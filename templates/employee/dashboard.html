@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}Employee Dashboard - GPLAST{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">Welcome, {{ user.username|upper }}</h2>
+            <p class="text-muted mb-0">Manage and monitor your IT & ERP support requests</p>
+        </div>
+        <a href="{% url 'create_ticket' %}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-circle-plus me-2"></i>New Support Ticket
+        </a>
+    </div>
+</div>
+
+<!-- KPI Cards Section -->
+<div class="row g-3 mb-4">
+    <!-- Total Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card p-3 h-100">
+            <div class="kpi-value text-secondary">{{ kpis.total }}</div>
+            <div class="kpi-label">Total Tickets</div>
+        </div>
+    </div>
+    <!-- Open Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card kpi-open p-3 h-100">
+            <div class="kpi-value text-primary">{{ kpis.open }}</div>
+            <div class="kpi-label">Open</div>
+        </div>
+    </div>
+    <!-- Assigned Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card kpi-assigned p-3 h-100">
+            <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
+            <div class="kpi-label">Assigned</div>
+        </div>
+    </div>
+    <!-- Hold Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card kpi-hold p-3 h-100">
+            <div class="kpi-value" style="color: #b78300;">{{ kpis.hold }}</div>
+            <div class="kpi-label">Hold</div>
+        </div>
+    </div>
+    <!-- Escalated Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card kpi-escalated p-3 h-100">
+            <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
+            <div class="kpi-label">Escalated</div>
+        </div>
+    </div>
+    <!-- Closed Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card kpi-closed p-3 h-100">
+            <div class="kpi-value text-success">{{ kpis.closed }}</div>
+            <div class="kpi-label">Closed</div>
+        </div>
+    </div>
+    <!-- Critical Priority Tickets -->
+    <div class="col-12 col-md-12 col-lg-12 mt-3">
+        <div class="card kpi-card kpi-critical p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="kpi-value text-danger">{{ kpis.critical }}</div>
+                    <div class="kpi-label">Critical Priority Tickets</div>
+                </div>
+                <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Latest Tickets Table -->
+    <div class="col-lg-8">
+        <div class="card panel-card">
+            <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-clock-rotate-left me-2"></i>Latest Tickets</h5>
+                <a href="{% url 'my_tickets' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-hover-zoom align-middle mb-0">
+                        <thead class="table-light text-secondary">
+                            <tr>
+                                <th class="ps-4">Ticket Number</th>
+                                <th>Created Date</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th class="pe-4 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ticket in latest_tickets %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">{{ ticket.ticket_number }}</td>
+                                    <td class="text-secondary">{{ ticket.created_at|date:"d-b-Y h:i A" }}</td>
+                                    <td class="fw-medium">{{ ticket.subject }}</td>
+                                    <td>
+                                        <span class="badge-custom badge-status-{{ ticket.status|lower }}">
+                                            {{ ticket.status }}
+                                        </span>
+                                    </td>
+                                    <td class="pe-4 text-center">
+                                        <a href="{% url 'ticket_detail' ticket.id %}" class="btn btn-sm btn-light rounded-pill border px-3">
+                                            <i class="fa-solid fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25"></i>
+                                        No tickets found. Click "New Support Ticket" to raise one.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Info Support Card -->
+    <div class="col-lg-4">
+        <div class="card panel-card border-0 text-white" style="background: var(--primary-gradient);">
+            <div class="card-body p-4 text-center">
+                <i class="fa-solid fa-headset fa-3x mb-3 text-white-50"></i>
+                <h4 class="fw-bold mb-1">Need Immediate Help?</h4>
+                <p class="small text-white-50 mb-4">Feel free to contact our internal IT support helpdesk directly</p>
+                
+                <hr class="border-white-50 my-3">
+                
+                {% if contact %}
+                    <div class="text-start">
+                        <p class="mb-2 d-flex align-items-center">
+                            <i class="fa-solid fa-user-tie me-3 text-white-50"></i>
+                            <span>
+                                <span class="d-block small text-white-50">Assigned IT Executive</span>
+                                <strong class="fs-5">{{ contact.admin_name }}</strong>
+                            </span>
+                        </p>
+                        <p class="mb-2 d-flex align-items-center">
+                            <i class="fa-solid fa-phone me-3 text-white-50"></i>
+                            <span>
+                                <span class="d-block small text-white-50">Phone Number</span>
+                                <strong class="fs-5">{{ contact.admin_phone }}</strong>
+                            </span>
+                        </p>
+                        <p class="mb-0 d-flex align-items-center">
+                            <i class="fa-solid fa-envelope me-3 text-white-50"></i>
+                            <span>
+                                <span class="d-block small text-white-50">Email Address</span>
+                                <a href="mailto:{{ contact.admin_email }}" class="text-white fw-bold">{{ contact.admin_email }}</a>
+                            </span>
+                        </p>
+                    </div>
+                {% else %}
+                    <p class="mb-0 text-white-50">IT support details not configured yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

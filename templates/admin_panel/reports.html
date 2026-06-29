@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Operational Reports - GPLAST{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold text-primary mb-1"><i class="fa-solid fa-file-excel me-2"></i>Operational Reports</h2>
+        <p class="text-muted mb-0">Filter, analyze, and export support tickets data to Excel formats</p>
+    </div>
+</div>
+
+<!-- Filters Panel Card -->
+<div class="card panel-card shadow-sm mb-4">
+    <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-filter me-2"></i>Search Filters</h5>
+        <span class="badge bg-primary rounded-pill px-3">{{ tickets.count }} Tickets Found</span>
+    </div>
+    <div class="card-body p-4">
+        <form method="GET" action="{% url 'reports' %}" id="reportsForm">
+            <!-- Hidden Category Field -->
+            <input type="hidden" name="category" value="{{ category }}">
+
+            <div class="row g-3">
+                <!-- Row 1: Unit, Department, Priority, Status -->
+                <div class="col-md-3">
+                    <label for="id_unit" class="form-label fw-bold text-dark">Unit</label>
+                    <select name="unit" id="id_unit" class="form-select">
+                        <option value="">-- All Units --</option>
+                        {% for u in units %}
+                            <option value="{{ u.id }}" {% if request.GET.unit == u.id|stringformat:"i" %}selected{% endif %}>{{ u.code }} - {{ u.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="id_department" class="form-label fw-bold text-dark">Department</label>
+                    <select name="department" id="id_department" class="form-select" data-show-all="true">
+                        <option value="">-- All Departments --</option>
+                        {% for d in departments %}
+                            <option value="{{ d.id }}" {% if request.GET.department == d.id|stringformat:"i" %}selected{% endif %}>{{ d.name }} ({{ d.unit.code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="id_priority" class="form-label fw-bold text-dark">Priority</label>
+                    <select name="priority" id="id_priority" class="form-select">
+                        <option value="">-- All Priorities --</option>
+                        <option value="Low" {% if request.GET.priority == 'Low' %}selected{% endif %}>Low</option>
+                        <option value="Medium" {% if request.GET.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                        <option value="High" {% if request.GET.priority == 'High' %}selected{% endif %}>High</option>
+                        <option value="Critical" {% if request.GET.priority == 'Critical' %}selected{% endif %}>Critical</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="id_status" class="form-label fw-bold text-dark">Status</label>
+                    <select name="status" id="id_status" class="form-select" {% if category != 'all' %}disabled title="Category shortcut applied"{% endif %}>
+                        <option value="">-- All Statuses --</option>
+                        <option value="Open" {% if request.GET.status == 'Open' %}selected{% endif %}>Open</option>
+                        <option value="Assigned" {% if request.GET.status == 'Assigned' %}selected{% endif %}>Assigned</option>
+                        <option value="Hold" {% if request.GET.status == 'Hold' %}selected{% endif %}>Hold</option>
+                        <option value="Escalated" {% if request.GET.status == 'Escalated' %}selected{% endif %}>Escalated</option>
+                        <option value="Closed" {% if request.GET.status == 'Closed' %}selected{% endif %}>Closed</option>
+                    </select>
+                </div>
+
+                <!-- Row 2: Assigned person, Created By, Error Type, Vendor Ticket -->
+                <div class="col-md-3">
+                    <label class="form-label fw-bold text-dark">Assigned Person</label>
+                    <input type="text" name="assigned_person" value="{{ request.GET.assigned_person }}" class="form-control" placeholder="Search Executive Name">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold text-dark">Created By</label>
+                    <select name="created_by_role" class="form-select">
+                        <option value="">-- All --</option>
+                        <option value="Employee" {% if request.GET.created_by_role == 'Employee' %}selected{% endif %}>Employee</option>
+                        <option value="Admin" {% if request.GET.created_by_role == 'Admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold text-dark">Error Type</label>
+                    <select name="error_type" class="form-select">
+                        <option value="">-- All --</option>
+                        <option value="New" {% if request.GET.error_type == 'New' %}selected{% endif %}>New</option>
+                        <option value="Regular" {% if request.GET.error_type == 'Regular' %}selected{% endif %}>Regular</option>
+                        <option value="No Idea" {% if request.GET.error_type == 'No Idea' %}selected{% endif %}>No Idea</option>
+                        <option value="ERP Error" {% if request.GET.error_type == 'ERP Error' %}selected{% endif %}>ERP Error</option>
+                        <option value="Data Entry Error" {% if request.GET.error_type == 'Data Entry Error' %}selected{% endif %}>Data Entry Error</option>
+                        <option value="DB Error" {% if request.GET.error_type == 'DB Error' %}selected{% endif %}>DB Error</option>
+                        <option value="Server Error" {% if request.GET.error_type == 'Server Error' %}selected{% endif %}>Server Error</option>
+                        <option value="IT Error" {% if request.GET.error_type == 'IT Error' %}selected{% endif %}>IT Error</option>
+                        <option value="User Error" {% if request.GET.error_type == 'User Error' %}selected{% endif %}>User Error</option>
+                        <option value="Other" {% if request.GET.error_type == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold text-dark">Vendor Ticket Number</label>
+                    <input type="text" name="vendor_ticket_number" value="{{ request.GET.vendor_ticket_number }}" class="form-control" placeholder="Search Vendor Ticket">
+                </div>
+
+                <!-- Row 3: Date Ranges -->
+                <div class="col-md-4 border-end pe-3">
+                    <label class="form-label fw-bold text-dark">Created Date Range</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="date" name="created_start" value="{{ request.GET.created_start }}" class="form-control">
+                        <span class="text-muted">to</span>
+                        <input type="date" name="created_end" value="{{ request.GET.created_end }}" class="form-control">
+                    </div>
+                </div>
+
+                <div class="col-md-4 border-end px-3">
+                    <label class="form-label fw-bold text-dark">Closed Date Range</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="date" name="closed_start" value="{{ request.GET.closed_start }}" class="form-control">
+                        <span class="text-muted">to</span>
+                        <input type="date" name="closed_end" value="{{ request.GET.closed_end }}" class="form-control">
+                    </div>
+                </div>
+
+                <div class="col-md-4 ps-3">
+                    <label class="form-label fw-bold text-dark">Escalated Date Range</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="date" name="escalated_start" value="{{ request.GET.escalated_start }}" class="form-control">
+                        <span class="text-muted">to</span>
+                        <input type="date" name="escalated_end" value="{{ request.GET.escalated_end }}" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Buttons -->
+            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'reports' %}?category=all" class="btn btn-outline-secondary rounded-pill px-3">
+                        <i class="fa-solid fa-arrows-rotate me-1"></i>Reset Filters
+                    </a>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-secondary rounded-pill px-4 py-2 fw-medium">
+                        <i class="fa-solid fa-search me-1"></i>Apply Filters
+                    </button>
+                    <!-- Export to Excel with confirmation intercept -->
+                    <button type="submit" name="export" value="true" class="btn btn-primary-custom confirm-link px-4 py-2" data-confirm="Are you sure you want to export this report?">
+                        <i class="fa-solid fa-file-excel me-1"></i>Export to Excel
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Shortcuts and Quick Stats Row -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-light border-0 py-2.5 px-3 rounded-3 d-flex flex-row flex-wrap justify-content-center align-items-center gap-2">
+            <span class="fw-bold text-secondary text-uppercase small me-3">Quick Shortcut Views:</span>
+            <a href="?category=all" class="btn btn-sm {% if category == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-3">All Tickets</a>
+            <a href="?category=open" class="btn btn-sm {% if category == 'open' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-3">Open</a>
+            <a href="?category=assigned" class="btn btn-sm {% if category == 'assigned' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-3">Assigned</a>
+            <a href="?category=hold" class="btn btn-sm {% if category == 'hold' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-3">On Hold</a>
+            <a href="?category=escalated" class="btn btn-sm {% if category == 'escalated' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-3">Escalated</a>
+            <a href="?category=closed" class="btn btn-sm {% if category == 'closed' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-3">Closed</a>
+            <a href="?category=escalated_closed" class="btn btn-sm {% if category == 'escalated_closed' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill px-3">Escalated then Closed</a>
+        </div>
+    </div>
+</div>
+
+<!-- Reports Table Log Preview -->
+<div class="row">
+    <div class="col-12">
+        <div class="card panel-card shadow-sm">
+            <div class="card-header glass-header py-3">
+                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-list me-2"></i>Report Log Preview</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-hover-zoom align-middle mb-0">
+                        <thead class="table-light text-secondary">
+                            <tr>
+                                <th class="ps-4">Ticket Number</th>
+                                <th>Created Date</th>
+                                <th>Subject</th>
+                                <th>Unit</th>
+                                <th>Department</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Assigned To</th>
+                                <th>Attachment</th>
+                                <th class="pe-4 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ticket in tickets %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">{{ ticket.ticket_number }}</td>
+                                    <td class="text-secondary small">{{ ticket.created_at|date:"d-b-Y h:i A" }}</td>
+                                    <td class="fw-medium text-truncate" style="max-width: 250px;" title="{{ ticket.subject }}">{{ ticket.subject }}</td>
+                                    <td class="fw-bold text-secondary">{{ ticket.unit.code }}</td>
+                                    <td class="small">{{ ticket.department.name }}</td>
+                                    <td>
+                                        <span class="badge {% if ticket.priority == 'Critical' %}bg-danger{% elif ticket.priority == 'High' %}bg-warning text-dark{% elif ticket.priority == 'Medium' %}bg-info text-dark{% else %}bg-secondary{% endif %} rounded-pill px-2.5 py-1" style="font-size: 0.75rem;">
+                                            {{ ticket.priority }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-custom badge-status-{{ ticket.status|lower }}">
+                                            {{ ticket.status }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-medium small text-secondary">
+                                        {% if ticket.assigned_person %}
+                                            <i class="fa-solid fa-user-gear me-1 text-primary"></i> {{ ticket.assigned_person }}
+                                        {% else %}
+                                            <span class="text-muted small">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if ticket.attachment %}
+                                            <a href="{{ ticket.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary border-0" title="View Attachment">
+                                                <i class="fa-solid fa-paperclip"></i>
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted small">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="pe-4 text-center">
+                                        <a href="{% url 'admin_ticket_detail' ticket.id %}" target="_blank" class="btn btn-sm btn-light rounded-pill border px-3">
+                                            <i class="fa-solid fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="10" class="text-center py-5 text-muted">
+                                        <i class="fa-solid fa-folder-open fa-3x mb-3 d-block opacity-25"></i>
+                                        No tickets match the filtered criteria.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Dynamic dropdown loads for filtering departments -->
+<script src="{% static 'js/ticket_form.js' %}"></script>
+{% endblock %}

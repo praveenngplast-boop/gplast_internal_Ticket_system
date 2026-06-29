@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}All Tickets - GPLAST{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="fa-solid fa-list-check me-2"></i>All Tickets Log</h2>
+            <p class="text-muted mb-0">Operational log of all support requests raised in the system</p>
+        </div>
+        <a href="{% url 'create_ticket_admin' %}" class="btn btn-primary-custom">
+            <i class="fa-solid fa-circle-plus me-2"></i>Create Ticket
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card panel-card shadow-sm">
+            <div class="card-header glass-header py-3">
+                <h5 class="fw-bold mb-0 text-primary">All System Tickets</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-hover-zoom align-middle mb-0">
+                        <thead class="table-light text-secondary">
+                            <tr>
+                                <th class="ps-4">Ticket Number</th>
+                                <th>Created Date</th>
+                                <th>Subject</th>
+                                <th>Unit</th>
+                                <th>Department</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Assigned To</th>
+                                <th>Origin</th>
+                                <th>Attachment</th>
+                                <th class="pe-4 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ticket in tickets %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">{{ ticket.ticket_number }}</td>
+                                    <td class="text-secondary small">{{ ticket.created_at|date:"d-b-Y h:i A" }}</td>
+                                    <td class="fw-medium text-truncate" style="max-width: 250px;" title="{{ ticket.subject }}">{{ ticket.subject }}</td>
+                                    <td class="fw-bold text-secondary">{{ ticket.unit.code }}</td>
+                                    <td class="small">{{ ticket.department.name }}</td>
+                                    <td>
+                                        <span class="badge {% if ticket.priority == 'Critical' %}bg-danger{% elif ticket.priority == 'High' %}bg-warning text-dark{% elif ticket.priority == 'Medium' %}bg-info text-dark{% else %}bg-secondary{% endif %} rounded-pill px-2.5 py-1" style="font-size: 0.75rem;">
+                                            {{ ticket.priority }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-custom badge-status-{{ ticket.status|lower }}">
+                                            {{ ticket.status }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-medium small text-secondary">
+                                        {% if ticket.assigned_person %}
+                                            <i class="fa-solid fa-user-gear me-1 text-primary"></i> {{ ticket.assigned_person }}
+                                        {% else %}
+                                            <span class="text-muted italic">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if ticket.created_by_role == 'Admin' %}
+                                            <span class="badge-custom badge-admin-created">Admin Created</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark border rounded-pill">Employee</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if ticket.attachment %}
+                                            <a href="{{ ticket.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary border-0" title="View Attachment">
+                                                <i class="fa-solid fa-paperclip"></i>
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted small">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="pe-4 text-center">
+                                        <a href="{% url 'admin_ticket_detail' ticket.id %}" class="btn btn-sm btn-light rounded-pill border px-3">
+                                            <i class="fa-solid fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="11" class="text-center py-5 text-muted">
+                                        <i class="fa-solid fa-folder-open fa-3x mb-3 d-block opacity-25"></i>
+                                        No tickets present in the database.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

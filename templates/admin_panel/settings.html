@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+{% block title %}Settings Panel - GPLAST{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold text-primary mb-1"><i class="fa-solid fa-sliders me-2"></i>Settings & Master Data Management</h2>
+        <p class="text-muted mb-0">Manage system-wide parameters, contacts, notification alerts, units, and departments</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: IT Support Contact & Alert Recipients -->
+    <div class="col-lg-4">
+        <!-- IT Support Contact Card -->
+        <div class="card panel-card shadow-sm mb-4">
+            <div class="card-header glass-header py-3 bg-light">
+                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-headset me-2"></i>IT Helpdesk Contact Card</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" data-confirm="Are you sure you want to save these settings?">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="contact">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Executive Name <span class="text-danger">*</span></label>
+                        {{ contact_form.admin_name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Helpdesk Phone <span class="text-danger">*</span></label>
+                        {{ contact_form.admin_phone }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Helpdesk Email <span class="text-danger">*</span></label>
+                        {{ contact_form.admin_email }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 mt-2">
+                        <i class="fa-solid fa-save me-1"></i>Save Contact Card
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Alert Emails Management -->
+        <div class="card panel-card shadow-sm">
+            <div class="card-header glass-header py-3 bg-light">
+                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-envelope-circle-check me-2"></i>IT Notification List</h5>
+            </div>
+            <div class="card-body p-4">
+                <!-- Add Alert Email -->
+                <form method="POST" data-confirm="Are you sure you want to add this email?">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="email_add">
+                    <div class="input-group mb-3">
+                        {{ email_form.email }}
+                        <button type="submit" class="btn btn-primary">Add</button>
+                    </div>
+                </form>
+
+                <hr class="my-3">
+
+                <!-- Alert Emails List -->
+                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                    <table class="table table-sm align-middle table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Active Alert Emails</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for e in emails %}
+                                <tr>
+                                    <td class="fw-medium text-dark">{{ e.email }}</td>
+                                    <td class="text-center">
+                                        <!-- Delete Email Form -->
+                                        <form method="POST" class="d-inline" data-confirm="Are you sure you want to delete this record?">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="form_type" value="email_delete">
+                                            <input type="hidden" name="email_id" value="{{ e.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger border-0">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted small py-3">No emails configured.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Admin Password Card -->
+        <div class="card panel-card shadow-sm mt-4">
+            <div class="card-header glass-header py-3 bg-light">
+                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-key me-2"></i>Change Admin Password</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" data-confirm="Are you sure you want to change the admin password?">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="change_password">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Current Password <span class="text-danger">*</span></label>
+                        <input type="password" name="current_password" class="form-control" placeholder="Enter current password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">New Password <span class="text-danger">*</span></label>
+                        <input type="password" name="new_password" class="form-control" placeholder="Enter new password" required>
+                        <div class="form-text small">Minimum 6 characters.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Confirm New Password <span class="text-danger">*</span></label>
+                        <input type="password" name="confirm_password" class="form-control" placeholder="Re-enter new password" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 mt-2">
+                        <i class="fa-solid fa-lock me-1"></i>Update Password
+                    </button>
+                </form>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Units & Departments Masters -->
+    <div class="col-lg-8">
+        <!-- Units Management -->
+        <div class="card panel-card shadow-sm mb-4">
+            <div class="card-header glass-header py-3 bg-light d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-industry me-2"></i>Units Management</h5>
+                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                    <i class="fa-solid fa-plus me-1"></i>Add Unit
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary">
+                            <tr>
+                                <th class="ps-4">Code</th>
+                                <th>Unit Name (ALL CAPS)</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in units %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">{{ u.code }}</td>
+                                    <td class="fw-medium">{{ u.full_name }}</td>
+                                    <td>
+                                        {% if u.is_active %}
+                                            <span class="badge bg-success">ACTIVE</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">INACTIVE</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <!-- Edit trigger -->
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2.5" data-bs-toggle="modal" data-bs-target="#editUnitModal" data-id="{{ u.id }}" data-code="{{ u.code }}" data-fullname="{{ u.full_name }}">
+                                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                                        </button>
+                                        
+                                        <!-- Toggle Status Form -->
+                                        <form method="POST" class="d-inline" data-confirm="Are you sure you want to {% if u.is_active %}deactivate{% else %}activate{% endif %} this unit?">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="form_type" value="unit_toggle">
+                                            <input type="hidden" name="unit_id" value="{{ u.id }}">
+                                            <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2.5">
+                                                {% if u.is_active %}Deactivate{% else %}Activate{% endif %}
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No units defined.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Departments Management -->
+        <div class="card panel-card shadow-sm">
+            <div class="card-header glass-header py-3 bg-light d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-cubes me-2"></i>Departments Management</h5>
+                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addDeptModal">
+                    <i class="fa-solid fa-plus me-1"></i>Add Department
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary">
+                            <tr>
+                                <th class="ps-4">Associated Unit</th>
+                                <th>Department Name (ALL CAPS)</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in departments %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-secondary">{{ d.unit.code }} - {{ d.unit.full_name }}</td>
+                                    <td class="fw-bold text-dark">{{ d.name }}</td>
+                                    <td>
+                                        {% if d.is_active %}
+                                            <span class="badge bg-success">ACTIVE</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">INACTIVE</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <!-- Edit trigger -->
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2.5" data-bs-toggle="modal" data-bs-target="#editDeptModal" data-id="{{ d.id }}" data-name="{{ d.name }}">
+                                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                                        </button>
+                                        
+                                        <!-- Toggle Status Form -->
+                                        <form method="POST" class="d-inline" data-confirm="Are you sure you want to {% if d.is_active %}deactivate{% else %}activate{% endif %} this department?">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="form_type" value="dept_toggle">
+                                            <input type="hidden" name="dept_id" value="{{ d.id }}">
+                                            <button type="submit" class="btn btn-sm {% if d.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2.5">
+                                                {% if d.is_active %}Deactivate{% else %}Activate{% endif %}
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No departments defined.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     Settings Modals
+     ========================================================================= -->
+
+<!-- Add Unit Modal -->
+<div class="modal fade" id="addUnitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <form method="POST" data-confirm="Are you sure you want to add this unit?">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="unit_add">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add New Unit</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Unit Short Code <span class="text-danger">*</span></label>
+                        {{ unit_form.code }}
+                        <div class="form-text small">Short unique code (e.g., IMD, DCD). Auto capitalized on save.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Unit Full Name <span class="text-danger">*</span></label>
+                        {{ unit_form.full_name }}
+                        <div class="form-text small">Full name description of the plant/unit.</div>
+                    </div>
+                    <div class="form-check mt-3">
+                        {{ unit_form.is_active }}
+                        <label class="form-check-label fw-bold text-dark" for="id_is_active">Mark Unit as Active</label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Add Unit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Unit Modal -->
+<div class="modal fade" id="editUnitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <form method="POST" data-confirm="Are you sure you want to save changes to this unit?">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="unit_edit">
+                <input type="hidden" name="unit_id" id="edit_unit_id">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Unit</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Unit Short Code <span class="text-danger">*</span></label>
+                        <input type="text" name="code" id="edit_unit_code" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Unit Full Name <span class="text-danger">*</span></label>
+                        <input type="text" name="full_name" id="edit_unit_fullname" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Department Modal -->
+<div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <form method="POST" data-confirm="Are you sure you want to add this department?">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="dept_add">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add New Department</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Parent Unit <span class="text-danger">*</span></label>
+                        {{ dept_form.unit }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Department Name <span class="text-danger">*</span></label>
+                        {{ dept_form.name }}
+                        <div class="form-text small">Enter name (e.g. QUALITY CONTROL). Auto capitalized on save.</div>
+                    </div>
+                    <div class="form-check mt-3">
+                        {{ dept_form.is_active }}
+                        <label class="form-check-label fw-bold text-dark" for="id_is_active">Mark Department as Active</label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Add Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Department Modal -->
+<div class="modal fade" id="editDeptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <form method="POST" data-confirm="Are you sure you want to save changes to this department?">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="dept_edit">
+                <input type="hidden" name="dept_id" id="edit_dept_id">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Department</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Department Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="edit_dept_name" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // JS to prefill the Edit Modals inputs dynamically
+    document.addEventListener('DOMContentLoaded', function() {
+        // Prefill Edit Unit Modal
+        const editUnitModal = document.getElementById('editUnitModal');
+        if (editUnitModal) {
+            editUnitModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const unitId = button.getAttribute('data-id');
+                const code = button.getAttribute('data-code');
+                const fullName = button.getAttribute('data-fullname');
+                
+                document.getElementById('edit_unit_id').value = unitId;
+                document.getElementById('edit_unit_code').value = code;
+                document.getElementById('edit_unit_fullname').value = fullName;
+            });
+        }
+
+        // Prefill Edit Department Modal
+        const editDeptModal = document.getElementById('editDeptModal');
+        if (editDeptModal) {
+            editDeptModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const deptId = button.getAttribute('data-id');
+                const deptName = button.getAttribute('data-name');
+                
+                document.getElementById('edit_dept_id').value = deptId;
+                document.getElementById('edit_dept_name').value = deptName;
+            });
+        }
+    });
+</script>
+{% endblock %}

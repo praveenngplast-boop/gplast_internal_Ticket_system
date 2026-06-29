@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% block title %}Admin Ticket Detail - {{ ticket.ticket_number }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="fa-solid fa-screwdriver-wrench me-2"></i>Manage Ticket #{{ ticket.ticket_number }}</h2>
+            <p class="text-muted mb-0">Raised on {{ ticket.created_at|date:"d-b-Y h:i A" }}</p>
+        </div>
+        <a href="{% url 'all_tickets' %}" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to All Tickets
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Detailed Information & Administration Actions -->
+    <div class="col-lg-8">
+        <!-- Ticket Information Panel -->
+        <div class="card panel-card shadow-sm mb-4">
+            <div class="card-header glass-header py-3">
+                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-circle-info me-2"></i>Full Ticket Details</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <!-- Subject -->
+                    <div class="col-12 border-bottom pb-3 mb-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Subject</span>
+                        <h4 class="fw-bold text-dark mb-0">{{ ticket.subject }}</h4>
+                    </div>
+
+                    <!-- Row 1: Employee and Unit Details -->
+                    <div class="col-md-4">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Employee ID</span>
+                        <strong class="text-dark">{{ ticket.employee_id }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Employee Name</span>
+                        <strong class="text-dark">{{ ticket.employee_name }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Mobile Number</span>
+                        <strong class="text-dark">{{ ticket.mobile }}</strong>
+                    </div>
+
+                    <!-- Row 2: Contact, Unit, Dept details -->
+                    <div class="col-md-4 mt-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Email ID</span>
+                        <strong class="text-dark"><a href="mailto:{{ ticket.email }}">{{ ticket.email }}</a></strong>
+                    </div>
+                    <div class="col-md-4 mt-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Unit</span>
+                        <strong class="text-dark">{{ ticket.unit.full_name }} ({{ ticket.unit.code }})</strong>
+                    </div>
+                    <div class="col-md-4 mt-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Department</span>
+                        <strong class="text-dark">{{ ticket.department.name }}</strong>
+                    </div>
+
+                    <!-- Row 3: Screen, Error type, Priority, Status -->
+                    <div class="col-md-3 mt-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Screen Number</span>
+                        <strong class="text-dark">{{ ticket.screen_number }}</strong>
+                    </div>
+                    <div class="col-md-3 mt-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Error Type</span>
+                        <strong class="text-dark">{{ ticket.error_type }}</strong>
+                    </div>
+                    <div class="col-md-3 mt-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Priority</span>
+                        <span class="badge {% if ticket.priority == 'Critical' %}bg-danger{% elif ticket.priority == 'High' %}bg-warning text-dark{% elif ticket.priority == 'Medium' %}bg-info text-dark{% else %}bg-secondary{% endif %} rounded-pill px-2.5 py-1">
+                            {{ ticket.priority }}
+                        </span>
+                    </div>
+                    <div class="col-md-3 mt-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Current Status</span>
+                        <span class="badge-custom badge-status-{{ ticket.status|lower }}">
+                            {{ ticket.status }}
+                        </span>
+                    </div>
+
+                    <!-- Row 4: Origin and Admin Details -->
+                    <div class="col-md-6 mt-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Ticket Origin</span>
+                        {% if ticket.created_by_role == 'Admin' %}
+                            <span class="badge-custom badge-admin-created">Admin Created (Reason: {{ ticket.admin_creation_reason }})</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark border">Employee Self-Created</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Assigned Person</span>
+                        {% if ticket.assigned_person %}
+                            <strong class="text-dark"><i class="fa-solid fa-user-gear text-primary me-1"></i>{{ ticket.assigned_person }}</strong>
+                        {% else %}
+                            <span class="text-muted italic">None</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Hold Reason (If status is Hold) -->
+                    {% if ticket.status == 'Hold' and ticket.hold_reason %}
+                        <div class="col-12 mt-3 bg-warning bg-opacity-10 border border-warning p-3 rounded-3">
+                            <span class="d-block text-warning small fw-bold text-uppercase">Hold Reason Details</span>
+                            <p class="mb-0 text-dark">{{ ticket.hold_reason }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Vendor Details (If Escalated or previously escalated) -->
+                    {% if ticket.vendor_ticket_number %}
+                        <div class="col-12 mt-3 bg-purple bg-opacity-10 border border-purple p-3 rounded-3" style="background-color: rgba(111, 66, 193, 0.08); border-color: rgba(111, 66, 193, 0.3);">
+                            <span class="d-block text-purple small fw-bold text-uppercase" style="color: var(--status-escalated);">ERP Vendor Tracking</span>
+                            <p class="mb-0 text-dark"><strong>Vendor Ticket Number:</strong> {{ ticket.vendor_ticket_number }}</p>
+                            {% if ticket.escalated_at %}
+                                <span class="text-muted small">Escalated on: {{ ticket.escalated_at|date:"d-b-Y h:i A" }}</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Closing Details (If Closed) -->
+                    {% if ticket.status == 'Closed' %}
+                        <div class="col-12 mt-3 bg-success bg-opacity-10 border border-success p-3 rounded-3">
+                            <span class="d-block text-success small fw-bold text-uppercase">Closing Audit Information</span>
+                            <p class="mb-1 text-dark"><strong>Closed By:</strong> {{ ticket.closed_by }}</p>
+                            <p class="mb-1 text-dark"><strong>Closed Date:</strong> {{ ticket.closed_at|date:"d-b-Y h:i A" }}</p>
+                            <p class="mb-0 text-dark"><strong>Closing Remarks:</strong> {{ ticket.closing_remarks }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Description -->
+                    <div class="col-12 mt-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase mb-2">Description</span>
+                        <div class="p-3 bg-light rounded-3 text-dark fs-6" style="white-space: pre-line; border-left: 4px solid var(--primary); font-size: 0.95rem;">
+                            {{ ticket.description }}
+                        </div>
+                    </div>
+
+                    <!-- Attachment -->
+                    {% if ticket.attachment %}
+                        <div class="col-12 mt-3">
+                            <span class="d-block text-secondary small fw-medium text-uppercase mb-2">Attachment</span>
+                            <a href="{{ ticket.attachment.url }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-2">
+                                <i class="fa-solid fa-paperclip me-1"></i>View Attachment ({{ ticket.attachment.name|slice:"12:" }})
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Administrative Lifecycle Action Panel -->
+        {% if ticket.status != 'Closed' %}
+            <div class="card panel-card shadow-sm">
+                <div class="card-header glass-header py-3 bg-light">
+                    <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-gears me-2"></i>Lifecycle Actions</h5>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <p class="text-muted small mb-4">Perform workflow modifications on this ticket</p>
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <!-- Assign Trigger -->
+                        <button type="button" class="btn btn-warning rounded-pill px-4 py-2 text-dark fw-medium" data-bs-toggle="modal" data-bs-target="#assignModal">
+                            <i class="fa-solid fa-user-plus me-1"></i>Assign Ticket
+                        </button>
+                        
+                        <!-- Hold Trigger -->
+                        <button type="button" class="btn btn-secondary rounded-pill px-4 py-2 fw-medium" data-bs-toggle="modal" data-bs-target="#holdModal">
+                            <i class="fa-solid fa-pause me-1"></i>Put on Hold
+                        </button>
+
+                        <!-- Escalate Trigger -->
+                        <button type="button" class="btn btn-info rounded-pill px-4 py-2 text-dark fw-medium" style="background-color: #e0cffc; border: 1px solid #c7b3e8;" data-bs-toggle="modal" data-bs-target="#escalateModal">
+                            <i class="fa-solid fa-cloud-arrow-up me-1"></i>Escalate to ERP Vendor
+                        </button>
+
+                        <!-- Close Trigger -->
+                        <button type="button" class="btn btn-success rounded-pill px-4 py-2 fw-medium" data-bs-toggle="modal" data-bs-target="#closeModal">
+                            <i class="fa-solid fa-circle-check me-1"></i>Close Ticket
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Column: Audit Timeline History -->
+    <div class="col-lg-4">
+        <div class="card panel-card shadow-sm h-100">
+            <div class="card-header glass-header py-3">
+                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-timeline me-2"></i>Audit History Log</h5>
+            </div>
+            <div class="card-body p-4">
+                <ul class="timeline mb-0">
+                    {% for log in history %}
+                        <li class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content p-3">
+                                <div class="timeline-time"><i class="fa-regular fa-clock me-1"></i>{{ log.timestamp|date:"d-b-Y h:i A" }}</div>
+                                <div class="timeline-title fw-bold text-dark">{{ log.action }}</div>
+                                {% if log.remarks %}
+                                    <div class="timeline-body small text-secondary">{{ log.remarks }}</div>
+                                {% endif %}
+                                <div class="small text-muted mt-1 text-end" style="font-size: 0.72rem;">
+                                    By: <strong>{{ log.performed_by }}</strong>
+                                </div>
+                            </div>
+                        </li>
+                    {% empty %}
+                        <li class="text-muted text-center py-4">No audit logs found.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     LifeCycle Forms Modals
+     ========================================================================= -->
+
+{% if ticket.status != 'Closed' %}
+    <!-- Assign Modal -->
+    <div class="modal fade text-dark" id="assignModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                <form method="POST" id="assignForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_type" value="Assign">
+                    <div class="modal-header bg-warning py-3 text-dark">
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-gear me-2"></i>Assign Ticket</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark">Assigned Person Name <span class="text-danger">*</span></label>
+                            <input type="text" name="assigned_person" class="form-control" placeholder="Enter Executive Name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark">Remarks / Special Instructions</label>
+                            <textarea name="remarks" class="form-control" rows="3" placeholder="Enter optional instructions"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                        <button type="button" class="btn btn-light rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning rounded-pill px-4 text-dark fw-bold">Assign Now</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hold Modal -->
+    <div class="modal fade text-dark" id="holdModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                <form method="POST" id="holdForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_type" value="Hold">
+                    <div class="modal-header bg-secondary py-3 text-white">
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-pause me-2"></i>Put Ticket on Hold</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark">Reason for Hold <span class="text-danger">*</span></label>
+                            <textarea name="hold_reason" class="form-control" rows="4" placeholder="Describe the reason for holding this ticket (e.g. waiting for vendor, missing raw details)" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                        <button type="button" class="btn btn-light rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-secondary rounded-pill px-4 fw-bold">Put on Hold</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Escalate Modal -->
+    <div class="modal fade text-dark" id="escalateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                <form method="POST" id="escalateForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_type" value="Escalate">
+                    <div class="modal-header py-3 text-dark" style="background-color: #e0cffc;">
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-cloud-arrow-up me-2"></i>Escalate to ERP Vendor</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="text-muted small">This action moves the ticket state to <strong>Escalated</strong> indicating that the issue has been raised in the external ERP vendor portal.</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark">Vendor Ticket Number (Optional)</label>
+                            <input type="text" name="vendor_ticket_number" class="form-control" placeholder="Enter ERP vendor reference number (if available)">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark">Remarks</label>
+                            <textarea name="remarks" class="form-control" rows="3" placeholder="Enter optional notes"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                        <button type="button" class="btn btn-light rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold" style="background-color: #6f42c1; border-color: #6f42c1;">Escalate Now</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Modal -->
+    <div class="modal fade text-dark" id="closeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                <form method="POST" id="closeForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_type" value="Close">
+                    <div class="modal-header bg-success py-3 text-white">
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-check me-2"></i>Close Ticket</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark">Error Classification <span class="text-danger">*</span></label>
+                            <select name="error_type" class="form-select" required>
+                                <option value="">-- Select Error Type --</option>
+                                <option value="ERP Error">ERP Error</option>
+                                <option value="Data Entry Error">Data Entry Error</option>
+                                <option value="DB Error">DB Error</option>
+                                <option value="Server Error">Server Error</option>
+                                <option value="IT Error">IT Error</option>
+                                <option value="User Error">User Error</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div class="form-text small text-muted">Classify the root cause of this issue before closing.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark">Closing Remarks / Resolution Description <span class="text-danger">*</span></label>
+                            <textarea name="closing_remarks" class="form-control" rows="4" placeholder="Describe how this issue was resolved (mandatory)" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                        <button type="button" class="btn btn-light rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold">Close Ticket</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}

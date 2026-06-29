@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% block title %}Create Ticket (Admin) - GPLAST{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card panel-card shadow-lg border-0">
+            <div class="card-header glass-header py-3">
+                <h4 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-ticket me-2"></i>Create Ticket (Admin Portal)</h4>
+                <p class="text-muted small mb-0">Log a support request directly or on behalf of an employee</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data" id="ticketForm" data-confirm="Are you sure you want to submit this ticket?">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <!-- Admin Logger Header -->
+                        <div class="col-12 border-bottom pb-2 mb-2 bg-light p-3 rounded-3">
+                            <h6 class="fw-bold text-primary text-uppercase mb-2"><i class="fa-solid fa-user-shield me-2"></i>Admin Creation Settings</h6>
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-dark">Ticket Created By <span class="text-danger">*</span></label>
+                                    <div class="d-flex gap-4 mt-1">
+                                        {% for radio in form.created_by_role %}
+                                            <div class="form-check">
+                                                {{ radio.tag }}
+                                                <label class="form-check-label fw-medium" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6" id="admin_reason_container" style="display: none;">
+                                    <label for="id_admin_creation_reason" class="form-label fw-bold text-dark">Reason for Admin Creation <span class="text-danger">*</span></label>
+                                    {{ form.admin_creation_reason }}
+                                    {% if form.admin_creation_reason.errors %}
+                                        <div class="text-danger small mt-1">{{ form.admin_creation_reason.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employee Details Header -->
+                        <div class="col-12 border-bottom pb-2 mt-4 mb-2">
+                            <h6 class="fw-bold text-secondary text-uppercase"><i class="fa-solid fa-user-tag me-2"></i>Employee & Unit Information</h6>
+                        </div>
+
+                        <!-- Unit -->
+                        <div class="col-md-6">
+                            <label for="id_unit" class="form-label fw-bold text-dark">Unit <span class="text-danger">*</span></label>
+                            {{ form.unit }}
+                            {% if form.unit.errors %}
+                                <div class="text-danger small mt-1">{{ form.unit.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Department -->
+                        <div class="col-md-6">
+                            <label for="id_department" class="form-label fw-bold text-dark">Department <span class="text-danger">*</span></label>
+                            {{ form.department }}
+                            {% if form.department.errors %}
+                                <div class="text-danger small mt-1">{{ form.department.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Employee ID -->
+                        <div class="col-md-6">
+                            <label for="id_employee_id" class="form-label fw-bold text-dark">Employee ID <span class="text-danger">*</span></label>
+                            {{ form.employee_id }}
+                            {% if form.employee_id.errors %}
+                                <div class="text-danger small mt-1">{{ form.employee_id.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Employee Name -->
+                        <div class="col-md-6">
+                            <label for="id_employee_name" class="form-label fw-bold text-dark">Employee Name <span class="text-danger">*</span></label>
+                            {{ form.employee_name }}
+                            {% if form.employee_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.employee_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Mobile -->
+                        <div class="col-md-6">
+                            <label for="id_mobile" class="form-label fw-bold text-dark">Mobile Number <span class="text-danger">*</span></label>
+                            {{ form.mobile }}
+                            <div class="form-text small">Enter exactly 10 digits without spaces or symbols.</div>
+                            {% if form.mobile.errors %}
+                                <div class="text-danger small mt-1">{{ form.mobile.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Email -->
+                        <div class="col-md-6">
+                            <label for="id_email" class="form-label fw-bold text-dark">Email ID <span class="text-danger">*</span></label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Issue Details Header -->
+                        <div class="col-12 border-bottom pb-2 mt-4 mb-2">
+                            <h6 class="fw-bold text-secondary text-uppercase"><i class="fa-solid fa-triangle-exclamation me-2"></i>Issue Details</h6>
+                        </div>
+
+                        <!-- Screen Number -->
+                        <div class="col-md-6">
+                            <label for="id_screen_number" class="form-label fw-bold text-dark">Screen Number <span class="text-danger">*</span></label>
+                            {{ form.screen_number }}
+                            <span class="char-counter" id="screen_counter">0 characters</span>
+                            {% if form.screen_number.errors %}
+                                <div class="text-danger small mt-1">{{ form.screen_number.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Priority -->
+                        <div class="col-md-3">
+                            <label for="id_priority" class="form-label fw-bold text-dark">Priority <span class="text-danger">*</span></label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                                <div class="text-danger small mt-1">{{ form.priority.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Error Type -->
+                        <div class="col-md-3">
+                            <label for="id_error_type" class="form-label fw-bold text-dark">Error Type <span class="text-danger">*</span></label>
+                            {{ form.error_type }}
+                            {% if form.error_type.errors %}
+                                <div class="text-danger small mt-1">{{ form.error_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Subject -->
+                        <div class="col-12">
+                            <label for="id_subject" class="form-label fw-bold text-dark">Subject <span class="text-danger">*</span></label>
+                            {{ form.subject }}
+                            <span class="char-counter" id="subject_counter">0 / 150</span>
+                            {% if form.subject.errors %}
+                                <div class="text-danger small mt-1">{{ form.subject.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Detailed Description -->
+                        <div class="col-12">
+                            <label for="id_description" class="form-label fw-bold text-dark">Detailed Description <span class="text-danger">*</span></label>
+                            {{ form.description }}
+                            <span class="char-counter" id="desc_counter">0 characters (minimum 20)</span>
+                            {% if form.description.errors %}
+                                <div class="text-danger small mt-1">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Attachment -->
+                        <div class="col-12">
+                            <label for="id_attachment" class="form-label fw-bold text-dark">Attachment (Optional)</label>
+                            {{ form.attachment }}
+                            <div class="form-text small">Max size: 3MB. Allowed formats: pdf, doc, docx, xls, xlsx, png, jpg, jpeg.</div>
+                            {% if form.attachment.errors %}
+                                <div class="text-danger small mt-1">{{ form.attachment.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
+                        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary px-4 py-2 rounded-pill fw-medium">
+                            <i class="fa-solid fa-xmark me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary-custom px-5 py-2 fw-medium">
+                            <i class="fa-solid fa-paper-plane me-2"></i>Submit Ticket
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/ticket_form.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Ticket Details - {{ ticket.ticket_number }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="fa-solid fa-file-invoice me-2"></i>Ticket #{{ ticket.ticket_number }}</h2>
+            <p class="text-muted mb-0">Raised on {{ ticket.created_at|date:"d-b-Y h:i A" }}</p>
+        </div>
+        <a href="{% url 'my_tickets' %}" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to My Tickets
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Ticket Details Card -->
+    <div class="col-lg-7">
+        <div class="card panel-card shadow-sm h-100">
+            <div class="card-header glass-header py-3">
+                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-circle-info me-2"></i>Issue Information</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <!-- Subject -->
+                    <div class="col-12 mb-3">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Subject</span>
+                        <h4 class="fw-bold text-dark mb-0">{{ ticket.subject }}</h4>
+                    </div>
+
+                    <!-- Unit and Department -->
+                    <div class="col-md-6">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Unit</span>
+                        <strong class="text-dark fs-5">{{ ticket.unit.full_name }} ({{ ticket.unit.code }})</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="d-block text-secondary small fw-medium text-uppercase">Department</span>
+                        <strong class="text-dark fs-5">{{ ticket.department.name }}</strong>
+                    </div>
+
+                    <!-- Priority and Status -->
+                    <div class="col-md-6 mt-4">
+                        <span class="d-block text-secondary small fw-medium text-uppercase mb-1">Priority</span>
+                        <span class="badge {% if ticket.priority == 'Critical' %}bg-danger{% elif ticket.priority == 'High' %}bg-warning text-dark{% elif ticket.priority == 'Medium' %}bg-info text-dark{% else %}bg-secondary{% endif %} rounded-pill px-3 py-1.5 fs-6">
+                            {{ ticket.priority }}
+                        </span>
+                    </div>
+                    <div class="col-md-6 mt-4">
+                        <span class="d-block text-secondary small fw-medium text-uppercase mb-1">Status</span>
+                        <span class="badge-custom badge-status-{{ ticket.status|lower }} fs-6 px-3 py-1">
+                            {{ ticket.status }}
+                        </span>
+                    </div>
+
+                    <!-- Assigned Executive (If Assigned) -->
+                    {% if ticket.status == 'Assigned' and ticket.assigned_person %}
+                        <div class="col-12 mt-4 bg-light p-3 rounded-3">
+                            <span class="d-block text-secondary small fw-medium text-uppercase"><i class="fa-solid fa-user-gear me-1 text-primary"></i>Assigned Executive</span>
+                            <strong class="text-dark fs-5">{{ ticket.assigned_person }}</strong>
+                        </div>
+                    {% endif %}
+
+                    <!-- Detailed Description -->
+                    <div class="col-12 mt-4">
+                        <span class="d-block text-secondary small fw-medium text-uppercase mb-2">Detailed Description</span>
+                        <div class="p-3 bg-light rounded-3 text-dark fs-6" style="white-space: pre-line; border-left: 4px solid var(--status-open);">
+                            {{ ticket.description }}
+                        </div>
+                    </div>
+
+                    <!-- Attachment (If exists) -->
+                    {% if ticket.attachment %}
+                        <div class="col-12 mt-4">
+                            <span class="d-block text-secondary small fw-medium text-uppercase mb-2">Attachment</span>
+                            <a href="{{ ticket.attachment.url }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-2">
+                                <i class="fa-solid fa-paperclip me-1"></i>View Attachment ({{ ticket.attachment.name|slice:"12:" }})
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline History Card -->
+    <div class="col-lg-5">
+        <div class="card panel-card shadow-sm h-100">
+            <div class="card-header glass-header py-3">
+                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-timeline me-2"></i>Ticket History Timeline</h5>
+            </div>
+            <div class="card-body p-4">
+                <ul class="timeline mb-0">
+                    {% for log in history %}
+                        <li class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-time"><i class="fa-regular fa-clock me-1"></i>{{ log.timestamp|date:"d-b-Y h:i A" }}</div>
+                                <div class="timeline-title">{{ log.action }}</div>
+                                {% if log.remarks %}
+                                    <div class="timeline-body">{{ log.remarks }}</div>
+                                {% endif %}
+                                <div class="small text-muted mt-1 text-end" style="font-size: 0.75rem;">
+                                    Performed by: <strong>{{ log.performed_by }}</strong>
+                                </div>
+                            </div>
+                        </li>
+                    {% empty %}
+                        <li class="text-muted text-center py-4">No history records found.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

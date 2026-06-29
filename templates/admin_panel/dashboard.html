@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Admin Dashboard - GPLAST{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .chart-container {
+        position: relative;
+        height: 250px;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">GPLAST Support Admin Panel</h2>
+            <p class="text-muted mb-0">System-wide operational ticket monitoring and analysis</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'create_ticket_admin' %}" class="btn btn-primary-custom">
+                <i class="fa-solid fa-plus-circle me-2"></i>Create Ticket
+            </a>
+            <a href="{% url 'reports' %}" class="btn btn-outline-primary rounded-pill px-4">
+                <i class="fa-solid fa-file-excel me-2"></i>Export Reports
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Admin KPI Cards Section -->
+<div class="row g-3 mb-4">
+    <!-- Total Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card p-3 h-100">
+            <div class="kpi-value text-secondary">{{ kpis.total }}</div>
+            <div class="kpi-label">Total Tickets</div>
+        </div>
+    </div>
+    <!-- Open Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card kpi-open p-3 h-100">
+            <div class="kpi-value text-primary">{{ kpis.open }}</div>
+            <div class="kpi-label">Open</div>
+        </div>
+    </div>
+    <!-- Assigned Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card kpi-assigned p-3 h-100">
+            <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
+            <div class="kpi-label">Assigned</div>
+        </div>
+    </div>
+    <!-- Hold Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card kpi-hold p-3 h-100">
+            <div class="kpi-value" style="color: #b78300;">{{ kpis.hold }}</div>
+            <div class="kpi-label">Hold</div>
+        </div>
+    </div>
+    <!-- Escalated Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card kpi-escalated p-3 h-100">
+            <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
+            <div class="kpi-label">Escalated</div>
+        </div>
+    </div>
+    <!-- Closed Tickets -->
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card kpi-card kpi-closed p-3 h-100">
+            <div class="kpi-value text-success">{{ kpis.closed }}</div>
+            <div class="kpi-label">Closed</div>
+        </div>
+    </div>
+    <!-- Critical Priority Tickets -->
+    <div class="col-12 mt-3">
+        <div class="card kpi-card kpi-critical p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="kpi-value text-danger">{{ kpis.critical }}</div>
+                    <div class="kpi-label">Critical Priority Tickets System-Wide</div>
+                </div>
+                <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Reports Panel Grid (10 Charts) -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Status Distribution -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card panel-card h-100">
+            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">1. Status Distribution</h6></div>
+            <div class="card-body"><div class="chart-container"><canvas id="statusChart"></canvas></div></div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Unit-wise Tickets -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card panel-card h-100">
+            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">2. Unit-wise Tickets</h6></div>
+            <div class="card-body"><div class="chart-container"><canvas id="unitChart"></canvas></div></div>
+        </div>
+    </div>
+
+    <!-- Chart 3: Department-wise Tickets -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card panel-card h-100">
+            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">3. Department-wise Tickets</h6></div>
+            <div class="card-body"><div class="chart-container"><canvas id="deptChart"></canvas></div></div>
+        </div>
+    </div>
+
+    <!-- Chart 4: Priority Distribution -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card panel-card h-100">
+            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">4. Priority Distribution</h6></div>
+            <div class="card-body"><div class="chart-container"><canvas id="priorityChart"></canvas></div></div>
+        </div>
+    </div>
+
+    <!-- Chart 5: Error Type Distribution -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card panel-card h-100">
+            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">5. Error Type Distribution</h6></div>
+            <div class="card-body"><div class="chart-container"><canvas id="errorTypeChart"></canvas></div></div>
+        </div>
+    </div>
+
+    <!-- Chart 6: Monthly Ticket Trend -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card panel-card h-100">
+            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">6. Monthly Ticket Trend</h6></div>
+            <div class="card-body"><div class="chart-container"><canvas id="trendChart"></canvas></div></div>
+        </div>
+    </div>
+
+    <!-- Chart 7: Escalated vs Closed -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card panel-card h-100">
+            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">7. Escalated vs Closed</h6></div>
+            <div class="card-body"><div class="chart-container"><canvas id="escClosedChart"></canvas></div></div>
+        </div>
+    </div>
+
+    <!-- Chart 8: Average Resolution Time (hours) -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card panel-card h-100">
+            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">8. Avg Resolution Time (hours) by Unit</h6></div>
+            <div class="card-body"><div class="chart-container"><canvas id="avgResChart"></canvas></div></div>
+        </div>
+    </div>
+
+    <!-- Chart 9: Top 10 Reported Issues -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card panel-card h-100">
+            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">9. Top 10 Reported Issues (Subject)</h6></div>
+            <div class="card-body"><div class="chart-container"><canvas id="topIssuesChart"></canvas></div></div>
+        </div>
+    </div>
+
+    <!-- Chart 10: Top Departments by Ticket Count -->
+    <div class="col-md-12 col-lg-12">
+        <div class="card panel-card h-100">
+            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">10. Top Departments by Ticket Count</h6></div>
+            <div class="card-body"><div class="chart-container" style="height: 350px;"><canvas id="topDeptsChart"></canvas></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Secure Serialization of Chart Datasets -->
+{{ charts_data|json_script:"charts-data" }}
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart Drawing Logic -->
+<script src="{% static 'js/charts.js' %}"></script>
+{% endblock %}

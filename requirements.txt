@@ -1,0 +1,7 @@
+Django>=4.2,<5.1
+mysqlclient
+openpyxl
+Pillow
+python-decouple
+whitenoise
+PyMySQL

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}GPLAST Portal Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="col-md-6 col-lg-4">
+        <div class="card panel-card shadow-lg border-0 overflow-hidden">
+            <!-- Header Section -->
+            <div class="p-4 text-center text-white" style="background: var(--primary-gradient);">
+                <i class="fa-solid fa-lock-open fa-3x mb-3 animate-bounce"></i>
+                <h4 class="fw-bold mb-0">System Login</h4>
+                <p class="small text-white-50 mb-0">GPLAST Support Ticket System</p>
+            </div>
+            
+            <!-- Body Section -->
+            <div class="card-body p-4">
+                {% if form.errors %}
+                    <div class="alert alert-danger rounded-3" role="alert">
+                        <i class="fa-solid fa-circle-xmark me-2"></i>
+                        Invalid username or password. Please try again.
+                    </div>
+                {% endif %}
+
+                <form method="POST" action="{% url 'login' %}" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Username Field -->
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label fw-medium text-secondary">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-secondary border-end-0"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" name="username" id="id_username" class="form-control border-start-0 ps-0" placeholder="Enter Username" required>
+                        </div>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label for="id_password" class="form-label fw-medium text-secondary mb-1">Password</label>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-secondary border-end-0"><i class="fa-solid fa-key"></i></span>
+                            <input type="password" name="password" id="id_password" class="form-control border-start-0 ps-0" placeholder="Enter Password" required>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2 fs-6 rounded-pill">
+                        <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Sign In
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Default Credentials Hint Card for testing/seeding -->
+            <div class="card-footer bg-light border-0 py-3 text-center text-muted small">
+                <p class="mb-1"><strong>Default credentials:</strong></p>
+                <div class="d-flex justify-content-center gap-3">
+                    <span>Admin: <code>admin</code> / <code>Admin@1234</code></span>
+                    <span>Emp: <code>employee</code> / <code>Emp@1234</code></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
