@@ -31,9 +31,8 @@ class GPLASTTicketingTestCase(TestCase):
         self.assertEqual(self.department.name, "PRODUCTION")
 
     def test_sequential_ticket_numbering(self):
-        """Verify ticket numbers generate sequentially per day"""
-        date_str = timezone.now().astimezone(timezone.get_current_timezone()).strftime('%Y%m%d')
-        
+        """Verify ticket numbers generate sequential numeric identifiers."""
+
         # Create first ticket
         ticket1 = Ticket.objects.create(
             ticket_number=generate_ticket_number(),
@@ -50,7 +49,7 @@ class GPLASTTicketingTestCase(TestCase):
             error_type="New",
             created_by_user=self.employee_user
         )
-        self.assertEqual(ticket1.ticket_number, f"GPLAST-{date_str}-0001")
+        self.assertEqual(ticket1.ticket_number, "0001")
 
         # Create second ticket
         ticket2 = Ticket.objects.create(
@@ -68,7 +67,28 @@ class GPLASTTicketingTestCase(TestCase):
             error_type="New",
             created_by_user=self.employee_user
         )
-        self.assertEqual(ticket2.ticket_number, f"GPLAST-{date_str}-0002")
+        self.assertEqual(ticket2.ticket_number, "0002")
+
+    def test_generate_ticket_number_continues_after_old_prefix_format(self):
+        """Verify new numeric tickets continue after legacy prefixed ticket numbers."""
+        Ticket.objects.create(
+            ticket_number="GPLAST-20260628-0005",
+            unit=self.unit,
+            department=self.department,
+            employee_id="EMP01",
+            employee_name="Test",
+            mobile="1234567890",
+            email="test@gplast.com",
+            screen_number="SCR-01",
+            subject="Legacy Ticket",
+            description="Legacy format description.",
+            priority="Low",
+            error_type="New",
+            created_by_user=self.employee_user
+        )
+
+        next_number = generate_ticket_number()
+        self.assertEqual(next_number, "0006")
 
     def test_mobile_number_validation(self):
         """Verify form validation checks for exactly 10 numeric digits in mobile"""

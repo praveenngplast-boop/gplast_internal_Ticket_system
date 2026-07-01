@@ -14,6 +14,17 @@
         animation-timing-function: ease;
     }
 
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     /* ============================================
        Card Styles
     ============================================ */
@@ -83,7 +94,7 @@
     }
 
     /* ============================================
-       Form Controls
+       Form Controls - FIXED
     ============================================ */
     .form-label {
         color: var(--text-secondary) !important;
@@ -103,6 +114,8 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         backdrop-filter: blur(10px);
         height: 42px;
+        -webkit-text-fill-color: var(--text-primary) !important;
+        caret-color: var(--text-primary) !important;
     }
 
     .form-control:hover, .form-select:hover {
@@ -116,10 +129,15 @@
         border-color: var(--accent) !important;
         box-shadow: 0 0 0 4px var(--input-focus) !important;
         transform: translateY(-2px);
+        color: var(--text-primary) !important;
+        -webkit-text-fill-color: var(--text-primary) !important;
+        outline: none !important;
     }
 
     .form-control::placeholder {
         color: var(--text-muted) !important;
+        -webkit-text-fill-color: var(--text-muted) !important;
+        opacity: 1 !important;
     }
 
     .form-control:disabled, .form-select:disabled {
@@ -127,11 +145,18 @@
         border-color: rgba(255, 255, 255, 0.05) !important;
         color: var(--text-muted) !important;
         cursor: not-allowed;
+        -webkit-text-fill-color: var(--text-muted) !important;
     }
 
     .form-select option {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
+        padding: 8px 12px;
+    }
+
+    .form-select option:hover {
+        background: var(--accent) !important;
+        color: white !important;
     }
 
     .form-text {
@@ -379,6 +404,79 @@
     }
 
     /* ============================================
+       Autofill Fixes
+    ============================================ */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active,
+    textarea:-webkit-autofill,
+    textarea:-webkit-autofill:hover,
+    textarea:-webkit-autofill:focus,
+    textarea:-webkit-autofill:active,
+    select:-webkit-autofill,
+    select:-webkit-autofill:hover,
+    select:-webkit-autofill:focus,
+    select:-webkit-autofill:active {
+        -webkit-text-fill-color: var(--text-primary, #ffffff) !important;
+        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg, #2d2d2d) inset !important;
+        background-color: var(--input-bg, #2d2d2d) !important;
+        color: var(--text-primary, #ffffff) !important;
+        transition: background-color 5000s ease-in-out 0s;
+        caret-color: var(--text-primary, #ffffff) !important;
+        border-color: var(--border-color, #495057) !important;
+    }
+
+    input:-webkit-autofill:focus,
+    textarea:-webkit-autofill:focus,
+    select:-webkit-autofill:focus {
+        border-color: var(--accent, #e94560) !important;
+        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg, #2d2d2d) inset, 0 0 0 4px rgba(233, 69, 96, 0.15) !important;
+    }
+
+    /* ============================================
+       Light Mode Input Fixes
+    ============================================ */
+    :root:not([data-theme="dark"]) .form-control,
+    :root:not([data-theme="dark"]) .form-select {
+        background-color: #f7fafc !important;
+        border: 2px solid #e2e8f0 !important;
+        color: #2d3748 !important;
+        -webkit-text-fill-color: #2d3748 !important;
+        caret-color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-control:focus,
+    :root:not([data-theme="dark"]) .form-select:focus {
+        background-color: #edf2f7 !important;
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2) !important;
+        color: #2d3748 !important;
+        -webkit-text-fill-color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-control::placeholder {
+        color: #718096 !important;
+        -webkit-text-fill-color: #718096 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-select option {
+        background: #ffffff !important;
+        color: #2d3748 !important;
+    }
+
+    .form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%234a5568' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 1rem center !important;
+        background-size: 16px 12px !important;
+        padding-right: 2.5rem !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+    }
+
+    /* ============================================
        Dark Mode Support
     ============================================ */
     @media (prefers-color-scheme: dark) {
@@ -420,14 +518,6 @@
     ::-moz-selection {
         background: var(--accent);
         color: white;
-    }
-
-    /* ============================================
-       Input Group Animation
-    ============================================ */
-    .form-control:focus + .char-counter {
-        color: var(--accent) !important;
-        transition: all 0.3s ease;
     }
 
     /* ============================================
@@ -480,7 +570,7 @@
                     </p>
                 </div>
                 <div class="card-body p-4">
-                    <form method="POST" enctype="multipart/form-data" id="ticketForm" data-confirm="Are you sure you want to submit this ticket?">
+                    <form method="POST" enctype="multipart/form-data" id="ticketForm">
                         {% csrf_token %}
                         
                         <div class="row g-3">
@@ -507,6 +597,7 @@
                                 <label for="id_department" class="form-label fw-bold">
                                     <i class="fa-regular fa-layer-group me-1"></i>Department <span class="text-danger">*</span>
                                 </label>
+                                <!-- FIX: Use the Django form field instead of hardcoded select -->
                                 {{ form.department }}
                                 {% if form.department.errors %}
                                     <div class="text-danger small mt-1">{{ form.department.errors }}</div>
@@ -654,10 +745,117 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/ticket_form.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ============================================
+        // FIX: Department dropdown - Use Django form field
+        // The form field already has all departments loaded
+        // We just need to filter them based on Unit selection
+        // ============================================
+        const unitSelect = document.getElementById('id_unit');
+        const deptSelect = document.getElementById('id_department');
+        
+        // Store all department options
+        let allDeptOptions = [];
+        
+        // Save all department options on load
+        if (deptSelect) {
+            // Get all current options from the form field
+            const options = deptSelect.querySelectorAll('option');
+            options.forEach(function(opt) {
+                allDeptOptions.push({
+                    value: opt.value,
+                    text: opt.textContent,
+                    selected: opt.selected
+                });
+            });
+        }
+        
+        // Function to filter departments based on unit
+        function filterDepartments(unitId) {
+            if (!deptSelect) return;
+            
+            // Clear current options
+            deptSelect.innerHTML = '';
+            
+            // Add default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = unitId ? '-- Select Department --' : 'Select Unit First';
+            deptSelect.appendChild(defaultOption);
+            
+            if (!unitId) {
+                deptSelect.disabled = true;
+                return;
+            }
+            
+            // Filter departments by unit
+            // This requires the department options to have data-unit attribute
+            // or we need to fetch via AJAX
+            // Since Django form doesn't have unit info in options, we need AJAX
+            // So we'll use the AJAX approach
+            deptSelect.disabled = true;
+            deptSelect.innerHTML = '<option value="">Loading departments...</option>';
+            
+            const url = `/ajax/departments/?unit_id=${unitId}`;
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    deptSelect.innerHTML = '';
+                    
+                    // Add default option
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = '';
+                    defaultOpt.textContent = '-- Select Department --';
+                    deptSelect.appendChild(defaultOpt);
+                    
+                    if (data.departments && data.departments.length > 0) {
+                        data.departments.forEach(function(dept) {
+                            const option = document.createElement('option');
+                            option.value = dept.id;
+                            option.textContent = dept.name;
+                            deptSelect.appendChild(option);
+                        });
+                        deptSelect.disabled = false;
+                    } else {
+                        const noOpt = document.createElement('option');
+                        noOpt.value = '';
+                        noOpt.textContent = 'No departments available';
+                        deptSelect.appendChild(noOpt);
+                        deptSelect.disabled = true;
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error loading departments:', error);
+                    deptSelect.innerHTML = '<option value="">Error loading departments</option>';
+                    deptSelect.disabled = true;
+                });
+        }
+        
+        // Load departments on page load if unit is pre-selected
+        if (unitSelect && unitSelect.value) {
+            filterDepartments(unitSelect.value);
+        } else if (deptSelect) {
+            deptSelect.disabled = true;
+        }
+        
+        // Load departments when unit changes
+        if (unitSelect) {
+            unitSelect.addEventListener('change', function() {
+                const unitId = this.value;
+                filterDepartments(unitId);
+            });
+        }
+        
+        // ============================================
         // Character counters
+        // ============================================
         const screenInput = document.getElementById('id_screen_number');
         const subjectInput = document.getElementById('id_subject');
         const descInput = document.getElementById('id_description');
@@ -690,17 +888,39 @@
             });
         }
 
+        // ============================================
         // Animate form fields on load
+        // ============================================
         const formGroups = document.querySelectorAll('.row.g-3 > [class*="col-"]');
-        formGroups.forEach((group, index) => {
+        formGroups.forEach(function(group, index) {
             if (!group.querySelector('.section-header')) {
                 group.style.opacity = '0';
-                setTimeout(() => {
+                setTimeout(function() {
                     group.style.transition = 'all 0.4s ease';
                     group.style.opacity = '1';
                 }, 150 + (index * 30));
             }
         });
+
+        // ============================================
+        // FIX: Ensure all inputs have proper color on load
+        // ============================================
+        const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#ffffff';
+        
+        const allInputs = document.querySelectorAll('input, textarea, select');
+        allInputs.forEach(function(input) {
+            if (input.type !== 'hidden' && input.type !== 'submit' && input.type !== 'button') {
+                input.style.color = textColor;
+                if (input.tagName === 'SELECT') {
+                    input.style.color = textColor;
+                }
+                if (input.value && input.value.length > 0) {
+                    input.style.color = textColor;
+                }
+            }
+        });
+
+        console.log('Create Ticket page loaded successfully.');
     });
 </script>
 {% endblock %}

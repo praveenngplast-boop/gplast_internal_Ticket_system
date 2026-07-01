@@ -1147,7 +1147,7 @@
                 <!-- Ultra Search Bar -->
                 <div class="search-bar">
                     <i class="fa-solid fa-magnifying-glass" style="font-size: 0.8rem;"></i>
-                    <input type="text" placeholder="Search tickets..." id="searchInput" aria-label="Search tickets">
+                    <input type="text" placeholder="Search tickets..." id="searchInput" value="{{ search_query|default:'' }}" aria-label="Search tickets">
                     <button class="btn-clear" id="clearSearch" aria-label="Clear search">
                         <i class="fa-solid fa-times-circle"></i>
                     </button>
@@ -1159,6 +1159,75 @@
                     <i class="fa-solid fa-circle-plus me-2"></i>Create Ticket
                 </a>
             </div>
+        </div>
+    </div>
+
+    <!-- Advanced Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="get" class="card panel-card shadow-sm border-0 p-3">
+                <input type="hidden" name="category" value="{{ category }}">
+                <div class="row g-3 align-items-end">
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="">All</option>
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Priority</label>
+                        <select class="form-select" name="priority">
+                            <option value="">All</option>
+                            {% for value, label in priority_choices %}
+                                <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Unit</label>
+                        <select class="form-select" name="unit">
+                            <option value="">All</option>
+                            {% for unit in units %}
+                                <option value="{{ unit.id }}" {% if selected_unit|default:'' == unit.id|stringformat:'s' %}selected{% endif %}>{{ unit.code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Department</label>
+                        <select class="form-select" name="department">
+                            <option value="">All</option>
+                            {% for department in departments %}
+                                <option value="{{ department.id }}" {% if selected_department|default:'' == department.id|stringformat:'s' %}selected{% endif %}>{{ department.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Assigned To</label>
+                        <input class="form-control" type="text" name="assigned_person" value="{{ selected_assigned_person|default:'' }}" placeholder="Assigned person">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Created By</label>
+                        <select class="form-select" name="created_by_role">
+                            <option value="">All</option>
+                            {% for value, label in created_by_choices %}
+                                <option value="{{ value }}" {% if selected_created_by_role == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Keyword</label>
+                        <input class="form-control" type="text" name="search" value="{{ search_query|default:'' }}" placeholder="Ticket, subject, unit, dept">
+                    </div>
+                    <div class="col-sm-6 col-md-3 d-grid">
+                        <button type="submit" class="btn btn-primary-custom w-100">
+                            <i class="fa-solid fa-filter me-1"></i>Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 

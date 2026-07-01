@@ -585,23 +585,27 @@
         </div>
         <!-- Open Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-open p-3 h-100">
-                <div class="kpi-value text-primary">{{ kpis.open }}</div>
-                <div class="kpi-label">
-                    <i class="fa-regular fa-circle me-1" style="color: var(--status-open);"></i>
-                    Open
+            <a href="{% url 'all_tickets' %}?category=open" class="text-decoration-none text-reset">
+                <div class="card kpi-card kpi-open p-3 h-100">
+                    <div class="kpi-value text-primary">{{ kpis.open }}</div>
+                    <div class="kpi-label">
+                        <i class="fa-regular fa-circle me-1" style="color: var(--status-open);"></i>
+                        Open
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <!-- Assigned Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-assigned p-3 h-100">
-                <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
-                <div class="kpi-label">
-                    <i class="fa-solid fa-user-check me-1" style="color: var(--status-assigned);"></i>
-                    Assigned
+            <a href="{% url 'all_tickets' %}?category=assigned" class="text-decoration-none text-reset">
+                <div class="card kpi-card kpi-assigned p-3 h-100">
+                    <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
+                    <div class="kpi-label">
+                        <i class="fa-solid fa-user-check me-1" style="color: var(--status-assigned);"></i>
+                        Assigned
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <!-- Hold Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
@@ -625,17 +629,20 @@
         </div>
         <!-- Closed Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-closed p-3 h-100">
-                <div class="kpi-value text-success">{{ kpis.closed }}</div>
-                <div class="kpi-label">
-                    <i class="fa-solid fa-circle-check me-1" style="color: var(--status-closed);"></i>
-                    Closed
+            <a href="{% url 'all_tickets' %}?category=closed" class="text-decoration-none text-reset">
+                <div class="card kpi-card kpi-closed p-3 h-100">
+                    <div class="kpi-value text-success">{{ kpis.closed }}</div>
+                    <div class="kpi-label">
+                        <i class="fa-solid fa-circle-check me-1" style="color: var(--status-closed);"></i>
+                        Closed
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
         <!-- Critical Priority Tickets -->
         <div class="col-12 mt-3">
-            <div class="card kpi-card kpi-critical p-3">
+            <a href="{% url 'all_tickets' %}?category=critical" class="text-decoration-none text-reset">
+                <div class="card kpi-card kpi-critical p-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="kpi-value text-danger">{{ kpis.critical }}</div>

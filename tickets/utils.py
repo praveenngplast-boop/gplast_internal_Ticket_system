@@ -1,4 +1,5 @@
 import os
+import re
 import datetime
 from django.utils import timezone
 from django.core.mail import EmailMessage
@@ -13,26 +14,27 @@ logger = logging.getLogger(__name__)
 # Ticket number generator
 def generate_ticket_number():
     from tickets.models import Ticket  # Lazy import to avoid circular dependency
-    # Get current local date in Asia/Kolkata
-    local_tz = timezone.get_current_timezone()
-    now_local = timezone.now().astimezone(local_tz)
-    date_str = now_local.strftime('%Y%m%d')  # YYYYMMDD
-    prefix = f"GPLAST-{date_str}"
-    
-    # Query database for tickets starting with this prefix
-    last_ticket = Ticket.objects.filter(ticket_number__startswith=prefix).order_by('-ticket_number').first()
-    
-    if last_ticket:
-        # Extract sequence number
-        last_num = last_ticket.ticket_number.split('-')[-1]
+
+    ticket_numbers = Ticket.objects.values_list('ticket_number', flat=True)
+    max_seq = 0
+
+    for ticket_number in ticket_numbers:
+        if not ticket_number:
+            continue
+        match = re.search(r'(\d+)$', ticket_number)
+        if not match:
+            continue
+
         try:
-            next_seq = int(last_num) + 1
+            value = int(match.group(1))
         except ValueError:
-            next_seq = 1
-    else:
-        next_seq = 1
-        
-    return f"{prefix}-{next_seq:04d}"
+            continue
+
+        if value > max_seq:
+            max_seq = value
+
+    next_seq = max_seq + 1
+    return f"{next_seq:04d}"
 
 # Server-side attachment validator
 def validate_attachment(file):

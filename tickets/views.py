@@ -226,9 +226,69 @@ def create_ticket_admin(request):
 @login_required
 @user_passes_test(is_admin, login_url='role_redirect')
 def all_tickets(request):
-    # Exclude personal columns like employee_id, mobile, email, screen_number in list view
-    tickets = Ticket.objects.all().order_by('-created_at')
-    return render(request, 'admin_panel/all_tickets.html', {'tickets': tickets})
+    tickets_qs = Ticket.objects.all().order_by('-created_at')
+    units = Unit.objects.filter(is_active=True)
+    departments = Department.objects.filter(is_active=True)
+
+    category = request.GET.get('category', 'all')
+    status = request.GET.get('status')
+    priority = request.GET.get('priority')
+    unit_id = request.GET.get('unit')
+    dept_id = request.GET.get('department')
+    assigned_person = request.GET.get('assigned_person', '').strip()
+    created_by_role = request.GET.get('created_by_role')
+    search = request.GET.get('search', '').strip()
+
+    if category == 'open':
+        tickets_qs = tickets_qs.filter(status='Open')
+    elif category == 'assigned':
+        tickets_qs = tickets_qs.filter(status='Assigned')
+    elif category == 'hold':
+        tickets_qs = tickets_qs.filter(status='Hold')
+    elif category == 'escalated':
+        tickets_qs = tickets_qs.filter(status='Escalated')
+    elif category == 'closed':
+        tickets_qs = tickets_qs.filter(status='Closed')
+    elif category == 'critical':
+        tickets_qs = tickets_qs.filter(priority='Critical')
+
+    if unit_id:
+        tickets_qs = tickets_qs.filter(unit_id=unit_id)
+    if dept_id:
+        tickets_qs = tickets_qs.filter(department_id=dept_id)
+    if status:
+        tickets_qs = tickets_qs.filter(status=status)
+    if priority:
+        tickets_qs = tickets_qs.filter(priority=priority)
+    if assigned_person:
+        tickets_qs = tickets_qs.filter(assigned_person__icontains=assigned_person)
+    if created_by_role:
+        tickets_qs = tickets_qs.filter(created_by_role=created_by_role)
+    if search:
+        tickets_qs = tickets_qs.filter(
+            Q(ticket_number__icontains=search)
+            | Q(subject__icontains=search)
+            | Q(unit__code__icontains=search)
+            | Q(department__name__icontains=search)
+        )
+
+    context = {
+        'tickets': tickets_qs,
+        'units': units,
+        'departments': departments,
+        'status_choices': Ticket.STATUS_CHOICES,
+        'priority_choices': Ticket.PRIORITY_CHOICES,
+        'created_by_choices': Ticket.CREATED_BY_CHOICES,
+        'selected_status': status,
+        'selected_priority': priority,
+        'selected_unit': unit_id,
+        'selected_department': dept_id,
+        'selected_assigned_person': assigned_person,
+        'selected_created_by_role': created_by_role,
+        'search_query': search,
+        'category': category,
+    }
+    return render(request, 'admin_panel/all_tickets.html', context)
 
 
 @login_required
