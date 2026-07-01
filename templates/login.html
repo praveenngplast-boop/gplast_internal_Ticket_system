@@ -1,65 +1,1284 @@
 {% extends 'base.html' %}
 {% block title %}GPLAST Portal Login{% endblock %}
 
+{% load static %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: var(--bg-primary) !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+    }
+
+    /* Override any base template margins */
+    .container, .container-fluid {
+        padding: 0;
+        margin: 0;
+        max-width: 100%;
+    }
+
+    .row {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+
+    /* ============================================
+       Login Wrapper - Full Screen
+    ============================================ */
+    .login-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+        background: var(--bg-primary);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        transition: background var(--transition-speed) ease;
+    }
+
+    /* ============================================
+       Login Card - Perfect Fit
+    ============================================ */
+    .login-card {
+        background: var(--bg-secondary);
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        width: 100%;
+        max-width: 420px;
+        animation: slideUp 0.6s ease;
+        overflow: hidden;
+        margin: 0 auto;
+        border: 1px solid var(--border-color);
+        transition: all var(--transition-speed) ease;
+        position: relative;
+    }
+
+    .theme-toggle .sun-icon {
+        display: none;
+    }
+    .theme-toggle .moon-icon {
+        display: block;
+    }
+
+    [data-theme="light"] .theme-toggle .sun-icon {
+        display: block;
+    }
+    [data-theme="light"] .theme-toggle .moon-icon {
+        display: none;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* ============================================
+       Card Header - Same as Navbar Theme
+    ============================================ */
+    .login-header {
+        background: var(--navbar-gradient);
+        padding: 2.5rem 2rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border-bottom: 3px solid var(--accent);
+        transition: background var(--transition-speed) ease;
+    }
+
+    .login-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -30%;
+        width: 200px;
+        height: 200px;
+        background: rgba(233, 69, 96, 0.05);
+        border-radius: 50%;
+        animation: shimmer 8s ease-in-out infinite;
+        transition: background var(--transition-speed) ease;
+    }
+
+    [data-theme="light"] .login-header::before {
+        background: rgba(233, 69, 96, 0.03);
+    }
+
+    @keyframes shimmer {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(-30px, 20px) scale(1.2); }
+    }
+
+    .logo-container {
+        position: relative;
+        z-index: 1;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Login Logo - Same as Navbar */
+    .login-logo {
+        height: 45px;
+        width: auto;
+        object-fit: contain;
+        transition: all 0.3s ease;
+        animation: pulse 2s ease-in-out infinite;
+        filter: drop-shadow(0 4px 20px rgba(233, 69, 96, 0.3));
+        display: block;
+        margin: 0 auto;
+    }
+
+    .login-logo:hover {
+        transform: scale(1.05) rotate(-3deg);
+        filter: drop-shadow(0 8px 30px rgba(233, 69, 96, 0.5));
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+    }
+
+    /* Fallback text if logo doesn't load */
+    .logo-fallback-text {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--header-text);
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        letter-spacing: 2px;
+        position: relative;
+        z-index: 1;
+        transition: color var(--transition-speed) ease;
+    }
+
+    .logo-fallback-text .highlight {
+        color: var(--accent);
+    }
+
+    .login-header h4 {
+        color: var(--header-text);
+        position: relative;
+        z-index: 1;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        transition: color var(--transition-speed) ease;
+    }
+
+    .login-header p {
+        color: var(--header-subtext) !important;
+        position: relative;
+        z-index: 1;
+        font-weight: 300;
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        transition: color var(--transition-speed) ease;
+    }
+
+    /* Decorative bottom line - Accent color */
+    .login-header .header-line {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+
+    /* ============================================
+       Card Body
+    ============================================ */
+    .login-body {
+        padding: 2rem;
+        background: var(--bg-secondary);
+        transition: background var(--transition-speed) ease;
+    }
+
+    /* ============================================
+       FIX: Password Toggle - Proper Working
+       ROOT CAUSE OF BUG: password-wrapper had
+       width:100% inside a flex .input-group that
+       already contains the key icon box. That made
+       it overflow past the card edge, and because
+       .login-card has overflow:hidden, the toggle
+       button (absolute, anchored to this wrapper)
+       ended up clipped / unclickable.
+       FIX: use flex:1 + min-width:0 so the wrapper
+       correctly shares space with the icon box.
+    ============================================ */
+    .password-wrapper {
+        position: relative;
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        align-items: stretch;
+    }
+
+    .password-wrapper .form-control {
+        padding-right: 1rem !important;
+        border-radius: 0 10px 10px 0;
+        border-left: none;
+        width: 100%;
+        height: 48px;
+    }
+
+    .login-loading-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(12, 14, 22, 0.92);
+        backdrop-filter: blur(6px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.25s ease, visibility 0.25s ease;
+        z-index: 30;
+    }
+
+    .login-loading-overlay.show {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .login-loading-card {
+        text-align: center;
+        padding: 2rem 2.2rem;
+        border-radius: 22px;
+        background: rgba(21, 24, 35, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+        max-width: 320px;
+        width: 100%;
+    }
+
+    .login-loading-card .login-ring-spinner {
+        width: 3.4rem;
+        height: 3.4rem;
+        border-radius: 50%;
+        position: relative;
+        margin: 0 auto;
+        background: conic-gradient(from 90deg at 50% 50%, rgba(233, 69, 96, 0.95) 0%, rgba(233, 69, 96, 0.3) 40%, rgba(255, 255, 255, 0.05) 90%);
+        animation: rotate-ring 1.1s linear infinite;
+        box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.15);
+    }
+
+    .login-loading-card .login-ring-spinner::before {
+        content: '';
+        position: absolute;
+        inset: 0.55rem;
+        border-radius: 50%;
+        background: rgba(12, 14, 22, 0.94);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    @keyframes rotate-ring {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .login-loading-card .loading-text {
+        margin-top: 1rem;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+    }
+
+    .login-loading-card .loading-subtext {
+        margin-top: 0.4rem;
+        color: rgba(255, 255, 255, 0.74);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    /* Fix for input group with password wrapper */
+    .input-group .password-wrapper .form-control {
+        border-left: none;
+        border-radius: 0 10px 10px 0;
+    }
+
+    .input-group .password-wrapper .form-control:focus {
+        border-color: var(--accent);
+    }
+
+    /* ============================================
+       Form Controls - Dark Theme
+    ============================================ */
+    .form-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        transition: color var(--transition-speed) ease;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--border-color);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: var(--input-bg);
+        height: 48px;
+        font-size: 0.95rem;
+        color: var(--text-primary) !important;
+        -webkit-text-fill-color: var(--text-primary) !important;
+        caret-color: var(--text-primary) !important;
+        transition: all var(--transition-speed) ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px var(--input-focus);
+        background: var(--input-hover);
+        color: var(--text-primary) !important;
+        -webkit-text-fill-color: var(--text-primary) !important;
+    }
+
+    .form-control::placeholder {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        -webkit-text-fill-color: var(--text-muted) !important;
+        opacity: 1 !important;
+    }
+
+    .form-control:hover {
+        border-color: rgba(233, 69, 96, 0.3);
+        background: var(--input-hover);
+    }
+
+    .input-group-text {
+        background: var(--input-bg);
+        border: 2px solid var(--border-color);
+        border-right: none;
+        border-radius: 10px 0 0 10px;
+        color: var(--accent);
+        height: 48px;
+        min-width: 45px;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all var(--transition-speed) ease;
+        transition: all 0.3s ease;
+    }
+
+    .input-group {
+        position: relative;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: stretch;
+    }
+
+    .input-group:focus-within .input-group-text {
+        border-color: var(--accent);
+        background: var(--input-hover);
+        color: var(--accent-light);
+    }
+
+    /* ============================================
+       Light Mode Input Fixes
+    ============================================ */
+    :root:not([data-theme="dark"]) .form-control {
+        background-color: #f7fafc !important;
+        border: 2px solid #e2e8f0 !important;
+        color: #2d3748 !important;
+        -webkit-text-fill-color: #2d3748 !important;
+        caret-color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-control:focus {
+        background-color: #edf2f7 !important;
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2) !important;
+        color: #2d3748 !important;
+        -webkit-text-fill-color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-control::placeholder {
+        color: #718096 !important;
+        -webkit-text-fill-color: #718096 !important;
+    }
+
+    :root:not([data-theme="dark"]) .input-group-text {
+        background: #f7fafc !important;
+        border-color: #e2e8f0 !important;
+        color: #667eea !important;
+    }
+
+    /* ============================================
+       Autofill Fixes
+    ============================================ */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-text-fill-color: var(--text-primary, #ffffff) !important;
+        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg, #2d2d2d) inset !important;
+        background-color: var(--input-bg, #2d2d2d) !important;
+        color: var(--text-primary, #ffffff) !important;
+        transition: background-color 5000s ease-in-out 0s;
+        caret-color: var(--text-primary, #ffffff) !important;
+        border-color: var(--border-color, #495057) !important;
+    }
+
+    input:-webkit-autofill:focus {
+        border-color: var(--accent, #e94560) !important;
+        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg, #2d2d2d) inset, 0 0 0 4px rgba(233, 69, 96, 0.15) !important;
+    }
+
+    :root:not([data-theme="dark"]) input:-webkit-autofill,
+    :root:not([data-theme="dark"]) input:-webkit-autofill:hover,
+    :root:not([data-theme="dark"]) input:-webkit-autofill:focus,
+    :root:not([data-theme="dark"]) input:-webkit-autofill:active {
+        -webkit-text-fill-color: #2d3748 !important;
+        -webkit-box-shadow: 0 0 0px 1000px #f7fafc inset !important;
+        background-color: #f7fafc !important;
+        color: #2d3748 !important;
+        border-color: #e2e8f0 !important;
+    }
+
+    :root:not([data-theme="dark"]) input:-webkit-autofill:focus {
+        border-color: #667eea !important;
+        -webkit-box-shadow: 0 0 0px 1000px #edf2f7 inset, 0 0 0 4px rgba(102, 126, 234, 0.2) !important;
+    }
+
+    /* ============================================
+       Button Styling - Same as Dashboard
+    ============================================ */
+    .btn-login {
+        background: var(--accent-gradient);
+        border: none;
+        border-radius: 50px;
+        padding: 0.85rem;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 48px;
+        width: 100%;
+        letter-spacing: 0.5px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-login::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.6s ease;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(233, 69, 96, 0.4);
+        color: white;
+    }
+
+    .btn-login:active {
+        transform: scale(0.95);
+    }
+
+    .btn-login:active::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-login i {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* ============================================
+       Alert Styling
+    ============================================ */
+    .alert {
+        border-radius: 10px;
+        border: none;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+        animation: shakeX 0.5s ease;
+    }
+
+    .alert-danger {
+        background: var(--alert-bg) !important;
+        border: 1px solid var(--alert-border) !important;
+        color: var(--alert-text) !important;
+    }
+
+    .alert-danger strong {
+        color: var(--alert-text) !important;
+    }
+
+    @keyframes shakeX {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-10px); }
+        40%, 80% { transform: translateX(10px); }
+    }
+
+    /* ============================================
+       Checkbox Styling
+    ============================================ */
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        border: 2px solid var(--checkbox-border);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-top: 2px;
+        background-color: var(--checkbox-bg);
+    }
+
+    .form-check-input:checked {
+        background-color: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px var(--input-focus);
+    }
+
+    .form-check-input:hover {
+        transform: scale(1.1);
+        border-color: var(--accent);
+    }
+
+    .form-check-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .form-check-label:hover {
+        color: var(--text-primary);
+    }
+
+    /* ============================================
+       Footer Text
+    ============================================ */
+    .login-body .text-center .small {
+        color: var(--text-muted) !important;
+        transition: color var(--transition-speed) ease;
+    }
+
+    /* ============================================
+       RESPONSIVE STYLES - FIXED
+    ============================================ */
+    
+    /* Desktop */
+    @media (min-width: 1200px) {
+        .login-card {
+            max-width: 420px;
+        }
+    }
+
+    /* Tablet */
+    @media (max-width: 991px) {
+        .login-card {
+            max-width: 400px;
+        }
+        
+        .login-header {
+            padding: 2rem 1.5rem 1.5rem;
+        }
+        
+        .login-logo {
+            height: 40px;
+        }
+        
+        .login-body {
+            padding: 1.75rem;
+        }
+
+        .form-control {
+            height: 44px;
+            font-size: 0.9rem;
+        }
+
+        .password-wrapper .form-control {
+            height: 44px;
+        }
+
+        .input-group-text {
+            height: 44px;
+            min-width: 40px;
+        }
+
+        .btn-login {
+            height: 44px;
+        }
+    }
+
+    /* Mobile Landscape */
+    @media (max-width: 767px) {
+        .login-wrapper {
+            padding: 10px;
+        }
+        
+        .login-card {
+            max-width: 100%;
+            border-radius: 16px;
+        }
+        
+        .login-header {
+            padding: 1.5rem 1.25rem 1.25rem;
+        }
+        
+        .login-logo {
+            height: 35px;
+        }
+        
+        .logo-container {
+            margin-bottom: 0.75rem;
+        }
+
+        .login-header h4 {
+            font-size: 1.1rem;
+        }
+        
+        .login-header p {
+            font-size: 0.75rem;
+        }
+        
+        .login-body {
+            padding: 1.25rem;
+        }
+        
+        .form-control {
+            height: 40px;
+            font-size: 0.85rem;
+            padding: 0.5rem 0.8rem;
+        }
+
+        .password-wrapper .form-control {
+            height: 40px;
+            padding-right: 1rem !important;
+        }
+
+        .input-group-text {
+            height: 40px;
+            min-width: 36px;
+            font-size: 0.85rem;
+        }
+        
+        .btn-login {
+            height: 40px;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+        }
+
+        .form-check-label {
+            font-size: 0.8rem;
+        }
+
+        .form-check-input {
+            width: 16px;
+            height: 16px;
+        }
+
+        .alert {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .theme-toggle {
+            width: 34px;
+            height: 34px;
+            font-size: 0.9rem;
+            top: 10px;
+            right: 10px;
+        }
+    }
+
+    /* Mobile Portrait */
+    @media (max-width: 575px) {
+        .login-wrapper {
+            padding: 8px;
+        }
+        
+        .login-card {
+            border-radius: 14px;
+        }
+        
+        .login-header {
+            padding: 1.25rem 1rem 1rem;
+        }
+        
+        .login-logo {
+            height: 30px;
+        }
+        
+        .login-header h4 {
+            font-size: 1rem;
+        }
+        
+        .login-header p {
+            font-size: 0.7rem;
+        }
+        
+        .login-body {
+            padding: 1rem;
+        }
+        
+        .form-control {
+            height: 36px;
+            font-size: 0.8rem;
+            padding: 0.4rem 0.6rem;
+            border-radius: 8px;
+        }
+
+        .password-wrapper .form-control {
+            height: 36px;
+            padding-right: 1rem !important;
+        }
+
+        .input-group-text {
+            height: 36px;
+            min-width: 32px;
+            font-size: 0.8rem;
+            border-radius: 8px 0 0 8px;
+        }
+        
+        .input-group .password-wrapper .form-control {
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .btn-login {
+            height: 36px;
+            font-size: 0.85rem;
+            padding: 0.4rem;
+            border-radius: 25px;
+        }
+
+        .form-label {
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-check-label {
+            font-size: 0.75rem;
+        }
+
+        .form-check-input {
+            width: 14px;
+            height: 14px;
+        }
+
+        .alert {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.6rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .mb-3 {
+            margin-bottom: 0.6rem !important;
+        }
+
+        .mb-4 {
+            margin-bottom: 0.6rem !important;
+        }
+
+        .theme-toggle {
+            width: 30px;
+            height: 30px;
+            font-size: 0.8rem;
+            top: 8px;
+            right: 8px;
+        }
+
+        .login-body .text-center .small {
+            font-size: 0.65rem;
+        }
+    }
+
+    /* Very Small Phones */
+    @media (max-width: 400px) {
+        .login-wrapper {
+            padding: 5px;
+        }
+        
+        .login-card {
+            border-radius: 12px;
+        }
+
+        .login-header {
+            padding: 0.75rem 0.75rem 0.75rem;
+        }
+        
+        .login-logo {
+            height: 28px;
+        }
+        
+        .logo-container {
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header h4 {
+            font-size: 0.9rem;
+        }
+        
+        .login-header p {
+            font-size: 0.6rem;
+        }
+        
+        .login-body {
+            padding: 0.75rem;
+        }
+        
+        .form-control {
+            height: 32px;
+            font-size: 0.75rem;
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+        }
+
+        .password-wrapper .form-control {
+            height: 32px;
+            padding-right: 1rem !important;
+        }
+
+        .input-group-text {
+            height: 32px;
+            min-width: 28px;
+            font-size: 0.75rem;
+            border-radius: 6px 0 0 6px;
+        }
+        
+        .input-group .password-wrapper .form-control {
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .btn-login {
+            height: 32px;
+            font-size: 0.8rem;
+            padding: 0.3rem;
+            border-radius: 20px;
+        }
+
+        .form-label {
+            font-size: 0.7rem;
+        }
+
+        .form-check-label {
+            font-size: 0.7rem;
+        }
+
+        .form-check-input {
+            width: 12px;
+            height: 12px;
+        }
+
+        .alert {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-3 {
+            margin-bottom: 0.4rem !important;
+        }
+
+        .mb-4 {
+            margin-bottom: 0.4rem !important;
+        }
+
+        .theme-toggle {
+            width: 26px;
+            height: 26px;
+            font-size: 0.7rem;
+            top: 6px;
+            right: 6px;
+        }
+
+        .login-body .text-center .small {
+            font-size: 0.55rem;
+        }
+    }
+
+    /* Height-based adjustments for very short screens */
+    @media (max-height: 700px) {
+        .login-header {
+            padding: 1rem 1.5rem 0.75rem;
+        }
+        
+        .logo-container {
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-logo {
+            height: 32px;
+        }
+        
+        .login-header h4 {
+            font-size: 1rem;
+            margin-bottom: 0.15rem !important;
+        }
+        
+        .login-header p {
+            font-size: 0.7rem;
+        }
+        
+        .login-body {
+            padding: 1rem;
+        }
+        
+        .form-control {
+            height: 34px;
+            font-size: 0.8rem;
+            padding: 0.4rem 0.6rem;
+        }
+
+        .password-wrapper .form-control {
+            height: 34px;
+            padding-right: 1rem !important;
+        }
+
+        .input-group-text {
+            height: 34px;
+            min-width: 32px;
+            font-size: 0.8rem;
+        }
+        
+        .btn-login {
+            height: 34px;
+            font-size: 0.8rem;
+            padding: 0.3rem;
+        }
+        
+        .mb-3 {
+            margin-bottom: 0.4rem !important;
+        }
+        
+        .mb-4 {
+            margin-bottom: 0.4rem !important;
+        }
+        
+        .alert {
+            padding: 0.3rem 0.5rem;
+            font-size: 0.7rem;
+            margin-bottom: 0.5rem !important;
+        }
+    }
+
+    @media (max-height: 600px) {
+        .login-header {
+            padding: 0.5rem 1rem 0.5rem;
+        }
+        
+        .login-logo {
+            height: 28px;
+        }
+        
+        .logo-container {
+            margin-bottom: 0.25rem;
+        }
+        
+        .login-header h4 {
+            font-size: 0.8rem;
+            margin-bottom: 0 !important;
+        }
+        
+        .login-header p {
+            display: none;
+        }
+        
+        .login-body {
+            padding: 0.6rem 0.8rem;
+        }
+        
+        .form-control {
+            height: 30px;
+            font-size: 0.75rem;
+            padding: 0.3rem 0.5rem;
+        }
+
+        .password-wrapper .form-control {
+            height: 30px;
+            padding-right: 1rem !important;
+        }
+
+        .input-group-text {
+            height: 30px;
+            min-width: 28px;
+            font-size: 0.75rem;
+        }
+        
+        .btn-login {
+            height: 30px;
+            font-size: 0.75rem;
+            padding: 0.25rem;
+        }
+        
+        .form-label {
+            font-size: 0.65rem;
+            margin-bottom: 0.1rem !important;
+        }
+        
+        .mb-3 {
+            margin-bottom: 0.25rem !important;
+        }
+        
+        .mb-4 {
+            margin-bottom: 0.25rem !important;
+        }
+        
+        .form-check-label {
+            font-size: 0.65rem;
+        }
+        
+        .form-check-input {
+            width: 12px;
+            height: 12px;
+        }
+        
+        .alert {
+            padding: 0.2rem 0.4rem;
+            font-size: 0.65rem;
+            margin-bottom: 0.25rem !important;
+        }
+    }
+
+    /* ============================================
+       Utility Classes
+    ============================================ */
+    .text-secondary {
+        color: var(--text-secondary) !important;
+    }
+
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    .fw-medium {
+        font-weight: 600 !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
-    <div class="col-md-6 col-lg-4">
-        <div class="card panel-card shadow-lg border-0 overflow-hidden">
-            <!-- Header Section -->
-            <div class="p-4 text-center text-white" style="background: var(--primary-gradient);">
-                <i class="fa-solid fa-lock-open fa-3x mb-3 animate-bounce"></i>
-                <h4 class="fw-bold mb-0">System Login</h4>
-                <p class="small text-white-50 mb-0">GPLAST Support Ticket System</p>
+<div class="login-wrapper">
+    <div class="login-card">
+        <!-- ==========================================
+             HEADER with Logo - Same as Navbar Theme
+             ========================================== -->
+        <div class="login-header">
+            <div class="logo-container">
+                <!-- Company Logo - Same size as navbar -->
+                <img src="{% static 'images/logo.png' %}" 
+                     alt="GPLAST Logo" 
+                     class="login-logo"
+                     onerror="this.style.display='none'; this.parentElement.innerHTML=`
+                        <div class='logo-fallback-text'>
+                            <span class='highlight'>G</span>PLAST
+                        </div>
+                     `">
             </div>
             
-            <!-- Body Section -->
-            <div class="card-body p-4">
-                {% if form.errors %}
-                    <div class="alert alert-danger rounded-3" role="alert">
-                        <i class="fa-solid fa-circle-xmark me-2"></i>
-                        Invalid username or password. Please try again.
-                    </div>
-                {% endif %}
-
-                <form method="POST" action="{% url 'login' %}" class="needs-validation" novalidate>
-                    {% csrf_token %}
-                    
-                    <!-- Username Field -->
-                    <div class="mb-3">
-                        <label for="id_username" class="form-label fw-medium text-secondary">Username</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-secondary border-end-0"><i class="fa-solid fa-user"></i></span>
-                            <input type="text" name="username" id="id_username" class="form-control border-start-0 ps-0" placeholder="Enter Username" required>
-                        </div>
-                    </div>
-
-                    <!-- Password Field -->
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <label for="id_password" class="form-label fw-medium text-secondary mb-1">Password</label>
-                        </div>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-secondary border-end-0"><i class="fa-solid fa-key"></i></span>
-                            <input type="password" name="password" id="id_password" class="form-control border-start-0 ps-0" placeholder="Enter Password" required>
-                        </div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn btn-primary-custom w-100 py-2 fs-6 rounded-pill">
-                        <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Sign In
-                    </button>
-                </form>
-            </div>
+            <h4 class="fw-bold">
+                <i class="fa-solid fa-lock-open me-2"></i>System Login
+            </h4>
+            <p class="small">GPLAST Support Ticket System</p>
             
-            <!-- Default Credentials Hint Card for testing/seeding -->
-            <div class="card-footer bg-light border-0 py-3 text-center text-muted small">
-                <p class="mb-1"><strong>Default credentials:</strong></p>
-                <div class="d-flex justify-content-center gap-3">
-                    <span>Admin: <code>admin</code> / <code>Admin@1234</code></span>
-                    <span>Emp: <code>employee</code> / <code>Emp@1234</code></span>
+            <!-- Decorative bottom line - Accent color -->
+            <div class="header-line"></div>
+        </div>
+        
+        <!-- ==========================================
+             BODY with Login Form
+             ========================================== -->
+        <div class="login-body">
+            {% if form.errors %}
+                <div class="alert alert-danger" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fa-solid fa-circle-xmark me-2 fa-lg"></i>
+                        <div>
+                            <strong>Login Failed!</strong>
+                            <span class="d-block small">Invalid username or password. Please try again.</span>
+                        </div>
+                    </div>
                 </div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'login' %}" novalidate>
+                {% csrf_token %}
+                
+                <!-- Username Field -->
+                <div class="mb-3">
+                    <label for="id_username" class="form-label">
+                        <i class="fa-regular fa-user me-1"></i>Username
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" name="username" id="id_username" 
+                               class="form-control" 
+                               placeholder="Enter your username" 
+                               required 
+                               autofocus>
+                    </div>
+                </div>
+
+                <!-- Password Field with Toggle -->
+                <div class="mb-3">
+                    <label for="id_password" class="form-label">
+                        <i class="fa-solid fa-key me-1"></i>Password
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+                        <div class="password-wrapper">
+                            <input type="password" name="password" id="id_password" 
+                                   class="form-control" 
+                                   placeholder="Enter your password" 
+                                   required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Remember Me Checkbox -->
+                <div class="mb-3 d-flex align-items-center">
+                    <input type="checkbox" class="form-check-input me-2" id="rememberMe" name="remember_me">
+                    <label for="rememberMe" class="form-check-label">
+                        <i class="fa-regular fa-circle-check me-1"></i>Remember me
+                    </label>
+                </div>
+
+                <!-- Login Button - Centered -->
+                <button type="submit" class="btn-login">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    <span>Sign In</span>
+                </button>
+            </form>
+
+            <div id="loginLoadingOverlay" class="login-loading-overlay" aria-hidden="true">
+                <div class="login-loading-card" role="status" aria-live="polite" aria-busy="true">
+                    <div class="login-ring-spinner" aria-hidden="true"></div>
+                    <p class="loading-text">Signing you in…</p>
+                    <p class="loading-subtext">Please wait while we securely connect you to your dashboard.</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-3">
+                <p class="small mb-0" style="color: var(--text-muted);">
+                    <i class="fa-regular fa-copyright me-1"></i> {% now "Y" %} GPLAST. All rights reserved.
+                </p>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ==========================================
+     JAVASCRIPT - FIXED with Proper Toggle Functionality
+     ========================================== -->
+{% block extra_js %}
+    {{ block.super }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ==========================================
+            // Auto-focus on username field
+            // ==========================================
+            const usernameField = document.getElementById('id_username');
+            if (usernameField) {
+                setTimeout(function() {
+                    usernameField.focus();
+                }, 400);
+            }
+
+            // ==========================================
+            // Enter key support for login
+            // ==========================================
+            if (loginPasswordInput) {
+                loginPasswordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        const form = this.closest('form');
+                        if (form) {
+                            form.submit();
+                        }
+                    }
+                });
+            }
+
+            // ==========================================
+            // Keyboard shortcut: Ctrl+Shift+P for login
+            // ==========================================
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.shiftKey && (e.key === 'p' || e.key === 'P')) {
+                    e.preventDefault();
+                    if (loginToggleBtn) {
+                        loginToggleBtn.click();
+                    }
+                }
+            });
+
+            // ==========================================
+            // Smooth logo animation on load
+            // ==========================================
+            const logo = document.querySelector('.login-logo');
+            if (logo) {
+                logo.addEventListener('load', function() {
+                    this.style.opacity = '0';
+                    setTimeout(() => {
+                        this.style.transition = 'opacity 0.5s ease';
+                        this.style.opacity = '1';
+                    }, 100);
+                });
+            }
+
+            const loginForm = document.querySelector('.login-body form');
+            const loginLoadingOverlay = document.getElementById('loginLoadingOverlay');
+            const loginButton = document.querySelector('.btn-login');
+
+            function showLoginLoading() {
+                if (loginLoadingOverlay) {
+                    loginLoadingOverlay.classList.add('show');
+                }
+                if (loginButton) {
+                    loginButton.disabled = true;
+                    loginButton.innerHTML = '<span class="spinner-border spinner-border-sm text-white me-2" role="status" aria-hidden="true"></span>Signing In...';
+                }
+            }
+
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    if (!loginForm.checkValidity()) {
+                        return;
+                    }
+                    showLoginLoading();
+                });
+            }
+
+            console.log('Login page loaded successfully with password toggle.');
+        });
+    </script>
+{% endblock %}
 {% endblock %}

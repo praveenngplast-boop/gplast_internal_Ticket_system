@@ -1,168 +1,896 @@
 {% extends 'base.html' %}
 {% block title %}Employee Dashboard - GPLAST{% endblock %}
 
+{% block extra_head %}
+<style>
+    /* ============================================
+       Dashboard Container Animation
+    ============================================ */
+    .dashboard-container {
+        animation-name: fadeInUp;
+        animation-duration: 0.6s;
+        animation-timing-function: ease;
+    }
+
+    /* ============================================
+       Header Styles
+    ============================================ */
+    .text-primary {
+        color: var(--accent) !important;
+    }
+
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    .text-success {
+        color: var(--status-open) !important;
+    }
+
+    .text-danger {
+        color: var(--status-critical) !important;
+    }
+
+    .text-secondary {
+        color: var(--text-secondary) !important;
+    }
+
+    .btn-primary-custom {
+        background: var(--accent-gradient) !important;
+        border: none !important;
+        color: white !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50px !important;
+        padding: 0.5rem 1.5rem;
+        font-size: clamp(0.8rem, 1vw, 0.9rem);
+        font-weight: 500;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary-custom::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.6s ease;
+    }
+
+    .btn-primary-custom:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 6px 30px rgba(233, 69, 96, 0.4);
+        color: white !important;
+    }
+
+    .btn-primary-custom:active {
+        transform: scale(0.95);
+    }
+
+    .btn-primary-custom i {
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-custom:hover i {
+        transform: translateX(3px);
+    }
+
+    .btn-outline-primary {
+        color: var(--accent) !important;
+        border: 2px solid var(--accent) !important;
+        border-radius: 50px !important;
+        padding: 0.25rem 0.8rem;
+        font-size: 0.75rem;
+        transition: all 0.3s ease;
+        background: transparent !important;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--accent-gradient) !important;
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
+        border-color: transparent !important;
+    }
+
+    /* ============================================
+       KPI Cards - Animated
+    ============================================ */
+    .kpi-card {
+        background: var(--bg-card) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color) !important;
+        border-radius: 16px !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        animation: cardSlideUp 0.5s ease;
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--accent-gradient);
+        opacity: 0;
+        transition: all 0.4s ease;
+    }
+
+    .kpi-card:hover::before {
+        opacity: 1;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 8px 40px rgba(233, 69, 96, 0.1);
+        border-color: rgba(233, 69, 96, 0.25) !important;
+    }
+
+    .kpi-card:nth-child(1) { animation-delay: 0.05s; }
+    .kpi-card:nth-child(2) { animation-delay: 0.1s; }
+    .kpi-card:nth-child(3) { animation-delay: 0.15s; }
+    .kpi-card:nth-child(4) { animation-delay: 0.2s; }
+    .kpi-card:nth-child(5) { animation-delay: 0.25s; }
+    .kpi-card:nth-child(6) { animation-delay: 0.3s; }
+    .kpi-card:nth-child(7) { animation-delay: 0.35s; }
+
+    @keyframes cardSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .kpi-value {
+        font-size: clamp(1.5rem, 2.5vw, 2rem);
+        font-weight: 700;
+        line-height: 1.2;
+        transition: all 0.3s ease;
+    }
+
+    .kpi-card:hover .kpi-value {
+        transform: scale(1.05);
+    }
+
+    .kpi-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+
+    /* KPI Color Variants */
+    .kpi-open .kpi-value { color: var(--status-open) !important; }
+    .kpi-assigned .kpi-value { color: var(--status-assigned) !important; }
+    .kpi-hold .kpi-value { color: var(--status-hold) !important; }
+    .kpi-escalated .kpi-value { color: var(--status-escalated) !important; }
+    .kpi-closed .kpi-value { color: var(--status-closed) !important; }
+    .kpi-critical .kpi-value { color: var(--status-critical) !important; }
+
+    .kpi-critical {
+        border-color: rgba(252, 129, 129, 0.2) !important;
+        animation: criticalPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes criticalPulse {
+        0%, 100% { border-color: rgba(252, 129, 129, 0.2); }
+        50% { border-color: rgba(252, 129, 129, 0.4); }
+    }
+
+    .kpi-critical .kpi-value {
+        animation: criticalNumber 2s ease-in-out infinite;
+    }
+
+    @keyframes criticalNumber {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    /* ============================================
+       Panel Card Styles
+    ============================================ */
+    .panel-card {
+        background: var(--bg-card) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color) !important;
+        box-shadow: 0 8px 32px var(--shadow-color) !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px !important;
+        overflow: hidden;
+        animation: cardFadeIn 0.6s ease;
+    }
+
+    .panel-card:nth-child(1) { animation-delay: 0.1s; }
+    .panel-card:nth-child(2) { animation-delay: 0.15s; }
+
+    @keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .panel-card:hover {
+        box-shadow: 0 12px 48px rgba(233, 69, 96, 0.1) !important;
+        transform: translateY(-4px);
+        border-color: rgba(233, 69, 96, 0.25) !important;
+    }
+
+    .glass-header {
+        background: rgba(233, 69, 96, 0.05) !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        backdrop-filter: blur(10px);
+        padding: 0.75rem 1.25rem;
+    }
+
+    .glass-header h5 {
+        color: var(--accent-light) !important;
+        font-weight: 700 !important;
+    }
+
+    /* ============================================
+       Table Styles - Dark Theme
+    ============================================ */
+    .table {
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }
+
+    .table > :not(caption) > * > * {
+        background: transparent !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-light) !important;
+    }
+
+    .table-hover-zoom tbody tr {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        background: transparent !important;
+    }
+
+    .table-hover-zoom tbody tr:hover {
+        transform: scale(1.02) translateY(-2px);
+        background: rgba(233, 69, 96, 0.05) !important;
+        box-shadow: 0 4px 25px rgba(233, 69, 96, 0.08);
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 0.6rem 0.4rem;
+        font-size: 0.8rem;
+        border-color: var(--border-light) !important;
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }
+
+    .table th {
+        padding: 0.6rem 0.4rem;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        border-bottom: 2px solid rgba(233, 69, 96, 0.2) !important;
+        white-space: nowrap;
+        color: var(--text-secondary) !important;
+        background: transparent !important;
+        border-top: none !important;
+    }
+
+    .table-hover > tbody > tr:hover {
+        background: rgba(233, 69, 96, 0.05) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .table-light {
+        background: transparent !important;
+    }
+
+    .table-light > th {
+        background: transparent !important;
+        color: var(--text-secondary) !important;
+    }
+
+    /* ============================================
+       Badge Styles
+    ============================================ */
+    .badge-custom {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .badge-custom:hover {
+        transform: scale(1.05);
+    }
+
+    .badge-status-open {
+        background: var(--status-open);
+        color: white;
+    }
+
+    .badge-status-assigned {
+        background: var(--status-assigned);
+        color: white;
+    }
+
+    .badge-status-hold {
+        background: var(--status-hold);
+        color: white;
+    }
+
+    .badge-status-escalated {
+        background: var(--status-escalated);
+        color: white;
+    }
+
+    .badge-status-closed {
+        background: var(--status-closed);
+        color: white;
+    }
+
+    /* ============================================
+       Contact Card - Theme
+    ============================================ */
+    .contact-card {
+        background: var(--accent-gradient) !important;
+        border: none !important;
+        border-radius: 16px !important;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .contact-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -30%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        animation: shimmerFloat 8s ease-in-out infinite;
+    }
+
+    @keyframes shimmerFloat {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(-30px, 20px) scale(1.2); }
+    }
+
+    .contact-card .card-body {
+        position: relative;
+        z-index: 1;
+    }
+
+    .contact-card hr {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    .contact-card a {
+        color: white !important;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .contact-card a:hover {
+        text-decoration: underline;
+        opacity: 0.8;
+    }
+
+    /* ============================================
+       View Button - Compact
+    ============================================ */
+    .btn-view {
+        padding: 0.2rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: var(--accent-gradient);
+        color: white;
+        border: none;
+        white-space: nowrap;
+        display: inline-block;
+        text-decoration: none;
+    }
+
+    .btn-view:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        color: white;
+    }
+
+    .btn-view:active {
+        transform: scale(0.95);
+    }
+
+    .btn-view i {
+        font-size: 0.65rem;
+        margin-right: 0.2rem;
+    }
+
+    /* ============================================
+       Responsive Styles
+    ============================================ */
+    @media (max-width: 992px) {
+        .col-lg-8,
+        .col-lg-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .kpi-value {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .kpi-value {
+            font-size: 1.3rem;
+        }
+
+        .kpi-label {
+            font-size: 0.6rem;
+        }
+
+        .kpi-card {
+            padding: 0.75rem !important;
+        }
+
+        .col-6.col-md-3.col-lg-2 {
+            flex: 0 0 33.333%;
+            max-width: 33.333%;
+        }
+
+        .btn-primary-custom {
+            font-size: 0.8rem;
+            padding: 0.4rem 1rem;
+        }
+
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .d-flex.justify-content-between .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .glass-header {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .glass-header .btn {
+            width: 100%;
+        }
+
+        .table-responsive {
+            font-size: 0.8rem;
+        }
+
+        .table td, .table th {
+            padding: 0.4rem 0.3rem;
+        }
+
+        .contact-card .card-body {
+            padding: 1.25rem !important;
+        }
+
+        .contact-card h4 {
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .col-6.col-md-3.col-lg-2 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+
+        .kpi-value {
+            font-size: 1.1rem;
+        }
+
+        .kpi-label {
+            font-size: 0.55rem;
+        }
+
+        .kpi-card {
+            padding: 0.5rem !important;
+        }
+
+        h2.fw-bold {
+            font-size: 1.2rem !important;
+        }
+
+        .btn-primary-custom {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.8rem;
+        }
+
+        .panel-card {
+            margin-bottom: 0.75rem;
+        }
+
+        .table {
+            font-size: 0.7rem;
+        }
+
+        .badge-custom {
+            font-size: 0.5rem;
+            padding: 0.15rem 0.4rem;
+        }
+
+        .btn-view {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.6rem;
+        }
+
+        .btn-view i {
+            display: none;
+        }
+
+        .contact-card h4 {
+            font-size: 1rem;
+        }
+
+        .contact-card .fs-5 {
+            font-size: 0.9rem !important;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .col-6.col-md-3.col-lg-2 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+
+        .kpi-value {
+            font-size: 1rem;
+        }
+
+        .kpi-label {
+            font-size: 0.5rem;
+        }
+
+        .kpi-card {
+            padding: 0.4rem !important;
+        }
+    }
+
+    /* ============================================
+       Scrollbar Styling
+    ============================================ */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--accent-gradient);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-light);
+    }
+
+    /* ============================================
+       Text Selection
+    ============================================ */
+    ::selection {
+        background: var(--accent);
+        color: white;
+    }
+
+    ::-moz-selection {
+        background: var(--accent);
+        color: white;
+    }
+
+    /* ============================================
+       Empty State
+    ============================================ */
+    .empty-state i {
+        color: var(--accent);
+        opacity: 0.25;
+    }
+
+    .empty-state .text-muted {
+        color: var(--text-muted) !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center">
-        <div>
-            <h2 class="fw-bold text-primary mb-1">Welcome, {{ user.username|upper }}</h2>
-            <p class="text-muted mb-0">Manage and monitor your IT & ERP support requests</p>
-        </div>
-        <a href="{% url 'create_ticket' %}" class="btn btn-primary-custom">
-            <i class="fa-solid fa-circle-plus me-2"></i>New Support Ticket
-        </a>
-    </div>
-</div>
-
-<!-- KPI Cards Section -->
-<div class="row g-3 mb-4">
-    <!-- Total Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card p-3 h-100">
-            <div class="kpi-value text-secondary">{{ kpis.total }}</div>
-            <div class="kpi-label">Total Tickets</div>
-        </div>
-    </div>
-    <!-- Open Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card kpi-open p-3 h-100">
-            <div class="kpi-value text-primary">{{ kpis.open }}</div>
-            <div class="kpi-label">Open</div>
-        </div>
-    </div>
-    <!-- Assigned Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card kpi-assigned p-3 h-100">
-            <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
-            <div class="kpi-label">Assigned</div>
-        </div>
-    </div>
-    <!-- Hold Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card kpi-hold p-3 h-100">
-            <div class="kpi-value" style="color: #b78300;">{{ kpis.hold }}</div>
-            <div class="kpi-label">Hold</div>
-        </div>
-    </div>
-    <!-- Escalated Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card kpi-escalated p-3 h-100">
-            <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
-            <div class="kpi-label">Escalated</div>
-        </div>
-    </div>
-    <!-- Closed Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card kpi-closed p-3 h-100">
-            <div class="kpi-value text-success">{{ kpis.closed }}</div>
-            <div class="kpi-label">Closed</div>
-        </div>
-    </div>
-    <!-- Critical Priority Tickets -->
-    <div class="col-12 col-md-12 col-lg-12 mt-3">
-        <div class="card kpi-card kpi-critical p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="kpi-value text-danger">{{ kpis.critical }}</div>
-                    <div class="kpi-label">Critical Priority Tickets</div>
-                </div>
-                <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50"></i>
+<div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="row mb-4 animate__animated animate__fadeInDown">
+        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--accent-light);">
+                    <i class="fa-solid fa-gauge-high me-2" style="color: var(--accent);"></i>
+                    Welcome, {{ user.username|upper }}
+                </h2>
+                <p class="mb-0" style="font-size: clamp(0.75rem, 1.5vw, 0.9rem); color: var(--text-secondary);">
+                    <i class="fa-regular fa-clock me-1"></i>
+                    Manage and monitor your IT & ERP support requests
+                    <span class="badge rounded-pill ms-2 px-2 py-1" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); background: rgba(233, 69, 96, 0.2); color: var(--accent-light); border: 1px solid rgba(233, 69, 96, 0.2);">
+                        <i class="fa-regular fa-circle-check me-1"></i>
+                        Active
+                    </span>
+                </p>
             </div>
+            <a href="{% url 'create_ticket' %}" class="btn btn-primary-custom">
+                <i class="fa-solid fa-circle-plus me-2"></i>New Support Ticket
+            </a>
         </div>
     </div>
-</div>
 
-<div class="row g-4">
-    <!-- Latest Tickets Table -->
-    <div class="col-lg-8">
-        <div class="card panel-card">
-            <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-clock-rotate-left me-2"></i>Latest Tickets</h5>
-                <a href="{% url 'my_tickets' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">View All</a>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover table-hover-zoom align-middle mb-0">
-                        <thead class="table-light text-secondary">
-                            <tr>
-                                <th class="ps-4">Ticket Number</th>
-                                <th>Created Date</th>
-                                <th>Subject</th>
-                                <th>Status</th>
-                                <th class="pe-4 text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for ticket in latest_tickets %}
-                                <tr>
-                                    <td class="ps-4 fw-bold text-dark">{{ ticket.ticket_number }}</td>
-                                    <td class="text-secondary">{{ ticket.created_at|date:"d-b-Y h:i A" }}</td>
-                                    <td class="fw-medium">{{ ticket.subject }}</td>
-                                    <td>
-                                        <span class="badge-custom badge-status-{{ ticket.status|lower }}">
-                                            {{ ticket.status }}
-                                        </span>
-                                    </td>
-                                    <td class="pe-4 text-center">
-                                        <a href="{% url 'ticket_detail' ticket.id %}" class="btn btn-sm btn-light rounded-pill border px-3">
-                                            <i class="fa-solid fa-eye me-1"></i>View
-                                        </a>
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">
-                                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25"></i>
-                                        No tickets found. Click "New Support Ticket" to raise one.
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+    <!-- KPI Cards Section -->
+    <div class="row g-3 mb-4">
+        <!-- Total Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card p-3 h-100">
+                <div class="kpi-value text-secondary">{{ kpis.total }}</div>
+                <div class="kpi-label">
+                    <i class="fa-regular fa-circle-check me-1" style="color: var(--accent);"></i>
+                    Total Tickets
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Contact Info Support Card -->
-    <div class="col-lg-4">
-        <div class="card panel-card border-0 text-white" style="background: var(--primary-gradient);">
-            <div class="card-body p-4 text-center">
-                <i class="fa-solid fa-headset fa-3x mb-3 text-white-50"></i>
-                <h4 class="fw-bold mb-1">Need Immediate Help?</h4>
-                <p class="small text-white-50 mb-4">Feel free to contact our internal IT support helpdesk directly</p>
-                
-                <hr class="border-white-50 my-3">
-                
-                {% if contact %}
-                    <div class="text-start">
-                        <p class="mb-2 d-flex align-items-center">
-                            <i class="fa-solid fa-user-tie me-3 text-white-50"></i>
-                            <span>
-                                <span class="d-block small text-white-50">Assigned IT Executive</span>
-                                <strong class="fs-5">{{ contact.admin_name }}</strong>
-                            </span>
-                        </p>
-                        <p class="mb-2 d-flex align-items-center">
-                            <i class="fa-solid fa-phone me-3 text-white-50"></i>
-                            <span>
-                                <span class="d-block small text-white-50">Phone Number</span>
-                                <strong class="fs-5">{{ contact.admin_phone }}</strong>
-                            </span>
-                        </p>
-                        <p class="mb-0 d-flex align-items-center">
-                            <i class="fa-solid fa-envelope me-3 text-white-50"></i>
-                            <span>
-                                <span class="d-block small text-white-50">Email Address</span>
-                                <a href="mailto:{{ contact.admin_email }}" class="text-white fw-bold">{{ contact.admin_email }}</a>
-                            </span>
-                        </p>
+        <!-- Open Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-open p-3 h-100">
+                <div class="kpi-value text-primary">{{ kpis.open }}</div>
+                <div class="kpi-label">
+                    <i class="fa-regular fa-circle me-1" style="color: var(--status-open);"></i>
+                    Open
+                </div>
+            </div>
+        </div>
+        <!-- Assigned Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-assigned p-3 h-100">
+                <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-user-check me-1" style="color: var(--status-assigned);"></i>
+                    Assigned
+                </div>
+            </div>
+        </div>
+        <!-- Hold Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-hold p-3 h-100">
+                <div class="kpi-value" style="color: var(--status-hold);">{{ kpis.hold }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-pause me-1" style="color: var(--status-hold);"></i>
+                    Hold
+                </div>
+            </div>
+        </div>
+        <!-- Escalated Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-escalated p-3 h-100">
+                <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-cloud-arrow-up me-1" style="color: var(--status-escalated);"></i>
+                    Escalated
+                </div>
+            </div>
+        </div>
+        <!-- Closed Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-closed p-3 h-100">
+                <div class="kpi-value text-success">{{ kpis.closed }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-circle-check me-1" style="color: var(--status-closed);"></i>
+                    Closed
+                </div>
+            </div>
+        </div>
+        <!-- Critical Priority Tickets -->
+        <div class="col-12 mt-3">
+            <div class="card kpi-card kpi-critical p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="kpi-value text-danger">{{ kpis.critical }}</div>
+                        <div class="kpi-label">
+                            <i class="fa-solid fa-triangle-exclamation me-1" style="color: var(--status-critical);"></i>
+                            Critical Priority Tickets
+                        </div>
                     </div>
-                {% else %}
-                    <p class="mb-0 text-white-50">IT support details not configured yet.</p>
-                {% endif %}
+                    <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50" style="animation: pulseIcon 2s ease-in-out infinite;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Latest Tickets & Contact Section -->
+    <div class="row g-4">
+        <!-- Latest Tickets Table -->
+        <div class="col-lg-8">
+            <div class="card panel-card">
+                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="fw-bold mb-0" style="color: var(--accent-light);">
+                        <i class="fa-solid fa-clock-rotate-left me-2" style="color: var(--accent);"></i>Latest Tickets
+                    </h5>
+                    <a href="{% url 'my_tickets' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        View All <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-hover-zoom align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-4" style="font-size: 0.65rem;">Ticket Number</th>
+                                    <th style="font-size: 0.65rem;">Created Date</th>
+                                    <th style="font-size: 0.65rem;">Subject</th>
+                                    <th style="font-size: 0.65rem;">Status</th>
+                                    <th class="pe-4 text-center" style="font-size: 0.65rem;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in latest_tickets %}
+                                    <tr>
+                                        <td class="ps-4 fw-bold" style="color: var(--accent-light); font-size: clamp(0.7rem, 0.9vw, 0.8rem);">
+                                            <i class="fa-regular fa-hashtag me-1" style="color: var(--accent); font-size: 0.5rem;"></i>
+                                            {{ ticket.ticket_number }}
+                                        </td>
+                                        <td style="color: var(--text-secondary); font-size: clamp(0.6rem, 0.8vw, 0.7rem);">
+                                            <i class="fa-regular fa-calendar me-1" style="font-size: 0.4rem;"></i>
+                                            {{ ticket.created_at|date:"d-m-Y" }}
+                                            <span class="d-block" style="color: var(--text-muted); font-size: 0.6rem;">{{ ticket.created_at|date:"h:i A" }}</span>
+                                        </td>
+                                        <td class="fw-medium text-truncate" style="max-width: 150px; font-size: clamp(0.65rem, 0.8vw, 0.75rem);" title="{{ ticket.subject }}">
+                                            <i class="fa-regular fa-message me-1" style="color: var(--accent); font-size: 0.4rem;"></i>
+                                            {{ ticket.subject }}
+                                        </td>
+                                        <td>
+                                            <span class="badge-custom badge-status-{{ ticket.status|lower }}">
+                                                <i class="fa-solid fa-circle me-1" style="font-size: 0.3rem;"></i>
+                                                {{ ticket.status }}
+                                            </span>
+                                        </td>
+                                        <td class="pe-4 text-center">
+                                            <a href="{% url 'ticket_detail' ticket.id %}" class="btn-view">
+                                                <i class="fa-solid fa-eye"></i>View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <div class="empty-state">
+                                                <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--accent);"></i>
+                                                <p style="color: var(--text-muted);">No tickets found. Click "New Support Ticket" to raise one.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Info Support Card -->
+        <div class="col-lg-4">
+            <div class="card panel-card border-0 text-white contact-card">
+                <div class="card-body p-4 text-center">
+                    <i class="fa-solid fa-headset fa-3x mb-3 text-white-50"></i>
+                    <h4 class="fw-bold mb-1">Need Immediate Help?</h4>
+                    <p class="small text-white-50 mb-4">Feel free to contact our internal IT support helpdesk directly</p>
+                    
+                    <hr class="my-3">
+                    
+                    {% if contact %}
+                        <div class="text-start">
+                            <p class="mb-3 d-flex align-items-center">
+                                <i class="fa-solid fa-user-tie me-3 text-white-50"></i>
+                                <span>
+                                    <span class="d-block small text-white-50">Assigned IT Executive</span>
+                                    <strong class="fs-5">{{ contact.admin_name }}</strong>
+                                </span>
+                            </p>
+                            <p class="mb-3 d-flex align-items-center">
+                                <i class="fa-solid fa-phone me-3 text-white-50"></i>
+                                <span>
+                                    <span class="d-block small text-white-50">Phone Number</span>
+                                    <strong class="fs-5">{{ contact.admin_phone }}</strong>
+                                </span>
+                            </p>
+                            <p class="mb-0 d-flex align-items-center">
+                                <i class="fa-solid fa-envelope me-3 text-white-50"></i>
+                                <span>
+                                    <span class="d-block small text-white-50">Email Address</span>
+                                    <a href="mailto:{{ contact.admin_email }}" class="fw-bold">{{ contact.admin_email }}</a>
+                                </span>
+                            </p>
+                        </div>
+                    {% else %}
+                        <p class="mb-0 text-white-50">IT support details not configured yet.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Add keyframe for icon pulse -->
+<style>
+    @keyframes pulseIcon {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 1; }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate KPI values on load
+        const kpiValues = document.querySelectorAll('.kpi-value');
+        kpiValues.forEach((value, index) => {
+            const originalText = value.textContent;
+            value.textContent = '0';
+            value.style.transition = 'all 0.5s ease';
+            
+            setTimeout(() => {
+                value.textContent = originalText;
+                value.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    value.style.transform = 'scale(1)';
+                }, 300);
+            }, 200 + (index * 80));
+        });
+
+        // Animate table rows on load
+        const rows = document.querySelectorAll('.table tbody tr');
+        rows.forEach((row, index) => {
+            if (!row.querySelector('.empty-state')) {
+                row.style.opacity = '0';
+                setTimeout(() => {
+                    row.style.transition = 'all 0.3s ease';
+                    row.style.opacity = '1';
+                    row.style.transform = 'translateX(0)';
+                }, 300 + (index * 80));
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -1,5 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
+from django.contrib.auth.models import User
 from tickets.models import Ticket, Unit, Department, AdminContact, AdminNotificationEmail
 from tickets.utils import validate_attachment
 
@@ -109,6 +111,30 @@ class AdminTicketForm(TicketForm):
             cleaned_data['admin_creation_reason'] = None
             
         return cleaned_data
+
+
+# =========================================================================
+# Settings & User Management Forms
+# =========================================================================
+
+class AdminPasswordChangeForm(PasswordChangeForm):
+    """ Form for an admin to change their own password. """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control', 'placeholder': f"Enter {field.label}"})
+
+
+class AdminSetUserPasswordForm(SetPasswordForm):
+    """ Form for an admin to set a password for another user. """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control', 'placeholder': f"Enter {field.label}"})
+
+
+class UserSelectionForm(forms.Form):
+    user = forms.ModelChoiceField(queryset=User.objects.filter(is_staff=False).order_by('username'), label="Select Employee User", widget=forms.Select(attrs={'class': 'form-select'}))
 
 
 # Settings Forms

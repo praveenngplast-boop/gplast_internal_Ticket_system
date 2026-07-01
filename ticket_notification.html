@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPLAST Ticket Notification</title>
+    <style>
+        /* Basic Reset & Font Import */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+        body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f0f4f8; font-family: 'Poppins', 'Segoe UI', Arial, sans-serif; }
+
+        /* Main Styles */
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            animation: slideDown 0.8s ease-out;
+        }
+        .header p {
+            margin: 5px 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Body Content */
+        .content {
+            padding: 30px;
+            line-height: 1.7;
+            color: #4a5568;
+            font-size: 15px;
+        }
+
+        /* Details Table */
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .details-table td {
+            padding: 12px;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 14px;
+        }
+        .details-table tr:last-child td {
+            border-bottom: none;
+        }
+        .details-table .label {
+            font-weight: 600;
+            color: #2d3748;
+            width: 130px;
+        }
+        .details-table .value {
+            color: #718096;
+        }
+        .details-table .value strong {
+            color: #2d3748;
+        }
+
+        /* Remarks Section */
+        .remarks {
+            background-color: #f7fafc;
+            border-left: 4px solid #764ba2;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        /* Call to Action Button */
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        .footer a {
+            color: #764ba2;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Ticket {{ action }}: #{{ ticket.ticket_number }}</h1>
+            <p>{{ ticket.subject }}</p>
+        </div>
+
+        <!-- Body -->
+        <div class="content">
+            <p>Hello,</p>
+            <p>This is to inform you that your Erp ticket has sucessfully raised <strong>#{{ ticket.ticket_number }}</strong>. Please find the details below.</p>
+
+            <!-- Ticket Details Table -->
+            <table class="details-table">
+                <tr>
+                    <td class="label">Status</td>
+                    <td class="value"><strong>{{ ticket.status }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="label">Priority</td>
+                    <td class="value">{{ ticket.priority }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Raised By</td>
+                    <td class="value">{{ ticket.employee_name }} ({{ ticket.employee_id }})</td>
+                </tr>
+                <tr>
+                    <td class="label">Department</td>
+                    <td class="value">{{ ticket.department.name }} ({{ ticket.unit.code }})</td>
+                </tr>
+                <tr>
+                    <td class="label">Contact Email</td>
+                    <td class="value"><a href="mailto:{{ ticket.email }}" style="color: #667eea; text-decoration: none;">{{ ticket.email }}</a></td>
+                </tr>
+                <tr>
+                    <td class="label">Mobile</td>
+                    <td class="value">{{ ticket.mobile }}</td>
+                </tr>
+            </table>
+
+            {% if remarks %}
+            <div class="remarks">
+                <strong>Remarks/Reason:</strong><br>
+                {{ remarks }}
+            </div>
+            {% endif %}
+
+            <div style="text-align: center;">
+                <a href="{{ domain }}{% url 'login' %}" class="cta-button">View Ticket in Portal</a>
+            </div>
+
+            <p style="margin-top: 30px;">Regards,<br><strong>GPLAST IT Support Team</strong></p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; {% now "Y" %} GPLAST ERP Ticketing System. All Rights Reserved.</p>
+        <p>This is an automated email. Please do not reply.</p>
+    </div>
+</body>
+</html>

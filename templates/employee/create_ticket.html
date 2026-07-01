@@ -2,153 +2,651 @@
 {% load static %}
 {% block title %}Create Support Ticket - GPLAST{% endblock %}
 
+{% block extra_head %}
+{{ block.super }}
+<style>
+    /* ============================================
+       Container Animation
+    ============================================ */
+    .create-ticket-container {
+        animation-name: fadeInUp;
+        animation-duration: 0.6s;
+        animation-timing-function: ease;
+    }
+
+    /* ============================================
+       Card Styles
+    ============================================ */
+    .panel-card {
+        background: var(--bg-card) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color) !important;
+        box-shadow: 0 8px 32px var(--shadow-color) !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px !important;
+        overflow: hidden;
+        animation: cardFadeIn 0.6s ease;
+    }
+
+    .panel-card:hover {
+        box-shadow: 0 12px 48px rgba(233, 69, 96, 0.1) !important;
+        transform: translateY(-2px);
+        border-color: rgba(233, 69, 96, 0.25) !important;
+    }
+
+    @keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .glass-header {
+        background: rgba(233, 69, 96, 0.05) !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        backdrop-filter: blur(10px);
+        padding: 0.75rem 1.25rem;
+    }
+
+    .glass-header h4 {
+        color: var(--accent-light) !important;
+        font-weight: 700 !important;
+    }
+
+    .text-primary {
+        color: var(--accent) !important;
+    }
+
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    .text-danger {
+        color: var(--accent) !important;
+    }
+
+    .text-dark {
+        color: var(--text-primary) !important;
+    }
+
+    .text-secondary {
+        color: var(--text-secondary) !important;
+    }
+
+    .card-body {
+        background: transparent !important;
+        padding: 1.5rem !important;
+    }
+
+    /* ============================================
+       Form Controls
+    ============================================ */
+    .form-label {
+        color: var(--text-secondary) !important;
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.3px;
+        margin-bottom: 0.4rem;
+    }
+
+    .form-control, .form-select {
+        background: var(--input-bg) !important;
+        border: 2px solid var(--border-color) !important;
+        color: var(--text-primary) !important;
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+        height: 42px;
+    }
+
+    .form-control:hover, .form-select:hover {
+        background: var(--input-hover) !important;
+        border-color: rgba(233, 69, 96, 0.3) !important;
+        transform: translateY(-1px);
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: var(--input-hover) !important;
+        border-color: var(--accent) !important;
+        box-shadow: 0 0 0 4px var(--input-focus) !important;
+        transform: translateY(-2px);
+    }
+
+    .form-control::placeholder {
+        color: var(--text-muted) !important;
+    }
+
+    .form-control:disabled, .form-select:disabled {
+        background: rgba(255, 255, 255, 0.02) !important;
+        border-color: rgba(255, 255, 255, 0.05) !important;
+        color: var(--text-muted) !important;
+        cursor: not-allowed;
+    }
+
+    .form-select option {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .form-text {
+        color: var(--text-muted) !important;
+        font-size: 0.75rem;
+    }
+
+    /* ============================================
+       Section Headers
+    ============================================ */
+    .section-header {
+        color: var(--accent-light) !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--border-color) !important;
+        animation: headerFade 0.5s ease;
+    }
+
+    .section-header i {
+        color: var(--accent);
+    }
+
+    @keyframes headerFade {
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* ============================================
+       Character Counter
+    ============================================ */
+    .char-counter {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-align: right;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .char-counter.text-danger {
+        color: var(--accent) !important;
+    }
+
+    .char-counter.text-success {
+        color: var(--status-open) !important;
+    }
+
+    /* ============================================
+       Button Styles
+    ============================================ */
+    .btn-primary-custom {
+        background: var(--accent-gradient) !important;
+        border: none !important;
+        color: white !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50px !important;
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary-custom::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.6s ease;
+    }
+
+    .btn-primary-custom:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 6px 30px rgba(233, 69, 96, 0.4);
+        color: white !important;
+    }
+
+    .btn-primary-custom:active {
+        transform: scale(0.95);
+    }
+
+    .btn-primary-custom i {
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-custom:hover i {
+        transform: translateX(3px);
+    }
+
+    .btn-outline-secondary {
+        color: var(--text-secondary) !important;
+        border: 2px solid var(--border-color) !important;
+        border-radius: 50px !important;
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: transparent !important;
+    }
+
+    .btn-outline-secondary:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(233, 69, 96, 0.3) !important;
+        transform: translateY(-2px);
+        color: var(--text-primary) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-outline-secondary:active {
+        transform: scale(0.95);
+    }
+
+    /* ============================================
+       Border & Divider
+    ============================================ */
+    .border-bottom {
+        border-bottom: 2px solid var(--border-color) !important;
+    }
+
+    .border-top {
+        border-top: 2px solid var(--border-color) !important;
+    }
+
+    /* ============================================
+       Responsive Styles
+    ============================================ */
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 1rem !important;
+        }
+
+        .form-control, .form-select {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.8rem;
+            height: 38px;
+            border-radius: 10px;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+        }
+
+        .btn-primary-custom, .btn-outline-secondary {
+            width: 100%;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .d-flex.justify-content-end {
+            flex-direction: column-reverse;
+            gap: 0.5rem;
+        }
+
+        .d-flex.justify-content-end .gap-3 {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .d-flex.justify-content-end .gap-3 .btn {
+            width: 100%;
+        }
+
+        .glass-header h4 {
+            font-size: 1.1rem;
+        }
+
+        .glass-header p {
+            font-size: 0.8rem;
+        }
+
+        .section-header {
+            font-size: 0.8rem;
+        }
+
+        .char-counter {
+            font-size: 0.65rem;
+        }
+
+        .row.g-3 > [class*="col-"] {
+            margin-bottom: 0.25rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 0.75rem !important;
+        }
+
+        .form-control, .form-select {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.7rem;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .form-label {
+            font-size: 0.75rem;
+        }
+
+        .btn-primary-custom, .btn-outline-secondary {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+        }
+
+        .glass-header h4 {
+            font-size: 1rem;
+        }
+
+        .glass-header p {
+            font-size: 0.7rem;
+        }
+
+        .section-header {
+            font-size: 0.7rem;
+        }
+
+        .char-counter {
+            font-size: 0.6rem;
+        }
+
+        .form-text {
+            font-size: 0.65rem;
+        }
+    }
+
+    /* ============================================
+       Dark Mode Support
+    ============================================ */
+    @media (prefers-color-scheme: dark) {
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.03) !important;
+        }
+    }
+
+    /* ============================================
+       Scrollbar Styling
+    ============================================ */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--accent-gradient);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-light);
+    }
+
+    /* ============================================
+       Text Selection
+    ============================================ */
+    ::selection {
+        background: var(--accent);
+        color: white;
+    }
+
+    ::-moz-selection {
+        background: var(--accent);
+        color: white;
+    }
+
+    /* ============================================
+       Input Group Animation
+    ============================================ */
+    .form-control:focus + .char-counter {
+        color: var(--accent) !important;
+        transition: all 0.3s ease;
+    }
+
+    /* ============================================
+       File Input Styling
+    ============================================ */
+    input[type="file"] {
+        padding: 0.5rem;
+        cursor: pointer;
+        background: var(--input-bg) !important;
+        border: 2px solid var(--border-color) !important;
+        border-radius: 12px;
+        color: var(--text-primary) !important;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    input[type="file"]:hover {
+        background: var(--input-hover) !important;
+        border-color: rgba(233, 69, 96, 0.3) !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-10">
-        <div class="card panel-card shadow-lg border-0">
-            <div class="card-header glass-header py-3">
-                <h4 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-ticket me-2"></i>Create Support Ticket</h4>
-                <p class="text-muted small mb-0">Fill in the form to report an IT or ERP system issue</p>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST" enctype="multipart/form-data" id="ticketForm" data-confirm="Are you sure you want to submit this ticket?">
-                    {% csrf_token %}
-                    
-                    <div class="row g-3">
-                        <!-- Employee Details Header -->
-                        <div class="col-12 border-bottom pb-2 mb-2">
-                            <h6 class="fw-bold text-secondary text-uppercase"><i class="fa-solid fa-user-tag me-2"></i>Employee & Unit Information</h6>
+<div class="create-ticket-container">
+    <!-- Header Section -->
+    <div class="row mb-4 animate__animated animate__fadeInDown">
+        <div class="col-12">
+            <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--accent-light);">
+                <i class="fa-solid fa-ticket me-2" style="color: var(--accent);"></i>Create Support Ticket
+            </h2>
+            <p class="mb-0" style="font-size: clamp(0.75rem, 1.5vw, 0.9rem); color: var(--text-secondary);">
+                <i class="fa-regular fa-pen-to-square me-1"></i>
+                Fill in the form to report an IT or ERP system issue
+            </p>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card panel-card shadow-lg border-0">
+                <div class="card-header glass-header py-3">
+                    <h4 class="fw-bold mb-0" style="color: var(--accent-light);">
+                        <i class="fa-solid fa-ticket me-2" style="color: var(--accent);"></i>Create Support Ticket
+                    </h4>
+                    <p class="small mb-0" style="color: var(--text-muted);">
+                        <i class="fa-regular fa-circle-info me-1"></i>
+                        Fill in the form to report an IT or ERP system issue
+                    </p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" id="ticketForm" data-confirm="Are you sure you want to submit this ticket?">
+                        {% csrf_token %}
+                        
+                        <div class="row g-3">
+                            <!-- Employee Details Header -->
+                            <div class="col-12">
+                                <h6 class="section-header">
+                                    <i class="fa-solid fa-user-tag me-2"></i>Employee & Unit Information
+                                </h6>
+                            </div>
+
+                            <!-- Unit -->
+                            <div class="col-md-6">
+                                <label for="id_unit" class="form-label fw-bold">
+                                    <i class="fa-regular fa-building me-1"></i>Unit <span class="text-danger">*</span>
+                                </label>
+                                {{ form.unit }}
+                                {% if form.unit.errors %}
+                                    <div class="text-danger small mt-1">{{ form.unit.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Department -->
+                            <div class="col-md-6">
+                                <label for="id_department" class="form-label fw-bold">
+                                    <i class="fa-regular fa-layer-group me-1"></i>Department <span class="text-danger">*</span>
+                                </label>
+                                {{ form.department }}
+                                {% if form.department.errors %}
+                                    <div class="text-danger small mt-1">{{ form.department.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Employee ID -->
+                            <div class="col-md-6">
+                                <label for="id_employee_id" class="form-label fw-bold">
+                                    <i class="fa-regular fa-id-card me-1"></i>Employee ID <span class="text-danger">*</span>
+                                </label>
+                                {{ form.employee_id }}
+                                {% if form.employee_id.errors %}
+                                    <div class="text-danger small mt-1">{{ form.employee_id.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Employee Name -->
+                            <div class="col-md-6">
+                                <label for="id_employee_name" class="form-label fw-bold">
+                                    <i class="fa-regular fa-user me-1"></i>Employee Name <span class="text-danger">*</span>
+                                </label>
+                                {{ form.employee_name }}
+                                {% if form.employee_name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.employee_name.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Mobile -->
+                            <div class="col-md-6">
+                                <label for="id_mobile" class="form-label fw-bold">
+                                    <i class="fa-solid fa-phone me-1"></i>Mobile Number <span class="text-danger">*</span>
+                                </label>
+                                {{ form.mobile }}
+                                <div class="form-text small">Enter exactly 10 digits without country code or spaces.</div>
+                                {% if form.mobile.errors %}
+                                    <div class="text-danger small mt-1">{{ form.mobile.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label for="id_email" class="form-label fw-bold">
+                                    <i class="fa-regular fa-envelope me-1"></i>Email ID <span class="text-danger">*</span>
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Issue Details Header -->
+                            <div class="col-12">
+                                <h6 class="section-header">
+                                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Issue Details
+                                </h6>
+                            </div>
+
+                            <!-- Screen Number -->
+                            <div class="col-md-6">
+                                <label for="id_screen_number" class="form-label fw-bold">
+                                    <i class="fa-regular fa-display me-1"></i>Screen Number <span class="text-danger">*</span>
+                                </label>
+                                {{ form.screen_number }}
+                                <span class="char-counter" id="screen_counter">0 characters</span>
+                                {% if form.screen_number.errors %}
+                                    <div class="text-danger small mt-1">{{ form.screen_number.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Priority -->
+                            <div class="col-md-3">
+                                <label for="id_priority" class="form-label fw-bold">
+                                    <i class="fa-solid fa-flag me-1"></i>Priority <span class="text-danger">*</span>
+                                </label>
+                                {{ form.priority }}
+                                {% if form.priority.errors %}
+                                    <div class="text-danger small mt-1">{{ form.priority.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Error Type -->
+                            <div class="col-md-3">
+                                <label for="id_error_type" class="form-label fw-bold">
+                                    <i class="fa-regular fa-bug me-1"></i>Error Type <span class="text-danger">*</span>
+                                </label>
+                                {{ form.error_type }}
+                                {% if form.error_type.errors %}
+                                    <div class="text-danger small mt-1">{{ form.error_type.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Subject -->
+                            <div class="col-12">
+                                <label for="id_subject" class="form-label fw-bold">
+                                    <i class="fa-regular fa-heading me-1"></i>Subject <span class="text-danger">*</span>
+                                </label>
+                                {{ form.subject }}
+                                <span class="char-counter" id="subject_counter">0 / 150</span>
+                                {% if form.subject.errors %}
+                                    <div class="text-danger small mt-1">{{ form.subject.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Detailed Description -->
+                            <div class="col-12">
+                                <label for="id_description" class="form-label fw-bold">
+                                    <i class="fa-regular fa-align-left me-1"></i>Detailed Description <span class="text-danger">*</span>
+                                </label>
+                                {{ form.description }}
+                                <span class="char-counter" id="desc_counter">0 characters (minimum 20)</span>
+                                {% if form.description.errors %}
+                                    <div class="text-danger small mt-1">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Attachment -->
+                            <div class="col-12">
+                                <label for="id_attachment" class="form-label fw-bold">
+                                    <i class="fa-regular fa-paperclip me-1"></i>Attachment (Optional)
+                                </label>
+                                {{ form.attachment }}
+                                <div class="form-text small">Max size: 3MB. Allowed: pdf, doc, docx, xls, xlsx, png, jpg, jpeg.</div>
+                                {% if form.attachment.errors %}
+                                    <div class="text-danger small mt-1">{{ form.attachment.errors }}</div>
+                                {% endif %}
+                            </div>
                         </div>
 
-                        <!-- Unit -->
-                        <div class="col-md-6">
-                            <label for="id_unit" class="form-label fw-bold text-dark">Unit <span class="text-danger">*</span></label>
-                            {{ form.unit }}
-                            {% if form.unit.errors %}
-                                <div class="text-danger small mt-1">{{ form.unit.errors }}</div>
-                            {% endif %}
+                        <!-- Submit & Cancel Buttons -->
+                        <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
+                            <a href="{% url 'employee_dashboard' %}" class="btn btn-outline-secondary px-4 py-2 rounded-pill fw-medium">
+                                <i class="fa-solid fa-xmark me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary-custom px-5 py-2 fw-medium">
+                                <i class="fa-solid fa-paper-plane me-2"></i>Submit Ticket
+                            </button>
                         </div>
-
-                        <!-- Department -->
-                        <div class="col-md-6">
-                            <label for="id_department" class="form-label fw-bold text-dark">Department <span class="text-danger">*</span></label>
-                            {{ form.department }}
-                            {% if form.department.errors %}
-                                <div class="text-danger small mt-1">{{ form.department.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Employee ID -->
-                        <div class="col-md-6">
-                            <label for="id_employee_id" class="form-label fw-bold text-dark">Employee ID <span class="text-danger">*</span></label>
-                            {{ form.employee_id }}
-                            {% if form.employee_id.errors %}
-                                <div class="text-danger small mt-1">{{ form.employee_id.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Employee Name -->
-                        <div class="col-md-6">
-                            <label for="id_employee_name" class="form-label fw-bold text-dark">Employee Name <span class="text-danger">*</span></label>
-                            {{ form.employee_name }}
-                            {% if form.employee_name.errors %}
-                                <div class="text-danger small mt-1">{{ form.employee_name.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Mobile -->
-                        <div class="col-md-6">
-                            <label for="id_mobile" class="form-label fw-bold text-dark">Mobile Number <span class="text-danger">*</span></label>
-                            {{ form.mobile }}
-                            <div class="form-text small">Enter exactly 10 digits without country code or spaces.</div>
-                            {% if form.mobile.errors %}
-                                <div class="text-danger small mt-1">{{ form.mobile.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Email -->
-                        <div class="col-md-6">
-                            <label for="id_email" class="form-label fw-bold text-dark">Email ID <span class="text-danger">*</span></label>
-                            {{ form.email }}
-                            {% if form.email.errors %}
-                                <div class="text-danger small mt-1">{{ form.email.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Issue Details Header -->
-                        <div class="col-12 border-bottom pb-2 mt-4 mb-2">
-                            <h6 class="fw-bold text-secondary text-uppercase"><i class="fa-solid fa-triangle-exclamation me-2"></i>Issue Details</h6>
-                        </div>
-
-                        <!-- Screen Number -->
-                        <div class="col-md-6">
-                            <label for="id_screen_number" class="form-label fw-bold text-dark">Screen Number <span class="text-danger">*</span></label>
-                            {{ form.screen_number }}
-                            <span class="char-counter" id="screen_counter">0 characters</span>
-                            {% if form.screen_number.errors %}
-                                <div class="text-danger small mt-1">{{ form.screen_number.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Priority -->
-                        <div class="col-md-3">
-                            <label for="id_priority" class="form-label fw-bold text-dark">Priority <span class="text-danger">*</span></label>
-                            {{ form.priority }}
-                            {% if form.priority.errors %}
-                                <div class="text-danger small mt-1">{{ form.priority.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Error Type -->
-                        <div class="col-md-3">
-                            <label for="id_error_type" class="form-label fw-bold text-dark">Error Type <span class="text-danger">*</span></label>
-                            {{ form.error_type }}
-                            {% if form.error_type.errors %}
-                                <div class="text-danger small mt-1">{{ form.error_type.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Subject -->
-                        <div class="col-12">
-                            <label for="id_subject" class="form-label fw-bold text-dark">Subject <span class="text-danger">*</span></label>
-                            {{ form.subject }}
-                            <span class="char-counter" id="subject_counter">0 / 150</span>
-                            {% if form.subject.errors %}
-                                <div class="text-danger small mt-1">{{ form.subject.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Detailed Description -->
-                        <div class="col-12">
-                            <label for="id_description" class="form-label fw-bold text-dark">Detailed Description <span class="text-danger">*</span></label>
-                            {{ form.description }}
-                            <span class="char-counter" id="desc_counter">0 characters (minimum 20)</span>
-                            {% if form.description.errors %}
-                                <div class="text-danger small mt-1">{{ form.description.errors }}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Attachment -->
-                        <div class="col-12">
-                            <label for="id_attachment" class="form-label fw-bold text-dark">Attachment (Optional)</label>
-                            {{ form.attachment }}
-                            <div class="form-text small">Max size: 3MB. Allowed: pdf, doc, docx, xls, xlsx, png, jpg, jpeg.</div>
-                            {% if form.attachment.errors %}
-                                <div class="text-danger small mt-1">{{ form.attachment.errors }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- Submit & Cancel Buttons -->
-                    <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
-                        <a href="{% url 'employee_dashboard' %}" class="btn btn-outline-secondary px-4 py-2 rounded-pill fw-medium">
-                            <i class="fa-solid fa-xmark me-2"></i>Cancel
-                        </a>
-                        <button type="submit" class="btn btn-primary-custom px-5 py-2 fw-medium">
-                            <i class="fa-solid fa-paper-plane me-2"></i>Submit Ticket
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -157,4 +655,52 @@
 
 {% block extra_js %}
 <script src="{% static 'js/ticket_form.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Character counters
+        const screenInput = document.getElementById('id_screen_number');
+        const subjectInput = document.getElementById('id_subject');
+        const descInput = document.getElementById('id_description');
+        
+        const screenCounter = document.getElementById('screen_counter');
+        const subjectCounter = document.getElementById('subject_counter');
+        const descCounter = document.getElementById('desc_counter');
+        
+        if (screenInput && screenCounter) {
+            screenInput.addEventListener('input', function() {
+                const count = this.value.length;
+                screenCounter.textContent = count + ' characters';
+                screenCounter.className = count > 100 ? 'char-counter text-danger' : 'char-counter';
+            });
+        }
+        
+        if (subjectInput && subjectCounter) {
+            subjectInput.addEventListener('input', function() {
+                const count = this.value.length;
+                subjectCounter.textContent = count + ' / 150';
+                subjectCounter.className = count > 130 ? 'char-counter text-danger' : 'char-counter';
+            });
+        }
+        
+        if (descInput && descCounter) {
+            descInput.addEventListener('input', function() {
+                const count = this.value.length;
+                descCounter.textContent = count + ' characters (minimum 20)';
+                descCounter.className = count < 20 ? 'char-counter text-danger' : 'char-counter text-success';
+            });
+        }
+
+        // Animate form fields on load
+        const formGroups = document.querySelectorAll('.row.g-3 > [class*="col-"]');
+        formGroups.forEach((group, index) => {
+            if (!group.querySelector('.section-header')) {
+                group.style.opacity = '0';
+                setTimeout(() => {
+                    group.style.transition = 'all 0.4s ease';
+                    group.style.opacity = '1';
+                }, 150 + (index * 30));
+            }
+        });
+    });
+</script>
 {% endblock %}

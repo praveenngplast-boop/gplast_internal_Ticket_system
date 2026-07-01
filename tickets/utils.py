@@ -1,9 +1,11 @@
 import os
 import datetime
 from django.utils import timezone
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.core.exceptions import ValidationError
 from django.conf import settings
+from django.template.loader import render_to_string
+from django.contrib.sites.shortcuts import get_current_site
 import logging
 
 logger = logging.getLogger(__name__)
@@ -52,54 +54,73 @@ def validate_attachment(file):
 # Email notifications
 def send_ticket_email(ticket, action, remarks=None):
     from tickets.models import AdminNotificationEmail  # Lazy import to avoid circular dependency
-    
-    subject = f"GPLAST Ticket {action}: {ticket.ticket_number} - {ticket.subject}"
-    remarks_section = f"\nRemarks/Reason: {remarks}" if remarks else ""
-    
-    message = f"""Hello,
 
-This is to notify you that the support ticket {ticket.ticket_number} has been {action.lower()}.
+    subject = f"ERP Ticket {action}: {ticket.ticket_number} - {ticket.subject}"
+    action_label = action if action else 'Updated'
+    recipient_name = ticket.employee_name or ticket.full_name if hasattr(ticket, 'full_name') else ticket.employee_name
 
-Details:
-- Ticket Number: {ticket.ticket_number}
-- Subject: {ticket.subject}
-- Status: {ticket.status}
-- Unit: {ticket.unit.full_name}
-- Department: {ticket.department.name}
-- Priority: {ticket.priority}
-- Raised By: {ticket.employee_name} ({ticket.employee_id})
-{remarks_section}
-
-To view details, log in to the GPLAST Ticketing System portal.
-
-Regards,
-GPLAST IT Support Team
-"""
-    # Recipients list
-    recipients = []
-    
-    # Add employee email
-    if ticket.email:
-        recipients.append(ticket.email)
-        
-    # Fetch active admin notification emails
-    admin_emails = list(AdminNotificationEmail.objects.filter(is_active=True).values_list('email', flat=True))
-    recipients.extend(admin_emails)
-    
-    # Unique recipients, filter empty
-    recipients = list(set([r for r in recipients if r]))
-    
-    if not recipients:
-        return
-        
     try:
-        send_mail(
+        domain = get_current_site(None).domain if hasattr(get_current_site(None), 'domain') else 'http://localhost:8000'
+    except Exception:
+        domain = 'http://localhost:8000'
+
+    html_message = render_to_string(
+        'emails/ticket_notification.html',
+        {
+            'ticket': ticket,
+            'action_label': action_label,
+            'recipient_name': recipient_name,
+            'remarks': remarks,
+            'domain': domain,
+        }
+    )
+
+    plain_message = (
+        f"Hello {recipient_name},\n\n"
+        f"This is to inform you that ticket {ticket.ticket_number} has been {action_label.lower()} successfully.\n\n"
+        f"Ticket Number: {ticket.ticket_number}\n"
+        f"Subject: {ticket.subject}\n"
+        f"Status: {ticket.status}\n"
+        f"Raised By: {ticket.employee_name} ({ticket.employee_id})\n"
+        f"Unit: {ticket.unit.full_name}\n"
+        f"Department: {ticket.department.name}\n"
+        f"Priority: {ticket.priority}\n"
+        f"Contact Email: {ticket.email}\n"
+        f"Mobile: {ticket.mobile}\n"
+        + (f"\nRemarks / Closing Notes: {remarks}\n" if remarks else "")
+        + "\nPlease log in to the GPLAST Ticketing System portal to view the update.\n\nRegards,\nGPLAST IT Support Team"
+    )
+
+    # Define user and admin recipients
+    user_recipient = [ticket.email] if ticket.email else []
+    admin_recipients_bcc = list(AdminNotificationEmail.objects.filter(is_active=True).values_list('email', flat=True))
+
+    # Do not send if there are no recipients at all.
+    if not user_recipient and not admin_recipients_bcc:
+        logger.warning(f"Email not sent for ticket {ticket.ticket_number}. No recipients configured or provided.")
+        return
+
+    try:
+        # Use EmailMessage to support BCC and HTML content
+        email = EmailMessage(
             subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            recipients,
-            fail_silently=False,
+            plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=user_recipient,
+            bcc=admin_recipients_bcc,
         )
-        logger.info(f"Successfully sent email notification for ticket {ticket.ticket_number} ({action}) to {recipients}")
+        email.content_subtype = 'html'
+        email.extra_headers['X-Priority'] = '3'
+        email.body = html_message
+        email.send(fail_silently=False)
+
+        log_message = f"Successfully sent email notification for ticket {ticket.ticket_number} ({action})."
+        if user_recipient:
+            log_message += f" To: {user_recipient}"
+        if admin_recipients_bcc:
+            log_message += f" Bcc: {admin_recipients_bcc}"
+
+        logger.info(log_message)
+
     except Exception as e:
         logger.error(f"Failed to send email notification for ticket {ticket.ticket_number}: {e}")

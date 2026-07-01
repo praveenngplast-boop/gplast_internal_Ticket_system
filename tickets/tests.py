@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from tickets.models import Unit, Department, Ticket, TicketHistory
 from tickets.forms import TicketForm
-from tickets.utils import generate_ticket_number
+from tickets.utils import generate_ticket_number, send_ticket_email
 
 class GPLASTTicketingTestCase(TestCase):
     def setUp(self):
@@ -161,3 +161,30 @@ class GPLASTTicketingTestCase(TestCase):
         # Count visible closed tickets
         visible_closed = [t for t in all_visible if t.status == 'Closed']
         self.assertEqual(len(visible_closed), 50)
+
+    def test_send_ticket_email_uses_html_template(self):
+        """Verify ticket emails render the HTML notification template with ticket details."""
+        ticket = Ticket.objects.create(
+            ticket_number=generate_ticket_number(),
+            unit=self.unit,
+            department=self.department,
+            employee_id="EMP01",
+            employee_name="Alice",
+            mobile="9876543210",
+            email="alice@gplast.com",
+            screen_number="SCR-02",
+            subject="Printer issue",
+            description="Printer is not working at the workstation.",
+            priority="High",
+            error_type="New",
+            created_by_user=self.employee_user
+        )
+
+        with self.settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
+            send_ticket_email(ticket, 'Closed', remarks='Issue resolved.')
+
+        from django.core import mail
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('ERP Ticket Closed', mail.outbox[0].subject)
+        self.assertIn('Alice', mail.outbox[0].body)
+        self.assertIn('Printer issue', mail.outbox[0].body)

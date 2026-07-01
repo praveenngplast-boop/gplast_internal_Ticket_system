@@ -1,81 +1,828 @@
 {% extends 'base.html' %}
 {% block title %}My Support Tickets - GPLAST{% endblock %}
 
-{% block content %}
-<div class="row mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center">
-        <div>
-            <h2 class="fw-bold text-primary mb-1"><i class="fa-solid fa-receipt me-2"></i>My Support Tickets</h2>
-            <p class="text-muted mb-0">Showing your active tickets and recently resolved cases</p>
-        </div>
-        <a href="{% url 'create_ticket' %}" class="btn btn-primary-custom">
-            <i class="fa-solid fa-circle-plus me-2"></i>Create New Ticket
-        </a>
-    </div>
-</div>
+{% block extra_head %}
+<style>
+    /* ============================================
+       Container Animation
+    ============================================ */
+    .tickets-container {
+        animation-name: fadeInUp;
+        animation-duration: 0.6s;
+        animation-timing-function: ease;
+    }
 
-<div class="row">
-    <div class="col-12">
-        <div class="card panel-card shadow-sm">
-            <div class="card-header glass-header py-3">
-                <h5 class="fw-bold mb-0 text-primary">Tickets Log</h5>
+    /* ============================================
+       Header Styles
+    ============================================ */
+    .text-primary {
+        color: var(--accent) !important;
+    }
+
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    .text-secondary {
+        color: var(--text-secondary) !important;
+    }
+
+    .text-dark {
+        color: var(--text-primary) !important;
+    }
+
+    .btn-primary-custom {
+        background: var(--accent-gradient) !important;
+        border: none !important;
+        color: white !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50px !important;
+        padding: 0.5rem 1.5rem;
+        font-size: clamp(0.8rem, 1vw, 0.9rem);
+        font-weight: 500;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary-custom::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.6s ease;
+    }
+
+    .btn-primary-custom:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 6px 30px rgba(233, 69, 96, 0.4);
+        color: white !important;
+    }
+
+    .btn-primary-custom:active {
+        transform: scale(0.95);
+    }
+
+    .btn-primary-custom i {
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-custom:hover i {
+        transform: translateX(3px);
+    }
+
+    /* ============================================
+       Panel Card Styles
+    ============================================ */
+    .panel-card {
+        background: var(--bg-card) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color) !important;
+        box-shadow: 0 8px 32px var(--shadow-color) !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px !important;
+        overflow: hidden;
+        animation: cardFadeIn 0.6s ease;
+    }
+
+    .panel-card:hover {
+        box-shadow: 0 12px 48px rgba(233, 69, 96, 0.1) !important;
+        transform: translateY(-4px);
+        border-color: rgba(233, 69, 96, 0.25) !important;
+    }
+
+    @keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .glass-header {
+        background: rgba(233, 69, 96, 0.05) !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        backdrop-filter: blur(10px);
+        padding: 0.75rem 1.25rem;
+    }
+
+    .glass-header h5 {
+        color: var(--accent-light) !important;
+        font-weight: 700 !important;
+    }
+
+    /* ============================================
+       Table Styles - Dark Theme
+    ============================================ */
+    .table {
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }
+
+    .table > :not(caption) > * > * {
+        background: transparent !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-light) !important;
+    }
+
+    .table-hover-zoom tbody tr {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        background: transparent !important;
+    }
+
+    .table-hover-zoom tbody tr:hover {
+        transform: scale(1.02) translateY(-2px);
+        background: rgba(233, 69, 96, 0.05) !important;
+        box-shadow: 0 4px 25px rgba(233, 69, 96, 0.08);
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 0.6rem 0.4rem;
+        font-size: 0.8rem;
+        border-color: var(--border-light) !important;
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }
+
+    .table th {
+        padding: 0.6rem 0.4rem;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        border-bottom: 2px solid rgba(233, 69, 96, 0.2) !important;
+        white-space: nowrap;
+        color: var(--text-secondary) !important;
+        background: transparent !important;
+        border-top: none !important;
+    }
+
+    .table-hover > tbody > tr:hover {
+        background: rgba(233, 69, 96, 0.05) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .table-light {
+        background: transparent !important;
+    }
+
+    .table-light > th {
+        background: transparent !important;
+        color: var(--text-secondary) !important;
+    }
+
+    /* ============================================
+       Badge Styles
+    ============================================ */
+    .badge-custom {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .badge-custom:hover {
+        transform: scale(1.05);
+    }
+
+    .badge-status-open {
+        background: var(--status-open);
+        color: white;
+    }
+
+    .badge-status-assigned {
+        background: var(--status-assigned);
+        color: white;
+    }
+
+    .badge-status-hold {
+        background: var(--status-hold);
+        color: white;
+    }
+
+    .badge-status-escalated {
+        background: var(--status-escalated);
+        color: white;
+    }
+
+    .badge-status-closed {
+        background: var(--status-closed);
+        color: white;
+    }
+
+    /* Priority Badges */
+    .badge-priority {
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+    }
+
+    .badge-priority:hover {
+        transform: scale(1.05);
+    }
+
+    .badge-priority-critical {
+        background: var(--status-critical);
+        color: white;
+        animation: pulseCritical 2s ease-in-out infinite;
+        font-size: 0.55rem;
+        padding: 0.15rem 0.5rem;
+    }
+
+    @keyframes pulseCritical {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(252, 129, 129, 0.4); }
+        50% { box-shadow: 0 0 0 6px rgba(252, 129, 129, 0); }
+    }
+
+    .badge-priority-high {
+        background: #f6ad55;
+        color: #2d3748;
+    }
+
+    .badge-priority-medium {
+        background: #63b3ed;
+        color: #2d3748;
+    }
+
+    .badge-priority-low {
+        background: #a0aec0;
+        color: white;
+    }
+
+    .badge-priority i {
+        font-size: 0.4rem;
+    }
+
+    /* ============================================
+       View Button - Compact
+    ============================================ */
+    .btn-view {
+        padding: 0.2rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: var(--accent-gradient);
+        color: white;
+        border: none;
+        white-space: nowrap;
+        display: inline-block;
+        text-decoration: none;
+    }
+
+    .btn-view:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        color: white;
+    }
+
+    .btn-view:active {
+        transform: scale(0.95);
+    }
+
+    .btn-view i {
+        font-size: 0.65rem;
+        margin-right: 0.2rem;
+    }
+
+    /* ============================================
+       Mobile Card View - Ultra Responsive
+    ============================================ */
+    
+    @media (max-width: 991px) {
+        .table-responsive thead {
+            display: none;
+        }
+
+        .table-responsive tbody tr {
+            display: block !important;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            background: var(--bg-card) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px var(--shadow-color) !important;
+            border: 1px solid var(--border-color) !important;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: cardSlideIn 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .table-responsive tbody tr::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-gradient);
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+
+        .table-responsive tbody tr:hover::before {
+            opacity: 1;
+        }
+
+        .table-responsive tbody tr:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 40px rgba(233, 69, 96, 0.15) !important;
+            border-color: rgba(233, 69, 96, 0.3) !important;
+            background: var(--bg-card-hover) !important;
+        }
+
+        @keyframes cardSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .table-responsive tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0;
+            border: none !important;
+            border-bottom: 1px solid var(--border-light) !important;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: var(--text-primary) !important;
+            background: transparent !important;
+        }
+
+        .table-responsive tbody td:last-child {
+            border-bottom: none !important;
+            padding-top: 0.6rem;
+            margin-top: 0.3rem;
+            border-top: 2px solid rgba(233, 69, 96, 0.2) !important;
+            justify-content: center;
+        }
+
+        .table-responsive tbody td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            min-width: 80px;
+            flex-shrink: 0;
+        }
+
+        .table-responsive tbody td[data-label="Action"]::before {
+            display: none;
+        }
+
+        .table-responsive tbody td .badge-priority,
+        .table-responsive tbody td .badge-custom {
+            font-size: 0.6rem;
+            padding: 0.15rem 0.5rem;
+        }
+
+        .table-responsive tbody td:first-child {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-light) !important;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid rgba(233, 69, 96, 0.2) !important;
+        }
+
+        .table-responsive tbody td:first-child::before {
+            content: 'Ticket';
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 0.7rem;
+        }
+
+        .table-responsive tbody td[data-label="Status"] {
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .table-responsive tbody td[data-label="Status"] .badge-custom {
+            margin-right: 0.3rem;
+        }
+
+        .table-responsive tbody td[data-label="Priority"] .badge-priority {
+            font-size: 0.55rem;
+            padding: 0.15rem 0.5rem;
+        }
+
+        .table-responsive tbody td:last-child {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .table-responsive tbody td:last-child .btn-view {
+            min-width: 100px;
+            text-align: center;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.8rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .table-responsive tbody tr {
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            border-radius: 10px;
+        }
+
+        .table-responsive tbody td {
+            padding: 0.3rem 0;
+            font-size: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .table-responsive tbody td::before {
+            font-size: 0.55rem;
+            min-width: 65px;
+        }
+
+        .table-responsive tbody td:first-child {
+            font-size: 0.8rem;
+            padding-bottom: 0.4rem;
+        }
+
+        .table-responsive tbody td:last-child {
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .table-responsive tbody td:last-child .btn-view {
+            width: 100%;
+            min-width: unset;
+            font-size: 0.7rem;
+            padding: 0.25rem;
+        }
+
+        .badge-priority,
+        .badge-custom {
+            font-size: 0.5rem !important;
+            padding: 0.1rem 0.4rem !important;
+        }
+
+        .badge-priority-critical {
+            font-size: 0.5rem !important;
+            padding: 0.1rem 0.4rem !important;
+        }
+
+        .badge-priority i {
+            font-size: 0.3rem;
+        }
+
+        .table-responsive tbody td {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.1rem;
+        }
+
+        .table-responsive tbody td::before {
+            margin-bottom: 0.1rem;
+        }
+
+        .table-responsive tbody td[data-label="Status"] {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .table-responsive tbody td[data-label="Action"] {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .btn-view {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .btn-view i {
+            display: none;
+        }
+
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .d-flex.justify-content-between .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        h2.fw-bold {
+            font-size: 1.2rem !important;
+        }
+
+        .btn-primary-custom {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.8rem;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .table-responsive tbody tr {
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .table-responsive tbody td {
+            font-size: 0.7rem;
+            padding: 0.2rem 0;
+        }
+
+        .table-responsive tbody td::before {
+            font-size: 0.5rem;
+            min-width: 55px;
+        }
+
+        .table-responsive tbody td:first-child {
+            font-size: 0.7rem;
+        }
+
+        .badge-priority,
+        .badge-custom,
+        .badge-priority-critical {
+            font-size: 0.45rem !important;
+            padding: 0.1rem 0.3rem !important;
+        }
+
+        .badge-priority i {
+            display: none;
+        }
+
+        .btn-view {
+            font-size: 0.6rem;
+            padding: 0.15rem 0.5rem;
+        }
+    }
+
+    /* ============================================
+       Empty State
+    ============================================ */
+    .empty-state {
+        animation: bounceIn 1s ease;
+    }
+
+    @keyframes bounceIn {
+        0% { transform: scale(0.8); opacity: 0; }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .empty-state i {
+        animation: floatIcon 3s ease-in-out infinite;
+        color: var(--accent);
+    }
+
+    @keyframes floatIcon {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(-5deg); }
+    }
+
+    .empty-state .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    /* ============================================
+       Scrollbar Styling
+    ============================================ */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--accent-gradient);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-light);
+    }
+
+    /* ============================================
+       Text Selection
+    ============================================ */
+    ::selection {
+        background: var(--accent);
+        color: white;
+    }
+
+    ::-moz-selection {
+        background: var(--accent);
+        color: white;
+    }
+
+    /* ============================================
+       Animation Delays
+    ============================================ */
+    .animate__fadeInDown {
+        animation: fadeInDown 0.6s ease;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tickets-container">
+    <!-- Header Section -->
+    <div class="row mb-4 animate__animated animate__fadeInDown">
+        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--accent-light);">
+                    <i class="fa-solid fa-receipt me-2" style="color: var(--accent);"></i>My Support Tickets
+                </h2>
+                <p class="mb-0" style="font-size: clamp(0.75rem, 1.5vw, 0.9rem); color: var(--text-secondary);">
+                    <i class="fa-regular fa-file-lines me-1"></i>
+                    Showing your active tickets and recently resolved cases
+                    <span class="badge rounded-pill ms-2 px-2 py-1" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); background: rgba(233, 69, 96, 0.2); color: var(--accent-light); border: 1px solid rgba(233, 69, 96, 0.2);">
+                        <i class="fa-regular fa-circle-check me-1"></i>
+                        {{ tickets|length }} Tickets
+                    </span>
+                </p>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover table-hover-zoom align-middle mb-0">
-                        <thead class="table-light text-secondary">
-                            <tr>
-                                <th class="ps-4">Ticket Number</th>
-                                <th>Created Date</th>
-                                <th>Subject</th>
-                                <th>Priority</th>
-                                <th>Status</th>
-                                <th>Assigned Executive</th>
-                                <th class="pe-4 text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for ticket in tickets %}
+            <a href="{% url 'create_ticket' %}" class="btn btn-primary-custom">
+                <i class="fa-solid fa-circle-plus me-2"></i>Create New Ticket
+            </a>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="row animate__animated animate__fadeInUp animate__delay-1s">
+        <div class="col-12">
+            <div class="card panel-card shadow-sm">
+                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="fw-bold mb-0" style="color: var(--accent-light);">
+                        <i class="fa-solid fa-list me-2" style="color: var(--accent);"></i>Tickets Log
+                    </h5>
+                    <span class="badge rounded-pill px-2 py-1" style="font-size: clamp(0.55rem, 0.9vw, 0.7rem); background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--border-light);">
+                        <i class="fa-regular fa-clock me-1"></i>
+                        Updated: {% now "d-m-Y H:i" %}
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-hover-zoom align-middle mb-0" id="ticketsTable">
+                            <thead>
                                 <tr>
-                                    <td class="ps-4 fw-bold text-dark">{{ ticket.ticket_number }}</td>
-                                    <td class="text-secondary">{{ ticket.created_at|date:"d-b-Y h:i A" }}</td>
-                                    <td class="fw-medium">{{ ticket.subject }}</td>
-                                    <td>
-                                        <span class="badge {% if ticket.priority == 'Critical' %}bg-danger{% elif ticket.priority == 'High' %}bg-warning text-dark{% elif ticket.priority == 'Medium' %}bg-info text-dark{% else %}bg-secondary{% endif %} rounded-pill px-2.5 py-1" style="font-size: 0.75rem;">
-                                            {{ ticket.priority }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge-custom badge-status-{{ ticket.status|lower }}">
-                                            {{ ticket.status }}
-                                        </span>
-                                    </td>
-                                    <td class="fw-medium text-secondary">
-                                        {% if ticket.status == 'Assigned' and ticket.assigned_person %}
-                                            <i class="fa-solid fa-user-gear me-1 text-primary"></i> {{ ticket.assigned_person }}
-                                        {% else %}
-                                            <span class="text-muted small">—</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="pe-4 text-center">
-                                        <a href="{% url 'ticket_detail' ticket.id %}" class="btn btn-sm btn-light rounded-pill border px-3">
-                                            <i class="fa-solid fa-eye me-1"></i>View Details
-                                        </a>
-                                    </td>
+                                    <th class="ps-4" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Ticket Number</th>
+                                    <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Created Date</th>
+                                    <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Subject</th>
+                                    <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Priority</th>
+                                    <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Status</th>
+                                    <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Assigned Executive</th>
+                                    <th class="pe-4 text-center" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Action</th>
                                 </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="7" class="text-center py-5 text-muted">
-                                        <i class="fa-solid fa-folder-open fa-3x mb-3 d-block opacity-25"></i>
-                                        No support tickets raised yet.
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {% for ticket in tickets %}
+                                    <tr>
+                                        <td class="ps-4 fw-bold" data-label="Ticket" style="font-size: clamp(0.7rem, 0.9vw, 0.85rem); color: var(--accent-light);">
+                                            <i class="fa-regular fa-hashtag me-1" style="color: var(--accent); font-size: clamp(0.4rem, 0.6vw, 0.5rem);"></i>
+                                            {{ ticket.ticket_number }}
+                                        </td>
+                                        <td data-label="Created Date" style="color: var(--text-secondary); font-size: clamp(0.6rem, 0.8vw, 0.7rem);">
+                                            <i class="fa-regular fa-calendar me-1" style="font-size: clamp(0.3rem, 0.5vw, 0.4rem);"></i>
+                                            {{ ticket.created_at|date:"d-m-Y" }}
+                                            <span class="d-block" style="color: var(--text-muted); font-size: clamp(0.5rem, 0.6vw, 0.6rem);">{{ ticket.created_at|date:"h:i A" }}</span>
+                                        </td>
+                                        <td class="fw-medium text-truncate" style="max-width: 150px; font-size: clamp(0.65rem, 0.8vw, 0.75rem);" title="{{ ticket.subject }}" data-label="Subject">
+                                            <i class="fa-regular fa-message me-1" style="color: var(--accent); font-size: clamp(0.3rem, 0.5vw, 0.4rem);"></i>
+                                            {{ ticket.subject }}
+                                        </td>
+                                        <td data-label="Priority">
+                                            <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
+                                                <i class="fa-solid fa-flag"></i>
+                                                {{ ticket.priority }}
+                                            </span>
+                                        </td>
+                                        <td data-label="Status">
+                                            <span class="badge-custom badge-status-{{ ticket.status|lower }}">
+                                                <i class="fa-solid fa-circle me-1" style="font-size: 0.3rem;"></i>
+                                                {{ ticket.status }}
+                                            </span>
+                                        </td>
+                                        <td data-label="Assigned Executive" style="color: var(--text-secondary); font-size: clamp(0.55rem, 0.7vw, 0.65rem);">
+                                            {% if ticket.status == 'Assigned' and ticket.assigned_person %}
+                                                <i class="fa-solid fa-user-gear me-1" style="color: var(--accent); font-size: clamp(0.3rem, 0.5vw, 0.4rem);"></i>
+                                                {{ ticket.assigned_person }}
+                                            {% else %}
+                                                <span style="color: var(--text-muted);">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="pe-4 text-center" data-label="Action">
+                                            <a href="{% url 'ticket_detail' ticket.id %}" class="btn-view">
+                                                <i class="fa-solid fa-eye"></i>View Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <div class="empty-state">
+                                                <i class="fa-solid fa-folder-open fa-3x mb-3 d-block opacity-25"></i>
+                                                <p style="color: var(--text-muted);">No support tickets raised yet.</p>
+                                                <a href="{% url 'create_ticket' %}" class="btn btn-primary-custom mt-2">
+                                                    <i class="fa-solid fa-circle-plus me-2"></i>Create First Ticket
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate rows on load
+        const rows = document.querySelectorAll('#ticketsTable tbody tr');
+        rows.forEach((row, index) => {
+            if (!row.querySelector('.empty-state')) {
+                row.style.opacity = '0';
+                setTimeout(() => {
+                    row.style.transition = 'all 0.3s ease';
+                    row.style.opacity = '1';
+                    row.style.animation = `cardSlideIn 0.3s ease forwards`;
+                    row.style.animationDelay = `${index * 0.05}s`;
+                }, 100 + (index * 50));
+            }
+        });
+
+        // Row click to view ticket detail
+        const tableRows = document.querySelectorAll('#ticketsTable tbody tr');
+        tableRows.forEach(row => {
+            const viewBtn = row.querySelector('.btn-view');
+            if (viewBtn) {
+                row.addEventListener('click', function(e) {
+                    if (!e.target.closest('.btn-view')) {
+                        const link = this.querySelector('.btn-view');
+                        if (link) {
+                            window.location.href = link.href;
+                        }
+                    }
+                });
+                row.style.cursor = 'pointer';
+            }
+        });
+    });
+</script>
 {% endblock %}

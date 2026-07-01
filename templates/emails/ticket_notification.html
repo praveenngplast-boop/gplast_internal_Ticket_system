@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPLAST Ticket Notification</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f7fb; margin: 0; padding: 24px; color: #203040; }
+        .email-wrap { max-width: 640px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e3e8ef; }
+        .header { background: linear-gradient(135deg, #0f6cbd 0%, #1f4f8b 100%); color: #ffffff; padding: 24px; }
+        .header h1 { margin: 0 0 6px; font-size: 24px; }
+        .header p { margin: 0; opacity: 0.95; }
+        .content { padding: 24px; line-height: 1.6; }
+        .badge { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #e8f2ff; color: #0f6cbd; font-weight: bold; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        td { padding: 10px 8px; border-bottom: 1px solid #eef2f7; vertical-align: top; }
+        .label { font-weight: bold; color: #334155; width: 38%; }
+        .btn { display: inline-block; margin-top: 18px; padding: 10px 16px; background: #0f6cbd; color: #ffffff; text-decoration: none; border-radius: 8px; }
+        .footer { padding: 16px 24px 24px; color: #64748b; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="email-wrap">
+        <div class="header">
+            <h1>ERP Ticket {{ action_label }}</h1>
+            <p>Dear {{ recipient_name }}, your ERP support ticket has been {{ action_label|lower }} successfully.</p>
+        </div>
+        <div class="content">
+            <p>Hello {{ recipient_name }},</p>
+            <p>This is an automated update for your support ticket <strong>#{{ ticket.ticket_number }}</strong>.</p>
+            <p><span class="badge">Ticket {{ action_label }}</span></p>
+
+            <table>
+                <tr>
+                    <td class="label">Ticket Number</td>
+                    <td>{{ ticket.ticket_number }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Subject</td>
+                    <td>{{ ticket.subject }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Status</td>
+                    <td>{{ ticket.status }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Raised By</td>
+                    <td>{{ ticket.employee_name }} ({{ ticket.employee_id }})</td>
+                </tr>
+                <tr>
+                    <td class="label">Unit</td>
+                    <td>{{ ticket.unit.full_name }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Department</td>
+                    <td>{{ ticket.department.name }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Priority</td>
+                    <td>{{ ticket.priority }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Contact Email</td>
+                    <td>{{ ticket.email }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Mobile</td>
+                    <td>{{ ticket.mobile }}</td>
+                </tr>
+            </table>
+
+            {% if remarks %}
+            <p><strong>Remarks / Closing Notes:</strong><br>{{ remarks }}</p>
+            {% endif %}
+
+            <a href="{{ domain }}{% url 'login' %}" class="btn">Open Ticket Portal</a>
+        </div>
+        <div class="footer">
+            Regards,<br>
+            GPLAST IT Support Team
+        </div>
+    </div>
+</body>
+</html>

@@ -5,180 +5,860 @@
 {% block extra_head %}
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
+{{ block.super }}
+<style>    
+
+    /* ============================================
+       Dashboard Container Animation
+    ============================================ */
+    .dashboard-container {
+        animation: fadeInUp 0.6s ease;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ============================================
+       Header Styles
+    ============================================ */
+    .text-primary {
+        color: var(--accent);
+    }
+
+    .text-muted {
+        color: var(--text-muted);
+    }
+
+    .btn-primary-custom {
+        background: var(--accent-gradient);
+        border: none;
+        color: white;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50px;
+        padding: 0.5rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary-custom::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.6s ease;
+    }
+
+    .btn-primary-custom:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 6px 30px rgba(233, 69, 96, 0.4);
+        color: white;
+    }
+
+    .btn-primary-custom:active {
+        transform: scale(0.95);
+    }
+
+    .btn-outline-primary {
+        color: var(--accent);
+        border: 2px solid var(--accent);
+        border-radius: 50px;
+        padding: 0.5rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--accent-gradient);
+        color: white;
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 6px 30px rgba(233, 69, 96, 0.3);
+        border-color: transparent;
+    }
+
+    .btn-outline-primary:active {
+        transform: scale(0.95);
+    }
+
+    /* ============================================
+       KPI Cards - Animated with Proper Colors
+    ============================================ */
+    .kpi-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        animation: cardSlideUp 0.5s ease;
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--accent-gradient);
+        opacity: 0;
+        transition: all 0.4s ease;
+    }
+
+    .kpi-card:hover::before {
+        opacity: 1;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 8px 40px rgba(233, 69, 96, 0.1);
+        border-color: rgba(233, 69, 96, 0.25);
+    }
+
+    .kpi-card:nth-child(1) { animation-delay: 0.05s; }
+    .kpi-card:nth-child(2) { animation-delay: 0.1s; }
+    .kpi-card:nth-child(3) { animation-delay: 0.15s; }
+    .kpi-card:nth-child(4) { animation-delay: 0.2s; }
+    .kpi-card:nth-child(5) { animation-delay: 0.25s; }
+    .kpi-card:nth-child(6) { animation-delay: 0.3s; }
+    .kpi-card:nth-child(7) { animation-delay: 0.35s; }
+
+    @keyframes cardSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .kpi-value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1.2;
+        transition: all 0.3s ease;
+        color: var(--text-primary) !important;
+    }
+
+    .kpi-card:hover .kpi-value {
+        transform: scale(1.05);
+    }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary) !important;
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+
+    /* KPI Color Variants - Force colors with !important */
+    .kpi-open .kpi-value { color: var(--status-open, #48bb78) !important; }
+    .kpi-assigned .kpi-value { color: var(--status-assigned, #4299e1) !important; }
+    .kpi-hold .kpi-value { color: var(--status-hold, #ed8936) !important; }
+    .kpi-escalated .kpi-value { color: var(--status-escalated, #9f7aea) !important; }
+    .kpi-closed .kpi-value { color: var(--status-closed, #718096) !important; }
+    .kpi-critical .kpi-value { color: var(--status-critical, #fc8181) !important; }
+
+    .text-secondary {
+        color: var(--text-secondary) !important;
+    }
+
+    .text-danger {
+        color: var(--status-critical, #fc8181) !important;
+    }
+
+    .text-success {
+        color: var(--status-open, #48bb78) !important;
+    }
+
+    .text-primary {
+        color: var(--accent) !important;
+    }
+
+    /* ============================================
+       Chart Cards - Animated
+    ============================================ */
+    .panel-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 8px 32px var(--shadow-color);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px;
+        overflow: hidden;
+        animation: cardFadeIn 0.6s ease;
+    }
+
+    .panel-card:nth-child(1) { animation-delay: 0.1s; }
+    .panel-card:nth-child(2) { animation-delay: 0.15s; }
+    .panel-card:nth-child(3) { animation-delay: 0.2s; }
+
+    @keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .panel-card:hover {
+        box-shadow: 0 12px 48px rgba(233, 69, 96, 0.1);
+        transform: translateY(-4px);
+        border-color: rgba(233, 69, 96, 0.25);
+    }
+
+    .glass-header {
+        background: rgba(233, 69, 96, 0.05);
+        border-bottom: 1px solid var(--border-color);
+        backdrop-filter: blur(10px);
+        padding: 0.75rem 1.25rem;
+    }
+
+    .glass-header h6 {
+        color: var(--accent-light) !important;
+        font-weight: 700;
+        font-size: 0.85rem;
+        letter-spacing: 0.3px;
+    }
+
+    .card-body {
+        padding: 1rem;
+        background: transparent;
+    }
+
+    /* ============================================
+       Chart Container
+    ============================================ */
     .chart-container {
         position: relative;
         height: 250px;
         width: 100%;
+        padding: 0.5rem;
+    }
+
+    /* ============================================
+       Responsive Styles
+    ============================================ */
+    @media (max-width: 992px) {
+        .col-lg-4 {
+            margin-bottom: 1rem;
+        }
+        
+        .kpi-value {
+            font-size: 1.5rem;
+        }
+        
+        .chart-container {
+            height: 200px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .kpi-value {
+            font-size: 1.3rem;
+        }
+        
+        .kpi-label {
+            font-size: 0.65rem;
+        }
+        
+        .kpi-card {
+            padding: 0.75rem;
+        }
+        
+        .col-6.col-md-3.col-lg-2 {
+            flex: 0 0 33.333%;
+            max-width: 33.333%;
+        }
+        
+        .btn-primary-custom,
+        .btn-outline-primary {
+            font-size: 0.8rem;
+            padding: 0.4rem 1rem;
+        }
+
+        .glass-header h6 {
+            font-size: 0.75rem;
+        }
+
+        .chart-container {
+            height: 180px;
+        }
+
+        .d-flex.gap-2 {
+            flex-wrap: wrap;
+        }
+
+        .d-flex.gap-2 .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .col-6.col-md-3.col-lg-2 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+        
+        .kpi-value {
+            font-size: 1.1rem;
+        }
+        
+        .kpi-label {
+            font-size: 0.6rem;
+        }
+        
+        .kpi-card {
+            padding: 0.5rem;
+        }
+        
+        .chart-container {
+            height: 150px;
+        }
+
+        h2.fw-bold {
+            font-size: 1.2rem;
+        }
+
+        .btn-primary-custom,
+        .btn-outline-primary {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.8rem;
+        }
+
+        .panel-card {
+            margin-bottom: 0.75rem;
+        }
+
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+
+    /* ============================================
+       Critical Card Special Animation
+    ============================================ */
+    .kpi-critical {
+        border-color: rgba(252, 129, 129, 0.2);
+        animation: criticalPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes criticalPulse {
+        0%, 100% { border-color: rgba(252, 129, 129, 0.2); }
+        50% { border-color: rgba(252, 129, 129, 0.4); }
+    }
+
+    .kpi-critical .kpi-value {
+        animation: criticalNumber 2s ease-in-out infinite;
+    }
+
+    @keyframes criticalNumber {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    /* ============================================
+       Chart Loading Animation
+    ============================================ */
+    .chart-container canvas {
+        opacity: 0;
+        animation: chartFadeIn 0.8s ease forwards;
+    }
+
+    .chart-container canvas:nth-child(1) { animation-delay: 0.2s; }
+    .chart-container canvas:nth-child(2) { animation-delay: 0.3s; }
+    .chart-container canvas:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes chartFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* ============================================
+       Scrollbar Styling
+    ============================================ */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--accent-gradient);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-light);
+    }
+
+    /* ============================================
+       Text Selection
+    ============================================ */
+    ::selection {
+        background: var(--accent);
+        color: white;
+    }
+
+    ::-moz-selection {
+        background: var(--accent);
+        color: white;
+    }
+
+    /* ============================================
+       Chart.js Dark Mode Overrides
+    ============================================ */
+    [data-theme="dark"] .chart-container canvas {
+        filter: brightness(1);
+    }
+
+    [data-theme="light"] .chart-container canvas {
+        filter: brightness(1);
+    }
+
+    /* ============================================
+       Badge Updates for Dark/Light Mode
+    ============================================ */
+    .badge.bg-primary {
+        background: var(--accent-gradient);
+        color: white;
+    }
+
+    .badge.rounded-pill {
+        background: rgba(233, 69, 96, 0.2);
+        color: var(--accent-light) !important;
+        border: 1px solid rgba(233, 69, 96, 0.2);
+    }
+
+    /* ============================================
+       FIX: Ensure all text is visible in dark mode
+    ============================================ */
+    .card {
+        color: var(--text-primary) !important;
+    }
+
+    .card * {
+        color: var(--text-primary) !important;
+    }
+
+    .card .kpi-value,
+    .card .kpi-label,
+    .card .text-muted,
+    .card .text-secondary {
+        color: var(--text-primary) !important;
+    }
+
+    .card .kpi-label {
+        color: var(--text-secondary) !important;
+    }
+
+    .card .text-danger {
+        color: var(--status-critical, #fc8181) !important;
+    }
+
+    .card .text-success {
+        color: var(--status-open, #48bb78) !important;
+    }
+
+    .card .text-primary {
+        color: var(--accent) !important;
+    }
+
+    /* Fix for badge text */
+    .badge {
+        color: var(--text-primary) !important;
+    }
+
+    .badge.bg-primary,
+    .badge.bg-success,
+    .badge.bg-danger,
+    .badge.bg-warning,
+    .badge.bg-info {
+        color: white !important;
+    }
+
+    /* Fix for paragraph text */
+    p {
+        color: var(--text-secondary) !important;
+    }
+
+    p .badge {
+        color: var(--text-secondary) !important;
+    }
+
+    p .badge i {
+        color: var(--status-open) !important;
+    }
+
+    /* Fix for chart header text */
+    .glass-header h6 {
+        color: var(--accent-light) !important;
+    }
+
+    .glass-header h6 i {
+        color: var(--accent) !important;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center">
-        <div>
-            <h2 class="fw-bold text-primary mb-1">GPLAST Support Admin Panel</h2>
-            <p class="text-muted mb-0">System-wide operational ticket monitoring and analysis</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'create_ticket_admin' %}" class="btn btn-primary-custom">
-                <i class="fa-solid fa-plus-circle me-2"></i>Create Ticket
-            </a>
-            <a href="{% url 'reports' %}" class="btn btn-outline-primary rounded-pill px-4">
-                <i class="fa-solid fa-file-excel me-2"></i>Export Reports
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- Admin KPI Cards Section -->
-<div class="row g-3 mb-4">
-    <!-- Total Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card p-3 h-100">
-            <div class="kpi-value text-secondary">{{ kpis.total }}</div>
-            <div class="kpi-label">Total Tickets</div>
-        </div>
-    </div>
-    <!-- Open Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card kpi-open p-3 h-100">
-            <div class="kpi-value text-primary">{{ kpis.open }}</div>
-            <div class="kpi-label">Open</div>
-        </div>
-    </div>
-    <!-- Assigned Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card kpi-assigned p-3 h-100">
-            <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
-            <div class="kpi-label">Assigned</div>
-        </div>
-    </div>
-    <!-- Hold Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card kpi-hold p-3 h-100">
-            <div class="kpi-value" style="color: #b78300;">{{ kpis.hold }}</div>
-            <div class="kpi-label">Hold</div>
-        </div>
-    </div>
-    <!-- Escalated Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card kpi-escalated p-3 h-100">
-            <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
-            <div class="kpi-label">Escalated</div>
-        </div>
-    </div>
-    <!-- Closed Tickets -->
-    <div class="col-6 col-md-3 col-lg-2">
-        <div class="card kpi-card kpi-closed p-3 h-100">
-            <div class="kpi-value text-success">{{ kpis.closed }}</div>
-            <div class="kpi-label">Closed</div>
-        </div>
-    </div>
-    <!-- Critical Priority Tickets -->
-    <div class="col-12 mt-3">
-        <div class="card kpi-card kpi-critical p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="kpi-value text-danger">{{ kpis.critical }}</div>
-                    <div class="kpi-label">Critical Priority Tickets System-Wide</div>
-                </div>
-                <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50"></i>
+<div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="row mb-4 animate__animated animate__fadeInDown">
+        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--accent-light);">
+                    <i class="fa-solid fa-gauge-high me-2" style="color: var(--accent);"></i>GPLAST Support Admin Panel
+                </h2>
+                <p class="mb-0" style="font-size: clamp(0.75rem, 1.5vw, 0.9rem); color: var(--text-secondary);">
+                    <i class="fa-regular fa-clock me-1"></i>
+                    System-wide operational ticket monitoring and analysis
+                    <span class="badge rounded-pill ms-2 px-2 py-1" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); background: rgba(233, 69, 96, 0.2); color: var(--accent-light) !important; border: 1px solid rgba(233, 69, 96, 0.2);">
+                        <i class="fa-regular fa-circle-check me-1"></i>
+                        Live
+                    </span>
+                </p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'create_ticket_admin' %}" class="btn btn-primary-custom">
+                    <i class="fa-solid fa-plus-circle me-2"></i>Create Ticket
+                </a>
+                <a href="{% url 'reports' %}" class="btn btn-outline-primary rounded-pill px-4">
+                    <i class="fa-solid fa-file-excel me-2"></i>Export Reports
+                </a>
             </div>
         </div>
     </div>
+
+    <!-- Admin KPI Cards Section -->
+    <div class="row g-3 mb-4">
+        <!-- Total Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card p-3 h-100">
+                <div class="kpi-value text-secondary">{{ kpis.total }}</div>
+                <div class="kpi-label">
+                    <i class="fa-regular fa-circle-check me-1" style="color: var(--accent);"></i>
+                    Total Tickets
+                </div>
+            </div>
+        </div>
+        <!-- Open Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-open p-3 h-100">
+                <div class="kpi-value text-primary">{{ kpis.open }}</div>
+                <div class="kpi-label">
+                    <i class="fa-regular fa-circle me-1" style="color: var(--status-open);"></i>
+                    Open
+                </div>
+            </div>
+        </div>
+        <!-- Assigned Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-assigned p-3 h-100">
+                <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-user-check me-1" style="color: var(--status-assigned);"></i>
+                    Assigned
+                </div>
+            </div>
+        </div>
+        <!-- Hold Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-hold p-3 h-100">
+                <div class="kpi-value" style="color: var(--status-hold);">{{ kpis.hold }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-pause me-1" style="color: var(--status-hold);"></i>
+                    Hold
+                </div>
+            </div>
+        </div>
+        <!-- Escalated Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-escalated p-3 h-100">
+                <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-cloud-arrow-up me-1" style="color: var(--status-escalated);"></i>
+                    Escalated
+                </div>
+            </div>
+        </div>
+        <!-- Closed Tickets -->
+        <div class="col-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-closed p-3 h-100">
+                <div class="kpi-value text-success">{{ kpis.closed }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-circle-check me-1" style="color: var(--status-closed);"></i>
+                    Closed
+                </div>
+            </div>
+        </div>
+        <!-- Critical Priority Tickets -->
+        <div class="col-12 mt-3">
+            <div class="card kpi-card kpi-critical p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="kpi-value text-danger">{{ kpis.critical }}</div>
+                        <div class="kpi-label">
+                            <i class="fa-solid fa-triangle-exclamation me-1" style="color: var(--status-critical);"></i>
+                            Critical Priority Tickets System-Wide
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50" style="animation: pulseIcon 2s ease-in-out infinite;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Reports Panel Grid (10 Charts) -->
+    <div class="row g-4 mb-4">
+        <!-- Chart 1: Status Distribution -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card panel-card h-100">
+                <div class="card-header glass-header py-3">
+                    <h6 class="fw-bold mb-0">
+                        <i class="fa-solid fa-chart-pie me-2" style="color: var(--accent);"></i>
+                        1. Status Distribution
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 2: Unit-wise Tickets -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card panel-card h-100">
+                <div class="card-header glass-header py-3">
+                    <h6 class="fw-bold mb-0">
+                        <i class="fa-solid fa-building me-2" style="color: var(--accent);"></i>
+                        2. Unit-wise Tickets
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="unitChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 4: Priority Distribution -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card panel-card h-100">
+                <div class="card-header glass-header py-3">
+                    <h6 class="fw-bold mb-0">
+                        <i class="fa-solid fa-flag me-2" style="color: var(--accent);"></i>
+                        3. Priority Distribution
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="priorityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secure Serialization of Chart Datasets -->
+    {{ charts_data|json_script:"charts-data" }}
+
+    <!-- Footer Info -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <p style="color: var(--text-muted); font-size: 0.75rem;">
+                <i class="fa-regular fa-clock me-1"></i>
+                Dashboard updated in real-time • 
+                <span class="badge rounded-pill px-2 py-1" style="background: rgba(233, 69, 96, 0.1); color: var(--text-secondary) !important; border: 1px solid var(--border-color);">
+                    <i class="fa-regular fa-circle me-1" style="color: var(--status-open); font-size: 0.4rem;"></i>
+                    {% now "d-m-Y H:i:s" %}
+                </span>
+            </p>
+        </div>
+    </div>
 </div>
-
-<!-- Chart Reports Panel Grid (10 Charts) -->
-<div class="row g-4 mb-4">
-    <!-- Chart 1: Status Distribution -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card panel-card h-100">
-            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">1. Status Distribution</h6></div>
-            <div class="card-body"><div class="chart-container"><canvas id="statusChart"></canvas></div></div>
-        </div>
-    </div>
-
-    <!-- Chart 2: Unit-wise Tickets -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card panel-card h-100">
-            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">2. Unit-wise Tickets</h6></div>
-            <div class="card-body"><div class="chart-container"><canvas id="unitChart"></canvas></div></div>
-        </div>
-    </div>
-
-    <!-- Chart 3: Department-wise Tickets -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card panel-card h-100">
-            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">3. Department-wise Tickets</h6></div>
-            <div class="card-body"><div class="chart-container"><canvas id="deptChart"></canvas></div></div>
-        </div>
-    </div>
-
-    <!-- Chart 4: Priority Distribution -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card panel-card h-100">
-            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">4. Priority Distribution</h6></div>
-            <div class="card-body"><div class="chart-container"><canvas id="priorityChart"></canvas></div></div>
-        </div>
-    </div>
-
-    <!-- Chart 5: Error Type Distribution -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card panel-card h-100">
-            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">5. Error Type Distribution</h6></div>
-            <div class="card-body"><div class="chart-container"><canvas id="errorTypeChart"></canvas></div></div>
-        </div>
-    </div>
-
-    <!-- Chart 6: Monthly Ticket Trend -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card panel-card h-100">
-            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">6. Monthly Ticket Trend</h6></div>
-            <div class="card-body"><div class="chart-container"><canvas id="trendChart"></canvas></div></div>
-        </div>
-    </div>
-
-    <!-- Chart 7: Escalated vs Closed -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card panel-card h-100">
-            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">7. Escalated vs Closed</h6></div>
-            <div class="card-body"><div class="chart-container"><canvas id="escClosedChart"></canvas></div></div>
-        </div>
-    </div>
-
-    <!-- Chart 8: Average Resolution Time (hours) -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card panel-card h-100">
-            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">8. Avg Resolution Time (hours) by Unit</h6></div>
-            <div class="card-body"><div class="chart-container"><canvas id="avgResChart"></canvas></div></div>
-        </div>
-    </div>
-
-    <!-- Chart 9: Top 10 Reported Issues -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card panel-card h-100">
-            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">9. Top 10 Reported Issues (Subject)</h6></div>
-            <div class="card-body"><div class="chart-container"><canvas id="topIssuesChart"></canvas></div></div>
-        </div>
-    </div>
-
-    <!-- Chart 10: Top Departments by Ticket Count -->
-    <div class="col-md-12 col-lg-12">
-        <div class="card panel-card h-100">
-            <div class="card-header glass-header py-3"><h6 class="fw-bold mb-0 text-primary">10. Top Departments by Ticket Count</h6></div>
-            <div class="card-body"><div class="chart-container" style="height: 350px;"><canvas id="topDeptsChart"></canvas></div></div>
-        </div>
-    </div>
-</div>
-
-<!-- Secure Serialization of Chart Datasets -->
-{{ charts_data|json_script:"charts-data" }}
 
 {% endblock %}
 
 {% block extra_js %}
 <!-- Chart Drawing Logic -->
 <script src="{% static 'js/charts.js' %}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add loading animation to charts
+        const charts = document.querySelectorAll('.chart-container canvas');
+        charts.forEach((chart, index) => {
+            chart.style.opacity = '0';
+            setTimeout(() => {
+                chart.style.transition = 'opacity 0.6s ease';
+                chart.style.opacity = '1';
+            }, 200 + (index * 150));
+        });
+
+        // Animate KPI values on load
+        const kpiValues = document.querySelectorAll('.kpi-value');
+        kpiValues.forEach((value, index) => {
+            const originalText = value.textContent;
+            value.textContent = '0';
+            value.style.transition = 'all 0.5s ease';
+            
+            setTimeout(() => {
+                value.textContent = originalText;
+                value.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    value.style.transform = 'scale(1)';
+                }, 300);
+            }, 300 + (index * 100));
+        });
+
+        // Add pulse animation to critical icon
+        const criticalIcon = document.querySelector('.kpi-critical i.fa-triangle-exclamation');
+        if (criticalIcon) {
+            criticalIcon.style.animation = 'pulseIcon 2s ease-in-out infinite';
+        }
+
+        // Add keyframe for icon pulse
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulseIcon {
+                0%, 100% { transform: scale(1); opacity: 0.5; }
+                50% { transform: scale(1.2); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ============================================
+        // Chart.js Dark/Light Mode Support
+        // ============================================
+        function updateChartColors() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#e2e8f0' : '#2d3748';
+            const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+            
+            // Update all charts
+            Chart.helpers.each(Chart.instances, function(instance) {
+                if (instance.options.scales) {
+                    // Update x-axis
+                    if (instance.options.scales.x) {
+                        instance.options.scales.x.ticks.color = textColor;
+                        instance.options.scales.x.grid.color = gridColor;
+                    }
+                    // Update y-axis
+                    if (instance.options.scales.y) {
+                        instance.options.scales.y.ticks.color = textColor;
+                        instance.options.scales.y.grid.color = gridColor;
+                    }
+                }
+                // Update legend
+                if (instance.options.plugins && instance.options.plugins.legend) {
+                    instance.options.plugins.legend.labels.color = textColor;
+                }
+                instance.update();
+            });
+        }
+
+        // Listen for theme changes
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'data-theme') {
+                    setTimeout(updateChartColors, 100);
+                }
+            });
+        });
+
+        observer.observe(document.documentElement, {
+            attributes: true
+        });
+
+        // Initial update after charts load
+        setTimeout(updateChartColors, 1000);
+
+        // ============================================
+        // FIX: Force all text colors in dark mode
+        // ============================================
+        function fixTextColors() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#ffffff' : '#212529';
+            
+            // Fix all card text
+            document.querySelectorAll('.card, .card *').forEach(el => {
+                if (el.tagName !== 'I' && el.tagName !== 'svg' && !el.closest('.kpi-value')) {
+                    const currentColor = getComputedStyle(el).color;
+                    if (currentColor === 'rgb(0, 0, 0)' || currentColor === '#000000' || currentColor === 'black') {
+                        el.style.color = textColor;
+                    }
+                }
+            });
+            
+            // Fix KPI values that might be black
+            document.querySelectorAll('.kpi-value').forEach(el => {
+                const currentColor = getComputedStyle(el).color;
+                if (currentColor === 'rgb(0, 0, 0)' || currentColor === '#000000' || currentColor === 'black') {
+                    el.style.color = textColor;
+                }
+            });
+        }
+
+        // Run fix after page load
+        setTimeout(fixTextColors, 500);
+        
+        // Also run when theme changes
+        const themeObserver = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'data-theme') {
+                    setTimeout(fixTextColors, 200);
+                }
+            });
+        });
+
+        themeObserver.observe(document.documentElement, {
+            attributes: true
+        });
+    });
+</script>
 {% endblock %}

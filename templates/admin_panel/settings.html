@@ -1,250 +1,1450 @@
 {% extends 'base.html' %}
-{% block title %}Settings Panel - GPLAST{% endblock %}
+{% load static %}
+{% block title %}System Settings - GPLAST{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>    
+    .settings-container {
+        animation: fadeInUp 0.6s ease;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ============================================
+       Header Styles
+    ============================================ */
+    .text-primary {
+        color: var(--accent);
+    }
+
+    .text-muted {
+        color: var(--text-muted);
+    }
+
+    .text-danger {
+        color: var(--accent);
+    }
+
+    .text-dark {
+        color: var(--text-primary);
+    }
+
+    .text-secondary {
+        color: var(--text-secondary);
+    }
+
+    /* ============================================
+       Card Styles
+    ============================================ */
+    .panel-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 8px 32px var(--shadow-color);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px;
+        overflow: hidden;
+        animation: cardFadeIn 0.6s ease;
+    }
+
+    .panel-card:nth-child(1) { animation-delay: 0.1s; }
+    .panel-card:nth-child(2) { animation-delay: 0.15s; }
+
+    @keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .panel-card:hover {
+        box-shadow: 0 12px 48px rgba(233, 69, 96, 0.1);
+        transform: translateY(-4px);
+        border-color: rgba(233, 69, 96, 0.25);
+    }
+
+    .glass-header {
+        background: rgba(233, 69, 96, 0.05);
+        border-bottom: 1px solid var(--border-color);
+        backdrop-filter: blur(10px);
+        padding: 0.75rem 1.25rem;
+    }
+
+    .glass-header h5 {
+        color: var(--accent-light);
+        font-weight: 700;
+    }
+
+    /* ============================================
+       FIX: Form Controls - Dark Theme with Proper Colors
+    ============================================ */
+    .form-control, 
+    .form-select,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+        background-color: var(--input-bg, #2d2d2d) !important;
+        border: 2px solid var(--border-color, #495057) !important;
+        color: var(--text-primary, #ffffff) !important;
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+        height: 42px;
+        -webkit-text-fill-color: var(--text-primary, #ffffff) !important;
+        caret-color: var(--text-primary, #ffffff) !important;
+    }
+
+    .form-control:hover, 
+    .form-select:hover {
+        background-color: var(--input-hover, #3d3d3d) !important;
+        border-color: rgba(233, 69, 96, 0.3) !important;
+        transform: translateY(-1px);
+    }
+
+    .form-control:focus, 
+    .form-select:focus,
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    input[type="number"]:focus,
+    input[type="date"]:focus,
+    textarea:focus,
+    select:focus {
+        background-color: var(--input-hover, #3d3d3d) !important;
+        border-color: var(--accent, #e94560) !important;
+        box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.15) !important;
+        transform: translateY(-2px);
+        color: var(--text-primary, #ffffff) !important;
+        -webkit-text-fill-color: var(--text-primary, #ffffff) !important;
+        outline: none !important;
+    }
+
+    .form-control::placeholder,
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--text-muted, #adb5bd) !important;
+        -webkit-text-fill-color: var(--text-muted, #adb5bd) !important;
+        opacity: 1 !important;
+    }
+
+    /* Fix for select dropdown options */
+    .form-select option,
+    select option {
+        background: var(--bg-secondary, #1a1a1a) !important;
+        color: var(--text-primary, #ffffff) !important;
+        padding: 8px 12px;
+    }
+
+    .form-select option:hover,
+    select option:hover {
+        background: var(--accent, #e94560) !important;
+        color: white !important;
+    }
+
+    /* Fix for select dropdown arrow */
+    .form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adb5bd' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 1rem center !important;
+        background-size: 16px 12px !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+        padding-right: 2.5rem !important;
+    }
+
+    /* Fix for date inputs */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: var(--date-picker-filter, invert(1));
+        cursor: pointer;
+    }
+
+    input[type="date"]::-webkit-datetime-edit {
+        color: var(--text-primary, #ffffff) !important;
+    }
+
+    input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+        color: var(--text-primary, #ffffff) !important;
+    }
+
+    /* ============================================
+       FIX: Autofill Styles
+    ============================================ */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active,
+    textarea:-webkit-autofill,
+    textarea:-webkit-autofill:hover,
+    textarea:-webkit-autofill:focus,
+    textarea:-webkit-autofill:active,
+    select:-webkit-autofill,
+    select:-webkit-autofill:hover,
+    select:-webkit-autofill:focus,
+    select:-webkit-autofill:active {
+        -webkit-text-fill-color: var(--text-primary, #ffffff) !important;
+        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg, #2d2d2d) inset !important;
+        background-color: var(--input-bg, #2d2d2d) !important;
+        color: var(--text-primary, #ffffff) !important;
+        transition: background-color 5000s ease-in-out 0s;
+        caret-color: var(--text-primary, #ffffff) !important;
+        border-color: var(--border-color, #495057) !important;
+    }
+
+    input:-webkit-autofill:focus,
+    textarea:-webkit-autofill:focus,
+    select:-webkit-autofill:focus {
+        border-color: var(--accent, #e94560) !important;
+        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg, #2d2d2d) inset, 0 0 0 4px rgba(233, 69, 96, 0.15) !important;
+    }
+
+    /* ============================================
+       Password Toggle - FIXED for both forms
+    ============================================ */
+    .password-wrapper {
+        position: relative;
+    }
+    
+    .password-toggle-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: var(--text-muted);
+        z-index: 10;
+        background: transparent;
+        border: none;
+        padding: 8px 10px;
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .password-toggle-icon:hover {
+        color: var(--accent);
+        background: rgba(233, 69, 96, 0.1);
+        transform: translateY(-50%) scale(1.1);
+    }
+    
+    .password-toggle-icon:active {
+        transform: translateY(-50%) scale(0.9);
+    }
+    
+    .password-toggle-icon .fa-eye-slash {
+        color: var(--accent);
+    }
+    
+    .password-wrapper .form-control {
+        padding-right: 45px !important;
+    }
+
+    .form-label {
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.3px;
+    }
+
+    /* ============================================
+       FIX: Password Help Text Visibility in Dark Mode
+    ============================================ */
+    .form-text,
+    .form-text.text-muted,
+    .help-text,
+    .password-help-text {
+        color: var(--text-secondary) !important;
+        opacity: 1 !important;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-text ul,
+    .help-text ul,
+    .password-help-text ul {
+        padding-left: 1.2rem;
+        margin-bottom: 0;
+        color: var(--text-secondary) !important;
+    }
+
+    .form-text li,
+    .help-text li,
+    .password-help-text li {
+        color: var(--text-secondary) !important;
+        font-size: 0.75rem;
+        margin-bottom: 0.2rem;
+    }
+
+    /* Dark mode specific overrides for help text */
+    [data-theme="dark"] .form-text,
+    [data-theme="dark"] .form-text.text-muted,
+    [data-theme="dark"] .help-text,
+    [data-theme="dark"] .password-help-text,
+    [data-theme="dark"] .form-text ul,
+    [data-theme="dark"] .form-text li,
+    [data-theme="dark"] .help-text ul,
+    [data-theme="dark"] .help-text li,
+    [data-theme="dark"] .password-help-text ul,
+    [data-theme="dark"] .password-help-text li {
+        color: rgba(255, 255, 255, 0.75) !important;
+    }
+
+    [data-theme="dark"] .form-text small,
+    [data-theme="dark"] .help-text small {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    /* Light mode help text */
+    :root:not([data-theme="dark"]) .form-text,
+    :root:not([data-theme="dark"]) .form-text.text-muted,
+    :root:not([data-theme="dark"]) .help-text,
+    :root:not([data-theme="dark"]) .password-help-text,
+    :root:not([data-theme="dark"]) .form-text ul,
+    :root:not([data-theme="dark"]) .form-text li,
+    :root:not([data-theme="dark"]) .help-text ul,
+    :root:not([data-theme="dark"]) .help-text li,
+    :root:not([data-theme="dark"]) .password-help-text ul,
+    :root:not([data-theme="dark"]) .password-help-text li {
+        color: #4a5568 !important;
+    }
+
+    /* ============================================
+       Button Styles - Fixed
+    ============================================ */
+    .btn-primary-custom {
+        background: var(--accent-gradient);
+        border: none;
+        color: white;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary-custom::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.6s ease;
+    }
+
+    .btn-primary-custom:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 6px 30px rgba(233, 69, 96, 0.4);
+        color: white;
+    }
+
+    .btn-primary-custom:active {
+        transform: scale(0.95);
+    }
+
+    .btn-primary-custom i {
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-custom:hover i {
+        transform: translateX(3px);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #fc8181 0%, #e53e3e 100%);
+        border: none;
+        color: white;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-danger::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.6s ease;
+    }
+
+    .btn-danger:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-danger:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 6px 30px rgba(229, 62, 62, 0.4);
+        color: white;
+    }
+
+    .btn-danger:active {
+        transform: scale(0.95);
+    }
+
+    .btn-primary {
+        background: var(--accent-gradient);
+        border: none;
+        color: white;
+        border-radius: 50px;
+        padding: 0.25rem 0.8rem;
+        font-size: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
+        color: white;
+    }
+
+    .btn-outline-primary {
+        color: var(--accent);
+        border: 2px solid var(--accent);
+        border-radius: 50px;
+        padding: 0.25rem 0.8rem;
+        font-size: 0.75rem;
+        transition: all 0.3s ease;
+        background: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--accent-gradient);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
+        border-color: transparent;
+    }
+
+    .btn-outline-success {
+        color: var(--status-active);
+        border: 2px solid var(--status-active);
+        border-radius: 50px;
+        padding: 0.15rem 0.6rem;
+        font-size: 0.65rem;
+        transition: all 0.3s ease;
+        background: transparent;
+    }
+
+    .btn-outline-success:hover {
+        background: var(--status-active);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(72, 187, 120, 0.3);
+    }
+
+    .btn-outline-danger {
+        color: var(--status-inactive);
+        border: 2px solid var(--status-inactive);
+        border-radius: 50px;
+        padding: 0.15rem 0.6rem;
+        font-size: 0.65rem;
+        transition: all 0.3s ease;
+        background: transparent;
+    }
+
+    .btn-outline-danger:hover {
+        background: var(--status-inactive);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(252, 129, 129, 0.3);
+    }
+
+    .btn-light {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid var(--border-color);
+        color: var(--text-secondary);
+        border-radius: 50px;
+        padding: 0.4rem 1rem;
+        font-weight: 500;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-light:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(233, 69, 96, 0.3);
+        transform: translateY(-2px);
+        color: var(--text-primary);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-sm {
+        padding: 0.2rem 0.6rem;
+        font-size: 0.7rem;
+    }
+
+    /* ============================================
+       Table Styles - Dark Theme - FIXED
+    ============================================ */
+    .table {
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }
+
+    .table > :not(caption) > * > * {
+        background: transparent !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-light) !important;
+        padding: 0.6rem 0.4rem;
+    }
+
+    .table-hover tbody tr {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        background: transparent !important;
+    }
+
+    .table-hover tbody tr:hover {
+        background: rgba(233, 69, 96, 0.05) !important;
+        transform: scale(1.01);
+        box-shadow: 0 2px 15px rgba(233, 69, 96, 0.05);
+    }
+
+    .table-hover tbody tr:hover td {
+        color: var(--text-primary) !important;
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 0.6rem 0.4rem;
+        font-size: 0.8rem;
+        border-color: var(--border-light);
+        color: var(--text-primary) !important;
+    }
+
+    .table th {
+        padding: 0.6rem 0.4rem;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        border-bottom: 2px solid rgba(233, 69, 96, 0.2);
+        white-space: nowrap;
+        color: var(--text-secondary) !important;
+        background: transparent !important;
+        border-top: none;
+    }
+
+    .table-light {
+        background: transparent !important;
+    }
+
+    .table-light > th {
+        background: transparent !important;
+        color: var(--text-secondary) !important;
+    }
+
+    /* ============================================
+       Badge Styles - Fixed
+    ============================================ */
+    .badge {
+        padding: 0.3rem 0.7rem;
+        border-radius: 50px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+    }
+
+    .badge:hover {
+        transform: scale(1.05);
+    }
+
+    .badge.bg-success {
+        background: var(--status-active, #48bb78) !important;
+        color: white !important;
+    }
+
+    .badge.bg-danger {
+        background: var(--status-inactive, #fc8181) !important;
+        color: white !important;
+    }
+
+    .badge.bg-primary {
+        background: var(--accent-gradient) !important;
+        color: white !important;
+    }
+
+    /* ============================================
+       Tabs Styles - Fixed
+    ============================================ */
+    .nav-tabs {
+        border-bottom: 2px solid var(--border-color);
+        padding: 0 0.5rem;
+    }
+
+    .nav-tabs .nav-link {
+        color: var(--text-secondary) !important;
+        font-weight: 500;
+        padding: 0.7rem 1.25rem;
+        border: none;
+        border-radius: 0;
+        position: relative;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 0.85rem;
+        background: transparent !important;
+    }
+
+    .nav-tabs .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        width: 0;
+        height: 3px;
+        background: var(--accent-gradient);
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }
+
+    .nav-tabs .nav-link:hover::after {
+        width: 60%;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--accent-light) !important;
+        background: transparent !important;
+    }
+
+    .nav-tabs .nav-link.active::after {
+        width: 100%;
+    }
+
+    .nav-tabs .nav-link i {
+        transition: all 0.3s ease;
+    }
+
+    .nav-tabs .nav-link:hover i {
+        transform: scale(1.2);
+        color: var(--accent);
+    }
+
+    .tab-pane {
+        animation: tabFadeIn 0.5s ease;
+        padding: 1rem 0;
+    }
+
+    @keyframes tabFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ============================================
+       Modal Styles - Dark Theme - Fixed
+    ============================================ */
+    .modal-content {
+        background: var(--bg-card) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color) !important;
+        border-radius: 16px;
+        box-shadow: 0 30px 80px var(--shadow-color);
+        animation: modalSlideIn 0.4s ease;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .modal-header {
+        background: var(--accent-gradient) !important;
+        border: none !important;
+        border-radius: 16px 16px 0 0;
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-header .modal-title {
+        color: white !important;
+        font-weight: 700;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1) !important;
+        opacity: 0.8;
+        transition: all 0.3s ease;
+    }
+
+    .modal-header .btn-close:hover {
+        opacity: 1;
+        transform: rotate(90deg);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }
+
+    .modal-body .form-label {
+        color: var(--text-secondary) !important;
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--border-color) !important;
+        padding: 1rem 1.5rem;
+        background: transparent !important;
+    }
+
+    .modal-footer .btn-light {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 2px solid var(--border-color) !important;
+        color: var(--text-secondary) !important;
+    }
+
+    .modal-footer .btn-light:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(233, 69, 96, 0.3) !important;
+        color: var(--text-primary) !important;
+    }
+
+    /* ============================================
+       Form Check - Fixed
+    ============================================ */
+    .form-check-input {
+        background-color: var(--input-bg) !important;
+        border: 2px solid var(--border-color) !important;
+        transition: all 0.3s ease;
+        width: 18px;
+        height: 18px;
+        margin-top: 0.2rem;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--accent) !important;
+        border-color: var(--accent) !important;
+        box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.15) !important;
+    }
+
+    .form-check-input:hover {
+        transform: scale(1.1);
+        border-color: var(--accent) !important;
+    }
+
+    .form-check-label {
+        color: var(--text-secondary) !important;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .form-check-label:hover {
+        color: var(--text-primary) !important;
+    }
+
+    /* ============================================
+       Responsive Styles - Fixed
+    ============================================ */
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 1.25rem !important;
+        }
+
+        .col-lg-6 {
+            margin-bottom: 1rem;
+        }
+
+        .form-control, .form-select {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.8rem;
+            height: 38px;
+        }
+
+        .btn-primary-custom, .btn-danger {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+
+        .modal-footer {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .modal-footer .btn {
+            width: 100%;
+        }
+
+        .nav-tabs .nav-link {
+            font-size: 0.75rem;
+            padding: 0.5rem 0.8rem;
+        }
+
+        .nav-tabs .nav-link i {
+            font-size: 0.8rem;
+        }
+
+        .d-flex.justify-content-between.align-items-center {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .d-flex.justify-content-between.align-items-center .btn {
+            width: 100%;
+        }
+
+        .table-responsive {
+            font-size: 0.8rem;
+        }
+
+        .table td, .table th {
+            padding: 0.4rem 0.3rem;
+        }
+
+        .badge {
+            font-size: 0.55rem;
+            padding: 0.2rem 0.5rem;
+        }
+
+        .btn-sm {
+            font-size: 0.6rem;
+            padding: 0.15rem 0.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 1rem !important;
+        }
+
+        .form-control, .form-select {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.7rem;
+            height: 36px;
+            border-radius: 10px;
+        }
+
+        .form-label {
+            font-size: 0.75rem;
+        }
+
+        .btn-primary-custom, .btn-danger {
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .modal-header {
+            padding: 0.75rem 1rem;
+        }
+
+        .modal-header .modal-title {
+            font-size: 1rem;
+        }
+
+        .modal-body {
+            padding: 0.75rem;
+        }
+
+        .nav-tabs .nav-link {
+            font-size: 0.65rem;
+            padding: 0.4rem 0.6rem;
+        }
+
+        .nav-tabs .nav-link i {
+            font-size: 0.7rem;
+            margin-right: 0.3rem !important;
+        }
+
+        .table {
+            font-size: 0.7rem;
+        }
+
+        .badge {
+            font-size: 0.5rem;
+            padding: 0.15rem 0.4rem;
+        }
+
+        .btn-sm {
+            font-size: 0.55rem;
+            padding: 0.1rem 0.4rem;
+        }
+
+        .password-toggle-icon {
+            font-size: 0.9rem;
+            padding: 6px 8px;
+            right: 8px;
+        }
+    }
+
+    /* ============================================
+       Scrollbar Styling
+    ============================================ */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--accent-gradient);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-light);
+    }
+
+    /* ============================================
+       Text Selection
+    ============================================ */
+    ::selection {
+        background: var(--accent);
+        color: white;
+    }
+
+    ::-moz-selection {
+        background: var(--accent);
+        color: white;
+    }
+
+    /* ============================================
+       Animation Delays
+    ============================================ */
+    .animate__fadeInDown {
+        animation: fadeInDown 0.6s ease;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ============================================
+       FIX: Performance - Reduce repaints
+    ============================================ */
+    .panel-card, .modal-content, .form-control, .form-select {
+        will-change: transform, opacity;
+    }
+
+    /* Prevent layout shift during animation */
+    .tab-pane {
+        will-change: transform, opacity;
+    }
+
+    /* Optimize backdrop-filter performance */
+    .panel-card, .glass-header, .modal-content {
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+    }
+
+    /* ============================================
+       FIX: Light Mode Input Field Colors
+    ============================================ */
+
+    /* Force proper input colors for light mode */
+    :root:not([data-theme="dark"]) .form-control,
+    :root:not([data-theme="dark"]) .form-select,
+    :root:not([data-theme="dark"]) input[type="text"],
+    :root:not([data-theme="dark"]) input[type="email"],
+    :root:not([data-theme="dark"]) input[type="password"],
+    :root:not([data-theme="dark"]) input[type="number"],
+    :root:not([data-theme="dark"]) input[type="date"],
+    :root:not([data-theme="dark"]) textarea,
+    :root:not([data-theme="dark"]) select {
+        background-color: #f7fafc !important;
+        border: 2px solid #e2e8f0 !important;
+        color: #2d3748 !important;
+        -webkit-text-fill-color: #2d3748 !important;
+        caret-color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-control:focus,
+    :root:not([data-theme="dark"]) .form-select:focus,
+    :root:not([data-theme="dark"]) input[type="text"]:focus,
+    :root:not([data-theme="dark"]) input[type="email"]:focus,
+    :root:not([data-theme="dark"]) input[type="password"]:focus,
+    :root:not([data-theme="dark"]) input[type="number"]:focus,
+    :root:not([data-theme="dark"]) input[type="date"]:focus,
+    :root:not([data-theme="dark"]) textarea:focus,
+    :root:not([data-theme="dark"]) select:focus {
+        background-color: #edf2f7 !important;
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2) !important;
+        color: #2d3748 !important;
+        -webkit-text-fill-color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-control::placeholder,
+    :root:not([data-theme="dark"]) input::placeholder,
+    :root:not([data-theme="dark"]) textarea::placeholder {
+        color: #718096 !important;
+        -webkit-text-fill-color: #718096 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-select option,
+    :root:not([data-theme="dark"]) select option {
+        background: #ffffff !important;
+        color: #2d3748 !important;
+    }
+
+    /* Fix for select dropdown in light mode */
+    :root:not([data-theme="dark"]) .form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%234a5568' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+    }
+
+    /* Fix for autofill in light mode */
+    :root:not([data-theme="dark"]) input:-webkit-autofill,
+    :root:not([data-theme="dark"]) input:-webkit-autofill:hover,
+    :root:not([data-theme="dark"]) input:-webkit-autofill:focus,
+    :root:not([data-theme="dark"]) input:-webkit-autofill:active,
+    :root:not([data-theme="dark"]) textarea:-webkit-autofill,
+    :root:not([data-theme="dark"]) textarea:-webkit-autofill:hover,
+    :root:not([data-theme="dark"]) textarea:-webkit-autofill:focus,
+    :root:not([data-theme="dark"]) textarea:-webkit-autofill:active,
+    :root:not([data-theme="dark"]) select:-webkit-autofill,
+    :root:not([data-theme="dark"]) select:-webkit-autofill:hover,
+    :root:not([data-theme="dark"]) select:-webkit-autofill:focus,
+    :root:not([data-theme="dark"]) select:-webkit-autofill:active {
+        -webkit-text-fill-color: #2d3748 !important;
+        -webkit-box-shadow: 0 0 0px 1000px #f7fafc inset !important;
+        background-color: #f7fafc !important;
+        color: #2d3748 !important;
+        border-color: #e2e8f0 !important;
+    }
+
+    :root:not([data-theme="dark"]) input:-webkit-autofill:focus,
+    :root:not([data-theme="dark"]) textarea:-webkit-autofill:focus,
+    :root:not([data-theme="dark"]) select:-webkit-autofill:focus {
+        border-color: #667eea !important;
+        -webkit-box-shadow: 0 0 0px 1000px #edf2f7 inset, 0 0 0 4px rgba(102, 126, 234, 0.2) !important;
+    }
+
+    /* Fix for date inputs in light mode */
+    :root:not([data-theme="dark"]) input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(0) !important;
+    }
+
+    :root:not([data-theme="dark"]) input[type="date"]::-webkit-datetime-edit {
+        color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+        color: #2d3748 !important;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2 class="fw-bold text-primary mb-1"><i class="fa-solid fa-sliders me-2"></i>Settings & Master Data Management</h2>
-        <p class="text-muted mb-0">Manage system-wide parameters, contacts, notification alerts, units, and departments</p>
-    </div>
-</div>
-
-<div class="row g-4">
-    <!-- Left Column: IT Support Contact & Alert Recipients -->
-    <div class="col-lg-4">
-        <!-- IT Support Contact Card -->
-        <div class="card panel-card shadow-sm mb-4">
-            <div class="card-header glass-header py-3 bg-light">
-                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-headset me-2"></i>IT Helpdesk Contact Card</h5>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST" data-confirm="Are you sure you want to save these settings?">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="contact">
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Executive Name <span class="text-danger">*</span></label>
-                        {{ contact_form.admin_name }}
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Helpdesk Phone <span class="text-danger">*</span></label>
-                        {{ contact_form.admin_phone }}
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Helpdesk Email <span class="text-danger">*</span></label>
-                        {{ contact_form.admin_email }}
-                    </div>
-
-                    <button type="submit" class="btn btn-primary-custom w-100 mt-2">
-                        <i class="fa-solid fa-save me-1"></i>Save Contact Card
-                    </button>
-                </form>
-            </div>
+<div class="settings-container">
+    <!-- Header Section -->
+    <div class="row mb-4 animate__animated animate__fadeInDown">
+        <div class="col-12">
+            <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--accent-light);">
+                <i class="fa-solid fa-sliders me-2" style="color: var(--accent);"></i>Settings & Master Data Management
+            </h2>
+            <p class="mb-0" style="font-size: clamp(0.75rem, 1.5vw, 0.9rem); color: var(--text-secondary);">
+                <i class="fa-regular fa-gear me-1"></i>
+                Manage system parameters, users, contacts, and master data
+            </p>
         </div>
+    </div>
 
-        <!-- Alert Emails Management -->
-        <div class="card panel-card shadow-sm">
-            <div class="card-header glass-header py-3 bg-light">
-                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-envelope-circle-check me-2"></i>IT Notification List</h5>
-            </div>
-            <div class="card-body p-4">
-                <!-- Add Alert Email -->
-                <form method="POST" data-confirm="Are you sure you want to add this email?">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="email_add">
-                    <div class="input-group mb-3">
-                        {{ email_form.email }}
-                        <button type="submit" class="btn btn-primary">Add</button>
-                    </div>
-                </form>
-
-                <hr class="my-3">
-
-                <!-- Alert Emails List -->
-                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                    <table class="table table-sm align-middle table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Active Alert Emails</th>
-                                <th class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for e in emails %}
-                                <tr>
-                                    <td class="fw-medium text-dark">{{ e.email }}</td>
-                                    <td class="text-center">
-                                        <!-- Delete Email Form -->
-                                        <form method="POST" class="d-inline" data-confirm="Are you sure you want to delete this record?">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="form_type" value="email_delete">
-                                            <input type="hidden" name="email_id" value="{{ e.id }}">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger border-0">
-                                                <i class="fa-solid fa-trash-can"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="2" class="text-center text-muted small py-3">No emails configured.</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+    <!-- Password Management Section -->
+    <div class="row g-4 mb-4">
+        <!-- Change My Password Card -->
+        <div class="col-lg-6">
+            <div class="card panel-card h-100">
+                <div class="card-header glass-header py-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fa-solid fa-key me-2" style="color: var(--accent);"></i>Change My Password
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{% url 'settings_page' %}" id="changePasswordForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="change_my_password">
+                        
+                        <div class="mb-3">
+                            <label for="id_change_current_password" class="form-label fw-bold">
+                                <i class="fa-solid fa-lock me-1"></i>Current Password
+                            </label>
+                            <div class="password-wrapper">
+                                <input type="password" name="current_password" id="id_change_current_password" class="form-control" required>
+                                <button type="button" class="password-toggle-icon toggle-change-password" data-target="id_change_current_password" aria-label="Toggle current password visibility">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_change_new_password1" class="form-label fw-bold">
+                                <i class="fa-solid fa-key me-1"></i>New Password
+                            </label>
+                            <div class="password-wrapper">
+                                <input type="password" name="new_password1" id="id_change_new_password1" class="form-control" required>
+                                <button type="button" class="password-toggle-icon toggle-change-password" data-target="id_change_new_password1" aria-label="Toggle new password visibility">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text password-help-text">
+                                <ul>
+                                    <li>Your password can't be too similar to your other personal information.</li>
+                                    <li>Your password must contain at least 8 characters.</li>
+                                    <li>Your password can't be a commonly used password.</li>
+                                    <li>Your password can't be entirely numeric.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_change_new_password2" class="form-label fw-bold">
+                                <i class="fa-solid fa-check-circle me-1"></i>Confirm New Password
+                            </label>
+                            <div class="password-wrapper">
+                                <input type="password" name="new_password2" id="id_change_new_password2" class="form-control" required>
+                                <button type="button" class="password-toggle-icon toggle-change-password" data-target="id_change_new_password2" aria-label="Toggle confirm password visibility">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary-custom mt-3">
+                            <i class="fa-solid fa-save me-2"></i>Update My Password
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
 
-        <!-- Change Admin Password Card -->
-        <div class="card panel-card shadow-sm mt-4">
-            <div class="card-header glass-header py-3 bg-light">
-                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-key me-2"></i>Change Admin Password</h5>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST" data-confirm="Are you sure you want to change the admin password?">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="change_password">
+        <!-- Reset Employee Password Card -->
+        <div class="col-lg-6">
+            <div class="card panel-card h-100">
+                <div class="card-header glass-header py-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fa-solid fa-user-lock me-2" style="color: var(--accent);"></i>Reset Employee Password
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{% url 'settings_page' %}" id="resetPasswordForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="set_user_password">
+                        <p class="form-text text-muted">
+                            This will reset the password for the shared employee account: 
+                            <strong class="fw-bold" style="color: var(--accent-light);">GPLERPUSERS</strong>.
+                        </p>
+                        <input type="hidden" name="user" value="{{ employee_user.id }}">
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Current Password <span class="text-danger">*</span></label>
-                        <input type="password" name="current_password" class="form-control" placeholder="Enter current password" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">New Password <span class="text-danger">*</span></label>
-                        <input type="password" name="new_password" class="form-control" placeholder="Enter new password" required>
-                        <div class="form-text small">Minimum 6 characters.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Confirm New Password <span class="text-danger">*</span></label>
-                        <input type="password" name="confirm_password" class="form-control" placeholder="Re-enter new password" required>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary-custom w-100 mt-2">
-                        <i class="fa-solid fa-lock me-1"></i>Update Password
-                    </button>
-                </form>
+                        <div class="mb-3">
+                            <label for="id_reset_new_password1" class="form-label fw-bold">
+                                <i class="fa-solid fa-key me-1"></i>New Password
+                            </label>
+                            <div class="password-wrapper">
+                                <input type="password" name="new_password1" id="id_reset_new_password1" class="form-control" required>
+                                <button type="button" class="password-toggle-icon toggle-reset-password" data-target="id_reset_new_password1" aria-label="Toggle new password visibility">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text password-help-text">
+                                <ul>
+                                    <li>Your password can't be too similar to your other personal information.</li>
+                                    <li>Your password must contain at least 8 characters.</li>
+                                    <li>Your password can't be a commonly used password.</li>
+                                    <li>Your password can't be entirely numeric.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_reset_new_password2" class="form-label fw-bold">
+                                <i class="fa-solid fa-check-circle me-1"></i>Confirm New Password
+                            </label>
+                            <div class="password-wrapper">
+                                <input type="password" name="new_password2" id="id_reset_new_password2" class="form-control" required>
+                                <button type="button" class="password-toggle-icon toggle-reset-password" data-target="id_reset_new_password2" aria-label="Toggle confirm password visibility">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-danger mt-3">
+                            <i class="fa-solid fa-sync-alt me-2"></i>Reset User Password
+                        </button>
+                    </form>
+                </div>
             </div>
-        </div>
         </div>
     </div>
 
-    <!-- Right Column: Units & Departments Masters -->
-    <div class="col-lg-8">
-        <!-- Units Management -->
-        <div class="card panel-card shadow-sm mb-4">
-            <div class="card-header glass-header py-3 bg-light d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-industry me-2"></i>Units Management</h5>
-                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addUnitModal">
-                    <i class="fa-solid fa-plus me-1"></i>Add Unit
-                </button>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light text-secondary">
-                            <tr>
-                                <th class="ps-4">Code</th>
-                                <th>Unit Name (ALL CAPS)</th>
-                                <th>Status</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for u in units %}
+    <!-- Master Data Management Tabs -->
+    <div class="card panel-card shadow-sm animate__animated animate__fadeInUp animate__delay-1s">
+        <div class="card-header p-0 border-bottom-0">
+            <ul class="nav nav-tabs nav-tabs-custom" id="settingsTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="units-tab" data-bs-toggle="tab" data-bs-target="#units-content" type="button" role="tab">
+                        <i class="fa-solid fa-industry me-2"></i>Units
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="depts-tab" data-bs-toggle="tab" data-bs-target="#depts-content" type="button" role="tab">
+                        <i class="fa-solid fa-cubes me-2"></i>Departments
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact-content" type="button" role="tab">
+                        <i class="fa-solid fa-headset me-2"></i>Helpdesk Info
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="emails-tab" data-bs-toggle="tab" data-bs-target="#emails-content" type="button" role="tab">
+                        <i class="fa-solid fa-envelope-circle-check me-2"></i>Notification Emails
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body">
+            <div class="tab-content" id="settingsTabContent">
+                <!-- Units Management Tab -->
+                <div class="tab-pane fade show active" id="units-content" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0" style="color: var(--accent-light);">
+                            <i class="fa-solid fa-industry me-2" style="color: var(--accent);"></i>Units Management
+                        </h5>
+                        <button type="button" class="btn btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                            <i class="fa-solid fa-plus me-1"></i>Add Unit
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
                                 <tr>
-                                    <td class="ps-4 fw-bold text-dark">{{ u.code }}</td>
-                                    <td class="fw-medium">{{ u.full_name }}</td>
+                                    <th class="ps-3" style="font-size: 0.65rem;">Code</th>
+                                    <th style="font-size: 0.65rem;">Unit Name</th>
+                                    <th style="font-size: 0.65rem;">Status</th>
+                                    <th class="text-center" style="font-size: 0.65rem;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in units %}
+                                <tr>
+                                    <td class="ps-3 fw-bold" style="color: var(--accent-light);">{{ u.code }}</td>
+                                    <td>{{ u.full_name }}</td>
                                     <td>
-                                        {% if u.is_active %}
-                                            <span class="badge bg-success">ACTIVE</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">INACTIVE</span>
-                                        {% endif %}
+                                        <span class="badge bg-{% if u.is_active %}success{% else %}danger{% endif %}">
+                                            {% if u.is_active %}ACTIVE{% else %}INACTIVE{% endif %}
+                                        </span>
                                     </td>
                                     <td class="text-center">
-                                        <!-- Edit trigger -->
-                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2.5" data-bs-toggle="modal" data-bs-target="#editUnitModal" data-id="{{ u.id }}" data-code="{{ u.code }}" data-fullname="{{ u.full_name }}">
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editUnitModal" data-id="{{ u.id }}" data-code="{{ u.code }}" data-fullname="{{ u.full_name }}">
                                             <i class="fa-solid fa-pen-to-square"></i> Edit
                                         </button>
-                                        
-                                        <!-- Toggle Status Form -->
-                                        <form method="POST" class="d-inline" data-confirm="Are you sure you want to {% if u.is_active %}deactivate{% else %}activate{% endif %} this unit?">
+                                        <form method="POST" class="d-inline" id="toggleUnitForm_{{ u.id }}">
                                             {% csrf_token %}
                                             <input type="hidden" name="form_type" value="unit_toggle">
                                             <input type="hidden" name="unit_id" value="{{ u.id }}">
-                                            <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2.5">
+                                            <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2" data-confirm="Are you sure you want to {% if u.is_active %}deactivate{% else %}activate{% endif %} this unit?">
                                                 {% if u.is_active %}Deactivate{% else %}Activate{% endif %}
                                             </button>
                                         </form>
                                     </td>
                                 </tr>
-                            {% empty %}
+                                {% empty %}
                                 <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted">No units defined.</td>
+                                    <td colspan="4" class="text-center py-4" style="color: var(--text-muted);">
+                                        <i class="fa-regular fa-building me-1"></i>No units defined.
+                                    </td>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Departments Management -->
-        <div class="card panel-card shadow-sm">
-            <div class="card-header glass-header py-3 bg-light d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-cubes me-2"></i>Departments Management</h5>
-                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addDeptModal">
-                    <i class="fa-solid fa-plus me-1"></i>Add Department
-                </button>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light text-secondary">
-                            <tr>
-                                <th class="ps-4">Associated Unit</th>
-                                <th>Department Name (ALL CAPS)</th>
-                                <th>Status</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for d in departments %}
+                <!-- Departments Management Tab -->
+                <div class="tab-pane fade" id="depts-content" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0" style="color: var(--accent-light);">
+                            <i class="fa-solid fa-cubes me-2" style="color: var(--accent);"></i>Departments Management
+                        </h5>
+                        <button type="button" class="btn btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addDeptModal">
+                            <i class="fa-solid fa-plus me-1"></i>Add Department
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
                                 <tr>
-                                    <td class="ps-4 fw-bold text-secondary">{{ d.unit.code }} - {{ d.unit.full_name }}</td>
-                                    <td class="fw-bold text-dark">{{ d.name }}</td>
+                                    <th class="ps-3" style="font-size: 0.65rem;">Associated Unit</th>
+                                    <th style="font-size: 0.65rem;">Department Name</th>
+                                    <th style="font-size: 0.65rem;">Status</th>
+                                    <th class="text-center" style="font-size: 0.65rem;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for d in departments %}
+                                <tr>
+                                    <td class="ps-3 fw-bold" style="color: var(--text-secondary);">{{ d.unit.code }}</td>
+                                    <td class="fw-bold" style="color: var(--accent-light);">{{ d.name }}</td>
                                     <td>
-                                        {% if d.is_active %}
-                                            <span class="badge bg-success">ACTIVE</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">INACTIVE</span>
-                                        {% endif %}
+                                        <span class="badge bg-{% if d.is_active %}success{% else %}danger{% endif %}">
+                                            {% if d.is_active %}ACTIVE{% else %}INACTIVE{% endif %}
+                                        </span>
                                     </td>
                                     <td class="text-center">
-                                        <!-- Edit trigger -->
-                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2.5" data-bs-toggle="modal" data-bs-target="#editDeptModal" data-id="{{ d.id }}" data-name="{{ d.name }}">
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editDeptModal" data-id="{{ d.id }}" data-name="{{ d.name }}">
                                             <i class="fa-solid fa-pen-to-square"></i> Edit
                                         </button>
-                                        
-                                        <!-- Toggle Status Form -->
-                                        <form method="POST" class="d-inline" data-confirm="Are you sure you want to {% if d.is_active %}deactivate{% else %}activate{% endif %} this department?">
+                                        <form method="POST" class="d-inline" id="toggleDeptForm_{{ d.id }}">
                                             {% csrf_token %}
                                             <input type="hidden" name="form_type" value="dept_toggle">
                                             <input type="hidden" name="dept_id" value="{{ d.id }}">
-                                            <button type="submit" class="btn btn-sm {% if d.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2.5">
+                                            <button type="submit" class="btn btn-sm {% if d.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2" data-confirm="Are you sure you want to {% if d.is_active %}deactivate{% else %}activate{% endif %} this department?">
                                                 {% if d.is_active %}Deactivate{% else %}Activate{% endif %}
                                             </button>
                                         </form>
                                     </td>
                                 </tr>
-                            {% empty %}
+                                {% empty %}
                                 <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted">No departments defined.</td>
+                                    <td colspan="4" class="text-center py-4" style="color: var(--text-muted);">
+                                        <i class="fa-regular fa-layer-group me-1"></i>No departments defined.
+                                    </td>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Helpdesk Info Tab -->
+                <div class="tab-pane fade" id="contact-content" role="tabpanel">
+                    <h5 class="fw-bold mb-3" style="color: var(--accent-light);">
+                        <i class="fa-solid fa-headset me-2" style="color: var(--accent);"></i>IT Helpdesk Contact Card
+                    </h5>
+                    <form method="POST" class="col-lg-6" id="contactForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="contact">
+                        {{ contact_form.as_p }}
+                        <button type="submit" class="btn btn-primary-custom mt-2">
+                            <i class="fa-solid fa-save me-1"></i> Save Contact Card
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Notification Emails Tab -->
+                <div class="tab-pane fade" id="emails-content" role="tabpanel">
+                    <h5 class="fw-bold mb-3" style="color: var(--accent-light);">
+                        <i class="fa-solid fa-envelope-circle-check me-2" style="color: var(--accent);"></i>IT Notification Email List
+                    </h5>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <h6 style="color: var(--text-secondary);">
+                                <i class="fa-solid fa-plus-circle me-1" style="color: var(--accent);"></i>Add New Email
+                            </h6>
+                            <form method="POST" id="addEmailForm">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="email_add">
+                                <div class="input-group mb-3">
+                                    {{ email_form.email }}
+                                    <button type="submit" class="btn btn-primary">Add</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-lg-6">
+                            <h6 style="color: var(--text-secondary);">
+                                <i class="fa-solid fa-list-check me-1" style="color: var(--accent);"></i>Active Alert Emails
+                            </h6>
+                            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                <table class="table table-sm align-middle table-hover mb-0">
+                                    <tbody>
+                                        {% for e in emails %}
+                                        <tr>
+                                            <td class="fw-medium" style="color: var(--text-primary);">{{ e.email }}</td>
+                                            <td class="text-end">
+                                                <form method="POST" class="d-inline" id="deleteEmailForm_{{ e.id }}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="form_type" value="email_delete">
+                                                    <input type="hidden" name="email_id" value="{{ e.id }}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0" data-confirm="Are you sure you want to delete this email?">
+                                                        <i class="fa-solid fa-trash-can"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="2" class="text-center py-3" style="color: var(--text-muted);">
+                                                <i class="fa-regular fa-inbox me-1"></i>No emails configured.
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -258,28 +1458,28 @@
 <!-- Add Unit Modal -->
 <div class="modal fade" id="addUnitModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
-            <form method="POST" data-confirm="Are you sure you want to add this unit?">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" id="addUnitForm">
                 {% csrf_token %}
                 <input type="hidden" name="form_type" value="unit_add">
-                <div class="modal-header bg-primary text-white py-3">
+                <div class="modal-header py-3">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add New Unit</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Unit Short Code <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold">Unit Short Code <span class="text-danger">*</span></label>
                         {{ unit_form.code }}
                         <div class="form-text small">Short unique code (e.g., IMD, DCD). Auto capitalized on save.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Unit Full Name <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold">Unit Full Name <span class="text-danger">*</span></label>
                         {{ unit_form.full_name }}
                         <div class="form-text small">Full name description of the plant/unit.</div>
                     </div>
                     <div class="form-check mt-3">
-                        {{ unit_form.is_active }}
-                        <label class="form-check-label fw-bold text-dark" for="id_is_active">Mark Unit as Active</label>
+                        <input type="checkbox" name="is_active" id="id_unit_is_active" class="form-check-input" checked>
+                        <label class="form-check-label fw-bold" for="id_unit_is_active">Mark Unit as Active</label>
                     </div>
                 </div>
                 <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
@@ -294,22 +1494,22 @@
 <!-- Edit Unit Modal -->
 <div class="modal fade" id="editUnitModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
-            <form method="POST" data-confirm="Are you sure you want to save changes to this unit?">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" id="editUnitForm">
                 {% csrf_token %}
                 <input type="hidden" name="form_type" value="unit_edit">
                 <input type="hidden" name="unit_id" id="edit_unit_id">
-                <div class="modal-header bg-primary text-white py-3">
+                <div class="modal-header py-3">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Unit</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Unit Short Code <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold">Unit Short Code <span class="text-danger">*</span></label>
                         <input type="text" name="code" id="edit_unit_code" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Unit Full Name <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold">Unit Full Name <span class="text-danger">*</span></label>
                         <input type="text" name="full_name" id="edit_unit_fullname" class="form-control" required>
                     </div>
                 </div>
@@ -325,27 +1525,27 @@
 <!-- Add Department Modal -->
 <div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
-            <form method="POST" data-confirm="Are you sure you want to add this department?">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" id="addDeptForm">
                 {% csrf_token %}
                 <input type="hidden" name="form_type" value="dept_add">
-                <div class="modal-header bg-primary text-white py-3">
+                <div class="modal-header py-3">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add New Department</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Parent Unit <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold">Parent Unit <span class="text-danger">*</span></label>
                         {{ dept_form.unit }}
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Department Name <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold">Department Name <span class="text-danger">*</span></label>
                         {{ dept_form.name }}
                         <div class="form-text small">Enter name (e.g. QUALITY CONTROL). Auto capitalized on save.</div>
                     </div>
                     <div class="form-check mt-3">
                         {{ dept_form.is_active }}
-                        <label class="form-check-label fw-bold text-dark" for="id_is_active">Mark Department as Active</label>
+                        <label class="form-check-label fw-bold" for="id_is_active">Mark Department as Active</label>
                     </div>
                 </div>
                 <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
@@ -360,18 +1560,18 @@
 <!-- Edit Department Modal -->
 <div class="modal fade" id="editDeptModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
-            <form method="POST" data-confirm="Are you sure you want to save changes to this department?">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" id="editDeptForm">
                 {% csrf_token %}
                 <input type="hidden" name="form_type" value="dept_edit">
                 <input type="hidden" name="dept_id" id="edit_dept_id">
-                <div class="modal-header bg-primary text-white py-3">
+                <div class="modal-header py-3">
                     <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Department</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-dark">Department Name <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold">Department Name <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="edit_dept_name" class="form-control" required>
                     </div>
                 </div>
@@ -388,35 +1588,237 @@
 
 {% block extra_js %}
 <script>
-    // JS to prefill the Edit Modals inputs dynamically
+    // ============================================
+    // OPTIMIZED: Debounced function to prevent excessive DOM updates
+    // ============================================
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        // Prefill Edit Unit Modal
+        // ============================================
+        // FIX: Ensure all inputs have proper color on load
+        // ============================================
+        const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#ffffff';
+        
+        const allInputs = document.querySelectorAll('input, textarea, select');
+        allInputs.forEach(input => {
+            if (input.type !== 'hidden' && input.type !== 'submit' && input.type !== 'button') {
+                input.style.color = textColor;
+                if (input.tagName === 'SELECT') {
+                    input.style.color = textColor;
+                }
+                if (input.value && input.value.length > 0) {
+                    input.style.color = textColor;
+                }
+            }
+        });
+
+        // ============================================
+        // FIX: Password Visibility Toggle - INDEPENDENT for both forms
+        // Each toggle button only toggles its own field
+        // ============================================
+        
+        // Get all password toggle buttons
+        const toggleButtons = document.querySelectorAll('.password-toggle-icon');
+        
+        toggleButtons.forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Get the target input ID from data-target attribute
+                const targetId = this.getAttribute('data-target');
+                const passwordInput = document.getElementById(targetId);
+                
+                if (passwordInput) {
+                    // Toggle password visibility
+                    const currentType = passwordInput.getAttribute('type');
+                    const newType = currentType === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', newType);
+                    
+                    // Update icon
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.className = newType === 'password' ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+                    }
+                    
+                    // Visual feedback animation
+                    this.style.transform = 'translateY(-50%) scale(1.2)';
+                    setTimeout(() => {
+                        this.style.transform = 'translateY(-50%)';
+                    }, 200);
+                    
+                    // Focus on the input
+                    passwordInput.focus();
+                }
+            });
+
+            // Keyboard accessibility (Enter and Space keys)
+            button.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.click();
+                }
+            });
+
+            // Set role and tabindex for accessibility
+            button.setAttribute('role', 'button');
+            button.setAttribute('tabindex', '0');
+        });
+
+        // ============================================
+        // Keyboard shortcut: Ctrl+Shift+P (toggles first password field in focused form)
+        // ============================================
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && (e.key === 'p' || e.key === 'P')) {
+                e.preventDefault();
+                // Find the currently focused element
+                const focused = document.activeElement;
+                // If focused element is in a password wrapper, toggle it
+                if (focused) {
+                    const wrapper = focused.closest('.password-wrapper');
+                    if (wrapper) {
+                        const toggleBtn = wrapper.querySelector('.password-toggle-icon');
+                        if (toggleBtn) {
+                            toggleBtn.click();
+                        }
+                    } else {
+                        // If not focused on password, find the first password field
+                        const firstPasswordField = document.querySelector('.password-wrapper .form-control');
+                        if (firstPasswordField) {
+                            const wrapper = firstPasswordField.closest('.password-wrapper');
+                            if (wrapper) {
+                                const toggleBtn = wrapper.querySelector('.password-toggle-icon');
+                                if (toggleBtn) {
+                                    toggleBtn.click();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // ============================================
+        // Prefill Edit Modals - Optimized
+        // ============================================
         const editUnitModal = document.getElementById('editUnitModal');
         if (editUnitModal) {
             editUnitModal.addEventListener('show.bs.modal', function(event) {
                 const button = event.relatedTarget;
-                const unitId = button.getAttribute('data-id');
-                const code = button.getAttribute('data-code');
-                const fullName = button.getAttribute('data-fullname');
-                
-                document.getElementById('edit_unit_id').value = unitId;
-                document.getElementById('edit_unit_code').value = code;
-                document.getElementById('edit_unit_fullname').value = fullName;
+                document.getElementById('edit_unit_id').value = button.getAttribute('data-id');
+                document.getElementById('edit_unit_code').value = button.getAttribute('data-code');
+                document.getElementById('edit_unit_fullname').value = button.getAttribute('data-fullname');
             });
         }
 
-        // Prefill Edit Department Modal
         const editDeptModal = document.getElementById('editDeptModal');
         if (editDeptModal) {
             editDeptModal.addEventListener('show.bs.modal', function(event) {
                 const button = event.relatedTarget;
-                const deptId = button.getAttribute('data-id');
-                const deptName = button.getAttribute('data-name');
-                
-                document.getElementById('edit_dept_id').value = deptId;
-                document.getElementById('edit_dept_name').value = deptName;
+                document.getElementById('edit_dept_id').value = button.getAttribute('data-id');
+                document.getElementById('edit_dept_name').value = button.getAttribute('data-name');
             });
         }
+
+        // ============================================
+        // Optimized: Animate cards on load
+        // ============================================
+        const cards = document.querySelectorAll('.panel-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+            }, 200 + (index * 150));
+        });
+
+        // ============================================
+        // Smooth tab transitions - Optimized
+        // ============================================
+        const tabLinks = document.querySelectorAll('[data-bs-toggle="tab"]');
+        tabLinks.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function(e) {
+                const targetPane = document.querySelector(this.getAttribute('data-bs-target'));
+                if (targetPane) {
+                    targetPane.style.animation = 'none';
+                    requestAnimationFrame(() => {
+                        targetPane.style.animation = 'tabFadeIn 0.5s ease';
+                    });
+                }
+            });
+        });
+
+        // ============================================
+        // PERFORMANCE: Use MutationObserver with debounce
+        // ============================================
+        const fixInputColors = debounce(function() {
+            const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#ffffff';
+            document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select').forEach(input => {
+                const currentColor = getComputedStyle(input).color;
+                if (currentColor === 'rgb(0, 0, 0)' || currentColor === '#000000' || currentColor === 'black' || !input.style.color) {
+                    input.style.color = textColor;
+                }
+            });
+        }, 100);
+
+        const observer = new MutationObserver(function(mutations) {
+            let needsUpdate = false;
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    needsUpdate = true;
+                }
+            });
+            if (needsUpdate) {
+                fixInputColors();
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // ============================================
+        // FIX: Modal backdrop z-index issue
+        // ============================================
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('shown.bs.modal', function() {
+                this.style.zIndex = '1050';
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.style.zIndex = '1040';
+                }
+            });
+        });
+
+        // ============================================
+        // PERFORMANCE: Lazy load tab content
+        // ============================================
+        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                const targetId = this.getAttribute('data-bs-target');
+                const targetPane = document.querySelector(targetId);
+                if (targetPane) {
+                    if (!targetPane.hasAttribute('data-loaded')) {
+                        targetPane.setAttribute('data-loaded', 'true');
+                        targetPane.style.animation = 'tabFadeIn 0.5s ease';
+                    }
+                }
+            });
+        });
+
+        console.log('System Settings page loaded successfully with performance optimizations.');
     });
 </script>
 {% endblock %}

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import logout
+from django.contrib.auth import logout, update_session_auth_hash
+from django.contrib.auth.models import User
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q
@@ -12,7 +13,7 @@ import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
 
 from tickets.models import Unit, Department, AdminContact, AdminNotificationEmail, Ticket, TicketHistory
-from tickets.forms import TicketForm, AdminTicketForm, AdminContactForm, UnitForm, DepartmentForm, AdminNotificationEmailForm
+from tickets.forms import TicketForm, AdminTicketForm, AdminContactForm, UnitForm, DepartmentForm, AdminNotificationEmailForm, AdminPasswordChangeForm, AdminSetUserPasswordForm, UserSelectionForm
 from tickets.utils import generate_ticket_number, send_ticket_email
 
 # Helper: Check if user is Admin
@@ -159,77 +160,15 @@ def admin_dashboard(request):
     # Chart 2: Unit-wise Tickets
     unit_counts = list(all_tickets.values('unit__code').annotate(count=Count('id')))
     chart_units = {item['unit__code']: item['count'] for item in unit_counts if item['unit__code']}
-    
-    # Chart 3: Department-wise Tickets
-    dept_counts = list(all_tickets.values('department__name').annotate(count=Count('id')))
-    chart_depts = {item['department__name']: item['count'] for item in dept_counts if item['department__name']}
 
     # Chart 4: Priority Distribution
     prio_counts = list(all_tickets.values('priority').annotate(count=Count('id')))
     chart_priority = {item['priority']: item['count'] for item in prio_counts}
 
-    # Chart 5: Error Type Distribution
-    err_counts = list(all_tickets.values('error_type').annotate(count=Count('id')))
-    chart_error_type = {item['error_type']: item['count'] for item in err_counts}
-
-    # Chart 6: Monthly Ticket Trend (Last 6 Months)
-    # Using python side grouping to avoid complex DB specific date queries
-    monthly_data = {}
-    now = timezone.now()
-    for i in range(5, -1, -1):
-        month_start = (now - datetime.timedelta(days=i*30)).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        # Next month start
-        if month_start.month == 12:
-            next_month = month_start.replace(year=month_start.year + 1, month=1)
-        else:
-            next_month = month_start.replace(month=month_start.month + 1)
-        
-        m_label = month_start.strftime('%b %Y')
-        m_count = all_tickets.filter(created_at__gte=month_start, created_at__lt=next_month).count()
-        monthly_data[m_label] = m_count
-
-    # Chart 7: Escalated vs Closed
-    # We want counts of escalated tickets vs closed tickets
-    chart_esc_vs_closed = {
-        'Escalated': all_tickets.filter(status='Escalated').count(),
-        'Closed': all_tickets.filter(status='Closed').count()
-    }
-
-    # Chart 8: Average Resolution Time (hours) per Unit
-    # Python-based processing for Oracle-ready DB compatibility
-    closed_tickets = all_tickets.filter(status='Closed', closed_at__isnull=False)
-    unit_res_times = {}
-    unit_res_counts = {}
-    
-    for t in closed_tickets:
-        ucode = t.unit.code
-        duration = (t.closed_at - t.created_at).total_seconds() / 3600.0
-        unit_res_times[ucode] = unit_res_times.get(ucode, 0) + duration
-        unit_res_counts[ucode] = unit_res_counts.get(ucode, 0) + 1
-        
-    chart_avg_res = {}
-    for ucode in unit_res_times:
-        chart_avg_res[ucode] = round(unit_res_times[ucode] / unit_res_counts[ucode], 2)
-
-    # Chart 9: Top 10 Reported Issues (Subjects)
-    subject_counts = list(all_tickets.values('subject').annotate(count=Count('id')).order_by('-count')[:10])
-    chart_top_issues = {item['subject']: item['count'] for item in subject_counts}
-
-    # Chart 10: Top Departments by Ticket Count
-    dept_counts_sorted = list(all_tickets.values('department__name').annotate(count=Count('id')).order_by('-count')[:5])
-    chart_top_depts = {item['department__name']: item['count'] for item in dept_counts_sorted if item['department__name']}
-
     charts_data = {
         'status': chart_status,
         'units': chart_units,
-        'depts': chart_depts,
         'priority': chart_priority,
-        'error_type': chart_error_type,
-        'trend': monthly_data,
-        'esc_closed': chart_esc_vs_closed,
-        'avg_res': chart_avg_res,
-        'top_issues': chart_top_issues,
-        'top_depts': chart_top_depts,
     }
 
     context = {
@@ -248,16 +187,25 @@ def create_ticket_admin(request):
             with transaction.atomic():
                 ticket = form.save(commit=False)
                 ticket.ticket_number = generate_ticket_number()
-                ticket.created_by_user = request.user
-                ticket.save()
                 
                 # Custom history text
                 if ticket.created_by_role == 'Admin':
                     hist_remark = f"Ticket created by Admin on behalf of employee (Reason: {ticket.admin_creation_reason})"
                     hist_perf = f"Admin {request.user.username}"
+                    # The admin is creating it, so the admin is the user who created it.
+                    ticket.created_by_user = request.user
                 else:
                     hist_remark = "Ticket Created by Employee (logged by Admin)"
                     hist_perf = "Employee"
+                    # Find or create the single, shared employee user.
+                    # All employee-created tickets will be associated with this user.
+                    employee_user, _ = User.objects.get_or_create(
+                        username='GPLERPUSERS', 
+                        defaults={'is_staff': False, 'password': 'pbkdf2_sha256$720000$j5xL6pS0LpGvLq3sRjVbWk$V/Hq7aYt2x531enqYm5d9f2uZdtsJ7MLd2y221C+L9s='} # GPL123USER
+                    )
+                    ticket.created_by_user = employee_user
+                
+                ticket.save()
                     
                 TicketHistory.objects.create(
                     ticket=ticket,
@@ -564,12 +512,20 @@ def settings_page(request):
     if not contact_obj:
         contact_obj = AdminContact.objects.create(admin_name="IT ADMIN", admin_phone="9999999999", admin_email="admin@gplast.com")
         
+    # Ensure the shared employee user exists, create if not.
+    employee_user, _ = User.objects.get_or_create(
+        username='GPLERPUSERS',
+        defaults={'is_staff': False, 'password': 'pbkdf2_sha256$720000$j5xL6pS0LpGvLq3sRjVbWk$V/Hq7aYt2x531enqYm5d9f2uZdtsJ7MLd2y221C+L9s='} # GPL123USER
+    )
+
     units = Unit.objects.all().order_by('code')
     departments = Department.objects.all().order_by('unit__code', 'name')
     emails = AdminNotificationEmail.objects.all().order_by('-created_at')
 
     # Initialize Forms
     contact_form = AdminContactForm(instance=contact_obj)
+    my_password_form = AdminPasswordChangeForm(user=request.user)
+    set_user_password_form = AdminSetUserPasswordForm(user=None)
     unit_form = UnitForm()
     dept_form = DepartmentForm()
     email_form = AdminNotificationEmailForm()
@@ -651,9 +607,36 @@ def settings_page(request):
             email_obj.delete()
             messages.success(request, f"Notification email {email_str} deleted.")
             return redirect('settings_page')
+            
+        elif form_type == 'change_my_password':
+            my_password_form = AdminPasswordChangeForm(user=request.user, data=request.POST)
+            if my_password_form.is_valid():
+                user = my_password_form.save()
+                update_session_auth_hash(request, user)  # Important!
+                messages.success(request, 'Your password was successfully updated!')
+                return redirect('settings_page')
+            else:
+                messages.error(request, 'Please correct the error below.')
+
+        elif form_type == 'set_user_password':
+            user_id = request.POST.get('user')
+            selected_user = get_object_or_404(User, pk=user_id, is_staff=False)
+            set_user_password_form = AdminSetUserPasswordForm(user=selected_user, data=request.POST)
+            
+            if set_user_password_form.is_valid():
+                set_user_password_form.save()
+                messages.success(request, f"Password for user '{selected_user.username}' has been successfully reset.")
+                return redirect('settings_page')
+            else:
+                messages.error(request, f"Failed to reset password for '{selected_user.username}'. Please correct the errors.")
+                # Repopulate user selection form to show which user was selected
+                user_select_form = UserSelectionForm(initial={'user': user_id})
 
     context = {
         'contact_form': contact_form,
+        'my_password_form': my_password_form,
+        'set_user_password_form': set_user_password_form,
+        'employee_user': employee_user,
         'unit_form': unit_form,
         'dept_form': dept_form,
         'email_form': email_form,

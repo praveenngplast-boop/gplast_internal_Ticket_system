@@ -113,7 +113,7 @@ EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
 Execute the database setup:
 ```powershell
 # Create MySQL Database (if not exists)
-mysql -u root -pPraxvn@7050 -e "CREATE DATABASE IF NOT EXISTS gplast_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -pRoot@123 -e "CREATE DATABASE IF NOT EXISTS gplast_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 # Generate and apply migrations
 python manage.py makemigrations
