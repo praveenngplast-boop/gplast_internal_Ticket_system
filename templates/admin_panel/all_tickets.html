@@ -81,6 +81,53 @@
         transform: scale(0.95);
     }
 
+    .form-control,
+    .form-select {
+        background-color: var(--input-bg, rgba(255, 255, 255, 0.08));
+        color: var(--text-primary, #ffffff) !important;
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+        box-shadow: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--accent);
+        background-color: var(--input-bg, rgba(255, 255, 255, 0.12));
+        box-shadow: 0 0 0 0.2rem rgba(233, 69, 96, 0.16);
+        outline: none;
+    }
+
+    .form-select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, var(--text-primary, #ffffff) 50%),
+                          linear-gradient(135deg, var(--text-primary, #ffffff) 50%, transparent 50%),
+                          linear-gradient(to right, var(--border-color, rgba(255, 255, 255, 0.15)), var(--border-color, rgba(255, 255, 255, 0.15)));
+        background-position: calc(100% - 1rem) calc(1em + 2px), calc(100% - 0.65rem) calc(1em + 2px), 100% 100%;
+        background-size: 0.45em 0.45em, 0.45em 0.45em, 1px 1.5em;
+        background-repeat: no-repeat;
+        padding-right: 2.5rem;
+    }
+
+    .form-select option {
+        background: var(--bg-card, #1e1e1e);
+        color: var(--text-primary, #ffffff);
+    }
+
+    .filter-clear-btn {
+        color: var(--text-primary, #ffffff) !important;
+        border-color: var(--border-color, rgba(255, 255, 255, 0.15)) !important;
+        background: transparent !important;
+    }
+
+    .filter-clear-btn:hover {
+        background: rgba(233, 69, 96, 0.12) !important;
+        color: white !important;
+        border-color: var(--accent) !important;
+    }
+
     /* ============================================
        Search Bar - Fixed for Dark/Light Mode
     ============================================ */
@@ -242,7 +289,7 @@
     }
 
     /* ============================================
-       Table Styles - Dark Theme
+       Table Styles - Dark Theme with SORTABLE HEADERS
     ============================================ */
     .table {
         color: var(--text-primary);
@@ -291,6 +338,40 @@
         color: var(--text-secondary);
         background: transparent;
         border-top: none;
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .table th:hover {
+        color: var(--accent-light);
+        background: rgba(233, 69, 96, 0.03);
+    }
+
+    .table th .sort-icon {
+        margin-left: 4px;
+        font-size: 0.5rem;
+        opacity: 0.4;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+    .table th:hover .sort-icon {
+        opacity: 1;
+        color: var(--accent);
+    }
+
+    .table th.sorted-asc .sort-icon {
+        opacity: 1;
+        color: var(--accent);
+        transform: rotate(0deg);
+    }
+
+    .table th.sorted-desc .sort-icon {
+        opacity: 1;
+        color: var(--accent);
+        transform: rotate(180deg);
     }
 
     /* Override Bootstrap table classes */
@@ -1165,7 +1246,7 @@
     <!-- Advanced Filters -->
     <div class="row mb-4">
         <div class="col-12">
-            <form method="get" class="card panel-card shadow-sm border-0 p-3">
+            <form method="get" class="card panel-card shadow-sm border-0 p-3" id="filterForm">
                 <input type="hidden" name="category" value="{{ category }}">
                 <div class="row g-3 align-items-end">
                     <div class="col-sm-6 col-md-3">
@@ -1226,6 +1307,31 @@
                             <i class="fa-solid fa-filter me-1"></i>Apply Filters
                         </button>
                     </div>
+                    <div class="col-sm-6 col-md-3 d-grid">
+                        <button type="button" class="btn btn-outline-secondary w-100" id="toggleAdvancedAdmin">
+                            <i class="fa-solid fa-sliders-horizontal me-1"></i>Advanced Filters
+                        </button>
+                    </div>
+                    <div class="col-sm-6 col-md-3 d-grid">
+                        <button type="button" class="btn btn-outline-secondary filter-clear-btn w-100" id="clearAdminFilters">
+                            <i class="fa-solid fa-eraser me-1"></i>Clear Filters
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-3" id="advancedFilterPanel" style="display: none;">
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Ticket Number</label>
+                        <input class="form-control" type="text" name="ticket_number" value="{{ selected_ticket_number|default:'' }}" placeholder="Ticket #">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Created From</label>
+                        <input class="form-control" type="date" name="date_from" value="{{ date_from|default:'' }}">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Created To</label>
+                        <input class="form-control" type="date" name="date_to" value="{{ date_to|default:'' }}">
+                    </div>
                 </div>
             </form>
         </div>
@@ -1258,10 +1364,16 @@
                                     <th class="ps-3" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Ticket</th>
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Date</th>
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Subject</th>
-                                    <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Unit</th>
+                                    <!-- SORTABLE: Unit -->
+                                    <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); cursor: pointer;" onclick="sortTable('unit')" class="sortable" id="sort-unit">
+                                        Unit <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span>
+                                    </th>
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Dept</th>
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Priority</th>
-                                    <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Status</th>
+                                    <!-- SORTABLE: Status -->
+                                    <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); cursor: pointer;" onclick="sortTable('status')" class="sortable" id="sort-status">
+                                        Status <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span>
+                                    </th>
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Assigned</th>
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Origin</th>
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Attach</th>
@@ -1270,7 +1382,9 @@
                             </thead>
                             <tbody id="ticketsBody">
                                 {% for ticket in tickets %}
-                                    <tr data-search="{{ ticket.ticket_number }} {{ ticket.subject }} {{ ticket.unit.code }} {{ ticket.department.name }}">
+                                    <tr data-search="{{ ticket.ticket_number }} {{ ticket.subject }} {{ ticket.unit.code }} {{ ticket.department.name }}"
+                                        data-unit="{{ ticket.unit.code }}"
+                                        data-status="{{ ticket.status }}">
                                         <td class="ps-3 fw-bold" data-label="Ticket" style="font-size: clamp(0.7rem, 1vw, 0.85rem); color: var(--accent-light);">
                                             <i class="fa-regular fa-hashtag me-1" style="font-size: clamp(0.5rem, 0.7vw, 0.6rem); color: var(--accent);"></i>
                                             {{ ticket.ticket_number }}
@@ -1367,66 +1481,80 @@
 
 <script>
     // ============================================
-    // Search/Filter Functionality - Ultra Search
+    // FIX: Prevent Double Render - Use flag
     // ============================================
-    function filterTickets() {
-        const input = document.getElementById('searchInput');
-        const filter = input.value.toLowerCase().trim();
-        const rows = document.querySelectorAll('#ticketsBody tr');
-        let visibleCount = 0;
-        
-        // Show/hide clear button
-        const clearBtn = document.getElementById('clearSearch');
-        if (filter.length > 0) {
-            clearBtn.classList.add('visible');
-        } else {
-            clearBtn.classList.remove('visible');
-        }
-        
-        rows.forEach(row => {
-            if (row.querySelector('.empty-state')) {
-                row.style.display = '';
-                return;
-            }
-            
-            const searchData = row.getAttribute('data-search') || '';
-            const text = searchData.toLowerCase();
-            
-            if (filter === '' || text.indexOf(filter) > -1) {
-                row.style.display = '';
-                visibleCount++;
-                row.style.animation = 'cardSlideIn 0.3s ease';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-        
-        // Update counters
-        const totalRows = document.querySelectorAll('#ticketsBody tr:not(:has(.empty-state))').length;
-        document.getElementById('showCount').textContent = visibleCount;
-        document.getElementById('ticketCounter').innerHTML = `<i class="fa-regular fa-circle-check me-1"></i> ${visibleCount} Tickets`;
-        
-        // Show/hide no results message
-        const noResults = document.getElementById('noResults');
-        if (visibleCount === 0 && totalRows > 0) {
-            noResults.style.display = 'block';
-        } else {
-            noResults.style.display = 'none';
-        }
-    }
+    let isRendered = false;
 
-    // ============================================
-    // Real-time search on input
-    // ============================================
     document.addEventListener('DOMContentLoaded', function() {
+        // Prevent double rendering
+        if (isRendered) {
+            console.log('Already rendered, skipping...');
+            return;
+        }
+        isRendered = true;
+
+        // ============================================
+        // Search/Filter Functionality - Ultra Search
+        // ============================================
+        function filterTickets() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#ticketsBody tr');
+            let visibleCount = 0;
+            
+            // Show/hide clear button
+            const clearBtn = document.getElementById('clearSearch');
+            if (filter.length > 0) {
+                clearBtn.classList.add('visible');
+            } else {
+                clearBtn.classList.remove('visible');
+            }
+            
+            rows.forEach(row => {
+                if (row.querySelector('.empty-state')) {
+                    row.style.display = '';
+                    return;
+                }
+                
+                const searchData = row.getAttribute('data-search') || '';
+                const text = searchData.toLowerCase();
+                
+                if (filter === '' || text.indexOf(filter) > -1) {
+                    row.style.display = '';
+                    visibleCount++;
+                    row.style.animation = 'cardSlideIn 0.3s ease';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update counters
+            const totalRows = document.querySelectorAll('#ticketsBody tr:not(:has(.empty-state))').length;
+            document.getElementById('showCount').textContent = visibleCount;
+            document.getElementById('ticketCounter').innerHTML = `<i class="fa-regular fa-circle-check me-1"></i> ${visibleCount} Tickets`;
+            
+            // Show/hide no results message
+            const noResults = document.getElementById('noResults');
+            if (visibleCount === 0 && totalRows > 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+        }
+
+        // Make filterTickets globally accessible
+        window.filterTickets = filterTickets;
+
+        // ============================================
+        // Real-time search on input
+        // ============================================
         const searchInput = document.getElementById('searchInput');
         const clearBtn = document.getElementById('clearSearch');
         
         if (searchInput) {
             searchInput.addEventListener('input', function() {
-                // Auto-search with debounce
                 clearTimeout(this.timer);
-                this.timer = setTimeout(() => {
+                this.timer = setTimeout(function() {
                     filterTickets();
                 }, 250);
             });
@@ -1447,8 +1575,124 @@
             });
         }
 
+        // Advanced filter toggle
+        const toggleAdvancedAdmin = document.getElementById('toggleAdvancedAdmin');
+        const advancedFilterPanel = document.getElementById('advancedFilterPanel');
+        if (toggleAdvancedAdmin && advancedFilterPanel) {
+            const updateAdminToggleText = () => {
+                const isVisible = advancedFilterPanel.style.display !== 'none';
+                toggleAdvancedAdmin.innerHTML = isVisible
+                    ? '<i class="fa-solid fa-sliders-horizontal me-1"></i>Hide Advanced Filters'
+                    : '<i class="fa-solid fa-sliders-horizontal me-1"></i>Advanced Filters';
+            };
+
+            toggleAdvancedAdmin.addEventListener('click', function() {
+                const isHidden = advancedFilterPanel.style.display === 'none';
+                advancedFilterPanel.style.display = isHidden ? 'flex' : 'none';
+                updateAdminToggleText();
+            });
+
+            const adminFields = advancedFilterPanel.querySelectorAll('input');
+            adminFields.forEach(field => {
+                if (field.value) {
+                    advancedFilterPanel.style.display = 'flex';
+                    updateAdminToggleText();
+                }
+            });
+        }
+
+        const clearAdminFilters = document.getElementById('clearAdminFilters');
+        if (clearAdminFilters) {
+            clearAdminFilters.addEventListener('click', function() {
+                const adminForm = document.getElementById('filterForm');
+                if (adminForm) {
+                    adminForm.querySelectorAll('input, select').forEach(field => {
+                        if (field.name !== 'category') {
+                            if (field.tagName.toLowerCase() === 'select') {
+                                field.selectedIndex = 0;
+                            } else {
+                                field.value = '';
+                            }
+                        }
+                    });
+                    adminForm.submit();
+                }
+            });
+        }
+
         // ============================================
-        // Animate rows on load
+        // SORTABLE TABLE HEADERS - Unit & Status
+        // ============================================
+        let sortColumn = '';
+        let sortDirection = 'asc';
+
+        window.sortTable = function(column) {
+            const tbody = document.getElementById('ticketsBody');
+            const rows = Array.from(tbody.querySelectorAll('tr:not(:has(.empty-state))'));
+            
+            // Toggle direction if same column
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+            
+            // Update sort icons
+            document.querySelectorAll('.sortable .sort-icon').forEach(function(icon) {
+                icon.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
+                icon.parentElement.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            
+            const currentHeader = document.getElementById('sort-' + column);
+            if (currentHeader) {
+                const icon = currentHeader.querySelector('.sort-icon');
+                if (sortDirection === 'asc') {
+                    icon.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
+                    currentHeader.classList.add('sorted-asc');
+                } else {
+                    icon.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
+                    currentHeader.classList.add('sorted-desc');
+                }
+            }
+            
+            // Sort rows
+            rows.sort(function(a, b) {
+                let aVal = a.getAttribute('data-' + column) || '';
+                let bVal = b.getAttribute('data-' + column) || '';
+                
+                // For status, use the full status name from the badge
+                if (column === 'status') {
+                    const aBadge = a.querySelector('.badge-custom');
+                    const bBadge = b.querySelector('.badge-custom');
+                    if (aBadge) aVal = aBadge.textContent.trim();
+                    if (bBadge) bVal = bBadge.textContent.trim();
+                }
+                
+                // For unit, use the code from the badge
+                if (column === 'unit') {
+                    const aBadge = a.querySelector('.unit-badge');
+                    const bBadge = b.querySelector('.unit-badge');
+                    if (aBadge) aVal = aBadge.textContent.trim();
+                    if (bBadge) bVal = bBadge.textContent.trim();
+                }
+                
+                aVal = aVal.toLowerCase();
+                bVal = bVal.toLowerCase();
+                
+                if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Re-append sorted rows
+            rows.forEach(function(row) {
+                tbody.appendChild(row);
+            });
+        };
+
+        // ============================================
+        // Animate rows on load (only once)
         // ============================================
         const rows = document.querySelectorAll('#ticketsBody tr');
         rows.forEach((row, index) => {
@@ -1481,6 +1725,8 @@
                 row.style.cursor = 'pointer';
             }
         });
+
+        console.log('All Tickets page loaded successfully (rendered once).');
     });
 </script>
 {% endblock %}

@@ -11,30 +11,47 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Ticket number generator
+# ============================================
+# FIX: Ticket Number Generator - Sequential
+# Format: 0001, 0002, 0003, ...
+# ============================================
 def generate_ticket_number():
+    """
+    Generate sequential ticket numbers starting from 0001
+    Format: 0001, 0002, 0003, ... up to 9999
+    """
     from tickets.models import Ticket  # Lazy import to avoid circular dependency
 
-    ticket_numbers = Ticket.objects.values_list('ticket_number', flat=True)
-    max_seq = 0
-
-    for ticket_number in ticket_numbers:
-        if not ticket_number:
-            continue
-        match = re.search(r'(\d+)$', ticket_number)
-        if not match:
-            continue
-
+    # Get the last ticket by ID (most recent)
+    last_ticket = Ticket.objects.all().order_by('id').last()
+    
+    if last_ticket and last_ticket.ticket_number:
+        # Extract the number part and increment
         try:
-            value = int(match.group(1))
+            # Try to convert the entire ticket_number to int
+            # This works for pure numbers like "0001", "0002"
+            last_number = int(last_ticket.ticket_number)
+            new_number = last_number + 1
         except ValueError:
-            continue
-
-        if value > max_seq:
-            max_seq = value
-
-    next_seq = max_seq + 1
-    return f"{next_seq:04d}"
+            # If ticket_number is not a pure number (e.g., old format GPLAST-20260701-0001)
+            # Try to extract the last 4 digits
+            try:
+                # Extract the last 4 digits
+                match = re.search(r'(\d{4})$', last_ticket.ticket_number)
+                if match:
+                    last_number = int(match.group(1))
+                    new_number = last_number + 1
+                else:
+                    # Fallback: start from 1
+                    new_number = 1
+            except (ValueError, AttributeError):
+                new_number = 1
+    else:
+        # No tickets exist, start from 1
+        new_number = 1
+    
+    # Format as 4-digit with leading zeros (0001, 0002, ...)
+    return f"{new_number:04d}"
 
 # Server-side attachment validator
 def validate_attachment(file):

@@ -76,6 +76,53 @@
         transition: all 0.3s ease;
     }
 
+    .form-control,
+    .form-select {
+        background-color: var(--input-bg, rgba(255, 255, 255, 0.08));
+        color: var(--text-primary, #ffffff) !important;
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+        box-shadow: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--accent);
+        background-color: var(--input-bg, rgba(255, 255, 255, 0.12));
+        box-shadow: 0 0 0 0.2rem rgba(233, 69, 96, 0.16);
+        outline: none;
+    }
+
+    .form-select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-image: linear-gradient(45deg, transparent 50%, var(--text-primary, #ffffff) 50%),
+                          linear-gradient(135deg, var(--text-primary, #ffffff) 50%, transparent 50%),
+                          linear-gradient(to right, var(--border-color, rgba(255, 255, 255, 0.15)), var(--border-color, rgba(255, 255, 255, 0.15)));
+        background-position: calc(100% - 1rem) calc(1em + 2px), calc(100% - 0.65rem) calc(1em + 2px), 100% 100%;
+        background-size: 0.45em 0.45em, 0.45em 0.45em, 1px 1.5em;
+        background-repeat: no-repeat;
+        padding-right: 2.5rem;
+    }
+
+    .form-select option {
+        background: var(--bg-card, #1e1e1e);
+        color: var(--text-primary, #ffffff);
+    }
+
+    .filter-clear-btn {
+        color: var(--text-primary, #ffffff) !important;
+        border-color: var(--border-color, rgba(255, 255, 255, 0.15)) !important;
+        background: transparent !important;
+    }
+
+    .filter-clear-btn:hover {
+        background: rgba(233, 69, 96, 0.12) !important;
+        color: white !important;
+        border-color: var(--accent) !important;
+    }
+
     .btn-primary-custom:hover i {
         transform: translateX(3px);
     }
@@ -700,6 +747,67 @@
         </div>
     </div>
 
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="get" class="card panel-card shadow-sm border-0 p-3" id="employeeFilterForm">
+                <div class="row g-3 align-items-end">
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="">All</option>
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Priority</label>
+                        <select class="form-select" name="priority">
+                            <option value="">All</option>
+                            {% for value, label in priority_choices %}
+                                <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Keyword</label>
+                        <input class="form-control" type="text" name="search" value="{{ search_query|default:'' }}" placeholder="Search ticket or subject">
+                    </div>
+                    <div class="col-sm-6 col-md-3 d-grid">
+                        <button type="submit" class="btn btn-primary-custom w-100">
+                            <i class="fa-solid fa-filter me-1"></i>Filter Tickets
+                        </button>
+                    </div>
+                    <div class="col-sm-6 col-md-3 d-grid">
+                        <button type="button" class="btn btn-outline-secondary w-100" id="toggleAdvancedEmployee">
+                            <i class="fa-solid fa-sliders-horizontal me-1"></i>Advanced Filters
+                        </button>
+                    </div>
+                    <div class="col-sm-6 col-md-3 d-grid">
+                        <button type="button" class="btn btn-outline-light w-100" id="clearEmployeeFilters">
+                            <i class="fa-solid fa-eraser me-1"></i>Clear Filters
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-3" id="employeeAdvancedFilters" style="display: none;">
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Ticket Number</label>
+                        <input class="form-control" type="text" name="ticket_number" value="{{ selected_ticket_number|default:'' }}" placeholder="Ticket #">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Created From</label>
+                        <input class="form-control" type="date" name="date_from" value="{{ date_from|default:'' }}">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="form-label text-secondary">Created To</label>
+                        <input class="form-control" type="date" name="date_to" value="{{ date_to|default:'' }}">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Table Section -->
     <div class="row animate__animated animate__fadeInUp animate__delay-1s">
         <div class="col-12">
@@ -793,6 +901,50 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const toggleAdvancedEmployee = document.getElementById('toggleAdvancedEmployee');
+        const employeeAdvancedFilters = document.getElementById('employeeAdvancedFilters');
+        if (toggleAdvancedEmployee && employeeAdvancedFilters) {
+            const updateEmployeeToggleText = () => {
+                const isVisible = employeeAdvancedFilters.style.display !== 'none';
+                toggleAdvancedEmployee.innerHTML = isVisible
+                    ? '<i class="fa-solid fa-sliders-horizontal me-1"></i>Hide Advanced Filters'
+                    : '<i class="fa-solid fa-sliders-horizontal me-1"></i>Advanced Filters';
+            };
+
+            toggleAdvancedEmployee.addEventListener('click', function() {
+                const isHidden = employeeAdvancedFilters.style.display === 'none';
+                employeeAdvancedFilters.style.display = isHidden ? 'flex' : 'none';
+                updateEmployeeToggleText();
+            });
+
+            const employeeFields = employeeAdvancedFilters.querySelectorAll('input');
+            employeeFields.forEach(field => {
+                if (field.value) {
+                    employeeAdvancedFilters.style.display = 'flex';
+                    updateEmployeeToggleText();
+                }
+            });
+        }
+
+        const clearEmployeeFilters = document.getElementById('clearEmployeeFilters');
+        if (clearEmployeeFilters) {
+            clearEmployeeFilters.addEventListener('click', function() {
+                const employeeForm = document.getElementById('employeeFilterForm');
+                if (employeeForm) {
+                    employeeForm.querySelectorAll('input, select').forEach(field => {
+                        if (field.name) {
+                            if (field.tagName.toLowerCase() === 'select') {
+                                field.selectedIndex = 0;
+                            } else {
+                                field.value = '';
+                            }
+                        }
+                    });
+                    employeeForm.submit();
+                }
+            });
+        }
+
         // Animate rows on load
         const rows = document.querySelectorAll('#ticketsTable tbody tr');
         rows.forEach((row, index) => {

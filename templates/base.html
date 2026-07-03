@@ -22,35 +22,36 @@
         ============================================ */
         :root {
             /* Light Mode (Default) */
-            --bg-primary: #f0f4f8;
-            --bg-secondary: #ffffff;
-            --bg-card: #ffffff;
-            --bg-card-hover: #f7fafc;
-            --bg-navbar-scrolled: rgba(255, 255, 255, 0.85);
-            --bg-navbar: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --text-primary: #2d3748;
-            --text-secondary: #4a5568;
-            --text-muted: #718096;
-            --border-color: #e2e8f0;
-            --border-light: #edf2f7;
-            --shadow-color: rgba(0, 0, 0, 0.08);
-            --accent: #667eea;
-            --accent-light: #764ba2;
-            --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --input-bg: #f7fafc;
-            --input-border: #e2e8f0;
-            --navbar-text: rgba(255, 255, 255, 0.9);
-            --navbar-text-hover: #ffffff;
-            --status-open: #48bb78;
-            --status-assigned: #4299e1;
-            --status-hold: #ed8936;
-            --status-escalated: #9f7aea;
-            --status-closed: #718096;
-            --status-critical: #fc8181;
-            --input-focus: rgba(102, 126, 234, 0.2);
-            --alert-bg: #fefcff;
-            --alert-border: #e2e8f0;
-            --alert-text: #4a5568;
+            --bg-primary: #F8FAFC;
+            --bg-secondary: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F8FAFC;
+            --bg-navbar-scrolled: rgba(30, 58, 138, 0.85);
+            --bg-navbar: #1E3A8A;
+            --bg-sidebar: #1F2937;
+            --text-primary: #1F2937;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --border-light: #EDF2F7;
+            --shadow-color: rgba(31, 41, 55, 0.08);
+            --accent: #2563EB;
+            --accent-light: #60A5FA;
+            --accent-gradient: linear-gradient(135deg, #2563EB 0%, #60A5FA 100%);
+            --input-bg: #F8FAFC;
+            --input-border: #E2E8F0;
+            --navbar-text: #FFFFFF;
+            --navbar-text-hover: #F8FAFC;
+            --status-open: #16A34A;
+            --status-assigned: #2563EB;
+            --status-hold: #F59E0B;
+            --status-escalated: #8B5CF6;
+            --status-closed: #64748B;
+            --status-critical: #DC2626;
+            --input-focus: rgba(37, 99, 235, 0.2);
+            --alert-bg: #EFF6FF;
+            --alert-border: #BFDBFE;
+            --alert-text: #1E3A8A;
         }
 
         /* Dark Mode */
@@ -143,15 +144,15 @@
         :root .navbar-custom.scrolled .nav-link,
         :root .navbar-custom.scrolled .user-name,
         :root .navbar-custom.scrolled .btn-logout {
-            color: var(--text-secondary) !important;
+            color: var(--navbar-text) !important;
         }
 
         :root .navbar-custom.scrolled .nav-link:hover,
         :root .navbar-custom.scrolled .nav-link.active,
         :root .navbar-custom.scrolled .user-name:hover,
         :root .navbar-custom.scrolled .btn-logout:hover {
-            color: var(--text-primary) !important;
-            background: rgba(0, 0, 0, 0.05) !important;
+            color: var(--navbar-text-hover) !important;
+            background: rgba(255, 255, 255, 0.08) !important;
         }
 
         /* ============================================

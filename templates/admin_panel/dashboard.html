@@ -102,8 +102,22 @@
     }
 
     /* ============================================
-       KPI Cards - Animated with Proper Colors
+       KPI Cards - Clickable Links
     ============================================ */
+    .kpi-link {
+        text-decoration: none !important;
+        display: block;
+        transition: all 0.3s ease;
+    }
+
+    .kpi-link:hover {
+        transform: translateY(-2px);
+    }
+
+    .kpi-link:active {
+        transform: scale(0.98);
+    }
+
     .kpi-card {
         background: var(--bg-card);
         backdrop-filter: blur(10px);
@@ -113,6 +127,7 @@
         position: relative;
         overflow: hidden;
         animation: cardSlideUp 0.5s ease;
+        cursor: pointer;
     }
 
     .kpi-card::before {
@@ -135,6 +150,10 @@
         transform: translateY(-5px) scale(1.02);
         box-shadow: 0 8px 40px rgba(233, 69, 96, 0.1);
         border-color: rgba(233, 69, 96, 0.25);
+    }
+
+    .kpi-card:active {
+        transform: scale(0.98);
     }
 
     .kpi-card:nth-child(1) { animation-delay: 0.05s; }
@@ -571,21 +590,24 @@
         </div>
     </div>
 
-    <!-- Admin KPI Cards Section -->
+    <!-- Admin KPI Cards Section - CLICKABLE -->
     <div class="row g-3 mb-4">
         <!-- Total Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card p-3 h-100">
-                <div class="kpi-value text-secondary">{{ kpis.total }}</div>
-                <div class="kpi-label">
-                    <i class="fa-regular fa-circle-check me-1" style="color: var(--accent);"></i>
-                    Total Tickets
+            <a href="{% url 'all_tickets' %}" class="kpi-link">
+                <div class="card kpi-card p-3 h-100">
+                    <div class="kpi-value text-secondary">{{ kpis.total }}</div>
+                    <div class="kpi-label">
+                        <i class="fa-regular fa-circle-check me-1" style="color: var(--accent);"></i>
+                        Total Tickets
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
-        <!-- Open Tickets -->
+
+        <!-- Open Tickets - Clickable -->
         <div class="col-6 col-md-3 col-lg-2">
-            <a href="{% url 'all_tickets' %}?category=open" class="text-decoration-none text-reset">
+            <a href="{% url 'all_tickets' %}?category=open" class="kpi-link">
                 <div class="card kpi-card kpi-open p-3 h-100">
                     <div class="kpi-value text-primary">{{ kpis.open }}</div>
                     <div class="kpi-label">
@@ -595,9 +617,10 @@
                 </div>
             </a>
         </div>
-        <!-- Assigned Tickets -->
+
+        <!-- Assigned Tickets - Clickable -->
         <div class="col-6 col-md-3 col-lg-2">
-            <a href="{% url 'all_tickets' %}?category=assigned" class="text-decoration-none text-reset">
+            <a href="{% url 'all_tickets' %}?category=assigned" class="kpi-link">
                 <div class="card kpi-card kpi-assigned p-3 h-100">
                     <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
                     <div class="kpi-label">
@@ -607,29 +630,36 @@
                 </div>
             </a>
         </div>
-        <!-- Hold Tickets -->
+
+        <!-- Hold Tickets - Clickable -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-hold p-3 h-100">
-                <div class="kpi-value" style="color: var(--status-hold);">{{ kpis.hold }}</div>
-                <div class="kpi-label">
-                    <i class="fa-solid fa-pause me-1" style="color: var(--status-hold);"></i>
-                    Hold
+            <a href="{% url 'all_tickets' %}?category=hold" class="kpi-link">
+                <div class="card kpi-card kpi-hold p-3 h-100">
+                    <div class="kpi-value" style="color: var(--status-hold);">{{ kpis.hold }}</div>
+                    <div class="kpi-label">
+                        <i class="fa-solid fa-pause me-1" style="color: var(--status-hold);"></i>
+                        Hold
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
-        <!-- Escalated Tickets -->
+
+        <!-- Escalated Tickets - Clickable -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-escalated p-3 h-100">
-                <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
-                <div class="kpi-label">
-                    <i class="fa-solid fa-cloud-arrow-up me-1" style="color: var(--status-escalated);"></i>
-                    Escalated
+            <a href="{% url 'all_tickets' %}?category=escalated" class="kpi-link">
+                <div class="card kpi-card kpi-escalated p-3 h-100">
+                    <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
+                    <div class="kpi-label">
+                        <i class="fa-solid fa-cloud-arrow-up me-1" style="color: var(--status-escalated);"></i>
+                        Escalated
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
-        <!-- Closed Tickets -->
+
+        <!-- Closed Tickets - Clickable -->
         <div class="col-6 col-md-3 col-lg-2">
-            <a href="{% url 'all_tickets' %}?category=closed" class="text-decoration-none text-reset">
+            <a href="{% url 'all_tickets' %}?category=closed" class="kpi-link">
                 <div class="card kpi-card kpi-closed p-3 h-100">
                     <div class="kpi-value text-success">{{ kpis.closed }}</div>
                     <div class="kpi-label">
@@ -639,21 +669,23 @@
                 </div>
             </a>
         </div>
-        <!-- Critical Priority Tickets -->
+
+        <!-- Critical Priority Tickets - Clickable -->
         <div class="col-12 mt-3">
-            <a href="{% url 'all_tickets' %}?category=critical" class="text-decoration-none text-reset">
+            <a href="{% url 'all_tickets' %}?category=critical" class="kpi-link">
                 <div class="card kpi-card kpi-critical p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="kpi-value text-danger">{{ kpis.critical }}</div>
-                        <div class="kpi-label">
-                            <i class="fa-solid fa-triangle-exclamation me-1" style="color: var(--status-critical);"></i>
-                            Critical Priority Tickets System-Wide
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="kpi-value text-danger">{{ kpis.critical }}</div>
+                            <div class="kpi-label">
+                                <i class="fa-solid fa-triangle-exclamation me-1" style="color: var(--status-critical);"></i>
+                                Critical Priority Tickets System-Wide
+                            </div>
                         </div>
+                        <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50" style="animation: pulseIcon 2s ease-in-out infinite;"></i>
                     </div>
-                    <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50" style="animation: pulseIcon 2s ease-in-out infinite;"></i>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -693,7 +725,7 @@
             </div>
         </div>
 
-        <!-- Chart 4: Priority Distribution -->
+        <!-- Chart 3: Priority Distribution -->
         <div class="col-md-6 col-lg-4">
             <div class="card panel-card h-100">
                 <div class="card-header glass-header py-3">

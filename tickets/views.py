@@ -75,11 +75,12 @@ def create_ticket(request):
         if form.is_valid():
             with transaction.atomic():
                 ticket = form.save(commit=False)
-                ticket.ticket_number = generate_ticket_number()
+                # FIX: Ticket number is now generated automatically in models.py save()
+                # No need to manually call generate_ticket_number() here
                 ticket.created_by_user = request.user
                 ticket.created_by_role = 'Employee'
                 ticket.status = 'Open'
-                ticket.save()
+                ticket.save()  # This will trigger the save() method in models.py
                 
                 # History log
                 TicketHistory.objects.create(
@@ -103,20 +104,43 @@ def create_ticket(request):
 @login_required
 @user_passes_test(lambda u: not u.is_staff, login_url='role_redirect')
 def my_tickets(request):
-    # Active tickets
-    active_tickets = Ticket.objects.filter(
-        created_by_user=request.user
-    ).exclude(status='Closed').order_by('-created_at')
+    status = request.GET.get('status')
+    priority = request.GET.get('priority')
+    ticket_number = request.GET.get('ticket_number', '').strip()
+    search = request.GET.get('search', '').strip()
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
 
-    # Last 50 closed tickets
-    closed_tickets = Ticket.objects.filter(
-        created_by_user=request.user,
-        status='Closed'
-    ).order_by('-closed_at')[:50]
+    tickets_qs = Ticket.objects.filter(created_by_user=request.user).order_by('-created_at')
 
-    all_visible = list(active_tickets) + list(closed_tickets)
-    
-    return render(request, 'employee/my_tickets.html', {'tickets': all_visible})
+    if status:
+        tickets_qs = tickets_qs.filter(status=status)
+    if priority:
+        tickets_qs = tickets_qs.filter(priority=priority)
+    if ticket_number:
+        tickets_qs = tickets_qs.filter(ticket_number__icontains=ticket_number)
+    if search:
+        tickets_qs = tickets_qs.filter(
+            Q(ticket_number__icontains=search)
+            | Q(subject__icontains=search)
+            | Q(description__icontains=search)
+        )
+    if date_from:
+        tickets_qs = tickets_qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        tickets_qs = tickets_qs.filter(created_at__date__lte=date_to)
+
+    return render(request, 'employee/my_tickets.html', {
+        'tickets': tickets_qs,
+        'status_choices': Ticket.STATUS_CHOICES,
+        'priority_choices': Ticket.PRIORITY_CHOICES,
+        'selected_status': status,
+        'selected_priority': priority,
+        'selected_ticket_number': ticket_number,
+        'search_query': search,
+        'date_from': date_from,
+        'date_to': date_to,
+    })
 
 
 @login_required
@@ -186,7 +210,8 @@ def create_ticket_admin(request):
         if form.is_valid():
             with transaction.atomic():
                 ticket = form.save(commit=False)
-                ticket.ticket_number = generate_ticket_number()
+                # FIX: Ticket number is now generated automatically in models.py save()
+                # No need to manually call generate_ticket_number() here
                 
                 # Custom history text
                 if ticket.created_by_role == 'Admin':
@@ -205,7 +230,7 @@ def create_ticket_admin(request):
                     )
                     ticket.created_by_user = employee_user
                 
-                ticket.save()
+                ticket.save()  # This will trigger the save() method in models.py
                     
                 TicketHistory.objects.create(
                     ticket=ticket,
@@ -237,6 +262,9 @@ def all_tickets(request):
     dept_id = request.GET.get('department')
     assigned_person = request.GET.get('assigned_person', '').strip()
     created_by_role = request.GET.get('created_by_role')
+    ticket_number = request.GET.get('ticket_number', '').strip()
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
     search = request.GET.get('search', '').strip()
 
     if category == 'open':
@@ -264,6 +292,12 @@ def all_tickets(request):
         tickets_qs = tickets_qs.filter(assigned_person__icontains=assigned_person)
     if created_by_role:
         tickets_qs = tickets_qs.filter(created_by_role=created_by_role)
+    if ticket_number:
+        tickets_qs = tickets_qs.filter(ticket_number__icontains=ticket_number)
+    if date_from:
+        tickets_qs = tickets_qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        tickets_qs = tickets_qs.filter(created_at__date__lte=date_to)
     if search:
         tickets_qs = tickets_qs.filter(
             Q(ticket_number__icontains=search)
@@ -285,6 +319,9 @@ def all_tickets(request):
         'selected_department': dept_id,
         'selected_assigned_person': assigned_person,
         'selected_created_by_role': created_by_role,
+        'selected_ticket_number': ticket_number,
+        'date_from': date_from,
+        'date_to': date_to,
         'search_query': search,
         'category': category,
     }
@@ -629,6 +666,15 @@ def settings_page(request):
             messages.success(request, f"Unit {unit.code} has been {status_str}.")
             return redirect('settings_page')
             
+        elif form_type == 'unit_delete':
+            unit_id = request.POST.get('unit_id')
+            unit = get_object_or_404(Unit, pk=unit_id)
+            unit.is_active = False
+            unit.save()
+            Department.objects.filter(unit=unit, is_active=True).update(is_active=False)
+            messages.success(request, f"Unit {unit.code} has been deleted and its related departments were deactivated.")
+            return redirect('settings_page')
+            
         elif form_type == 'dept_add':
             dept_form = DepartmentForm(request.POST)
             if dept_form.is_valid():
@@ -651,6 +697,14 @@ def settings_page(request):
             dept.save()
             status_str = "activated" if dept.is_active else "deactivated"
             messages.success(request, f"Department {dept.name} has been {status_str}.")
+            return redirect('settings_page')
+            
+        elif form_type == 'dept_delete':
+            dept_id = request.POST.get('dept_id')
+            dept = get_object_or_404(Department, pk=dept_id)
+            dept.is_active = False
+            dept.save()
+            messages.success(request, f"Department {dept.name} has been deleted.")
             return redirect('settings_page')
             
         elif form_type == 'email_add':

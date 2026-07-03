@@ -1300,11 +1300,19 @@
                                         <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editUnitModal" data-id="{{ u.id }}" data-code="{{ u.code }}" data-fullname="{{ u.full_name }}">
                                             <i class="fa-solid fa-pen-to-square"></i> Edit
                                         </button>
+                                        <form method="POST" class="d-inline" id="deleteUnitForm_{{ u.id }}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="form_type" value="unit_delete">
+                                            <input type="hidden" name="unit_id" value="{{ u.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 ms-1" data-confirm="Are you sure you want to delete this unit and preserve existing tickets?">
+                                                Delete
+                                            </button>
+                                        </form>
                                         <form method="POST" class="d-inline" id="toggleUnitForm_{{ u.id }}">
                                             {% csrf_token %}
                                             <input type="hidden" name="form_type" value="unit_toggle">
                                             <input type="hidden" name="unit_id" value="{{ u.id }}">
-                                            <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2" data-confirm="Are you sure you want to {% if u.is_active %}deactivate{% else %}activate{% endif %} this unit?">
+                                            <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2 ms-1" data-confirm="Are you sure you want to {% if u.is_active %}deactivate{% else %}activate{% endif %} this unit?">
                                                 {% if u.is_active %}Deactivate{% else %}Activate{% endif %}
                                             </button>
                                         </form>
@@ -1356,11 +1364,19 @@
                                         <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editDeptModal" data-id="{{ d.id }}" data-name="{{ d.name }}">
                                             <i class="fa-solid fa-pen-to-square"></i> Edit
                                         </button>
+                                        <form method="POST" class="d-inline" id="deleteDeptForm_{{ d.id }}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="form_type" value="dept_delete">
+                                            <input type="hidden" name="dept_id" value="{{ d.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 ms-1" data-confirm="Are you sure you want to delete this department and preserve ticket history?">
+                                                Delete
+                                            </button>
+                                        </form>
                                         <form method="POST" class="d-inline" id="toggleDeptForm_{{ d.id }}">
                                             {% csrf_token %}
                                             <input type="hidden" name="form_type" value="dept_toggle">
                                             <input type="hidden" name="dept_id" value="{{ d.id }}">
-                                            <button type="submit" class="btn btn-sm {% if d.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2" data-confirm="Are you sure you want to {% if d.is_active %}deactivate{% else %}activate{% endif %} this department?">
+                                            <button type="submit" class="btn btn-sm {% if d.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2 ms-1" data-confirm="Are you sure you want to {% if d.is_active %}deactivate{% else %}activate{% endif %} this department?">
                                                 {% if d.is_active %}Deactivate{% else %}Activate{% endif %}
                                             </button>
                                         </form>
@@ -1787,6 +1803,18 @@
         observer.observe(document.body, {
             childList: true,
             subtree: true
+        });
+
+        // ============================================
+        // CONFIRMATION: Prompt before destructive actions
+        // ============================================
+        document.querySelectorAll('button[data-confirm]').forEach(button => {
+            button.addEventListener('click', function(event) {
+                const message = this.getAttribute('data-confirm');
+                if (message && !window.confirm(message)) {
+                    event.preventDefault();
+                }
+            });
         });
 
         // ============================================

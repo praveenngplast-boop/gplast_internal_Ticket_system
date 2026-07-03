@@ -1,10 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
+import re  # ← ADD THIS IMPORT AT THE TOP
 
 # Unit — Admin-managed, ALL CAPS enforced
 class Unit(models.Model):
-    code = models.CharField(max_length=10, unique=True)       # e.g. IMD
-    full_name = models.CharField(max_length=100, unique=True)  # e.g. INJECTION MOULDING
+    code = models.CharField(max_length=10, unique=True)
+    full_name = models.CharField(max_length=100, unique=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=100, blank=True)
@@ -17,7 +18,7 @@ class Unit(models.Model):
     def __str__(self):
         return f"{self.code} - {self.full_name}"
 
-# Department — linked to Unit, ALL CAPS enforced
+
 class Department(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
@@ -31,7 +32,7 @@ class Department(models.Model):
     def __str__(self):
         return f"{self.name} ({self.unit.code})"
 
-# AdminContact — singleton setting
+
 class AdminContact(models.Model):
     admin_name = models.CharField(max_length=100)
     admin_phone = models.CharField(max_length=15)
@@ -40,7 +41,7 @@ class AdminContact(models.Model):
     def __str__(self):
         return f"{self.admin_name} - {self.admin_phone}"
 
-# AdminNotificationEmail — multiple recipients
+
 class AdminNotificationEmail(models.Model):
     email = models.EmailField(unique=True)
     is_active = models.BooleanField(default=True)
@@ -48,6 +49,46 @@ class AdminNotificationEmail(models.Model):
 
     def __str__(self):
         return self.email
+
+
+# ============================================
+# FIXED: Ticket Number Generator - Sequential
+# Format: 0001, 0002, 0003, ...
+# ============================================
+def generate_ticket_number():
+    """
+    Generate sequential ticket numbers starting from 0001
+    Format: 0001, 0002, 0003, ... up to 9999
+    """
+    # Get the last ticket
+    last_ticket = Ticket.objects.all().order_by('id').last()
+    
+    if last_ticket and last_ticket.ticket_number:
+        ticket_num = last_ticket.ticket_number
+        
+        # FIX: Handle both old format (GPLAST-20260701-0001) and new format (0001)
+        try:
+            # First try to convert the entire string to int (for new format)
+            last_number = int(ticket_num)
+            new_number = last_number + 1
+        except ValueError:
+            # If that fails, try to extract the last 4 digits (for old format)
+            try:
+                match = re.search(r'(\d{4})$', ticket_num)
+                if match:
+                    last_number = int(match.group(1))
+                    new_number = last_number + 1
+                else:
+                    new_number = 1
+            except (ValueError, AttributeError):
+                new_number = 1
+    else:
+        # No tickets exist, start from 1
+        new_number = 1
+    
+    # Format as 4-digit with leading zeros (0001, 0002, ...)
+    return f"{new_number:04d}"
+
 
 # Ticket
 class Ticket(models.Model):
@@ -95,7 +136,7 @@ class Ticket(models.Model):
     employee_name = models.CharField(max_length=150)
     mobile = models.CharField(max_length=10)
     email = models.EmailField()
-    screen_number = models.CharField(max_length=50)           # Mandatory
+    screen_number = models.CharField(max_length=50)
     subject = models.CharField(max_length=150)
     description = models.TextField()
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
@@ -114,8 +155,15 @@ class Ticket(models.Model):
     closed_at = models.DateTimeField(blank=True, null=True)
     escalated_at = models.DateTimeField(blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        # Generate ticket number if not already set
+        if not self.ticket_number:
+            self.ticket_number = generate_ticket_number()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.ticket_number} - {self.subject}"
+
 
 # TicketHistory
 class TicketHistory(models.Model):
