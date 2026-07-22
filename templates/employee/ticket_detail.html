@@ -13,6 +13,200 @@
         animation-timing-function: ease;
     }
 
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ============================================
+       ENHANCED DETAILS GRID - CLEAR VIEW
+    ============================================ */
+
+    /* Details Grid Container */
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        padding: 0.25rem 0;
+    }
+
+    @media (max-width: 768px) {
+        .details-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+
+    /* Detail Item - Clean Card Style */
+    .detail-item {
+        background: var(--input-bg);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .detail-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--accent-gradient);
+        opacity: 0.6;
+    }
+
+    .detail-item:hover {
+        border-color: rgba(233, 69, 96, 0.3);
+        transform: translateX(4px);
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.05);
+    }
+
+    /* Label - Clean & Minimal */
+    .detail-label {
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-muted) !important;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .detail-label i {
+        font-size: 0.7rem;
+        color: var(--accent);
+        opacity: 0.7;
+    }
+
+    /* Value - Bold & Clear */
+    .detail-value {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary) !important;
+        word-break: break-word;
+        padding-left: 0.1rem;
+    }
+
+    .detail-value a {
+        color: var(--accent) !important;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .detail-value a:hover {
+        color: var(--accent-light) !important;
+        text-decoration: underline;
+    }
+
+    .detail-value .badge {
+        font-size: 0.6rem;
+        padding: 0.25rem 0.6rem;
+        font-weight: 500;
+    }
+
+    /* Subject Row - Full Width */
+    .detail-subject {
+        grid-column: 1 / -1;
+        background: linear-gradient(135deg, rgba(233, 69, 96, 0.05), rgba(233, 69, 96, 0.02));
+        border: 1px solid rgba(233, 69, 96, 0.15);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .detail-subject .detail-label {
+        font-size: 0.6rem;
+        letter-spacing: 1px;
+        color: var(--accent) !important;
+    }
+
+    .detail-subject .detail-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--accent-light) !important;
+    }
+
+    /* Status & Priority - Highlighted */
+    .detail-item.highlight-status {
+        background: rgba(233, 69, 96, 0.05);
+        border-color: rgba(233, 69, 96, 0.15);
+    }
+
+    .detail-item.highlight-status .detail-value {
+        font-size: 1rem;
+    }
+
+    /* Ticket Number - Special Badge Style */
+    .detail-item.ticket-number {
+        background: linear-gradient(135deg, rgba(233, 69, 96, 0.1), rgba(233, 69, 96, 0.03));
+        border-color: rgba(233, 69, 96, 0.25);
+    }
+
+    .detail-item.ticket-number .detail-value {
+        font-family: 'Courier New', monospace;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--accent) !important;
+        letter-spacing: 0.5px;
+    }
+
+    /* Description - Full Width */
+    .detail-description {
+        grid-column: 1 / -1;
+        margin-top: 0.25rem;
+    }
+
+    .detail-description .detail-value {
+        background: var(--input-bg);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        border-left: 3px solid var(--accent);
+        font-weight: 400;
+        line-height: 1.7;
+        font-size: 0.92rem;
+        white-space: pre-line;
+        border: 1px solid var(--border-color);
+        border-left-width: 4px;
+    }
+
+    .detail-description .detail-value:hover {
+        background: var(--input-hover);
+        border-color: rgba(233, 69, 96, 0.2);
+    }
+
+    /* Attachment - Full Width */
+    .detail-attachment {
+        grid-column: 1 / -1;
+    }
+
+    /* Divider Line */
+    .detail-divider {
+        grid-column: 1 / -1;
+        border-bottom: 1px solid var(--border-color);
+        margin: 0.25rem 0 0.75rem 0;
+        opacity: 0.5;
+    }
+
+    /* Small Helper Text */
+    .detail-helper {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        margin-top: 0.1rem;
+        opacity: 0.7;
+    }
+
     /* ============================================
        Header Styles
     ============================================ */
@@ -200,46 +394,6 @@
     }
 
     /* ============================================
-       Info Styles
-    ============================================ */
-    .info-label {
-        font-size: 0.65rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-secondary);
-        display: block;
-        margin-bottom: 0.2rem;
-    }
-
-    .info-value {
-        font-size: 1.05rem;
-        color: var(--text-primary);
-        font-weight: 500;
-    }
-
-    /* ============================================
-       Description Box
-    ============================================ */
-    .description-box {
-        background: var(--input-bg) !important;
-        border-radius: 12px;
-        padding: 1.25rem;
-        border-left: 4px solid var(--status-open);
-        white-space: pre-line;
-        font-size: 0.95rem;
-        line-height: 1.7;
-        color: var(--text-primary);
-        transition: all 0.3s ease;
-        border: 1px solid var(--border-color) !important;
-    }
-
-    .description-box:hover {
-        background: var(--input-hover) !important;
-        box-shadow: 0 2px 20px rgba(233, 69, 96, 0.05);
-    }
-
-    /* ============================================
        Assigned Box
     ============================================ */
     .assigned-box {
@@ -253,6 +407,50 @@
     .assigned-box:hover {
         background: rgba(233, 69, 96, 0.08) !important;
         border-color: rgba(233, 69, 96, 0.2) !important;
+    }
+
+    /* ============================================
+       Status Boxes
+    ============================================ */
+    .status-box {
+        padding: 1rem;
+        border-radius: 12px;
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+        animation: slideInRight 0.5s ease;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+    }
+
+    .status-box:hover {
+        transform: scale(1.01);
+        box-shadow: 0 4px 20px rgba(233, 69, 96, 0.05);
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .status-box-hold {
+        border-left-color: var(--status-hold) !important;
+        background: rgba(237, 137, 54, 0.05) !important;
+    }
+
+    .status-box-escalated {
+        border-left-color: var(--status-escalated) !important;
+        background: rgba(159, 122, 234, 0.05) !important;
+    }
+
+    .status-box-closed {
+        border-left-color: var(--status-open) !important;
+        background: rgba(72, 187, 120, 0.05) !important;
     }
 
     /* ============================================
@@ -421,13 +619,21 @@
             padding: 1.25rem !important;
         }
 
-        .info-value {
-            font-size: 0.95rem;
+        .detail-value {
+            font-size: 0.9rem;
         }
 
-        .description-box {
+        .detail-label {
+            font-size: 0.55rem;
+        }
+
+        .detail-subject .detail-value {
+            font-size: 1rem;
+        }
+
+        .detail-description .detail-value {
             font-size: 0.85rem;
-            padding: 1rem;
+            padding: 0.75rem;
         }
 
         .timeline::before {
@@ -463,6 +669,15 @@
         h2.fw-bold {
             font-size: 1.2rem !important;
         }
+
+        .status-box {
+            padding: 0.75rem;
+        }
+
+        .badge-custom {
+            font-size: 0.6rem;
+            padding: 0.25rem 0.6rem;
+        }
     }
 
     @media (max-width: 576px) {
@@ -470,17 +685,21 @@
             padding: 1rem !important;
         }
 
-        .info-value {
+        .detail-value {
+            font-size: 0.85rem;
+        }
+
+        .detail-label {
+            font-size: 0.5rem;
+        }
+
+        .detail-subject .detail-value {
             font-size: 0.9rem;
         }
 
-        .info-label {
-            font-size: 0.6rem;
-        }
-
-        .description-box {
+        .detail-description .detail-value {
             font-size: 0.8rem;
-            padding: 0.75rem;
+            padding: 0.65rem;
             border-left-width: 3px;
         }
 
@@ -534,6 +753,11 @@
         .assigned-box {
             padding: 0.75rem;
         }
+
+        .status-box {
+            padding: 0.5rem;
+            border-left-width: 3px;
+        }
     }
 
     @media (max-width: 400px) {
@@ -541,11 +765,11 @@
             padding: 0.75rem !important;
         }
 
-        .info-value {
-            font-size: 0.85rem;
+        .detail-value {
+            font-size: 0.8rem;
         }
 
-        .description-box {
+        .detail-description .detail-value {
             font-size: 0.75rem;
             padding: 0.5rem;
         }
@@ -619,6 +843,27 @@
         background: var(--accent);
         color: white;
     }
+
+    /* ============================================
+       Timeline Scroll
+    ============================================ */
+    .timeline-scroll::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .timeline-scroll::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+        border-radius: 10px;
+    }
+
+    .timeline-scroll::-webkit-scrollbar-thumb {
+        background: var(--accent-gradient);
+        border-radius: 10px;
+    }
+
+    .timeline-scroll::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-light);
+    }
 </style>
 {% endblock %}
 
@@ -648,7 +893,7 @@
     </div>
 
     <div class="row g-4">
-        <!-- Ticket Details Card -->
+        <!-- Ticket Details Card - ENHANCED CLEAR VIEW -->
         <div class="col-lg-7">
             <div class="card panel-card shadow-sm h-100">
                 <div class="card-header glass-header py-3">
@@ -657,45 +902,85 @@
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <div class="row g-3">
-                        <!-- Subject -->
-                        <div class="col-12 mb-2">
-                            <span class="info-label">Subject</span>
-                            <h4 class="fw-bold mb-0" style="color: var(--accent-light); font-size: clamp(1rem, 1.5vw, 1.2rem);">
-                                {{ ticket.subject }}
-                            </h4>
-                        </div>
-
-                        <!-- Unit and Department -->
-                        <div class="col-md-6">
-                            <span class="info-label">Unit</span>
-                            <div class="info-value">
-                                <i class="fa-regular fa-building me-1" style="color: var(--accent);"></i>
-                                {{ ticket.unit.full_name }} 
-                                <span class="badge rounded-pill ms-1 px-2 py-1" style="font-size: 0.55rem; background: rgba(233, 69, 96, 0.1); color: var(--accent); border: 1px solid rgba(233, 69, 96, 0.15);">{{ ticket.unit.code }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <span class="info-label">Department</span>
-                            <div class="info-value">
-                                <i class="fa-regular fa-layer-group me-1" style="color: var(--accent);"></i>
-                                {{ ticket.department.name }}
+                    <!-- ENHANCED DETAILS GRID -->
+                    <div class="details-grid">
+                        <!-- Ticket Number - Highlighted -->
+                        <div class="detail-item ticket-number">
+                            <span class="detail-label">
+                                <i class="fa-regular fa-hashtag"></i> Ticket Number
+                            </span>
+                            <div class="detail-value">
+                                #{{ ticket.ticket_number }}
                             </div>
                         </div>
 
-                        <!-- Priority and Status -->
-                        <div class="col-md-6 mt-3">
-                            <span class="info-label">Priority</span>
-                            <div class="info-value">
+                        <!-- Subject - Full Width -->
+                        <div class="detail-subject">
+                            <span class="detail-label">
+                                <i class="fa-regular fa-heading"></i> Subject
+                            </span>
+                            <div class="detail-value">{{ ticket.subject }}</div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="detail-divider"></div>
+
+                        <!-- Unit -->
+                        <div class="detail-item">
+                            <span class="detail-label">
+                                <i class="fa-regular fa-building"></i> Unit
+                            </span>
+                            <div class="detail-value">
+                                {{ ticket.unit.full_name }}
+                                <span class="badge rounded-pill ms-1" style="font-size: 0.55rem; background: rgba(233, 69, 96, 0.1); color: var(--accent); border: 1px solid rgba(233, 69, 96, 0.15);">
+                                    {{ ticket.unit.code }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Department -->
+                        <div class="detail-item">
+                            <span class="detail-label">
+                                <i class="fa-regular fa-layer-group"></i> Department
+                            </span>
+                            <div class="detail-value">{{ ticket.department.name }}</div>
+                        </div>
+
+                        <!-- Screen Number -->
+                        <div class="detail-item">
+                            <span class="detail-label">
+                                <i class="fa-regular fa-display"></i> Screen Number
+                            </span>
+                            <div class="detail-value">{{ ticket.screen_number }}</div>
+                        </div>
+
+                        <!-- Error Type -->
+                        <div class="detail-item">
+                            <span class="detail-label">
+                                <i class="fa-regular fa-bug"></i> Error Type
+                            </span>
+                            <div class="detail-value">{{ ticket.error_type }}</div>
+                        </div>
+
+                        <!-- Priority - Highlighted -->
+                        <div class="detail-item highlight-status">
+                            <span class="detail-label">
+                                <i class="fa-solid fa-flag"></i> Priority
+                            </span>
+                            <div class="detail-value">
                                 <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
                                     <i class="fa-solid fa-flag"></i>
                                     {{ ticket.priority }}
                                 </span>
                             </div>
                         </div>
-                        <div class="col-md-6 mt-3">
-                            <span class="info-label">Status</span>
-                            <div class="info-value">
+
+                        <!-- Status - Highlighted -->
+                        <div class="detail-item highlight-status">
+                            <span class="detail-label">
+                                <i class="fa-regular fa-circle"></i> Status
+                            </span>
+                            <div class="detail-value">
                                 <span class="badge-custom badge-status-{{ ticket.status|lower }}">
                                     <i class="fa-solid fa-circle me-1" style="font-size: 0.4rem;"></i>
                                     {{ ticket.status }}
@@ -703,41 +988,57 @@
                             </div>
                         </div>
 
-                        <!-- Assigned Executive (If Assigned) -->
-                        {% if ticket.status == 'Assigned' and ticket.assigned_person %}
-                            <div class="col-12 mt-3">
-                                <div class="assigned-box">
-                                    <span class="info-label">
-                                        <i class="fa-solid fa-user-gear me-1" style="color: var(--accent);"></i>Assigned Executive
-                                    </span>
-                                    <div class="info-value">
-                                        <i class="fa-solid fa-user-check me-1" style="color: var(--status-assigned);"></i>
-                                        {{ ticket.assigned_person }}
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-
-                        <!-- Detailed Description -->
-                        <div class="col-12 mt-3">
-                            <span class="info-label">
-                                <i class="fa-regular fa-align-left me-1"></i>Detailed Description
+                        <!-- Created Date -->
+                        <div class="detail-item">
+                            <span class="detail-label">
+                                <i class="fa-regular fa-calendar-plus"></i> Created
                             </span>
-                            <div class="description-box">
+                            <div class="detail-value">
+                                {{ ticket.created_at|date:"d M Y" }}
+                                <span class="detail-helper d-block">
+                                    {{ ticket.created_at|date:"h:i A" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Last Updated -->
+                        <div class="detail-item">
+                            <span class="detail-label">
+                                <i class="fa-regular fa-calendar-check"></i> Last Updated
+                            </span>
+                            <div class="detail-value">
+                                {{ ticket.updated_at|date:"d M Y" }}
+                                <span class="detail-helper d-block">
+                                    {{ ticket.updated_at|date:"h:i A" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Divider before Description -->
+                        <div class="detail-divider"></div>
+
+                        <!-- Description - Full Width -->
+                        <div class="detail-description">
+                            <span class="detail-label" style="margin-bottom: 0.5rem;">
+                                <i class="fa-regular fa-align-left"></i> Detailed Description
+                            </span>
+                            <div class="detail-value">
                                 {{ ticket.description }}
                             </div>
                         </div>
 
-                        <!-- Attachment (If exists) -->
+                        <!-- Attachment - Full Width -->
                         {% if ticket.attachment %}
-                            <div class="col-12 mt-3">
-                                <span class="info-label">
-                                    <i class="fa-regular fa-paperclip me-1"></i>Attachment
+                            <div class="detail-attachment">
+                                <span class="detail-label" style="margin-bottom: 0.5rem;">
+                                    <i class="fa-regular fa-paperclip"></i> Attachment
                                 </span>
-                                <div>
+                                <div class="detail-value">
                                     <a href="{{ ticket.attachment.url }}" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-2">
-                                        <i class="fa-solid fa-paperclip me-1"></i>View Attachment 
-                                        <span class="badge rounded-pill ms-1" style="font-size: 0.55rem; background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--border-light);">{{ ticket.attachment.name|slice:"-10:" }}</span>
+                                        <i class="fa-solid fa-paperclip me-1"></i>View Attachment
+                                        <span class="badge rounded-pill ms-1" style="font-size: 0.55rem; background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--border-light);">
+                                            {{ ticket.attachment.name|slice:"-10:" }}
+                                        </span>
                                     </a>
                                 </div>
                             </div>
@@ -762,7 +1063,7 @@
                     <div class="timeline-scroll" style="max-height: 500px; overflow-y: auto; padding-right: 5px;">
                         <ul class="timeline mb-0">
                             {% for log in history %}
-                               <li class="timeline-item delay-{{ forloop.counter }}">
+                                <li class="timeline-item delay-{{ forloop.counter }}">
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
                                         <div class="timeline-time">
@@ -792,27 +1093,6 @@
         </div>
     </div>
 </div>
-
-<!-- Timeline Scrollbar Styles -->
-<style>
-    .timeline-scroll::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .timeline-scroll::-webkit-scrollbar-track {
-        background: var(--bg-primary);
-        border-radius: 10px;
-    }
-
-    .timeline-scroll::-webkit-scrollbar-thumb {
-        background: var(--accent-gradient);
-        border-radius: 10px;
-    }
-
-    .timeline-scroll::-webkit-scrollbar-thumb:hover {
-        background: var(--accent-light);
-    }
-</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

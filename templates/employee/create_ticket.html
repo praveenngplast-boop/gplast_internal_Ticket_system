@@ -538,6 +538,40 @@
         background: var(--input-hover) !important;
         border-color: rgba(233, 69, 96, 0.3) !important;
     }
+
+    input[type="file"]::file-selector-button {
+        background: var(--accent-gradient) !important;
+        border: none !important;
+        color: white !important;
+        padding: 0.4rem 1rem !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        font-weight: 500 !important;
+        margin-right: 1rem !important;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+        transform: scale(1.05) !important;
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3) !important;
+    }
+
+    input[type="file"]::-webkit-file-upload-button {
+        background: var(--accent-gradient) !important;
+        border: none !important;
+        color: white !important;
+        padding: 0.4rem 1rem !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        font-weight: 500 !important;
+        margin-right: 1rem !important;
+    }
+
+    input[type="file"]::-webkit-file-upload-button:hover {
+        transform: scale(1.05) !important;
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3) !important;
+    }
 </style>
 {% endblock %}
 
@@ -885,6 +919,35 @@
                 const count = this.value.length;
                 descCounter.textContent = count + ' characters (minimum 20)';
                 descCounter.className = count < 20 ? 'char-counter text-danger' : 'char-counter text-success';
+            });
+        }
+
+        // ============================================
+        // Attachment File Validator (Client-side)
+        // ============================================
+        const attachmentInput = document.getElementById('id_attachment');
+        if (attachmentInput) {
+            attachmentInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (!file) return;
+
+                // Max 3MB (3 * 1024 * 1024 bytes)
+                const maxSize = 3 * 1024 * 1024;
+                // Allowed extensions
+                const allowedExtensions = /(\.pdf|\.doc|\.docx|\.xls|\.xlsx|\.png|\.jpg|\.jpeg)$/i;
+
+                let errorMsg = "";
+
+                if (file.size > maxSize) {
+                    errorMsg = "File size exceeds 3MB. Please select a smaller file.";
+                } else if (!allowedExtensions.exec(file.name)) {
+                    errorMsg = "Unsupported file extension. Allowed formats: pdf, doc, docx, xls, xlsx, png, jpg, jpeg.";
+                }
+
+                if (errorMsg) {
+                    alert(errorMsg);
+                    this.value = ""; // Clear selection
+                }
             });
         }
 

@@ -67,6 +67,8 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmMsg = "Move this ticket to Hold?";
         } else if (form.id === 'escalateForm') {
             confirmMsg = "Are you sure you want to escalate this ticket to the ERP vendor?";
+        } else if (form.id === 'reopenForm') {
+            confirmMsg = "Are you sure you want to reopen this ticket?";
         } else if (form.id === 'addUnitForm') {
             confirmMsg = "Are you sure you want to add this unit?";
         } else if (form.id === 'editUnitForm') {

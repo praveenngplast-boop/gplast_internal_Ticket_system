@@ -208,3 +208,67 @@ class GPLASTTicketingTestCase(TestCase):
         self.assertIn('ERP Ticket Closed', mail.outbox[0].subject)
         self.assertIn('Alice', mail.outbox[0].body)
         self.assertIn('Printer issue', mail.outbox[0].body)
+
+    def test_reopen_ticket_by_admin(self):
+        """Verify only administrators can reopen closed tickets with remarks."""
+        # Create admin user
+        admin_user = User.objects.create_superuser(username="adminuser", password="adminpassword", email="admin@gplast.com")
+        
+        # Create a closed ticket
+        ticket = Ticket.objects.create(
+            ticket_number=generate_ticket_number(),
+            unit=self.unit,
+            department=self.department,
+            employee_id="EMP01",
+            employee_name="Alice",
+            mobile="9876543210",
+            email="alice@gplast.com",
+            screen_number="SCR-02",
+            subject="Printer issue",
+            description="Printer is not working at the workstation.",
+            priority="High",
+            error_type="New",
+            status="Closed",
+            closed_by="adminuser",
+            closed_at=timezone.now(),
+            closing_remarks="Closed resolution notes",
+            created_by_user=self.employee_user
+        )
+
+        # Login as non-admin employee and try to reopen (should fail permission check)
+        self.client.login(username="testemp", password="password")
+        reopen_url = f"/admin/ticket/{ticket.id}/"
+        
+        from unittest.mock import patch
+        with patch('tickets.views.send_ticket_email') as mock_send_email:
+            response = self.client.post(reopen_url, {'action_type': 'Reopen', 'remarks': 'Reopening'})
+            self.assertEqual(response.status_code, 302)
+            ticket.refresh_from_db()
+            self.assertEqual(ticket.status, "Closed") # Still closed
+
+            # Login as admin and reopen
+            self.client.login(username="adminuser", password="adminpassword")
+            
+            # Test validation: remarks are mandatory
+            response = self.client.post(reopen_url, {'action_type': 'Reopen', 'remarks': ''})
+            self.assertEqual(response.status_code, 302)
+            ticket.refresh_from_db()
+            self.assertEqual(ticket.status, "Closed") # Still closed
+
+            # Successful reopen
+            response = self.client.post(reopen_url, {'action_type': 'Reopen', 'remarks': 'Issue still exists'})
+            self.assertEqual(response.status_code, 302)
+            ticket.refresh_from_db()
+            self.assertEqual(ticket.status, "Open")
+            self.assertIsNone(ticket.closed_by)
+            self.assertIsNone(ticket.closed_at)
+            self.assertIsNone(ticket.closing_remarks)
+            
+            # Verify email was attempted
+            mock_send_email.assert_called_once_with(ticket, 'Reopened', remarks='Issue still exists')
+
+        # Verify TicketHistory contains the reopen action
+        history = TicketHistory.objects.filter(ticket=ticket, action="Ticket Reopened").first()
+        self.assertIsNotNone(history)
+        self.assertEqual(history.remarks, "Issue still exists")
+        self.assertEqual(history.performed_by, "Admin adminuser")

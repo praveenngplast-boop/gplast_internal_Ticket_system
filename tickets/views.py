@@ -4,6 +4,7 @@ from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Count, Q
 from django.db import transaction
 from django.contrib import messages
@@ -130,8 +131,18 @@ def my_tickets(request):
     if date_to:
         tickets_qs = tickets_qs.filter(created_at__date__lte=date_to)
 
+    # Pagination: 10 tickets per page
+    paginator = Paginator(tickets_qs, 10)
+    page_number = request.GET.get('page')
+    try:
+        tickets_page = paginator.page(page_number)
+    except PageNotAnInteger:
+        tickets_page = paginator.page(1)
+    except EmptyPage:
+        tickets_page = paginator.page(paginator.num_pages)
+
     return render(request, 'employee/my_tickets.html', {
-        'tickets': tickets_qs,
+        'tickets': tickets_page,
         'status_choices': Ticket.STATUS_CHOICES,
         'priority_choices': Ticket.PRIORITY_CHOICES,
         'selected_status': status,
@@ -306,8 +317,18 @@ def all_tickets(request):
             | Q(department__name__icontains=search)
         )
 
+    # Pagination: 10 tickets per page
+    paginator = Paginator(tickets_qs, 10)
+    page_number = request.GET.get('page')
+    try:
+        tickets_page = paginator.page(page_number)
+    except PageNotAnInteger:
+        tickets_page = paginator.page(1)
+    except EmptyPage:
+        tickets_page = paginator.page(paginator.num_pages)
+
     context = {
-        'tickets': tickets_qs,
+        'tickets': tickets_page,
         'units': units,
         'departments': departments,
         'status_choices': Ticket.STATUS_CHOICES,
@@ -420,6 +441,32 @@ def ticket_detail_admin(request, pk):
                 # Send Closed Notification Email
                 send_ticket_email(ticket, 'Closed', remarks=closing_remarks)
                 messages.success(request, "Ticket closed successfully.")
+
+            elif action_type == 'Reopen':
+                if ticket.status != 'Closed':
+                    messages.error(request, "Only closed tickets can be reopened.")
+                    return redirect('admin_ticket_detail', pk=pk)
+                remarks = request.POST.get('remarks', '').strip()
+                if not remarks:
+                    messages.error(request, "Reason for reopening is mandatory.")
+                    return redirect('admin_ticket_detail', pk=pk)
+                
+                ticket.status = 'Open'
+                ticket.closed_by = None
+                ticket.closed_at = None
+                ticket.closing_remarks = None
+                ticket.save()
+                
+                TicketHistory.objects.create(
+                    ticket=ticket,
+                    action="Ticket Reopened",
+                    remarks=remarks,
+                    performed_by=f"Admin {request.user.username}"
+                )
+                
+                # Send Reopened Notification Email
+                send_ticket_email(ticket, 'Reopened', remarks=remarks)
+                messages.success(request, "Ticket reopened successfully.")
         
         return redirect('admin_ticket_detail', pk=pk)
         
@@ -453,6 +500,7 @@ def reports(request):
     escalated_end = request.GET.get('escalated_end')
     
     category = request.GET.get('category', 'all')
+    is_reopened = request.GET.get('is_reopened', '')
 
     # Apply category shortcuts
     if category == 'open':
@@ -468,6 +516,9 @@ def reports(request):
     elif category == 'escalated_closed':
         # Tickets that were escalated then closed (must have escalated_at and status=Closed)
         tickets_qs = tickets_qs.filter(status='Closed', escalated_at__isnull=False)
+    elif category == 'reopened':
+        # Tickets that have at least one 'Ticket Reopened' history action
+        tickets_qs = tickets_qs.filter(history__action='Ticket Reopened').distinct()
 
     # Apply general filters
     if unit_id:
@@ -502,6 +553,12 @@ def reports(request):
         tickets_qs = tickets_qs.filter(escalated_at__date__gte=escalated_start)
     if escalated_end:
         tickets_qs = tickets_qs.filter(escalated_at__date__lte=escalated_end)
+
+    # Reopened filter (standalone, works in addition to category)
+    if is_reopened == 'yes':
+        tickets_qs = tickets_qs.filter(history__action='Ticket Reopened').distinct()
+    elif is_reopened == 'no':
+        tickets_qs = tickets_qs.exclude(history__action='Ticket Reopened')
 
     # Handle Export
     if 'export' in request.GET:
@@ -597,6 +654,7 @@ def reports(request):
         'units': units,
         'departments': departments,
         'category': category,
+        'is_reopened': is_reopened,
     }
     return render(request, 'admin_panel/reports.html', context)
 

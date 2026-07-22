@@ -600,7 +600,8 @@
                     <li class="nav-item p-1"><a href="?category=hold" class="nav-link {% if category == 'hold' %}active{% endif %}">Hold</a></li>
                     <li class="nav-item p-1"><a href="?category=escalated" class="nav-link {% if category == 'escalated' %}active{% endif %}">Escalated</a></li>
                     <li class="nav-item p-1"><a href="?category=closed" class="nav-link {% if category == 'closed' %}active{% endif %}">Closed</a></li>
-                    <li class="nav-item p-1"><a href="?category=escalated_closed" class="nav-link {% if category == 'escalated_closed' %}active{% endif %}">Escalated & Closed</a></li>
+                    <li class="nav-item p-1"><a href="?category=escalated_closed" class="nav-link {% if category == 'escalated_closed' %}active{% endif %}">Escalated &amp; Closed</a></li>
+                    <li class="nav-item p-1"><a href="?category=reopened" class="nav-link {% if category == 'reopened' %}active{% endif %}" style="{% if category == 'reopened' %}{% else %}color: #4299e1;{% endif %}"><i class="fa-solid fa-rotate-left me-1"></i>Reopened</a></li>
                 </ul>
                 <input type="hidden" name="category" value="{{ request.GET.category|default:'all' }}">
             </div>
@@ -648,6 +649,14 @@
                 <div class="col-md-4">
                     <label class="form-label">Vendor Ticket No.</label>
                     <input type="text" name="vendor_ticket_number" class="form-control" value="{{ request.GET.vendor_ticket_number|default:'' }}" placeholder="Enter vendor ticket...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label"><i class="fa-solid fa-rotate-left me-1" style="color: #4299e1;"></i>Reopened Status</label>
+                    <select name="is_reopened" class="form-select">
+                        <option value="" {% if not is_reopened %}selected{% endif %}>All (Reopened &amp; Not)</option>
+                        <option value="yes" {% if is_reopened == 'yes' %}selected{% endif %}>Reopened Only</option>
+                        <option value="no" {% if is_reopened == 'no' %}selected{% endif %}>Never Reopened</option>
+                    </select>
                 </div>
             </div>
 
