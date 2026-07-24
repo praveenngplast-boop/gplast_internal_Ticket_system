@@ -15,12 +15,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (descInput && descCounter) {
         descInput.addEventListener('input', function() {
             const count = descInput.value.length;
-            if (count < 20) {
-                descCounter.textContent = `${count} characters (minimum 20)`;
+            if (count < 10) {
+                descCounter.textContent = `${count} characters (minimum 10)`;
                 descCounter.classList.add('text-danger');
                 descCounter.classList.remove('text-success');
             } else {
-                descCounter.textContent = `${count} characters (minimum 20 met)`;
+                descCounter.textContent = `${count} characters (minimum 10 met)`;
                 descCounter.classList.remove('text-danger');
                 descCounter.classList.add('text-success');
             }

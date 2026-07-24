@@ -1,8 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
-import re  # ← ADD THIS IMPORT AT THE TOP
+import re
 
-# Unit — Admin-managed, ALL CAPS enforced
+
+# =========================================================================
+# UNIT MODEL
+# =========================================================================
 class Unit(models.Model):
     code = models.CharField(max_length=10, unique=True)
     full_name = models.CharField(max_length=100, unique=True)
@@ -19,6 +22,9 @@ class Unit(models.Model):
         return f"{self.code} - {self.full_name}"
 
 
+# =========================================================================
+# DEPARTMENT MODEL
+# =========================================================================
 class Department(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
@@ -33,6 +39,9 @@ class Department(models.Model):
         return f"{self.name} ({self.unit.code})"
 
 
+# =========================================================================
+# ADMIN CONTACT MODEL
+# =========================================================================
 class AdminContact(models.Model):
     admin_name = models.CharField(max_length=100)
     admin_phone = models.CharField(max_length=15)
@@ -42,6 +51,9 @@ class AdminContact(models.Model):
         return f"{self.admin_name} - {self.admin_phone}"
 
 
+# =========================================================================
+# ADMIN NOTIFICATION EMAIL MODEL
+# =========================================================================
 class AdminNotificationEmail(models.Model):
     email = models.EmailField(unique=True)
     is_active = models.BooleanField(default=True)
@@ -51,22 +63,22 @@ class AdminNotificationEmail(models.Model):
         return self.email
 
 
-# ============================================
-# FIXED: Ticket Number Generator - Sequential
-# Format: 0001, 0002, 0003, ...
-# ============================================
+# =========================================================================
+# TICKET NUMBER GENERATOR
+# =========================================================================
 def generate_ticket_number():
     """
     Generate sequential ticket numbers starting from 0001
     Format: 0001, 0002, 0003, ... up to 9999
     """
     # Get the last ticket
+    from tickets.models import Ticket  # Local import to avoid circular dependency
     last_ticket = Ticket.objects.all().order_by('id').last()
     
     if last_ticket and last_ticket.ticket_number:
         ticket_num = last_ticket.ticket_number
         
-        # FIX: Handle both old format (GPLAST-20260701-0001) and new format (0001)
+        # Handle both old format (GPLAST-20260701-0001) and new format (0001)
         try:
             # First try to convert the entire string to int (for new format)
             last_number = int(ticket_num)
@@ -90,7 +102,9 @@ def generate_ticket_number():
     return f"{new_number:04d}"
 
 
-# Ticket
+# =========================================================================
+# TICKET MODEL
+# =========================================================================
 class Ticket(models.Model):
     PRIORITY_CHOICES = [
         ('Low', 'Low'),
@@ -98,6 +112,7 @@ class Ticket(models.Model):
         ('High', 'High'),
         ('Critical', 'Critical')
     ]
+    
     ERROR_TYPE_CHOICES = [
         ('New', 'New'),
         ('Regular', 'Regular'),
@@ -110,6 +125,7 @@ class Ticket(models.Model):
         ('User Error', 'User Error'),
         ('Other', 'Other'),
     ]
+    
     STATUS_CHOICES = [
         ('Open', 'Open'),
         ('Assigned', 'Assigned'),
@@ -117,10 +133,12 @@ class Ticket(models.Model):
         ('Escalated', 'Escalated'),
         ('Closed', 'Closed')
     ]
+    
     CREATED_BY_CHOICES = [
         ('Employee', 'Employee'),
         ('Admin', 'Admin')
     ]
+    
     ADMIN_REASON_CHOICES = [
         ('Phone Call', 'Phone Call'),
         ('Walk-in Support', 'Walk-in Support'),
@@ -165,7 +183,9 @@ class Ticket(models.Model):
         return f"{self.ticket_number} - {self.subject}"
 
 
-# TicketHistory
+# =========================================================================
+# TICKET HISTORY MODEL
+# =========================================================================
 class TicketHistory(models.Model):
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='history')
     action = models.CharField(max_length=255)

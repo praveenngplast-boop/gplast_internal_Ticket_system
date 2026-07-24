@@ -1091,10 +1091,85 @@
                 </div>
             </div>
         </div>
+
+        <!-- Closing Details (If Closed) -->
+        {% if ticket.status == 'Closed' %}
+        <div class="col-12 mt-4">
+            <div class="status-box status-box-closed animate__animated animate__fadeInUp">
+                <span class="detail-label" style="color: var(--status-open);"><i class="fa-solid fa-circle-check me-1"></i>Closing Audit Information</span>
+                <p class="mb-1" style="font-size: clamp(0.85rem, 1vw, 0.95rem); color: var(--text-primary);"><strong>Closed By:</strong> {{ ticket.closed_by }}</p>
+                <p class="mb-1" style="font-size: clamp(0.85rem, 1vw, 0.95rem); color: var(--text-primary);"><strong>Resolution Time:</strong> {{ time_to_close }}</p>
+                <p class="mb-0" style="font-size: clamp(0.85rem, 1vw, 0.95rem); color: var(--text-primary);">
+                    <strong>Resolution:</strong> {{ ticket.closing_remarks }}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Reopen Action for Closed Tickets -->
+        {% if ticket.status == 'Closed' %}
+            <div class="col-12 mt-4">
+                <div class="card panel-card shadow-sm">
+                    <div class="card-header glass-header py-3">
+                        <h5 class="fw-bold mb-0" style="color: var(--accent-light);">
+                            <i class="fa-solid fa-rotate-left me-2" style="color: var(--accent);"></i>Ticket Actions
+                        </h5>
+                    </div>
+                    <div class="card-body p-4 text-center">
+                        {% if can_reopen %}
+                            <p class="small mb-3" style="color: var(--text-muted);">If the issue persists, you can reopen this ticket.</p>
+                            <button type="button" class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#reopenModal">
+                                <i class="fa-solid fa-envelope-open me-2"></i>Reopen Ticket
+                            </button>
+                        {% else %}
+                            <p class="mb-0" style="color: var(--text-muted);">This ticket was closed more than 48 hours ago and can no longer be reopened.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </div>
 </div>
 
 <script>
+    function startCountdown(deadlineISO) {
+        const timerEl = document.getElementById('reopen-timer');
+        if (!timerEl || !deadlineISO) return;
+
+        const deadline = new Date(deadlineISO).getTime();
+
+        const interval = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = deadline - now;
+
+            if (distance < 0) {
+                clearInterval(interval);
+                timerEl.innerHTML = "Time expired";
+                // Optionally hide the reopen button
+                const reopenButton = document.querySelector('[data-bs-target="#reopenModal"]');
+                if (reopenButton) {
+                    reopenButton.style.display = 'none';
+                    const parentP = reopenButton.previousElementSibling;
+                    if(parentP) parentP.textContent = "The window to reopen this ticket has expired.";
+                }
+                return;
+            }
+
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            timerEl.innerHTML = `${hours}h ${minutes}m ${seconds}s`;
+        }, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const deadlineISO = "{{ reopen_deadline_iso }}";
+        if (deadlineISO) {
+            startCountdown(deadlineISO);
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         // Animate timeline items on load
         const timelineItems = document.querySelectorAll('.timeline-item');
@@ -1115,4 +1190,35 @@
         });
     });
 </script>
+
+<!-- Reopen Modal for Employee -->
+<div class="modal fade" id="reopenModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'ticket_detail' ticket.id %}" id="reopenForm">
+                {% csrf_token %}
+                <div class="modal-header" style="background: linear-gradient(135deg, #3182ce, #2b6cb0) !important;">
+                    <h5 class="modal-title fw-bold" style="color: white !important;">
+                        <i class="fa-solid fa-envelope-open me-2"></i>Reopen Ticket
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Reason for Reopening <span class="text-danger">*</span></label>
+                        <textarea name="remarks" class="form-control" rows="4" placeholder="Please describe why this ticket needs to be reopened (e.g., 'The issue is happening again.')" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill border px-4" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold" style="background: linear-gradient(135deg, #3182ce, #2b6cb0); border: none;">
+                        <i class="fa-solid fa-envelope-open me-1"></i>Reopen Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

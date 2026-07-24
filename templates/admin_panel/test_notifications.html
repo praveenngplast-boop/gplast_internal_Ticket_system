@@ -48,6 +48,12 @@
                                 <i class="fa-solid fa-align-left me-2"></i>Long Message
                             </button>
                         </div>
+                        <!-- With Link -->
+                        <div class="col-md-3 col-sm-6">
+                            <button class="btn w-100 py-3 fw-semibold text-white" onclick="testWithLink()" style="border-radius: 12px; background: linear-gradient(135deg, #8B5CF6, #7C3AED); border: none;">
+                                <i class="fa-solid fa-link me-2"></i>With Link
+                            </button>
+                        </div>
                         <!-- Multiple Toasts -->
                         <div class="col-md-3 col-sm-6">
                             <button class="btn w-100 py-3 fw-semibold text-white" onclick="testMultiple()" style="border-radius: 12px; background: linear-gradient(135deg, #F59E0B, #D97706); border: none;">
@@ -67,7 +73,6 @@
                     <h5 class="mb-3" style="color: var(--text-primary);">
                         <i class="fa-solid fa-server me-2" style="color: var(--accent);"></i>Django Messages Test (Page Reload)
                     </h5>
-                    <p class="text-muted mb-3">These buttons redirect and show Django messages as toasts:</p>
                     <div class="d-flex flex-wrap gap-2">
                         <a href="{% url 'test_success' %}" class="btn btn-success" style="border-radius: 12px;">
                             <i class="fa-solid fa-check me-2"></i>Success Message
@@ -89,17 +94,20 @@
                         <i class="fa-solid fa-code me-2" style="color: var(--accent);"></i>Quick Test Buttons
                     </h5>
                     <div class="d-flex flex-wrap gap-2">
-                        <button class="btn btn-sm btn-outline-success" onclick="showToast('Ticket #1234 created successfully!', 'success', 'Ticket Created')">
+                        <button class="btn btn-sm btn-outline-success" onclick="showToast('Ticket #1234 has been created successfully!', 'success')">
                             Ticket Created
                         </button>
-                        <button class="btn btn-sm btn-outline-info" onclick="showToast('Ticket #1234 assigned to John Doe', 'info', 'Ticket Assigned')">
+                        <button class="btn btn-sm btn-outline-info" onclick="showToast('Ticket #1234 assigned to John Doe', 'info')">
                             Ticket Assigned
                         </button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="showToast('Ticket #1234 on hold - Waiting for vendor', 'warning', 'On Hold')">
+                        <button class="btn btn-sm btn-outline-warning" onclick="showToast('Ticket #1234 put on hold - Waiting for vendor response', 'warning')">
                             Ticket On Hold
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="showToast('Failed to update ticket. Try again.', 'error', 'Update Failed')">
+                        <button class="btn btn-sm btn-outline-danger" onclick="showToast('Failed to update ticket. Please try again.', 'error')">
                             Update Failed
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showToast('Settings saved successfully!', 'success', 'Settings Updated')">
+                            Custom Title
                         </button>
                     </div>
                 </div>
@@ -171,4 +179,82 @@
     }
 </style>
 
+<script>
+    // ============================================
+    // TEST FUNCTIONS
+    // ============================================
+    
+    function testSuccess() {
+        window.showToast('Operation completed successfully! All changes have been saved.', 'success', 'Success');
+    }
+    
+    function testError() {
+        window.showToast('An error occurred while processing your request. Please try again later or contact support.', 'error', 'Error');
+    }
+    
+    function testWarning() {
+        window.showToast('Please review your input before submitting. Some fields may contain invalid data.', 'warning', 'Warning');
+    }
+    
+    function testInfo() {
+        window.showToast('Your session will expire in 5 minutes. Please save your work.', 'info', 'Session Expiring');
+    }
+    
+    function testLongMessage() {
+        window.showToast(
+            'This is a very long notification message to test how the toast handles multiple lines of text. It should wrap properly and not overflow the container.',
+            'info',
+            'Long Message Test'
+        );
+    }
+    
+    function testWithLink() {
+        window.showToast('Click this toast to view the ticket details.', 'success', 'Ticket #5678 Updated');
+        // Note: The current toast implementation doesn't support clickable links in this version
+        // You can add URL parameter support if needed
+    }
+    
+    function testMultiple() {
+        const messages = [
+            { msg: 'Ticket #1001 created successfully!', type: 'success', title: 'Created' },
+            { msg: 'Ticket #1001 assigned to John Doe', type: 'info', title: 'Assigned' },
+            { msg: 'Ticket #1002 requires attention', type: 'warning', title: 'Attention' },
+            { msg: 'Failed to process ticket #1003', type: 'error', title: 'Error' },
+            { msg: 'Report generated successfully!', type: 'success', title: 'Report Ready' }
+        ];
+        
+        messages.forEach((item, index) => {
+            setTimeout(() => {
+                window.showToast(item.msg, item.type, item.title);
+            }, index * 600);
+        });
+    }
+    
+    function clearAllNotifications() {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        
+        const toasts = container.querySelectorAll('.toast-custom');
+        toasts.forEach(toast => {
+            if (toast._timeout) {
+                clearTimeout(toast._timeout);
+            }
+            toast.classList.add('removing');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 400);
+        });
+        
+        setTimeout(() => {
+            window.showToast('All notifications cleared! 🧹', 'success', 'Cleared');
+        }, 500);
+    }
+    
+    // Log that the page loaded successfully
+    console.log('✅ Notification Test Page Loaded');
+    console.log('Click any button to test toast notifications!');
+</script>
+{% endblock %}
 {% endblock %}

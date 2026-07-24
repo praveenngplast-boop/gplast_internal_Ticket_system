@@ -131,7 +131,7 @@
        Button Styles
     ============================================ */
     .btn-primary-custom {
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+        background: var(--accent-gradient);
         border: none;
         color: white;
         border-radius: 50px;
@@ -170,7 +170,7 @@
         transform: scale(0.95);
     }
 
-    .btn-outline-secondary {
+    .btn-outline-secondary-custom {
         border: 2px solid var(--border-color);
         color: var(--text-secondary);
         border-radius: 50px;
@@ -180,17 +180,17 @@
         background: transparent;
     }
 
-    .btn-outline-secondary:hover {
+    .btn-outline-secondary-custom:hover {
         background: var(--border-color);
         color: var(--text-primary);
         transform: translateY(-2px);
     }
 
-    .btn-outline-secondary:active {
+    .btn-outline-secondary-custom:active {
         transform: scale(0.95);
     }
 
-    .btn-success {
+    .btn-success-custom {
         border-radius: 50px;
         padding: 0.6rem 1.5rem;
         font-weight: 500;
@@ -202,7 +202,7 @@
         overflow: hidden;
     }
 
-    .btn-success::before {
+    .btn-success-custom::before {
         content: '';
         position: absolute;
         top: 50%;
@@ -215,26 +215,27 @@
         transition: all 0.6s ease;
     }
 
-    .btn-success:hover::before {
+    .btn-success-custom:hover::before {
         width: 300px;
         height: 300px;
     }
 
-    .btn-success:hover {
+    .btn-success-custom:hover {
         transform: translateY(-3px) scale(1.03);
         box-shadow: 0 6px 30px rgba(72, 187, 120, 0.4);
         color: white;
     }
 
-    .btn-success:active {
+    .btn-success-custom:active {
         transform: scale(0.95);
     }
 
     /* ============================================
-       Table Styles
+       Table Styles - FIXED
     ============================================ */
     .table {
         color: var(--text-primary) !important;
+        margin-bottom: 0 !important;
     }
 
     .table > :not(caption) > * > * {
@@ -251,6 +252,15 @@
         font-size: 0.7rem;
         letter-spacing: 0.5px;
         border-bottom: 2px solid rgba(233, 69, 96, 0.2);
+        background: transparent !important;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .table-hover tbody tr {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
     }
 
     .table-hover tbody tr:hover {
@@ -261,41 +271,59 @@
         color: var(--text-primary) !important;
     }
 
-    .table-light {
-        background: transparent !important;
+    .table td {
+        vertical-align: middle;
+        font-size: clamp(0.7rem, 1vw, 0.8rem);
     }
 
-    .table-light > th {
-        background: transparent !important;
-        color: var(--text-secondary) !important;
+    .table-responsive {
+        max-height: 600px;
+        overflow-y: auto;
+        border-radius: 0 0 16px 16px;
     }
 
     /* ============================================
-       Pagination Styles
+       Pagination Styles - FIXED
     ============================================ */
+    .pagination {
+        margin-bottom: 0;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
     .page-link {
         background-color: transparent !important;
-        border-color: var(--border-color) !important;
+        border: 2px solid var(--border-color) !important;
         color: var(--text-secondary) !important;
         transition: all 0.3s ease;
         padding: 0.5rem 0.75rem;
+        border-radius: 8px !important;
+        font-weight: 500;
     }
 
     .page-link:hover {
         background-color: rgba(233, 69, 96, 0.1) !important;
         color: var(--accent) !important;
         border-color: var(--accent) !important;
+        transform: translateY(-2px);
     }
 
     .page-item.active .page-link {
-        background-color: var(--accent) !important;
+        background: var(--accent-gradient) !important;
         border-color: var(--accent) !important;
         color: white !important;
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
     }
 
     .page-item.disabled .page-link {
         color: var(--text-muted) !important;
         opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .page-item:first-child .page-link,
+    .page-item:last-child .page-link {
+        border-radius: 8px !important;
     }
 
     /* ============================================
@@ -319,6 +347,7 @@
         background: rgba(233, 69, 96, 0.05) !important;
         border-bottom: 1px solid var(--border-color) !important;
         padding: 0.75rem 1.25rem;
+        border-radius: 16px 16px 0 0 !important;
     }
 
     .filter-card .card-header h5 {
@@ -336,13 +365,17 @@
     /* ============================================
        Nav Pills Styles
     ============================================ */
+    .nav-pills {
+        gap: 0.25rem;
+    }
+
     .nav-pills .nav-link {
         color: var(--text-secondary) !important;
         border-radius: 50px;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        padding: 0.5rem 1.25rem;
+        padding: 0.4rem 1rem;
         font-weight: 500;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         border: 2px solid transparent;
     }
 
@@ -353,7 +386,7 @@
     }
 
     .nav-pills .nav-link.active {
-        background: var(--accent) !important;
+        background: var(--accent-gradient) !important;
         color: white !important;
         box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
         border-color: var(--accent);
@@ -363,6 +396,11 @@
         color: white !important;
         transform: translateY(-2px);
         box-shadow: 0 6px 30px rgba(233, 69, 96, 0.4);
+    }
+
+    .nav-pills .nav-link i {
+        margin-right: 0.3rem;
+        font-size: 0.75rem;
     }
 
     /* ============================================
@@ -445,17 +483,99 @@
     }
 
     /* ============================================
-       Responsive Fixes
+       Light Mode Overrides
     ============================================ */
-    @media (max-width: 768px) {
+    :root:not([data-theme="dark"]) .form-control,
+    :root:not([data-theme="dark"]) .form-select,
+    :root:not([data-theme="dark"]) input[type="text"],
+    :root:not([data-theme="dark"]) input[type="date"],
+    :root:not([data-theme="dark"]) input[type="number"],
+    :root:not([data-theme="dark"]) input[type="email"],
+    :root:not([data-theme="dark"]) textarea,
+    :root:not([data-theme="dark"]) select {
+        background-color: #f7fafc !important;
+        border: 2px solid #e2e8f0 !important;
+        color: #2d3748 !important;
+        -webkit-text-fill-color: #2d3748 !important;
+        caret-color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-control:focus,
+    :root:not([data-theme="dark"]) .form-select:focus {
+        background-color: #edf2f7 !important;
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2) !important;
+        color: #2d3748 !important;
+        -webkit-text-fill-color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-select option,
+    :root:not([data-theme="dark"]) select option {
+        background: #ffffff !important;
+        color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%234a5568' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+    }
+
+    :root:not([data-theme="dark"]) input:-webkit-autofill,
+    :root:not([data-theme="dark"]) input:-webkit-autofill:hover,
+    :root:not([data-theme="dark"]) input:-webkit-autofill:focus,
+    :root:not([data-theme="dark"]) input:-webkit-autofill:active {
+        -webkit-text-fill-color: #2d3748 !important;
+        -webkit-box-shadow: 0 0 0px 1000px #f7fafc inset !important;
+        background-color: #f7fafc !important;
+        color: #2d3748 !important;
+        border-color: #e2e8f0 !important;
+    }
+
+    :root:not([data-theme="dark"]) input:-webkit-autofill:focus {
+        border-color: #667eea !important;
+        -webkit-box-shadow: 0 0 0px 1000px #edf2f7 inset, 0 0 0 4px rgba(102, 126, 234, 0.2) !important;
+    }
+
+    :root:not([data-theme="dark"]) input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(0) !important;
+    }
+
+    :root:not([data-theme="dark"]) input[type="date"]::-webkit-datetime-edit {
+        color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+        color: #2d3748 !important;
+    }
+
+    /* ============================================
+       Responsive Styles - FIXED
+    ============================================ */
+    @media (max-width: 992px) {
         .nav-pills .nav-link {
             font-size: 0.75rem;
-            padding: 0.4rem 0.8rem;
+            padding: 0.35rem 0.75rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .filter-card .card-body {
+            padding: 1.25rem !important;
+        }
+
+        .nav-pills {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.3rem;
+        }
+
+        .nav-pills .nav-link {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.7rem;
         }
 
         .btn-primary-custom,
-        .btn-outline-secondary,
-        .btn-success {
+        .btn-outline-secondary-custom,
+        .btn-success-custom {
             width: 100%;
             justify-content: center;
             margin-bottom: 0.5rem;
@@ -484,8 +604,8 @@
         }
 
         .table td, .table th {
-            font-size: 0.75rem;
-            padding: 0.4rem 0.3rem;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.25rem;
         }
 
         .filter-card .card-header h5 {
@@ -493,44 +613,74 @@
         }
 
         .badge {
-            font-size: 0.6rem;
-            padding: 0.25rem 0.5rem;
+            font-size: 0.55rem;
+            padding: 0.2rem 0.4rem;
         }
 
         .btn-sm {
+            font-size: 0.6rem;
+            padding: 0.15rem 0.4rem;
+        }
+
+        .table-responsive {
+            max-height: 400px;
+        }
+
+        .pagination .page-link {
+            padding: 0.3rem 0.5rem;
             font-size: 0.7rem;
-            padding: 0.2rem 0.6rem;
         }
     }
 
     @media (max-width: 576px) {
-        .nav-pills {
-            flex-direction: column;
+        .filter-card .card-body {
+            padding: 0.75rem !important;
         }
 
         .nav-pills .nav-link {
-            width: 100%;
-            text-align: center;
+            font-size: 0.6rem;
+            padding: 0.2rem 0.5rem;
         }
 
-        .table-responsive {
-            font-size: 0.7rem;
+        .form-control, .form-select {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.7rem;
+            border-radius: 10px;
+        }
+
+        .form-label {
+            font-size: 0.75rem;
         }
 
         .table td, .table th {
-            padding: 0.3rem 0.2rem;
-            font-size: 0.65rem;
+            font-size: 0.6rem;
+            padding: 0.2rem 0.15rem;
         }
 
-        .filter-card .card-body {
-            padding: 1rem !important;
+        .table-responsive {
+            max-height: 300px;
         }
 
         .btn-primary-custom,
-        .btn-outline-secondary,
-        .btn-success {
+        .btn-outline-secondary-custom,
+        .btn-success-custom {
             font-size: 0.8rem;
             padding: 0.4rem 1rem;
+        }
+
+        .badge {
+            font-size: 0.5rem;
+            padding: 0.15rem 0.35rem;
+        }
+
+        .pagination .page-link {
+            padding: 0.2rem 0.4rem;
+            font-size: 0.6rem;
+        }
+
+        .page-item .page-link {
+            padding: 0.2rem 0.4rem;
+            font-size: 0.6rem;
         }
     }
 
@@ -538,8 +688,8 @@
        Scrollbar Styling
     ============================================ */
     ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
     }
 
     ::-webkit-scrollbar-track {
@@ -568,6 +718,37 @@
         background: var(--accent);
         color: white;
     }
+
+    /* ============================================
+       Animation for table rows
+    ============================================ */
+    .table tbody tr {
+        animation: fadeInRow 0.3s ease;
+    }
+
+    @keyframes fadeInRow {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ============================================
+       Filter count badge
+    ============================================ */
+    .filter-count {
+        background: var(--accent);
+        color: white;
+        border-radius: 50px;
+        padding: 0.15rem 0.6rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
 </style>
 {% endblock %}
 
@@ -586,22 +767,25 @@
 
 <!-- Filter Form -->
 <div class="card filter-card shadow-sm mb-4">
-    <div class="card-header py-3">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="fw-bold mb-0"><i class="fa-solid fa-filter me-2"></i>Filter Tickets</h5>
+        <span class="badge bg-primary rounded-pill">
+            <i class="fa-solid fa-list me-1"></i>{{ tickets.paginator.count }} ticket(s) found
+        </span>
     </div>
     <div class="card-body p-4">
         <form method="GET" action="{% url 'reports' %}" id="filterForm">
             <!-- Category Pills -->
             <div class="mb-4">
-                <ul class="nav nav-pills nav-fill flex-wrap">
-                    <li class="nav-item p-1"><a href="?category=all" class="nav-link {% if category == 'all' %}active{% endif %}">All Tickets</a></li>
-                    <li class="nav-item p-1"><a href="?category=open" class="nav-link {% if category == 'open' %}active{% endif %}">Open</a></li>
-                    <li class="nav-item p-1"><a href="?category=assigned" class="nav-link {% if category == 'assigned' %}active{% endif %}">Assigned</a></li>
-                    <li class="nav-item p-1"><a href="?category=hold" class="nav-link {% if category == 'hold' %}active{% endif %}">Hold</a></li>
-                    <li class="nav-item p-1"><a href="?category=escalated" class="nav-link {% if category == 'escalated' %}active{% endif %}">Escalated</a></li>
-                    <li class="nav-item p-1"><a href="?category=closed" class="nav-link {% if category == 'closed' %}active{% endif %}">Closed</a></li>
-                    <li class="nav-item p-1"><a href="?category=escalated_closed" class="nav-link {% if category == 'escalated_closed' %}active{% endif %}">Escalated &amp; Closed</a></li>
-                    <li class="nav-item p-1"><a href="?category=reopened" class="nav-link {% if category == 'reopened' %}active{% endif %}" style="{% if category == 'reopened' %}{% else %}color: #4299e1;{% endif %}"><i class="fa-solid fa-rotate-left me-1"></i>Reopened</a></li>
+                <ul class="nav nav-pills flex-wrap">
+                    <li class="nav-item"><a href="?category=all" class="nav-link {% if category == 'all' %}active{% endif %}"><i class="fa-solid fa-list"></i>All</a></li>
+                    <li class="nav-item"><a href="?category=open" class="nav-link {% if category == 'open' %}active{% endif %}"><i class="fa-solid fa-circle"></i>Open</a></li>
+                    <li class="nav-item"><a href="?category=assigned" class="nav-link {% if category == 'assigned' %}active{% endif %}"><i class="fa-solid fa-user-check"></i>Assigned</a></li>
+                    <li class="nav-item"><a href="?category=hold" class="nav-link {% if category == 'hold' %}active{% endif %}"><i class="fa-solid fa-pause"></i>Hold</a></li>
+                    <li class="nav-item"><a href="?category=escalated" class="nav-link {% if category == 'escalated' %}active{% endif %}"><i class="fa-solid fa-arrow-up"></i>Escalated</a></li>
+                    <li class="nav-item"><a href="?category=closed" class="nav-link {% if category == 'closed' %}active{% endif %}"><i class="fa-solid fa-check-circle"></i>Closed</a></li>
+                    <li class="nav-item"><a href="?category=escalated_closed" class="nav-link {% if category == 'escalated_closed' %}active{% endif %}"><i class="fa-solid fa-arrow-up-right-dots"></i>Esc &amp; Closed</a></li>
+                    <li class="nav-item"><a href="?category=reopened" class="nav-link {% if category == 'reopened' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i>Reopened</a></li>
                 </ul>
                 <input type="hidden" name="category" value="{{ request.GET.category|default:'all' }}">
             </div>
@@ -609,7 +793,7 @@
             <!-- Main Filter Rows -->
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Unit</label>
+                    <label class="form-label"><i class="fa-regular fa-building me-1"></i>Unit</label>
                     <select name="unit" id="id_unit" class="form-select">
                         <option value="">All Units</option>
                         {% for unit in units %}
@@ -618,36 +802,35 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Department</label>
+                    <label class="form-label"><i class="fa-regular fa-layer-group me-1"></i>Department</label>
                     <select name="department" id="id_department" class="form-select" data-show-all="true">
                         <option value="">All Departments</option>
-                        {# Options will be loaded by JS #}
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Priority</label>
+                    <label class="form-label"><i class="fa-solid fa-flag me-1"></i>Priority</label>
                     <select name="priority" class="form-select">
                         <option value="">All Priorities</option>
-                        {% for p in tickets.model.PRIORITY_CHOICES %}
+                        {% for p in priority_choices %}
                         <option value="{{ p.0 }}" {% if request.GET.priority == p.0 %}selected{% endif %}>{{ p.1 }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select" {% if category != 'all' %}disabled{% endif %}>
+                    <label class="form-label"><i class="fa-solid fa-circle me-1"></i>Status</label>
+                    <select name="status" class="form-select">
                         <option value="">All Statuses</option>
-                        {% for s in tickets.model.STATUS_CHOICES %}
+                        {% for s in status_choices %}
                         <option value="{{ s.0 }}" {% if request.GET.status == s.0 %}selected{% endif %}>{{ s.1 }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Assigned Person</label>
+                    <label class="form-label"><i class="fa-solid fa-user me-1"></i>Assigned Person</label>
                     <input type="text" name="assigned_person" class="form-control" value="{{ request.GET.assigned_person|default:'' }}" placeholder="Enter name...">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Vendor Ticket No.</label>
+                    <label class="form-label"><i class="fa-solid fa-ticket me-1"></i>Vendor Ticket No.</label>
                     <input type="text" name="vendor_ticket_number" class="form-control" value="{{ request.GET.vendor_ticket_number|default:'' }}" placeholder="Enter vendor ticket...">
                 </div>
                 <div class="col-md-4">
@@ -658,29 +841,50 @@
                         <option value="no" {% if is_reopened == 'no' %}selected{% endif %}>Never Reopened</option>
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label"><i class="fa-solid fa-user-tag me-1"></i>Created By</label>
+                    <select name="created_by_role" class="form-select">
+                        <option value="">All</option>
+                        {% for c in created_by_choices %}
+                        <option value="{{ c.0 }}" {% if request.GET.created_by_role == c.0 %}selected{% endif %}>{{ c.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label"><i class="fa-solid fa-bug me-1"></i>Error Type</label>
+                    <select name="error_type" class="form-select">
+                        <option value="">All Error Types</option>
+                        {% for e in error_type_choices %}
+                        <option value="{{ e.0 }}" {% if request.GET.error_type == e.0 %}selected{% endif %}>{{ e.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
             <!-- Date Filter Rows -->
             <div class="row g-3 mt-3">
                 <div class="col-md-4">
-                    <label class="form-label">Created Date Range</label>
+                    <label class="form-label"><i class="fa-regular fa-calendar-plus me-1"></i>Created Date Range</label>
                     <div class="input-group">
-                        <input type="date" name="created_start" class="form-control" value="{{ request.GET.created_start|default:'' }}">
-                        <input type="date" name="created_end" class="form-control" value="{{ request.GET.created_end|default:'' }}">
+                        <input type="date" name="created_start" class="form-control" value="{{ request.GET.created_start|default:'' }}" placeholder="From">
+                        <span class="input-group-text bg-transparent border-0 text-muted">to</span>
+                        <input type="date" name="created_end" class="form-control" value="{{ request.GET.created_end|default:'' }}" placeholder="To">
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Closed Date Range</label>
+                    <label class="form-label"><i class="fa-regular fa-calendar-check me-1"></i>Closed Date Range</label>
                     <div class="input-group">
-                        <input type="date" name="closed_start" class="form-control" value="{{ request.GET.closed_start|default:'' }}">
-                        <input type="date" name="closed_end" class="form-control" value="{{ request.GET.closed_end|default:'' }}">
+                        <input type="date" name="closed_start" class="form-control" value="{{ request.GET.closed_start|default:'' }}" placeholder="From">
+                        <span class="input-group-text bg-transparent border-0 text-muted">to</span>
+                        <input type="date" name="closed_end" class="form-control" value="{{ request.GET.closed_end|default:'' }}" placeholder="To">
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Escalated Date Range</label>
+                    <label class="form-label"><i class="fa-regular fa-calendar-arrow-up me-1"></i>Escalated Date Range</label>
                     <div class="input-group">
-                        <input type="date" name="escalated_start" class="form-control" value="{{ request.GET.escalated_start|default:'' }}">
-                        <input type="date" name="escalated_end" class="form-control" value="{{ request.GET.escalated_end|default:'' }}">
+                        <input type="date" name="escalated_start" class="form-control" value="{{ request.GET.escalated_start|default:'' }}" placeholder="From">
+                        <span class="input-group-text bg-transparent border-0 text-muted">to</span>
+                        <input type="date" name="escalated_end" class="form-control" value="{{ request.GET.escalated_end|default:'' }}" placeholder="To">
                     </div>
                 </div>
             </div>
@@ -688,13 +892,13 @@
             <!-- Form Actions -->
             <hr>
             <div class="d-flex justify-content-end gap-2 flex-wrap">
-                <a href="{% url 'reports' %}" class="btn btn-outline-secondary px-4">
+                <a href="{% url 'reports' %}" class="btn btn-outline-secondary-custom px-4">
                     <i class="fa-solid fa-times me-1"></i> Clear Filters
                 </a>
                 <button type="submit" class="btn btn-primary-custom px-4">
                     <i class="fa-solid fa-filter me-1"></i> Apply Filters
                 </button>
-                <button type="submit" name="export" value="true" class="btn btn-success px-4">
+                <button type="submit" name="export" value="true" class="btn btn-success-custom px-4">
                     <i class="fa-solid fa-file-export me-1"></i> Export to Excel
                 </button>
             </div>
@@ -706,31 +910,49 @@
 <div class="card filter-card shadow-sm">
     <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="fw-bold mb-0"><i class="fa-solid fa-list-check me-2"></i>Filtered Results</h5>
-        <span class="badge bg-primary rounded-pill">{{ tickets.count }} ticket(s) found</span>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge bg-primary rounded-pill">
+                <i class="fa-solid fa-list me-1"></i> {{ tickets.paginator.count }} ticket(s)
+            </span>
+            {% if tickets.has_other_pages %}
+            <span class="badge bg-secondary rounded-pill">
+                <i class="fa-solid fa-page me-1"></i> Page {{ tickets.number }} of {{ tickets.paginator.num_pages }}
+            </span>
+            {% endif %}
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+                <thead>
                     <tr>
-                        <th class="ps-3">Ticket #</th>
-                        <th>Subject</th>
-                        <th>Unit</th>
-                        <th>Department</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Created At</th>
-                        <th>Assigned To</th>
-                        <th class="text-center">Action</th>
+                        <th class="ps-3" style="min-width: 90px;">Ticket #</th>
+                        <th style="min-width: 150px;">Subject</th>
+                        <th style="min-width: 70px;">Unit</th>
+                        <th style="min-width: 100px;">Department</th>
+                        <th style="min-width: 90px;">Status</th>
+                        <th style="min-width: 80px;">Priority</th>
+                        <th style="min-width: 110px;">Created At</th>
+                        <th style="min-width: 100px;">Assigned To</th>
+                        <th class="text-center" style="min-width: 60px;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for ticket in tickets %}
                     <tr>
-                        <td class="ps-3 fw-bold">{{ ticket.ticket_number }}</td>
-                        <td>{{ ticket.subject|truncatechars:40 }}</td>
-                        <td>{{ ticket.unit.code }}</td>
-                        <td>{{ ticket.department.name }}</td>
+                        <td class="ps-3 fw-bold" style="color: var(--accent-light); font-size: clamp(0.7rem, 1vw, 0.85rem);">
+                            {{ ticket.ticket_number }}
+                        </td>
+                        <td style="font-size: clamp(0.7rem, 1vw, 0.85rem);">
+                            {{ ticket.subject|truncatechars:40 }}
+                            {% if ticket.is_reopened %}
+                            <span class="badge bg-info rounded-pill ms-1" style="font-size: 0.5rem;">
+                                <i class="fa-solid fa-rotate-left"></i> Reopened
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: clamp(0.7rem, 1vw, 0.85rem);">{{ ticket.unit.code }}</td>
+                        <td style="font-size: clamp(0.7rem, 1vw, 0.85rem);">{{ ticket.department.name }}</td>
                         <td>
                             <span class="badge rounded-pill 
                                 {% if ticket.status == 'Open' %}bg-primary
@@ -752,10 +974,16 @@
                                 {{ ticket.priority }}
                             </span>
                         </td>
-                        <td>{{ ticket.created_at|date:"d M Y, H:i" }}</td>
-                        <td>{{ ticket.assigned_person|default:"-" }}</td>
+                        <td style="font-size: clamp(0.65rem, 0.9vw, 0.75rem); white-space: nowrap;">
+                            {{ ticket.created_at|date:"d M Y, H:i" }}
+                        </td>
+                        <td style="font-size: clamp(0.7rem, 0.9vw, 0.8rem);">
+                            {{ ticket.assigned_person|default:"<span class='text-muted'>-</span>" }}
+                        </td>
                         <td class="text-center">
-                            <a href="{% url 'admin_ticket_detail' ticket.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3" style="border-color: var(--accent); color: var(--accent);">
+                            <a href="{% url 'admin_ticket_detail' ticket.pk %}" 
+                               class="btn btn-sm btn-outline-primary rounded-pill px-2"
+                               style="border-color: var(--accent); color: var(--accent);">
                                 <i class="fa-solid fa-eye me-1"></i>View
                             </a>
                         </td>
@@ -763,8 +991,10 @@
                     {% empty %}
                     <tr>
                         <td colspan="9" class="text-center py-5" style="color: var(--text-muted);">
-                            <i class="fa-solid fa-search fa-2x mb-2" style="color: var(--text-muted);"></i><br>
-                            No tickets found matching your criteria.
+                            <i class="fa-solid fa-search fa-2x mb-2 d-block" style="color: var(--text-muted);"></i>
+                            <span style="font-size: 1.1rem;">No tickets found matching your criteria.</span>
+                            <br>
+                            <small class="text-muted">Try adjusting your filters or clear them to see all tickets.</small>
                         </td>
                     </tr>
                     {% endfor %}
@@ -772,23 +1002,62 @@
             </table>
         </div>
     </div>
+    {% if tickets.has_other_pages %}
+    <div class="card-footer bg-transparent border-top py-3">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if tickets.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ tickets.previous_page_number }}" aria-label="Previous">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="fa-solid fa-chevron-left"></i></span>
+                </li>
+                {% endif %}
+
+                {% for num in tickets.paginator.page_range %}
+                    {% if tickets.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > tickets.number|add:'-3' and num < tickets.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if tickets.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ tickets.next_page_number }}" aria-label="Next">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="fa-solid fa-chevron-right"></i></span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/ticket_form.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ============================================
+    // DEPARTMENT LOADING BASED ON UNIT
+    // ============================================
     const unitSelect = document.getElementById('id_unit');
     const deptSelect = document.getElementById('id_department');
 
-    // Function to fetch and populate departments
     function updateDepartments() {
         const unitId = unitSelect.value;
         const showAll = deptSelect.getAttribute('data-show-all') === 'true';
         const currentDeptId = '{{ request.GET.department }}';
 
-        // Clear existing options except the first one
         deptSelect.innerHTML = '<option value="">All Departments</option>';
 
         if (!unitId) {
@@ -797,7 +1066,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         deptSelect.disabled = false;
-        const url = `/ajax/departments/?unit_id=${unitId}&show_all=${showAll}`;
+        const url = `/ajax/get-departments/?unit_id=${unitId}&show_all=${showAll}`;
 
         fetch(url)
             .then(response => response.json())
@@ -811,46 +1080,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     deptSelect.appendChild(option);
                 });
+                deptSelect.disabled = false;
             })
-            .catch(err => console.error("Error fetching departments:", err));
+            .catch(err => {
+                console.error("Error fetching departments:", err);
+                deptSelect.disabled = true;
+            });
     }
 
-    // Trigger on page load to pre-fill if a unit is selected
+    // Initial load
     if (unitSelect.value) {
         updateDepartments();
     } else {
         deptSelect.disabled = true;
     }
 
-    // Add event listener for changes
     unitSelect.addEventListener('change', function() {
-        // When unit changes, we don't need to preserve the old department ID
-        // so we just call the update function without pre-selection logic.
-        const unitId = this.value;
-        const showAll = deptSelect.getAttribute('data-show-all') === 'true';
-        deptSelect.innerHTML = '<option value="">All Departments</option>';
-
-        if (!unitId) {
-            deptSelect.disabled = true;
-            return;
-        }
-
-        deptSelect.disabled = false;
-        const url = `/ajax/departments/?unit_id=${unitId}&show_all=${showAll}`;
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                data.departments.forEach(dept => {
-                    const option = document.createElement('option');
-                    option.value = dept.id;
-                    option.textContent = dept.name;
-                    deptSelect.appendChild(option);
-                });
-            });
+        updateDepartments();
     });
 
-    // Handle category pill clicks to submit the form
+    // ============================================
+    // CATEGORY PILLS - Submit form with filters
+    // ============================================
     const categoryLinks = document.querySelectorAll('.nav-pills .nav-link');
     const categoryInput = document.querySelector('input[name="category"]');
     const filterForm = document.getElementById('filterForm');
@@ -863,49 +1114,52 @@ document.addEventListener('DOMContentLoaded', function() {
             if (categoryInput) {
                 categoryInput.value = category;
             }
-            // Submit the main form to carry over other filters
             filterForm.submit();
         });
     });
 
     // ============================================
-    // FIX: Ensure all inputs have proper color on load
+    // FIX: Input Color Fix
     // ============================================
-    const allInputs = document.querySelectorAll('input, textarea, select');
-    allInputs.forEach(input => {
-        // Force color on all inputs
+    function fixInputColors() {
         const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#ffffff';
-        input.style.color = textColor;
+        const allInputs = document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select');
         
-        // If input has value, ensure it's visible
-        if (input.value && input.value.length > 0) {
-            input.style.color = textColor;
-        }
-        
-        // Handle select elements
-        if (input.tagName === 'SELECT') {
-            input.style.color = textColor;
-        }
-    });
-
-    // Monitor for dynamic changes
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'childList') {
-                document.querySelectorAll('input, textarea, select').forEach(input => {
-                    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#ffffff';
-                    if (!input.style.color || input.style.color === 'rgb(0, 0, 0)' || input.style.color === '#000000') {
-                        input.style.color = textColor;
-                    }
-                });
+        allInputs.forEach(input => {
+            const currentColor = getComputedStyle(input).color;
+            if (currentColor === 'rgb(0, 0, 0)' || currentColor === '#000000' || 
+                currentColor === 'black' || !input.style.color) {
+                input.style.color = textColor;
+            }
+            if (input.tagName === 'SELECT') {
+                input.style.color = textColor;
             }
         });
+    }
+
+    fixInputColors();
+
+    // Monitor for dynamic changes
+    const observer = new MutationObserver(function() {
+        fixInputColors();
     });
 
     observer.observe(document.body, {
         childList: true,
         subtree: true
     });
+
+    // Theme change observer
+    const themeObserver = new MutationObserver(function() {
+        fixInputColors();
+    });
+
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+
+    console.log('Reports page loaded successfully.');
 });
 </script>
 {% endblock %}

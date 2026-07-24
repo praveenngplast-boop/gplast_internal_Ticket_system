@@ -1,9 +1,10 @@
 // ============================================
-// CONFIRMATION INTERCEPTOR - COMPLETE REWRITE
+// CONFIRMATION INTERCEPTOR - BACKDROP FIX
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
     let currentFormToSubmit = null;
+    let isProcessing = false;
 
     // Grab confirmation modal elements
     const modalEl = document.getElementById('confirmModal');
@@ -21,38 +22,77 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================
-    // FIX: Use Bootstrap 5 Modal correctly
+    // FIX 1: Force cleanup function (CRITICAL)
+    // ============================================
+    function forceCleanupBackdrops() {
+        // Remove ALL modal backdrops
+        document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+            backdrop.remove();
+        });
+        
+        // Remove modal-open class from body
+        document.body.classList.remove('modal-open');
+        
+        // Remove any inline styles that might be causing blur
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        
+        // Reset modal display
+        if (modalEl) {
+            modalEl.style.display = 'none';
+            modalEl.classList.remove('show');
+            modalEl.removeAttribute('aria-modal');
+            modalEl.removeAttribute('style');
+        }
+        
+        console.log('Backdrops cleaned up');
+    }
+
+    // ============================================
+    // FIX 2: Proper Bootstrap Modal Initialization
     // ============================================
     let bsConfirmModal = null;
     
-    // Wait for Bootstrap to be available
     function initModal() {
         if (window.bootstrap && window.bootstrap.Modal) {
+            // If modal already exists, dispose it first
+            if (bsConfirmModal) {
+                try {
+                    bsConfirmModal.dispose();
+                } catch(e) {}
+                bsConfirmModal = null;
+            }
+            
             bsConfirmModal = new bootstrap.Modal(modalEl, {
                 backdrop: 'static',
                 keyboard: true
             });
+            
             console.log('Bootstrap modal initialized');
             return true;
         }
         return false;
     }
 
-    // Try to initialize immediately, if not, wait
+    // Try to initialize
     if (!initModal()) {
-        // Check again after a short delay
+        const checkBootstrap = setInterval(function() {
+            if (initModal()) {
+                clearInterval(checkBootstrap);
+            }
+        }, 100);
+        
         setTimeout(function() {
-            initModal();
-        }, 500);
+            clearInterval(checkBootstrap);
+        }, 5000);
     }
 
     // ============================================
-    // FIX: Intercept Form Submissions
+    // FIX 3: Handle Form Submissions
     // ============================================
     document.addEventListener('submit', function(e) {
         const form = e.target;
         
-        // If it's already confirmed, let it submit
         if (form.classList.contains('confirmed')) {
             setTimeout(() => {
                 form.classList.remove('confirmed');
@@ -60,103 +100,81 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        let confirmMsg = "";
-
-        // Check by form ID
-        if (form.id === 'holdForm') {
-            confirmMsg = "Move this ticket to Hold?";
-        } else if (form.id === 'escalateForm') {
-            confirmMsg = "Are you sure you want to escalate this ticket to the ERP vendor?";
-        } else if (form.id === 'reopenForm') {
-            confirmMsg = "Are you sure you want to reopen this ticket?";
-        } else if (form.id === 'addUnitForm') {
-            confirmMsg = "Are you sure you want to add this unit?";
-        } else if (form.id === 'editUnitForm') {
-            confirmMsg = "Are you sure you want to save changes to this unit?";
-        } else if (form.id === 'addDeptForm') {
-            confirmMsg = "Are you sure you want to add this department?";
-        } else if (form.id === 'editDeptForm') {
-            confirmMsg = "Are you sure you want to save changes to this department?";
-        } else if (form.id === 'contactForm') {
-            confirmMsg = "Are you sure you want to save these settings?";
-        } else if (form.id === 'addEmailForm') {
-            confirmMsg = "Are you sure you want to add this email?";
-        } else if (form.id === 'changePasswordForm') {
-            confirmMsg = "Are you sure you want to update your password?";
-        } else if (form.id === 'resetPasswordForm') {
-            confirmMsg = "Are you sure you want to reset this user's password?";
-        }
-
-        // Generic data-confirm attribute
-        if (form.hasAttribute('data-confirm')) {
-            confirmMsg = form.getAttribute('data-confirm');
-        }
+        let confirmMsg = form.getAttribute('data-confirm');
 
         if (confirmMsg) {
             e.preventDefault();
-            e.stopPropagation();
             
             currentFormToSubmit = form;
             confirmModalBody.textContent = confirmMsg;
             
-            // Show modal - this will add the backdrop
+            // Force clean before showing
+            forceCleanupBackdrops();
+            
             if (bsConfirmModal) {
                 bsConfirmModal.show();
             } else {
-                // Fallback: try re-initializing
                 if (initModal()) {
                     bsConfirmModal.show();
-                } else {
-                    // Ultra fallback - use jQuery if available
-                    if (typeof $ !== 'undefined') {
-                        $(modalEl).modal('show');
-                    }
+                } else if (typeof $ !== 'undefined') {
+                    $(modalEl).modal('show');
                 }
             }
         }
-    }, true);
+    });
 
     // ============================================
-    // FIX: Handle Yes Button Click
+    // FIX 4: Handle Yes Button - WITH BACKDROP CLEANUP
     // ============================================
     confirmModalYesBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        if (!currentFormToSubmit) return;
-
+        if (isProcessing || !currentFormToSubmit) {
+            return;
+        }
+        
+        isProcessing = true;
         const target = currentFormToSubmit;
+        currentFormToSubmit = null;
 
-        // Hide the modal first
+        // CRITICAL: Hide modal and clean up BEFORE submitting
         if (bsConfirmModal) {
             bsConfirmModal.hide();
         } else if (typeof $ !== 'undefined') {
             $(modalEl).modal('hide');
         }
 
-        // Remove any stuck backdrops
-        document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-            backdrop.remove();
-        });
-        document.body.classList.remove('modal-open');
+        // IMMEDIATE cleanup - this removes the blur
+        setTimeout(function() {
+            forceCleanupBackdrops();
+        }, 50);
 
-        // Mark as confirmed and submit
-        if (target.tagName === 'FORM') {
-            target.classList.add('confirmed');
-            setTimeout(function() {
-                target.submit();
-                currentFormToSubmit = null;
-            }, 200);
-        } else if (target.tagName === 'A') {
-            setTimeout(function() {
+        // Submit the form after cleanup
+        setTimeout(function() {
+            if (target && target.tagName === 'FORM') {
+                target.classList.add('confirmed');
+                
+                // Use native submit
+                const submitEvent = new Event('submit', {
+                    bubbles: true,
+                    cancelable: true
+                });
+                
+                if (target.dispatchEvent(submitEvent)) {
+                    target.submit();
+                }
+            } else if (target && target.tagName === 'A') {
                 window.location.href = target.href;
-                currentFormToSubmit = null;
-            }, 200);
-        }
+            }
+            
+            isProcessing = false;
+            forceCleanupBackdrops(); // One more time for safety
+        }, 100);
     });
 
     // ============================================
-    // FIX: Handle No Button Click
+    // FIX 5: Handle No Button
     // ============================================
     document.querySelectorAll('#confirmModal .btn-no, #confirmModal [data-bs-dismiss="modal"]').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
@@ -164,22 +182,21 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             
             currentFormToSubmit = null;
+            isProcessing = false;
+            
             if (bsConfirmModal) {
                 bsConfirmModal.hide();
             } else if (typeof $ !== 'undefined') {
                 $(modalEl).modal('hide');
             }
             
-            // Remove any stuck backdrops
-            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-                backdrop.remove();
-            });
-            document.body.classList.remove('modal-open');
+            // Clean up immediately
+            setTimeout(forceCleanupBackdrops, 50);
         });
     });
 
     // ============================================
-    // FIX: Handle modal close button (X)
+    // FIX 6: Handle Close Button
     // ============================================
     const closeBtn = modalEl.querySelector('.btn-close');
     if (closeBtn) {
@@ -188,21 +205,51 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             
             currentFormToSubmit = null;
+            isProcessing = false;
+            
             if (bsConfirmModal) {
                 bsConfirmModal.hide();
             } else if (typeof $ !== 'undefined') {
                 $(modalEl).modal('hide');
             }
             
-            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-                backdrop.remove();
-            });
-            document.body.classList.remove('modal-open');
+            setTimeout(forceCleanupBackdrops, 50);
         });
     }
 
     // ============================================
-    // FIX: Handle inline anchor actions
+    // FIX 7: Modal Hidden Event - Clean up
+    // ============================================
+    modalEl.addEventListener('hidden.bs.modal', function() {
+        forceCleanupBackdrops();
+        currentFormToSubmit = null;
+        isProcessing = false;
+        
+        document.querySelectorAll('form.confirmed').forEach(function(form) {
+            form.classList.remove('confirmed');
+        });
+    });
+
+    // ============================================
+    // FIX 8: Click Outside
+    // ============================================
+    modalEl.addEventListener('click', function(e) {
+        if (e.target === modalEl) {
+            currentFormToSubmit = null;
+            isProcessing = false;
+            
+            if (bsConfirmModal) {
+                bsConfirmModal.hide();
+            } else if (typeof $ !== 'undefined') {
+                $(modalEl).modal('hide');
+            }
+            
+            setTimeout(forceCleanupBackdrops, 50);
+        }
+    });
+
+    // ============================================
+    // FIX 9: Handle Inline Links
     // ============================================
     document.addEventListener('click', function(e) {
         const anchor = e.target.closest('.confirm-link');
@@ -213,6 +260,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentFormToSubmit = anchor;
                 const msg = anchor.getAttribute('data-confirm') || "Are you sure you want to perform this action?";
                 confirmModalBody.textContent = msg;
+                
+                forceCleanupBackdrops();
+                
                 if (bsConfirmModal) {
                     bsConfirmModal.show();
                 }
@@ -221,53 +271,46 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================
-    // FIX: Clean up when modal is hidden
+    // FIX 10: Mutation Observer for rogue backdrops
     // ============================================
-    modalEl.addEventListener('hidden.bs.modal', function() {
-        currentFormToSubmit = null;
-        document.querySelectorAll('form.confirmed').forEach(function(form) {
-            form.classList.remove('confirmed');
-        });
-        // Remove any stuck backdrops
-        document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-            backdrop.remove();
-        });
-        document.body.classList.remove('modal-open');
-    });
-
-    // ============================================
-    // FIX: Handle Escape key
-    // ============================================
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            if (modalEl.classList.contains('show')) {
-                currentFormToSubmit = null;
-                if (bsConfirmModal) {
-                    bsConfirmModal.hide();
-                }
-                document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+    const observer = new MutationObserver(function() {
+        // Check for any leftover backdrops and remove them
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        if (backdrops.length > 1) {
+            backdrops.forEach(function(backdrop, index) {
+                if (index > 0) {
                     backdrop.remove();
-                });
-                document.body.classList.remove('modal-open');
-            }
-        }
-    });
-
-    // ============================================
-    // FIX: Click outside modal - close it
-    // ============================================
-    modalEl.addEventListener('click', function(e) {
-        if (e.target === modalEl) {
-            currentFormToSubmit = null;
-            if (bsConfirmModal) {
-                bsConfirmModal.hide();
-            }
-            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-                backdrop.remove();
+                }
             });
+        }
+        
+        // If modal is not showing but body has modal-open class, fix it
+        if (!modalEl.classList.contains('show') && document.body.classList.contains('modal-open')) {
             document.body.classList.remove('modal-open');
         }
     });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class']
+    });
 
-    console.log('Confirmation interceptor initialized successfully.');
+    // ============================================
+    // FIX 11: Handle Escape Key properly
+    // ============================================
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            // If modal is showing and we press Escape, clean up
+            if (modalEl.classList.contains('show')) {
+                currentFormToSubmit = null;
+                isProcessing = false;
+                
+                setTimeout(forceCleanupBackdrops, 100);
+            }
+        }
+    });
+
+    console.log('Confirmation interceptor initialized with backdrop fix.');
 });

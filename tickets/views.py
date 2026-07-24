@@ -5,11 +5,14 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Count, Q
+from django.db.models import Count, Q, DateField
+from django.db.models.functions import TruncMonth, Cast
 from django.db import transaction
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
 
-import datetime
+from datetime import datetime, timedelta
+import json
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
 
@@ -17,18 +20,83 @@ from tickets.models import Unit, Department, AdminContact, AdminNotificationEmai
 from tickets.forms import TicketForm, AdminTicketForm, AdminContactForm, UnitForm, DepartmentForm, AdminNotificationEmailForm, AdminPasswordChangeForm, AdminSetUserPasswordForm, UserSelectionForm
 from tickets.utils import generate_ticket_number, send_ticket_email
 
-# Helper: Check if user is Admin
+
+# =========================================================================
+# HELPER FUNCTIONS
+# =========================================================================
+
 def is_admin(user):
+    """Check if user is Admin"""
     return user.is_authenticated and user.is_staff
 
-# Custom Login Redirect View
+
+def format_timedelta_display(td):
+    """Helper to format timedelta into a human-readable string for UI display."""
+    if not td:
+        return ""
+    
+    days = td.days
+    hours, remainder = divmod(td.seconds, 3600)
+    minutes, _ = divmod(remainder, 60)
+    
+    parts = []
+    if days > 0:
+        parts.append(f"{days} day{'s' if days > 1 else ''}")
+    if hours > 0:
+        parts.append(f"{hours} hour{'s' if hours > 1 else ''}")
+    if minutes > 0:
+        parts.append(f"{minutes} min{'s' if minutes > 1 else ''}")
+        
+    if not parts:
+        return "< 1 minute"
+        
+    return ", ".join(parts)
+
+
+def get_client_ip(request):
+    """Get client IP address from request"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+def reopen_ticket_logic(ticket, performed_by, remarks):
+    """
+    Shared logic to reopen a ticket.
+    Resets status and fields, creates history, and sends email.
+    """
+    with transaction.atomic():
+        ticket.status = 'Open'
+        ticket.closed_by = None
+        ticket.closed_at = None
+        ticket.closing_remarks = None
+        ticket.save()
+
+        TicketHistory.objects.create(
+            ticket=ticket,
+            action="Ticket Reopened",
+            remarks=remarks,
+            performed_by=performed_by
+        )
+
+    # Send Reopened Notification Email
+    send_ticket_email(ticket, 'Reopened', remarks=remarks)
+
+
+# =========================================================================
+# AUTH VIEWS
+# =========================================================================
+
 @login_required
 def role_redirect(request):
     if request.user.is_staff:
         return redirect('admin_dashboard')
     return redirect('employee_dashboard')
 
-# Custom Logout View
+
 def custom_logout(request):
     logout(request)
     return redirect('login')
@@ -76,12 +144,10 @@ def create_ticket(request):
         if form.is_valid():
             with transaction.atomic():
                 ticket = form.save(commit=False)
-                # FIX: Ticket number is now generated automatically in models.py save()
-                # No need to manually call generate_ticket_number() here
                 ticket.created_by_user = request.user
                 ticket.created_by_role = 'Employee'
                 ticket.status = 'Open'
-                ticket.save()  # This will trigger the save() method in models.py
+                ticket.save()
                 
                 # History log
                 TicketHistory.objects.create(
@@ -94,7 +160,8 @@ def create_ticket(request):
             # Send Email
             send_ticket_email(ticket, 'Created')
             
-            messages.success(request, f"Ticket {ticket.ticket_number} created successfully!")
+            # FIXED: Plain text message, no HTML
+            messages.success(request, f'Ticket {ticket.ticket_number} created successfully!')
             return redirect('employee_dashboard')
     else:
         form = TicketForm()
@@ -160,10 +227,36 @@ def ticket_detail(request, pk):
     # Security: Ensure employee only views their own ticket
     ticket = get_object_or_404(Ticket, pk=pk, created_by_user=request.user)
     history = ticket.history.all().order_by('timestamp')
+
+    can_reopen = False
+    reopen_time_left = None
+    reopen_deadline = None
+    if ticket.status == 'Closed' and ticket.closed_at:
+        reopen_deadline = ticket.closed_at + timedelta(hours=48)
+        if timezone.now() < reopen_deadline:
+            can_reopen = True
+            reopen_time_left = reopen_deadline - timezone.now()
+
+    # Calculate Time to Close for the UI
+    time_to_close_str = ""
+    if ticket.status == 'Closed' and ticket.created_at and ticket.closed_at:
+        time_to_close = ticket.closed_at - ticket.created_at
+        time_to_close_str = format_timedelta_display(time_to_close)
+
+    if request.method == 'POST' and can_reopen:
+        remarks = request.POST.get('remarks', '').strip()
+        if remarks:
+            reopen_ticket_logic(ticket, f"Employee {request.user.username}", remarks)
+            messages.success(request, f"Ticket {ticket.ticket_number} has been reopened.")
+            return redirect('ticket_detail', pk=pk)
     
     context = {
         'ticket': ticket,
         'history': history,
+        'can_reopen': can_reopen,
+        'time_to_close': time_to_close_str,
+        'reopen_time_left': reopen_time_left,
+        'reopen_deadline_iso': reopen_deadline.isoformat() if reopen_deadline else None,
     }
     return render(request, 'employee/ticket_detail.html', context)
 
@@ -193,17 +286,33 @@ def admin_dashboard(request):
     chart_status = {item['status']: item['count'] for item in status_counts}
     
     # Chart 2: Unit-wise Tickets
-    unit_counts = list(all_tickets.values('unit__code').annotate(count=Count('id')))
-    chart_units = {item['unit__code']: item['count'] for item in unit_counts if item['unit__code']}
+    unit_counts = list(all_tickets.filter(unit__isnull=False).values('unit_id', 'unit__code').annotate(count=Count('id')).order_by('unit__code'))
+    chart_units = [
+        {'id': item['unit_id'], 'label': item['unit__code'], 'value': item['count']} for item in unit_counts
+    ]
 
     # Chart 4: Priority Distribution
     prio_counts = list(all_tickets.values('priority').annotate(count=Count('id')))
     chart_priority = {item['priority']: item['count'] for item in prio_counts}
 
+    # Chart 3: Tickets created per month (last 12 months)
+    twelve_months_ago = timezone.now() - timedelta(days=365)
+    monthly_counts_qs = Ticket.objects.filter(created_at__gte=twelve_months_ago) \
+        .annotate(month=TruncMonth(Cast('created_at', output_field=DateField()))) \
+        .values('month') \
+        .annotate(count=Count('id')) \
+        .order_by('month')
+
+    chart_monthly = [
+        {'label': item['month'].strftime('%b %Y'), 'value': item['count']}
+        for item in monthly_counts_qs
+    ]
+
     charts_data = {
         'status': chart_status,
         'units': chart_units,
         'priority': chart_priority,
+        'monthly': chart_monthly,
     }
 
     context = {
@@ -221,27 +330,22 @@ def create_ticket_admin(request):
         if form.is_valid():
             with transaction.atomic():
                 ticket = form.save(commit=False)
-                # FIX: Ticket number is now generated automatically in models.py save()
-                # No need to manually call generate_ticket_number() here
                 
                 # Custom history text
                 if ticket.created_by_role == 'Admin':
                     hist_remark = f"Ticket created by Admin on behalf of employee (Reason: {ticket.admin_creation_reason})"
                     hist_perf = f"Admin {request.user.username}"
-                    # The admin is creating it, so the admin is the user who created it.
                     ticket.created_by_user = request.user
                 else:
                     hist_remark = "Ticket Created by Employee (logged by Admin)"
                     hist_perf = "Employee"
-                    # Find or create the single, shared employee user.
-                    # All employee-created tickets will be associated with this user.
                     employee_user, _ = User.objects.get_or_create(
                         username='GPLERPUSERS', 
-                        defaults={'is_staff': False, 'password': 'pbkdf2_sha256$720000$j5xL6pS0LpGvLq3sRjVbWk$V/Hq7aYt2x531enqYm5d9f2uZdtsJ7MLd2y221C+L9s='} # GPL123USER
+                        defaults={'is_staff': False, 'password': 'pbkdf2_sha256$720000$j5xL6pS0LpGvLq3sRjVbWk$V/Hq7aYt2x531enqYm5d9f2uZdtsJ7MLd2y221C+L9s='}
                     )
                     ticket.created_by_user = employee_user
                 
-                ticket.save()  # This will trigger the save() method in models.py
+                ticket.save()
                     
                 TicketHistory.objects.create(
                     ticket=ticket,
@@ -251,7 +355,9 @@ def create_ticket_admin(request):
                 )
                 
             send_ticket_email(ticket, 'Created')
-            messages.success(request, f"Ticket {ticket.ticket_number} created successfully by Admin!")
+            
+            # FIXED: Plain text message
+            messages.success(request, f'Ticket {ticket.ticket_number} created successfully by Admin!')
             return redirect('admin_dashboard')
     else:
         form = AdminTicketForm()
@@ -355,7 +461,23 @@ def ticket_detail_admin(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
     history = ticket.history.all().order_by('timestamp')
     
-    # Process actions (Assign, Hold, Escalate, Close)
+    # Check if ticket can be reopened (within 48 hours of closure)
+    can_reopen = False
+    reopen_time_left = None
+    reopen_deadline = None
+    if ticket.status == 'Closed' and ticket.closed_at:
+        reopen_deadline = ticket.closed_at + timedelta(hours=48)
+        if timezone.now() < reopen_deadline:
+            can_reopen = True
+            reopen_time_left = reopen_deadline - timezone.now()
+
+    # Calculate Time to Close for the UI
+    time_to_close_str = ""
+    if ticket.status == 'Closed' and ticket.created_at and ticket.closed_at:
+        time_to_close = ticket.closed_at - ticket.created_at
+        time_to_close_str = format_timedelta_display(time_to_close)
+
+    # Process actions (Assign, Hold, Escalate, Close, Reopen)
     if request.method == 'POST':
         action_type = request.POST.get('action_type')
         remarks = request.POST.get('remarks', '')
@@ -377,7 +499,8 @@ def ticket_detail_admin(request, pk):
                     remarks=remarks,
                     performed_by=f"Admin {request.user.username}"
                 )
-                messages.success(request, f"Ticket assigned to {assigned_person}.")
+                
+                messages.success(request, f'Ticket assigned to {assigned_person}.')
                 
             elif action_type == 'Hold':
                 hold_reason = request.POST.get('hold_reason', '').strip()
@@ -395,7 +518,8 @@ def ticket_detail_admin(request, pk):
                     remarks=f"Reason: {hold_reason}",
                     performed_by=f"Admin {request.user.username}"
                 )
-                messages.success(request, "Ticket placed on Hold.")
+                
+                messages.success(request, 'Ticket placed on Hold.')
                 
             elif action_type == 'Escalate':
                 vendor_ticket = request.POST.get('vendor_ticket_number', '').strip()
@@ -412,7 +536,8 @@ def ticket_detail_admin(request, pk):
                     remarks=remark_str,
                     performed_by=f"Admin {request.user.username}"
                 )
-                messages.success(request, "Ticket escalated to ERP vendor.")
+                
+                messages.success(request, 'Ticket escalated to ERP vendor.')
                 
             elif action_type == 'Close':
                 closing_remarks = request.POST.get('closing_remarks', '').strip()
@@ -440,37 +565,32 @@ def ticket_detail_admin(request, pk):
                 
                 # Send Closed Notification Email
                 send_ticket_email(ticket, 'Closed', remarks=closing_remarks)
-                messages.success(request, "Ticket closed successfully.")
+                messages.success(request, 'Ticket closed successfully.')
 
             elif action_type == 'Reopen':
-                if ticket.status != 'Closed':
-                    messages.error(request, "Only closed tickets can be reopened.")
+                if not can_reopen:
+                    messages.error(request, "This ticket cannot be reopened as it was closed more than 48 hours ago.")
                     return redirect('admin_ticket_detail', pk=pk)
+
                 remarks = request.POST.get('remarks', '').strip()
                 if not remarks:
                     messages.error(request, "Reason for reopening is mandatory.")
                     return redirect('admin_ticket_detail', pk=pk)
                 
-                ticket.status = 'Open'
-                ticket.closed_by = None
-                ticket.closed_at = None
-                ticket.closing_remarks = None
-                ticket.save()
-                
-                TicketHistory.objects.create(
-                    ticket=ticket,
-                    action="Ticket Reopened",
-                    remarks=remarks,
-                    performed_by=f"Admin {request.user.username}"
-                )
-                
-                # Send Reopened Notification Email
-                send_ticket_email(ticket, 'Reopened', remarks=remarks)
-                messages.success(request, "Ticket reopened successfully.")
+                # Use the shared logic to reopen the ticket
+                reopen_ticket_logic(ticket, f"Admin {request.user.username}", remarks)
+                messages.success(request, 'Ticket reopened successfully.')
         
         return redirect('admin_ticket_detail', pk=pk)
         
-    return render(request, 'admin_panel/ticket_detail.html', {'ticket': ticket, 'history': history})
+    return render(request, 'admin_panel/ticket_detail.html', {
+        'ticket': ticket, 
+        'history': history, 
+        'can_reopen': can_reopen,
+        'time_to_close': time_to_close_str,
+        'reopen_time_left': reopen_time_left,
+        'reopen_deadline_iso': reopen_deadline.isoformat() if reopen_deadline else None,
+    })
 
 
 @login_required
@@ -514,10 +634,8 @@ def reports(request):
     elif category == 'closed':
         tickets_qs = tickets_qs.filter(status='Closed')
     elif category == 'escalated_closed':
-        # Tickets that were escalated then closed (must have escalated_at and status=Closed)
         tickets_qs = tickets_qs.filter(status='Closed', escalated_at__isnull=False)
     elif category == 'reopened':
-        # Tickets that have at least one 'Ticket Reopened' history action
         tickets_qs = tickets_qs.filter(history__action='Ticket Reopened').distinct()
 
     # Apply general filters
@@ -527,7 +645,7 @@ def reports(request):
         tickets_qs = tickets_qs.filter(department_id=dept_id)
     if priority:
         tickets_qs = tickets_qs.filter(priority=priority)
-    if status and category == 'all':
+    if status:
         tickets_qs = tickets_qs.filter(status=status)
     if assigned_person:
         tickets_qs = tickets_qs.filter(assigned_person__icontains=assigned_person)
@@ -539,22 +657,22 @@ def reports(request):
         tickets_qs = tickets_qs.filter(vendor_ticket_number__icontains=vendor_ticket)
 
     # Date ranges
-    if created_start:
+    if created_start and created_start.strip():
         tickets_qs = tickets_qs.filter(created_at__date__gte=created_start)
-    if created_end:
+    if created_end and created_end.strip():
         tickets_qs = tickets_qs.filter(created_at__date__lte=created_end)
         
-    if closed_start:
+    if closed_start and closed_start.strip():
         tickets_qs = tickets_qs.filter(closed_at__date__gte=closed_start)
-    if closed_end:
+    if closed_end and closed_end.strip():
         tickets_qs = tickets_qs.filter(closed_at__date__lte=closed_end)
         
-    if escalated_start:
+    if escalated_start and escalated_start.strip():
         tickets_qs = tickets_qs.filter(escalated_at__date__gte=escalated_start)
-    if escalated_end:
+    if escalated_end and escalated_end.strip():
         tickets_qs = tickets_qs.filter(escalated_at__date__lte=escalated_end)
 
-    # Reopened filter (standalone, works in addition to category)
+    # Reopened filter
     if is_reopened == 'yes':
         tickets_qs = tickets_qs.filter(history__action='Ticket Reopened').distinct()
     elif is_reopened == 'no':
@@ -567,32 +685,29 @@ def reports(request):
         )
         response['Content-Disposition'] = f'attachment; filename=GPLAST_Ticket_Report_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
         
-        # Build workbook
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Tickets Report"
         
-        # Style Definitions
         title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
         header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
         data_font = Font(name='Calibri', size=11)
         
-        title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid') # Navy
-        header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid') # Lighter Navy
+        title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+        header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
         
-        # Title block
-        ws.merge_cells('A1:U1')
+        ws.merge_cells('A1:Y1')
         ws['A1'] = "GPLAST ERP Support Ticket System - Export Report"
         ws['A1'].font = title_font
         ws['A1'].fill = title_fill
         ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
         ws.row_dimensions[1].height = 40
         
-        # Headers
         headers = [
             "Ticket Number", "Status", "Unit Code", "Unit Full Name", "Department",
             "Employee ID", "Employee Name", "Mobile Number", "Email ID", "Screen Number",
-            "Subject", "Description", "Priority", "Error Type", "Created By Role",
+            "Subject", "Description", "Priority", "Error Type", "Created By Role", 
+            "Time to Close",
             "Admin Creation Reason", "Assigned Person", "Hold Reason", "Closing Remarks",
             "Closed By", "Vendor Ticket Number", "Created At", "Closed At", "Escalated At"
         ]
@@ -605,18 +720,22 @@ def reports(request):
             cell.fill = header_fill
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
             
-        # Data Rows
         row_idx = 4
         for t in tickets_qs:
-            # Format Datetimes safely
             c_at = t.created_at.astimezone(timezone.get_current_timezone()).strftime('%d-%b-%Y %I:%M %p') if t.created_at else ""
             cl_at = t.closed_at.astimezone(timezone.get_current_timezone()).strftime('%d-%b-%Y %I:%M %p') if t.closed_at else ""
             esc_at = t.escalated_at.astimezone(timezone.get_current_timezone()).strftime('%d-%b-%Y %I:%M %p') if t.escalated_at else ""
-            
+
+            time_to_close_str = ""
+            if t.status == 'Closed' and t.created_at and t.closed_at:
+                time_to_close = t.closed_at - t.created_at
+                time_to_close_str = format_timedelta_display(time_to_close)
+
             row_data = [
                 t.ticket_number, t.status, t.unit.code, t.unit.full_name, t.department.name,
                 t.employee_id, t.employee_name, t.mobile, t.email, t.screen_number,
                 t.subject, t.description, t.priority, t.error_type, t.created_by_role,
+                time_to_close_str,
                 t.admin_creation_reason or "", t.assigned_person or "", t.hold_reason or "", t.closing_remarks or "",
                 t.closed_by or "", t.vendor_ticket_number or "", c_at, cl_at, esc_at
             ]
@@ -625,8 +744,7 @@ def reports(request):
                 cell = ws.cell(row=row_idx, column=col_idx)
                 cell.value = val
                 cell.font = data_font
-                # Align left for text, center for codes/dates
-                if col_idx in [1, 2, 3, 6, 8, 13, 14, 15, 21, 22, 23, 24]:
+                if col_idx in [1, 2, 3, 6, 8, 13, 14, 15, 16, 22, 23, 24, 25]:
                     cell.alignment = Alignment(horizontal='center', vertical='center')
                 else:
                     cell.alignment = Alignment(horizontal='left', vertical='center')
@@ -634,7 +752,6 @@ def reports(request):
             ws.row_dimensions[row_idx].height = 20
             row_idx += 1
             
-        # Auto-adjust column widths
         for col in ws.columns:
             max_len = 0
             for cell in col:
@@ -649,174 +766,230 @@ def reports(request):
         wb.save(response)
         return response
 
+    # Pagination
+    paginator = Paginator(tickets_qs, 15)
+    page_number = request.GET.get('page')
+    try:
+        tickets_page = paginator.page(page_number)
+    except PageNotAnInteger:
+        tickets_page = paginator.page(1)
+    except EmptyPage:
+        tickets_page = paginator.page(paginator.num_pages)
+
+    query_params = request.GET.copy()
+    if 'page' in query_params:
+        del query_params['page']
+
+    error_type_choices = Ticket.objects.filter(error_type__isnull=False).values_list('error_type', 'error_type').distinct().order_by('error_type')
+
     context = {
-        'tickets': tickets_qs,
+        'tickets': tickets_page,
         'units': units,
         'departments': departments,
         'category': category,
         'is_reopened': is_reopened,
+        'query_params': query_params.urlencode(),
+        'status_choices': Ticket.STATUS_CHOICES,
+        'priority_choices': Ticket.PRIORITY_CHOICES,
+        'created_by_choices': Ticket.CREATED_BY_CHOICES,
+        'error_type_choices': error_type_choices,
     }
     return render(request, 'admin_panel/reports.html', context)
 
 
+# =========================================================================
+# SETTINGS VIEWS
+# =========================================================================
+
 @login_required
 @user_passes_test(is_admin, login_url='role_redirect')
 def settings_page(request):
-    # Retrieve singletons and lists
     contact_obj = AdminContact.objects.first()
     if not contact_obj:
         contact_obj = AdminContact.objects.create(admin_name="IT ADMIN", admin_phone="9999999999", admin_email="admin@gplast.com")
-        
-    # Ensure the shared employee user exists, create if not.
+
     employee_user, _ = User.objects.get_or_create(
         username='GPLERPUSERS',
-        defaults={'is_staff': False, 'password': 'pbkdf2_sha256$720000$j5xL6pS0LpGvLq3sRjVbWk$V/Hq7aYt2x531enqYm5d9f2uZdtsJ7MLd2y221C+L9s='} # GPL123USER
+        defaults={'is_staff': False, 'password': 'pbkdf2_sha256$720000$j5xL6pS0LpGvLq3sRjVbWk$V/Hq7aYt2x531enqYm5d9f2uZdtsJ7MLd2y221C+L9s='}
     )
 
-    units = Unit.objects.all().order_by('code')
-    departments = Department.objects.all().order_by('unit__code', 'name')
-    emails = AdminNotificationEmail.objects.all().order_by('-created_at')
+    context = {
+        'contact_form': AdminContactForm(instance=contact_obj),
+        'my_password_form': AdminPasswordChangeForm(user=request.user),
+        'set_user_password_form': AdminSetUserPasswordForm(user=employee_user),
+        'employee_user': employee_user,
+        'unit_form': UnitForm(),
+        'dept_form': DepartmentForm(),
+        'email_form': AdminNotificationEmailForm(),
+        'units': Unit.objects.all().order_by('code'),
+        'departments': Department.objects.all().order_by('unit__code', 'name'),
+        'emails': AdminNotificationEmail.objects.all().order_by('-created_at'),
+    }
+    return render(request, 'admin_panel/settings.html', context)
 
-    # Initialize Forms
-    contact_form = AdminContactForm(instance=contact_obj)
-    my_password_form = AdminPasswordChangeForm(user=request.user)
-    set_user_password_form = AdminSetUserPasswordForm(user=None)
-    unit_form = UnitForm()
-    dept_form = DepartmentForm()
-    email_form = AdminNotificationEmailForm()
 
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def settings_contact(request):
     if request.method == 'POST':
-        form_type = request.POST.get('form_type')
-        
-        if form_type == 'contact':
-            contact_form = AdminContactForm(request.POST, instance=contact_obj)
-            if contact_form.is_valid():
-                contact_form.save()
-                messages.success(request, "IT Support Contact updated successfully.")
-                return redirect('settings_page')
-                
-        elif form_type == 'unit_add':
-            unit_form = UnitForm(request.POST)
-            if unit_form.is_valid():
-                unit = unit_form.save(commit=False)
+        contact_obj = AdminContact.objects.first()
+        form = AdminContactForm(request.POST, instance=contact_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "IT Support Contact updated successfully.")
+    return redirect('settings_page')
+
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def settings_units(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add':
+            form = UnitForm(request.POST)
+            if form.is_valid():
+                unit = form.save(commit=False)
                 unit.created_by = request.user.username
                 unit.save()
-                messages.success(request, f"Unit {unit.code} added successfully.")
-                return redirect('settings_page')
-                
-        elif form_type == 'unit_edit':
+                messages.success(request, f"Unit '{unit.code}' added successfully.")
+        elif action == 'edit':
             unit_id = request.POST.get('unit_id')
             unit = get_object_or_404(Unit, pk=unit_id)
-            # Edit code and name
-            unit.code = request.POST.get('code', unit.code).strip().upper()
-            unit.full_name = request.POST.get('full_name', unit.full_name).strip().upper()
-            unit.save()
-            messages.success(request, f"Unit {unit.code} updated successfully.")
-            return redirect('settings_page')
-            
-        elif form_type == 'unit_toggle':
+            form = UnitForm(request.POST, instance=unit)
+            if form.is_valid():
+                form.save()
+                messages.success(request, f"Unit '{unit.code}' updated successfully.")
+        elif action == 'toggle':
             unit_id = request.POST.get('unit_id')
             unit = get_object_or_404(Unit, pk=unit_id)
-            # Toggle is_active
             unit.is_active = not unit.is_active
             unit.save()
             status_str = "activated" if unit.is_active else "deactivated"
-            messages.success(request, f"Unit {unit.code} has been {status_str}.")
-            return redirect('settings_page')
-            
-        elif form_type == 'unit_delete':
-            unit_id = request.POST.get('unit_id')
-            unit = get_object_or_404(Unit, pk=unit_id)
-            unit.is_active = False
-            unit.save()
-            Department.objects.filter(unit=unit, is_active=True).update(is_active=False)
-            messages.success(request, f"Unit {unit.code} has been deleted and its related departments were deactivated.")
-            return redirect('settings_page')
-            
-        elif form_type == 'dept_add':
-            dept_form = DepartmentForm(request.POST)
-            if dept_form.is_valid():
-                dept = dept_form.save()
-                messages.success(request, f"Department {dept.name} added under unit {dept.unit.code}.")
-                return redirect('settings_page')
-                
-        elif form_type == 'dept_edit':
+            messages.success(request, f"Unit '{unit.code}' has been {status_str}.")
+    return redirect('settings_page')
+
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def settings_departments(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add':
+            form = DepartmentForm(request.POST)
+            if form.is_valid():
+                dept = form.save()
+                messages.success(request, f"Department '{dept.name}' added under unit '{dept.unit.code}'.")
+        elif action == 'edit':
             dept_id = request.POST.get('dept_id')
             dept = get_object_or_404(Department, pk=dept_id)
-            dept.name = request.POST.get('name', dept.name).strip().upper()
-            dept.save()
-            messages.success(request, f"Department {dept.name} updated successfully.")
-            return redirect('settings_page')
-            
-        elif form_type == 'dept_toggle':
+            form = DepartmentForm(request.POST, instance=dept)
+            if form.is_valid():
+                form.save()
+                messages.success(request, f"Department '{dept.name}' updated successfully.")
+        elif action == 'toggle':
             dept_id = request.POST.get('dept_id')
             dept = get_object_or_404(Department, pk=dept_id)
             dept.is_active = not dept.is_active
             dept.save()
             status_str = "activated" if dept.is_active else "deactivated"
-            messages.success(request, f"Department {dept.name} has been {status_str}.")
-            return redirect('settings_page')
-            
-        elif form_type == 'dept_delete':
-            dept_id = request.POST.get('dept_id')
-            dept = get_object_or_404(Department, pk=dept_id)
-            dept.is_active = False
-            dept.save()
-            messages.success(request, f"Department {dept.name} has been deleted.")
-            return redirect('settings_page')
-            
-        elif form_type == 'email_add':
-            email_form = AdminNotificationEmailForm(request.POST)
-            if email_form.is_valid():
-                email = email_form.save()
-                messages.success(request, f"Notification email {email.email} added.")
-                return redirect('settings_page')
-                
-        elif form_type == 'email_delete':
+            messages.success(request, f"Department '{dept.name}' has been {status_str}.")
+    return redirect('settings_page')
+
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def settings_emails(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add':
+            form = AdminNotificationEmailForm(request.POST)
+            if form.is_valid():
+                email = form.save()
+                messages.success(request, f"Notification email '{email.email}' added.")
+        elif action == 'delete':
             email_id = request.POST.get('email_id')
             email_obj = get_object_or_404(AdminNotificationEmail, pk=email_id)
             email_str = email_obj.email
             email_obj.delete()
-            messages.success(request, f"Notification email {email_str} deleted.")
-            return redirect('settings_page')
-            
-        elif form_type == 'change_my_password':
-            my_password_form = AdminPasswordChangeForm(user=request.user, data=request.POST)
-            if my_password_form.is_valid():
-                user = my_password_form.save()
-                update_session_auth_hash(request, user)  # Important!
-                messages.success(request, 'Your password was successfully updated!')
-                return redirect('settings_page')
-            else:
-                messages.error(request, 'Please correct the error below.')
+            messages.success(request, f"Notification email '{email_str}' deleted.")
+    return redirect('settings_page')
 
-        elif form_type == 'set_user_password':
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def settings_passwords(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'change_my_password':
+            form = AdminPasswordChangeForm(user=request.user, data=request.POST)
+            if form.is_valid():
+                user = form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, 'Your password was successfully updated!')
+            else:
+                for field, error_list in form.errors.items():
+                    for error in error_list:
+                        messages.error(request, f"Password change failed: {error}")
+
+        elif action == 'set_user_password':
             user_id = request.POST.get('user')
             selected_user = get_object_or_404(User, pk=user_id, is_staff=False)
-            set_user_password_form = AdminSetUserPasswordForm(user=selected_user, data=request.POST)
-            
-            if set_user_password_form.is_valid():
-                set_user_password_form.save()
-                messages.success(request, f"Password for user '{selected_user.username}' has been successfully reset.")
-                return redirect('settings_page')
+            form = AdminSetUserPasswordForm(user=selected_user, data=request.POST)
+            if form.is_valid():
+                form.save()
+                messages.success(request, f"Password for user '{selected_user.username}' has been reset.")
             else:
-                messages.error(request, f"Failed to reset password for '{selected_user.username}'. Please correct the errors.")
-                # Repopulate user selection form to show which user was selected
-                user_select_form = UserSelectionForm(initial={'user': user_id})
+                for field, error_list in form.errors.items():
+                    for error in error_list:
+                        messages.error(request, f"Password reset failed: {error}")
+    return redirect('settings_page')
 
-    context = {
-        'contact_form': contact_form,
-        'my_password_form': my_password_form,
-        'set_user_password_form': set_user_password_form,
-        'employee_user': employee_user,
-        'unit_form': unit_form,
-        'dept_form': dept_form,
-        'email_form': email_form,
-        'units': units,
-        'departments': departments,
-        'emails': emails,
-    }
-    return render(request, 'admin_panel/settings.html', context)
+
+# =========================================================================
+# TEST NOTIFICATION VIEWS
+# =========================================================================
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def test_notifications(request):
+    """Test page for all notification types"""
+    return render(request, 'admin_panel/test_notifications.html')
+
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def test_success_message(request):
+    """Test Django success message"""
+    messages.success(request, 'This is a test success message from Django!')
+    messages.success(request, 'Ticket #1234 created successfully: Network Issue')
+    return redirect('test_notifications')
+
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def test_error_message(request):
+    """Test Django error message"""
+    messages.error(request, 'This is a test error message from Django!')
+    messages.error(request, 'Failed to save ticket. Please check all fields.')
+    return redirect('test_notifications')
+
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def test_warning_message(request):
+    """Test Django warning message"""
+    messages.warning(request, 'This is a test warning message from Django!')
+    messages.warning(request, 'Ticket #1234 is about to expire in 2 days.')
+    return redirect('test_notifications')
+
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def test_info_message(request):
+    """Test Django info message"""
+    messages.info(request, 'This is a test info message from Django!')
+    messages.info(request, 'Report generated successfully. Check the reports section.')
+    return redirect('test_notifications')
 
 
 # =========================================================================
