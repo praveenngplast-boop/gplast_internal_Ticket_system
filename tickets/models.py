@@ -64,6 +64,35 @@ class AdminNotificationEmail(models.Model):
 
 
 # =========================================================================
+# EMPLOYEE MASTER MODEL (NEW - for auto-fetch)
+# =========================================================================
+class EmployeeMaster(models.Model):
+    """Employee directory for auto-fetching details in ticket creation"""
+    employee_id = models.CharField(max_length=50, unique=True)
+    employee_name = models.CharField(max_length=150)
+    mobile = models.CharField(max_length=10)
+    email = models.EmailField()
+    unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['employee_id']
+        verbose_name = 'Employee Master'
+        verbose_name_plural = 'Employee Masters'
+
+    def save(self, *args, **kwargs):
+        self.employee_id = self.employee_id.upper()
+        self.employee_name = self.employee_name.upper()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.employee_id} - {self.employee_name}"
+
+
+# =========================================================================
 # TICKET NUMBER GENERATOR
 # =========================================================================
 def generate_ticket_number():
@@ -71,20 +100,16 @@ def generate_ticket_number():
     Generate sequential ticket numbers starting from 0001
     Format: 0001, 0002, 0003, ... up to 9999
     """
-    # Get the last ticket
-    from tickets.models import Ticket  # Local import to avoid circular dependency
+    from tickets.models import Ticket
     last_ticket = Ticket.objects.all().order_by('id').last()
     
     if last_ticket and last_ticket.ticket_number:
         ticket_num = last_ticket.ticket_number
         
-        # Handle both old format (GPLAST-20260701-0001) and new format (0001)
         try:
-            # First try to convert the entire string to int (for new format)
             last_number = int(ticket_num)
             new_number = last_number + 1
         except ValueError:
-            # If that fails, try to extract the last 4 digits (for old format)
             try:
                 match = re.search(r'(\d{4})$', ticket_num)
                 if match:
@@ -95,10 +120,8 @@ def generate_ticket_number():
             except (ValueError, AttributeError):
                 new_number = 1
     else:
-        # No tickets exist, start from 1
         new_number = 1
     
-    # Format as 4-digit with leading zeros (0001, 0002, ...)
     return f"{new_number:04d}"
 
 
@@ -174,7 +197,6 @@ class Ticket(models.Model):
     escalated_at = models.DateTimeField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        # Generate ticket number if not already set
         if not self.ticket_number:
             self.ticket_number = generate_ticket_number()
         super().save(*args, **kwargs)

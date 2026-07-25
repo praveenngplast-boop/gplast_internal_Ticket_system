@@ -1,6 +1,4 @@
 from django.urls import path
-from django.contrib import messages
-from django.shortcuts import redirect
 from . import views
 
 urlpatterns = [
@@ -32,6 +30,10 @@ urlpatterns = [
     path('admin/settings/departments/', views.settings_departments, name='settings_departments'),
     path('admin/settings/emails/', views.settings_emails, name='settings_emails'),
     path('admin/settings/passwords/', views.settings_passwords, name='settings_passwords'),
+    
+    # Employee Directory URLs (ADD THESE TWO LINES)
+    path('admin/settings/employees/', views.settings_employees, name='settings_employees'),
+    path('admin/settings/employees/download/', views.download_employee_list, name='download_employee_list'),
 
     # =========================================================================
     # TEST NOTIFICATION URLS
@@ -46,4 +48,7 @@ urlpatterns = [
     # AJAX ENDPOINTS
     # =========================================================================
     path('ajax/get-departments/', views.get_departments_by_unit, name='get_departments_by_unit'),
+    
+    # NEW: Employee Auto-Fetch Endpoint
+    path('ajax/get-employee/', views.get_employee_details, name='get_employee_details'),
 ]

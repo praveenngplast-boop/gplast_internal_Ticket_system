@@ -142,6 +142,67 @@
         cursor: pointer;
     }
 
+    /* ============================================
+       AUTO-FETCH INDICATOR STYLES
+    ============================================ */
+    .emp-id-wrapper {
+        position: relative;
+    }
+
+    .emp-fetch-status {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.8rem;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .emp-fetch-status.found {
+        color: #22C55E;
+    }
+
+    .emp-fetch-status.not-found {
+        color: #F59E0B;
+    }
+
+    .emp-fetch-status.loading {
+        color: var(--accent);
+        animation: spin 0.8s linear infinite;
+    }
+
+    .field-auto-filled {
+        border-color: #22C55E !important;
+        background-color: rgba(34, 197, 94, 0.03) !important;
+    }
+
+    [data-theme="dark"] .field-auto-filled {
+        border-color: #34D399 !important;
+        background-color: rgba(52, 211, 153, 0.05) !important;
+    }
+
+    .auto-fill-badge {
+        display: inline-block;
+        font-size: 0.6rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(34, 197, 94, 0.15);
+        color: #22C55E;
+        margin-left: 4px;
+        font-weight: 500;
+    }
+
+    [data-theme="dark"] .auto-fill-badge {
+        background: rgba(52, 211, 153, 0.2);
+        color: #34D399;
+    }
+
+    @keyframes spin {
+        0% { transform: translateY(-50%) rotate(0deg); }
+        100% { transform: translateY(-50%) rotate(360deg); }
+    }
+
     /* File Input */
     input[type="file"] {
         background-color: var(--input-bg) !important;
@@ -417,15 +478,24 @@
                     </div>
                 </div>
 
-                <!-- Section 2: Employee Details -->
+                <!-- Section 2: Employee Details with Auto-Fetch -->
                 <div class="form-section">
                     <div class="form-section-title">
                         <i class="fa-solid fa-circle-2"></i>Employee Details
                     </div>
                     <div class="row g-2">
                         <div class="col-md-3">
-                            <label class="form-label">Employee ID *</label>
-                            {{ form.employee_id }}
+                            <label class="form-label">
+                                Employee ID *
+                                <span class="auto-fill-badge" id="autoFillBadge" style="display: none;">
+                                    <i class="fa-solid fa-magic me-1"></i>Auto-fill
+                                </span>
+                            </label>
+                            <div class="emp-id-wrapper">
+                                {{ form.employee_id }}
+                                <span class="emp-fetch-status" id="empFetchStatus"></span>
+                            </div>
+                            <div id="empFetchMessage" class="char-counter" style="text-align: left; display: none;"></div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Employee Name *</label>
@@ -507,16 +577,181 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Department Loading
+        // ============================================
+        // EMPLOYEE AUTO-FETCH
+        // ============================================
+        const empIdInput = document.getElementById('id_employee_id');
+        const empNameInput = document.getElementById('id_employee_name');
+        const empMobileInput = document.getElementById('id_mobile');
+        const empEmailInput = document.getElementById('id_email');
         const unitSelect = document.getElementById('id_unit');
         const departmentSelect = document.getElementById('id_department');
         const deptLoading = document.getElementById('dept_loading');
+        const empFetchStatus = document.getElementById('empFetchStatus');
+        const empFetchMessage = document.getElementById('empFetchMessage');
+        const autoFillBadge = document.getElementById('autoFillBadge');
+        
+        let fetchTimeout;
+        let isAutoFilled = false;
 
+        function showFetchStatus(status, message = '') {
+            if (!empFetchStatus || !empFetchMessage) return;
+            
+            empFetchStatus.className = 'emp-fetch-status';
+            empFetchMessage.style.display = 'none';
+            
+            if (status === 'loading') {
+                empFetchStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                empFetchStatus.classList.add('loading');
+                empFetchMessage.style.display = 'none';
+            } else if (status === 'found') {
+                empFetchStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                empFetchStatus.classList.add('found');
+                empFetchMessage.textContent = message;
+                empFetchMessage.style.color = '#22C55E';
+                empFetchMessage.style.display = 'block';
+                autoFillBadge.style.display = 'inline-block';
+            } else if (status === 'not-found') {
+                empFetchStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+                empFetchStatus.classList.add('not-found');
+                empFetchMessage.textContent = message;
+                empFetchMessage.style.color = '#F59E0B';
+                empFetchMessage.style.display = 'block';
+                autoFillBadge.style.display = 'none';
+            }
+        }
+
+        function markFieldAutoFilled(field, isAuto) {
+            if (!field) return;
+            if (isAuto) {
+                field.classList.add('field-auto-filled');
+                field.setAttribute('data-auto-filled', 'true');
+            } else {
+                field.classList.remove('field-auto-filled');
+                field.removeAttribute('data-auto-filled');
+            }
+        }
+
+        function clearFetchStatus() {
+            if (empFetchStatus) {
+                empFetchStatus.className = 'emp-fetch-status';
+                empFetchStatus.innerHTML = '';
+            }
+            if (empFetchMessage) {
+                empFetchMessage.style.display = 'none';
+                empFetchMessage.textContent = '';
+            }
+            if (autoFillBadge) autoFillBadge.style.display = 'none';
+        }
+
+        function autoFillEmployeeDetails(data) {
+            if (data.employee_name) {
+                empNameInput.value = data.employee_name;
+                markFieldAutoFilled(empNameInput, true);
+            }
+            if (data.mobile) {
+                empMobileInput.value = data.mobile;
+                markFieldAutoFilled(empMobileInput, true);
+            }
+            if (data.email) {
+                empEmailInput.value = data.email;
+                markFieldAutoFilled(empEmailInput, true);
+            }
+            if (data.unit_id && unitSelect) {
+                unitSelect.value = data.unit_id;
+                markFieldAutoFilled(unitSelect, true);
+                loadDepartments(data.unit_id, data.department_id);
+            }
+            isAutoFilled = true;
+        }
+
+        function fetchEmployeeDetails(employeeId) {
+            if (!employeeId || employeeId.length < 2) {
+                clearFetchStatus();
+                return;
+            }
+
+            showFetchStatus('loading');
+
+            fetch(`/ajax/get-employee/?employee_id=${encodeURIComponent(employeeId)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.found) {
+                    showFetchStatus('found', 'Employee found! Details auto-filled.');
+                    autoFillEmployeeDetails(data.employee);
+                } else {
+                    showFetchStatus('not-found', data.message || 'Employee not found. Please fill manually.');
+                    clearAutoFilledFields();
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showFetchStatus('not-found', 'Error fetching employee. Please fill manually.');
+                clearAutoFilledFields();
+            });
+        }
+
+        function clearAutoFilledFields() {
+            [empNameInput, empMobileInput, empEmailInput].forEach(field => {
+                if (field && field.getAttribute('data-auto-filled') === 'true') {
+                    field.value = '';
+                    markFieldAutoFilled(field, false);
+                }
+            });
+            if (unitSelect && unitSelect.getAttribute('data-auto-filled') === 'true') {
+                unitSelect.value = '';
+                markFieldAutoFilled(unitSelect, false);
+            }
+            isAutoFilled = false;
+        }
+
+        if (empIdInput) {
+            empIdInput.addEventListener('input', function() {
+                clearTimeout(fetchTimeout);
+                const value = this.value.trim();
+                
+                if (value.length >= 2) {
+                    fetchTimeout = setTimeout(() => fetchEmployeeDetails(value), 500);
+                } else {
+                    clearFetchStatus();
+                    clearAutoFilledFields();
+                }
+            });
+
+            empIdInput.addEventListener('blur', function() {
+                const value = this.value.trim();
+                if (value.length >= 2 && !isAutoFilled) {
+                    fetchEmployeeDetails(value);
+                }
+            });
+        }
+
+        [empNameInput, empMobileInput, empEmailInput].forEach(field => {
+            if (field) {
+                field.addEventListener('input', function() {
+                    markFieldAutoFilled(this, false);
+                });
+            }
+        });
+
+        if (unitSelect) {
+            unitSelect.addEventListener('change', function() {
+                markFieldAutoFilled(this, false);
+            });
+        }
+
+        // ============================================
+        // Department Loading
+        // ============================================
         function getCsrfToken() {
             return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
         }
 
         function loadDepartments(unitId, selectedDeptId = null) {
+            if (!departmentSelect) return;
+            
             if (!unitId) {
                 departmentSelect.innerHTML = '<option value="">Select Unit First</option>';
                 departmentSelect.disabled = true;
@@ -541,6 +776,7 @@
                         departmentSelect.appendChild(opt);
                     });
                     departmentSelect.disabled = false;
+                    if (selectedDeptId) markFieldAutoFilled(departmentSelect, true);
                 } else {
                     departmentSelect.innerHTML += '<option value="">No departments found</option>';
                 }
@@ -558,7 +794,7 @@
             if (unitSelect.value) loadDepartments(unitSelect.value, departmentSelect?.value);
         }
 
-        // Character Counters - FIXED: min 10 for description
+        // Character Counters
         function setupCounter(inputId, counterId, maxLen = null) {
             const input = document.getElementById(inputId);
             const counter = document.getElementById(counterId);
@@ -609,7 +845,7 @@
             });
         }
 
-        console.log('✅ Create Ticket Page Ready');
+        console.log('✅ Admin Create Ticket Page Ready with Auto-Fetch');
     });
 </script>
 {% endblock %}
