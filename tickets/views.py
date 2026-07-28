@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.models import User
+from django.contrib.auth.views import LoginView
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -10,16 +11,21 @@ from django.db.models.functions import TruncMonth, Cast
 from django.db import transaction, IntegrityError
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.template.loader import render_to_string
+from django.template import TemplateDoesNotExist
 
 from datetime import datetime, timedelta
 import json
 import openpyxl
 import pandas as pd
 from openpyxl.styles import Font, Alignment, PatternFill
+import logging
 
-from tickets.models import Unit, Department, AdminContact, AdminNotificationEmail, Ticket, TicketHistory, EmployeeMaster
+from tickets.models import Unit, Department, AdminContact, AdminNotificationEmail, Ticket, TicketHistory, EmployeeMaster, DepartmentCredential
 from tickets.forms import TicketForm, AdminTicketForm, AdminContactForm, UnitForm, DepartmentForm, AdminNotificationEmailForm, AdminPasswordChangeForm, AdminSetUserPasswordForm, UserSelectionForm
 from tickets.utils import generate_ticket_number, send_ticket_email
+
+logger = logging.getLogger(__name__)
 
 
 # =========================================================================
@@ -27,19 +33,15 @@ from tickets.utils import generate_ticket_number, send_ticket_email
 # =========================================================================
 
 def is_admin(user):
-    """Check if user is Admin"""
     return user.is_authenticated and user.is_staff
 
 
 def format_timedelta_display(td):
-    """Helper to format timedelta into a human-readable string for UI display."""
     if not td:
         return ""
-    
     days = td.days
     hours, remainder = divmod(td.seconds, 3600)
     minutes, _ = divmod(remainder, 60)
-    
     parts = []
     if days > 0:
         parts.append(f"{days} day{'s' if days > 1 else ''}")
@@ -47,15 +49,12 @@ def format_timedelta_display(td):
         parts.append(f"{hours} hour{'s' if hours > 1 else ''}")
     if minutes > 0:
         parts.append(f"{minutes} min{'s' if minutes > 1 else ''}")
-        
     if not parts:
         return "< 1 minute"
-        
     return ", ".join(parts)
 
 
 def get_client_ip(request):
-    """Get client IP address from request"""
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0]
@@ -65,31 +64,202 @@ def get_client_ip(request):
 
 
 def reopen_ticket_logic(ticket, performed_by, remarks):
-    """
-    Shared logic to reopen a ticket.
-    Resets status and fields, creates history, and sends email.
-    """
     with transaction.atomic():
         ticket.status = 'Open'
         ticket.closed_by = None
         ticket.closed_at = None
         ticket.closing_remarks = None
         ticket.save()
-
         TicketHistory.objects.create(
             ticket=ticket,
             action="Ticket Reopened",
             remarks=remarks,
             performed_by=performed_by
         )
-
-    # Send Reopened Notification Email
     send_ticket_email(ticket, 'Reopened', remarks=remarks)
+
+
+def generate_ticket_list_html(tickets, status):
+    """Fallback HTML generation if template is missing"""
+    if not tickets:
+        return """
+        <div class="empty-state text-center py-5">
+            <i class="fa-solid fa-receipt fa-3x mb-3 d-block opacity-25" style="color: var(--accent);"></i>
+            <h6 style="color: var(--text-secondary); font-weight: 600;">No Tickets Found</h6>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">
+                No tickets found.
+            </p>
+            <a href="javascript:void(0)" onclick="window.location.href='/create-ticket/'" class="btn btn-primary-custom btn-sm mt-2">
+                <i class="fa-solid fa-circle-plus me-1"></i>Create New Ticket
+            </a>
+        </div>
+        """
+    
+    html = """
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Ticket</th>
+                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Created</th>
+                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Subject</th>
+                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Status</th>
+                    <th class="text-center" style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    for ticket in tickets:
+        status_class = ticket.status.lower()
+        badge_class = {
+            'open': 'badge-status-open',
+            'assigned': 'badge-status-assigned',
+            'hold': 'badge-status-hold',
+            'escalated': 'badge-status-escalated',
+            'closed': 'badge-status-closed',
+        }.get(status_class, 'badge-status-open')
+        
+        html += f"""
+                <tr>
+                    <td class="fw-bold" style="color: var(--accent-light); font-size: 0.7rem;">
+                        {ticket.ticket_number}
+                    </td>
+                    <td style="font-size: 0.65rem; color: var(--text-secondary);">
+                        {ticket.created_at.strftime('%d-%m-%Y') if ticket.created_at else '-'}
+                        <span class="d-block" style="font-size: 0.55rem; color: var(--text-muted);">{ticket.created_at.strftime('%I:%M %p') if ticket.created_at else ''}</span>
+                    </td>
+                    <td class="text-truncate" style="max-width: 120px; font-size: 0.7rem;" title="{ticket.subject}">
+                        {ticket.subject}
+                    </td>
+                    <td>
+                        <span class="badge-custom {badge_class}" style="font-size: 0.5rem; padding: 0.15rem 0.5rem;">
+                            {ticket.status}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <a href="/ticket/{ticket.id}/" class="btn-view" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
+                            <i class="fa-solid fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+        """
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    return html
+
+
+def generate_admin_ticket_list_html(tickets, status):
+    """Fallback HTML generation for admin ticket list if template is missing"""
+    if not tickets:
+        return """
+        <div class="empty-state text-center py-5">
+            <i class="fa-solid fa-receipt fa-3x mb-3 d-block opacity-25" style="color: var(--accent);"></i>
+            <h6 style="color: var(--text-secondary); font-weight: 600;">No Tickets Found</h6>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">
+                No tickets found.
+            </p>
+        </div>
+        """
+    
+    html = """
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Ticket</th>
+                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Created</th>
+                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Unit</th>
+                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Subject</th>
+                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Status</th>
+                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Priority</th>
+                    <th class="text-center" style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    
+    badge_class_map = {
+        'open': 'badge-status-open',
+        'assigned': 'badge-status-assigned',
+        'hold': 'badge-status-hold',
+        'escalated': 'badge-status-escalated',
+        'closed': 'badge-status-closed',
+    }
+    
+    priority_class_map = {
+        'critical': 'badge-priority-critical',
+        'high': 'badge-priority-high',
+        'medium': 'badge-priority-medium',
+        'low': 'badge-priority-low',
+    }
+    
+    for ticket in tickets:
+        status_class = ticket.status.lower()
+        badge_class = badge_class_map.get(status_class, 'badge-status-open')
+        priority_class = priority_class_map.get(ticket.priority.lower(), 'badge-priority-low')
+        
+        html += f"""
+                <tr>
+                    <td class="fw-bold" style="color: var(--accent-light); font-size: 0.7rem;">
+                        {ticket.ticket_number}
+                    </td>
+                    <td style="font-size: 0.65rem; color: var(--text-secondary);">
+                        {ticket.created_at.strftime('%d-%m-%Y') if ticket.created_at else '-'}
+                        <span class="d-block" style="font-size: 0.55rem; color: var(--text-muted);">{ticket.created_at.strftime('%I:%M %p') if ticket.created_at else ''}</span>
+                    </td>
+                    <td style="font-size: 0.65rem; color: var(--text-secondary);">
+                        <span class="unit-badge" style="background: rgba(233,69,96,0.1); color: var(--accent); border: 1px solid rgba(233,69,96,0.15); padding: 0.15rem 0.5rem; border-radius: 50px; font-size: 0.6rem; font-weight: 600;">{ticket.unit.code if ticket.unit else '-'}</span>
+                    </td>
+                    <td class="text-truncate" style="max-width: 100px; font-size: 0.7rem;" title="{ticket.subject}">
+                        {ticket.subject}
+                    </td>
+                    <td>
+                        <span class="badge-custom {badge_class}" style="font-size: 0.5rem; padding: 0.15rem 0.5rem;">
+                            {ticket.status}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge-priority {priority_class}" style="font-size: 0.5rem; padding: 0.15rem 0.5rem;">
+                            <i class="fa-solid fa-flag" style="font-size: 0.3rem;"></i>
+                            {ticket.priority}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <a href="/admin/ticket/{ticket.id}/" class="btn-view" style="font-size: 0.6rem; padding: 0.15rem 0.6rem; background: var(--accent-gradient); color: white; border-radius: 50px; text-decoration: none; display: inline-block;">
+                            <i class="fa-solid fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+        """
+    
+    html += """
+            </tbody>
+        </table>
+    </div>
+    """
+    
+    return html
 
 
 # =========================================================================
 # AUTH VIEWS
 # =========================================================================
+
+class CustomLoginView(LoginView):
+    """Custom login view that passes IT contact info to the template"""
+    template_name = 'login.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['contact'] = AdminContact.objects.first()
+        return context
+
 
 @login_required
 def role_redirect(request):
@@ -110,56 +280,184 @@ def custom_logout(request):
 @login_required
 @user_passes_test(lambda u: not u.is_staff, login_url='role_redirect')
 def employee_dashboard(request):
-    user_tickets = Ticket.objects.filter(created_by_user=request.user)
+    user_credential = DepartmentCredential.objects.filter(
+        username=request.user.username, is_active=True
+    ).first()
     
-    kpis = {
-        'total': user_tickets.count(),
-        'open': user_tickets.filter(status='Open').count(),
-        'assigned': user_tickets.filter(status='Assigned').count(),
-        'hold': user_tickets.filter(status='Hold').count(),
-        'escalated': user_tickets.filter(status='Escalated').count(),
-        'closed': user_tickets.filter(status='Closed').count(),
-        'critical': user_tickets.filter(priority='Critical').count(),
-    }
+    # Get the base queryset based on user credentials
+    if user_credential:
+        department_tickets = Ticket.objects.filter(
+            unit=user_credential.unit,
+            department=user_credential.department
+        )
+        personal_tickets = Ticket.objects.filter(created_by_user=request.user)
+        tickets_qs = department_tickets
+        
+        kpis = {
+            'total': tickets_qs.count(),
+            'open': tickets_qs.filter(status='Open').count(),
+            'assigned': tickets_qs.filter(status='Assigned').count(),
+            'hold': tickets_qs.filter(status='Hold').count(),
+            'escalated': tickets_qs.filter(status='Escalated').count(),
+            'closed': tickets_qs.filter(status='Closed').count(),
+            'critical': tickets_qs.filter(priority='Critical').count(),
+            'my_total': personal_tickets.count(),
+            'my_open': personal_tickets.filter(status='Open').count(),
+            'my_closed': personal_tickets.filter(status='Closed').count(),
+        }
+        
+        latest_tickets = tickets_qs.order_by('-created_at')[:5]
+        
+        # ============================================
+        # CHART DATA FOR EMPLOYEE DASHBOARD
+        # ============================================
+        # Status distribution for department
+        dept_status_counts = department_tickets.values('status').annotate(count=Count('id'))
+        chart_dept_status = {item['status']: item['count'] for item in dept_status_counts}
+        
+        # Priority distribution for department
+        dept_priority_counts = department_tickets.values('priority').annotate(count=Count('id'))
+        chart_dept_priority = {item['priority']: item['count'] for item in dept_priority_counts}
+        
+        charts_data = {
+            'dept_status': chart_dept_status,
+            'dept_priority': chart_dept_priority,
+        }
+        
+        context = {
+            'kpis': kpis,
+            'latest_tickets': latest_tickets,
+            'contact': AdminContact.objects.first(),
+            'user_credential': user_credential,
+            'department_name': user_credential.department.name if user_credential else None,
+            'unit_name': user_credential.unit.code if user_credential else None,
+            'show_department_tickets': True,
+            'charts_data': charts_data,
+        }
+    else:
+        user_tickets = Ticket.objects.filter(created_by_user=request.user)
+        kpis = {
+            'total': user_tickets.count(),
+            'open': user_tickets.filter(status='Open').count(),
+            'assigned': user_tickets.filter(status='Assigned').count(),
+            'hold': user_tickets.filter(status='Hold').count(),
+            'escalated': user_tickets.filter(status='Escalated').count(),
+            'closed': user_tickets.filter(status='Closed').count(),
+            'critical': user_tickets.filter(priority='Critical').count(),
+            'my_total': user_tickets.count(),
+            'my_open': user_tickets.filter(status='Open').count(),
+            'my_closed': user_tickets.filter(status='Closed').count(),
+        }
+        latest_tickets = user_tickets.order_by('-created_at')[:5]
+        
+        # Chart data for personal tickets
+        personal_status_counts = user_tickets.values('status').annotate(count=Count('id'))
+        chart_dept_status = {item['status']: item['count'] for item in personal_status_counts}
+        
+        personal_priority_counts = user_tickets.values('priority').annotate(count=Count('id'))
+        chart_dept_priority = {item['priority']: item['count'] for item in personal_priority_counts}
+        
+        charts_data = {
+            'dept_status': chart_dept_status,
+            'dept_priority': chart_dept_priority,
+        }
+        
+        context = {
+            'kpis': kpis,
+            'latest_tickets': latest_tickets,
+            'contact': AdminContact.objects.first(),
+            'user_credential': None,
+            'department_name': None,
+            'unit_name': None,
+            'show_department_tickets': False,
+            'charts_data': charts_data,
+        }
     
-    latest_tickets = user_tickets.order_by('-created_at')[:5]
-    contact = AdminContact.objects.first()
-    
-    context = {
-        'kpis': kpis,
-        'latest_tickets': latest_tickets,
-        'contact': contact,
-    }
     return render(request, 'employee/dashboard.html', context)
 
 
 @login_required
 @user_passes_test(lambda u: not u.is_staff, login_url='role_redirect')
 def create_ticket(request):
+    user_credential = DepartmentCredential.objects.filter(
+        username=request.user.username, is_active=True
+    ).first()
+    
+    if not user_credential:
+        messages.error(request, "Your account is not associated with any department. Please contact admin.")
+        return redirect('employee_dashboard')
+    
     if request.method == 'POST':
         form = TicketForm(request.POST, request.FILES)
         if form.is_valid():
+            employee_id = form.cleaned_data.get('employee_id', '').strip().upper()
+            
+            if employee_id:
+                try:
+                    employee = EmployeeMaster.objects.get(employee_id=employee_id, is_active=True)
+                    
+                    if employee.unit_id != user_credential.unit_id:
+                        messages.error(request, f'❌ Employee "{employee_id}" belongs to {employee.unit.code if employee.unit else "Unknown"} unit. You can only create tickets for {user_credential.unit.code} unit employees.')
+                        return render(request, 'employee/create_ticket.html', {
+                            'form': form, 
+                            'user_credential': user_credential,
+                            'validation_error': True
+                        })
+                    
+                    if employee.department_id != user_credential.department_id:
+                        messages.error(request, f'❌ Employee "{employee_id}" belongs to {employee.department.name if employee.department else "Unknown"} department. You can only create tickets for {user_credential.department.name} department employees.')
+                        return render(request, 'employee/create_ticket.html', {
+                            'form': form, 
+                            'user_credential': user_credential,
+                            'validation_error': True
+                        })
+                    
+                except EmployeeMaster.DoesNotExist:
+                    messages.error(request, f'❌ Employee "{employee_id}" not found. Please check the Employee ID.')
+                    return render(request, 'employee/create_ticket.html', {
+                        'form': form, 
+                        'user_credential': user_credential,
+                        'validation_error': True
+                    })
+                except EmployeeMaster.MultipleObjectsReturned:
+                    messages.error(request, f'❌ Multiple employees found with ID "{employee_id}". Please contact admin.')
+                    return render(request, 'employee/create_ticket.html', {
+                        'form': form, 
+                        'user_credential': user_credential,
+                        'validation_error': True
+                    })
+            
             with transaction.atomic():
                 ticket = form.save(commit=False)
                 ticket.created_by_user = request.user
                 ticket.created_by_role = 'Employee'
                 ticket.status = 'Open'
                 ticket.save()
-                
                 TicketHistory.objects.create(
-                    ticket=ticket,
+                    ticket=ticket, 
                     action="Ticket Created",
-                    remarks="Ticket Created by Employee",
-                    performed_by="Employee"
+                    remarks="Ticket Created by Employee", 
+                    performed_by=f"Employee {request.user.username}"
                 )
-            
             send_ticket_email(ticket, 'Created')
             messages.success(request, f'Ticket {ticket.ticket_number} created successfully!')
             return redirect('employee_dashboard')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
     else:
         form = TicketForm()
-        
-    return render(request, 'employee/create_ticket.html', {'form': form})
+        if user_credential:
+            form.fields['unit'].initial = user_credential.unit_id
+            form.fields['department'].initial = user_credential.department_id
+    
+    return render(request, 'employee/create_ticket.html', {
+        'form': form, 
+        'user_credential': user_credential,
+        'unit_name': user_credential.unit.code if user_credential else None,
+        'department_name': user_credential.department.name if user_credential else None,
+    })
 
 
 @login_required
@@ -171,44 +469,108 @@ def my_tickets(request):
     search = request.GET.get('search', '').strip()
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
-
-    tickets_qs = Ticket.objects.filter(created_by_user=request.user).order_by('-created_at')
-
-    if status:
+    is_ajax = request.GET.get('ajax', False)
+    filter_type = request.GET.get('filter_type')  # For chart drilldown
+    
+    if isinstance(is_ajax, str):
+        is_ajax = is_ajax.lower() in ['true', '1', 'yes']
+    
+    # ============================================
+    # FIX: Get user's department for filtering
+    # ============================================
+    user_credential = DepartmentCredential.objects.filter(
+        username=request.user.username, is_active=True
+    ).first()
+    
+    if user_credential:
+        # If user has department credentials, show department tickets
+        tickets_qs = Ticket.objects.filter(
+            unit=user_credential.unit,
+            department=user_credential.department
+        ).order_by('-created_at')
+        
+        # Add personal tickets as well (so users see both)
+        personal_tickets = Ticket.objects.filter(created_by_user=request.user)
+        tickets_qs = tickets_qs | personal_tickets
+        tickets_qs = tickets_qs.distinct().order_by('-created_at')
+    else:
+        # Fallback to personal tickets only
+        tickets_qs = Ticket.objects.filter(created_by_user=request.user).order_by('-created_at')
+    
+    # Apply filters
+    if status: 
         tickets_qs = tickets_qs.filter(status=status)
-    if priority:
+    if priority: 
         tickets_qs = tickets_qs.filter(priority=priority)
-    if ticket_number:
+    if ticket_number: 
         tickets_qs = tickets_qs.filter(ticket_number__icontains=ticket_number)
-    if search:
+    if search: 
         tickets_qs = tickets_qs.filter(
-            Q(ticket_number__icontains=search)
-            | Q(subject__icontains=search)
-            | Q(description__icontains=search)
+            Q(ticket_number__icontains=search) | 
+            Q(subject__icontains=search) | 
+            Q(description__icontains=search)
         )
-    if date_from:
+    if date_from: 
         tickets_qs = tickets_qs.filter(created_at__date__gte=date_from)
-    if date_to:
+    if date_to: 
         tickets_qs = tickets_qs.filter(created_at__date__lte=date_to)
+    
+    # ============================================
+    # AJAX request for modal - FIXED
+    # ============================================
+    if is_ajax:
+        filter_value = status or priority or 'All'
+        if filter_type == 'priority':
+            filter_value = priority
+        elif filter_type == 'status':
+            filter_value = status
+        
+        # Log for debugging
+        logger.info(f"📊 AJAX filter: status={status}, priority={priority}, filter_type={filter_type}")
+        logger.info(f"📊 Found {tickets_qs.count()} tickets")
 
+        try:
+            try:
+                html = render_to_string('employee/_ticket_list_modal.html', {
+                    'tickets': tickets_qs[:50],
+                    'status_label': filter_value,
+                }, request=request)
+                return JsonResponse({'html': html, 'success': True, 'count': tickets_qs.count()})
+            except TemplateDoesNotExist:
+                # Fallback HTML generation
+                html = generate_ticket_list_html(tickets_qs[:50], status or priority)
+                return JsonResponse({'html': html, 'success': True, 'count': tickets_qs.count()})
+            except Exception as e:
+                logger.error(f"Template rendering error in my_tickets: {str(e)}")
+                html = generate_ticket_list_html(tickets_qs[:50], status or priority)
+                return JsonResponse({'html': html, 'success': True, 'count': tickets_qs.count()})
+        except Exception as e:
+            logger.error(f"AJAX error in my_tickets: {str(e)}")
+            return JsonResponse({
+                'success': False, 
+                'error': str(e),
+                'message': 'Error loading tickets. Please try again.'
+            }, status=500)
+    
+    # Regular paginated view
     paginator = Paginator(tickets_qs, 10)
     page_number = request.GET.get('page')
-    try:
+    try: 
         tickets_page = paginator.page(page_number)
-    except PageNotAnInteger:
+    except PageNotAnInteger: 
         tickets_page = paginator.page(1)
-    except EmptyPage:
+    except EmptyPage: 
         tickets_page = paginator.page(paginator.num_pages)
-
+    
     return render(request, 'employee/my_tickets.html', {
-        'tickets': tickets_page,
+        'tickets': tickets_page, 
         'status_choices': Ticket.STATUS_CHOICES,
-        'priority_choices': Ticket.PRIORITY_CHOICES,
+        'priority_choices': Ticket.PRIORITY_CHOICES, 
         'selected_status': status,
-        'selected_priority': priority,
+        'selected_priority': priority, 
         'selected_ticket_number': ticket_number,
-        'search_query': search,
-        'date_from': date_from,
+        'search_query': search, 
+        'date_from': date_from, 
         'date_to': date_to,
     })
 
@@ -218,7 +580,6 @@ def my_tickets(request):
 def ticket_detail(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk, created_by_user=request.user)
     history = ticket.history.all().order_by('timestamp')
-
     can_reopen = False
     reopen_time_left = None
     reopen_deadline = None
@@ -227,25 +588,19 @@ def ticket_detail(request, pk):
         if timezone.now() < reopen_deadline:
             can_reopen = True
             reopen_time_left = reopen_deadline - timezone.now()
-
     time_to_close_str = ""
     if ticket.status == 'Closed' and ticket.created_at and ticket.closed_at:
         time_to_close = ticket.closed_at - ticket.created_at
         time_to_close_str = format_timedelta_display(time_to_close)
-
     if request.method == 'POST' and can_reopen:
         remarks = request.POST.get('remarks', '').strip()
         if remarks:
             reopen_ticket_logic(ticket, f"Employee {request.user.username}", remarks)
             messages.success(request, f"Ticket {ticket.ticket_number} has been reopened.")
             return redirect('ticket_detail', pk=pk)
-    
     context = {
-        'ticket': ticket,
-        'history': history,
-        'can_reopen': can_reopen,
-        'time_to_close': time_to_close_str,
-        'reopen_time_left': reopen_time_left,
+        'ticket': ticket, 'history': history, 'can_reopen': can_reopen,
+        'time_to_close': time_to_close_str, 'reopen_time_left': reopen_time_left,
         'reopen_deadline_iso': reopen_deadline.isoformat() if reopen_deadline else None,
     }
     return render(request, 'employee/ticket_detail.html', context)
@@ -259,51 +614,26 @@ def ticket_detail(request, pk):
 @user_passes_test(is_admin, login_url='role_redirect')
 def admin_dashboard(request):
     all_tickets = Ticket.objects.all()
-    
     kpis = {
-        'total': all_tickets.count(),
+        'total': all_tickets.count(), 
         'open': all_tickets.filter(status='Open').count(),
-        'assigned': all_tickets.filter(status='Assigned').count(),
+        'assigned': all_tickets.filter(status='Assigned').count(), 
         'hold': all_tickets.filter(status='Hold').count(),
-        'escalated': all_tickets.filter(status='Escalated').count(),
+        'escalated': all_tickets.filter(status='Escalated').count(), 
         'closed': all_tickets.filter(status='Closed').count(),
         'critical': all_tickets.filter(priority='Critical').count(),
     }
-    
     status_counts = list(all_tickets.values('status').annotate(count=Count('id')))
     chart_status = {item['status']: item['count'] for item in status_counts}
-    
     unit_counts = list(all_tickets.filter(unit__isnull=False).values('unit_id', 'unit__code').annotate(count=Count('id')).order_by('unit__code'))
-    chart_units = [
-        {'id': item['unit_id'], 'label': item['unit__code'], 'value': item['count']} for item in unit_counts
-    ]
-
+    chart_units = [{'id': item['unit_id'], 'label': item['unit__code'], 'value': item['count']} for item in unit_counts]
     prio_counts = list(all_tickets.values('priority').annotate(count=Count('id')))
     chart_priority = {item['priority']: item['count'] for item in prio_counts}
-
     twelve_months_ago = timezone.now() - timedelta(days=365)
-    monthly_counts_qs = Ticket.objects.filter(created_at__gte=twelve_months_ago) \
-        .annotate(month=TruncMonth(Cast('created_at', output_field=DateField()))) \
-        .values('month') \
-        .annotate(count=Count('id')) \
-        .order_by('month')
-
-    chart_monthly = [
-        {'label': item['month'].strftime('%b %Y'), 'value': item['count']}
-        for item in monthly_counts_qs
-    ]
-
-    charts_data = {
-        'status': chart_status,
-        'units': chart_units,
-        'priority': chart_priority,
-        'monthly': chart_monthly,
-    }
-
-    context = {
-        'kpis': kpis,
-        'charts_data': charts_data,
-    }
+    monthly_counts_qs = Ticket.objects.filter(created_at__gte=twelve_months_ago).annotate(month=TruncMonth(Cast('created_at', output_field=DateField()))).values('month').annotate(count=Count('id')).order_by('month')
+    chart_monthly = [{'label': item['month'].strftime('%b %Y'), 'value': item['count']} for item in monthly_counts_qs]
+    charts_data = {'status': chart_status, 'units': chart_units, 'priority': chart_priority, 'monthly': chart_monthly}
+    context = {'kpis': kpis, 'charts_data': charts_data}
     return render(request, 'admin_panel/dashboard.html', context)
 
 
@@ -315,7 +645,6 @@ def create_ticket_admin(request):
         if form.is_valid():
             with transaction.atomic():
                 ticket = form.save(commit=False)
-                
                 if ticket.created_by_role == 'Admin':
                     hist_remark = f"Ticket created by Admin on behalf of employee (Reason: {ticket.admin_creation_reason})"
                     hist_perf = f"Admin {request.user.username}"
@@ -323,37 +652,33 @@ def create_ticket_admin(request):
                 else:
                     hist_remark = "Ticket Created by Employee (logged by Admin)"
                     hist_perf = "Employee"
-                    employee_user, _ = User.objects.get_or_create(
-                        username='GPLERPUSERS', 
-                        defaults={'is_staff': False, 'password': 'pbkdf2_sha256$720000$j5xL6pS0LpGvLq3sRjVbWk$V/Hq7aYt2x531enqYm5d9f2uZdtsJ7MLd2y221C+L9s='}
-                    )
+                    employee_user, _ = User.objects.get_or_create(username='GPLERPUSERS', defaults={'is_staff': False, 'password': 'pbkdf2_sha256$720000$j5xL6pS0LpGvLq3sRjVbWk$V/Hq7aYt2x531enqYm5d9f2uZdtsJ7MLd2y221C+L9s='})
                     ticket.created_by_user = employee_user
-                
                 ticket.save()
-                    
-                TicketHistory.objects.create(
-                    ticket=ticket,
-                    action="Ticket Created",
-                    remarks=hist_remark,
-                    performed_by=hist_perf
-                )
-                
+                TicketHistory.objects.create(ticket=ticket, action="Ticket Created", remarks=hist_remark, performed_by=hist_perf)
             send_ticket_email(ticket, 'Created')
             messages.success(request, f'Ticket {ticket.ticket_number} created successfully by Admin!')
             return redirect('admin_dashboard')
     else:
         form = AdminTicketForm()
-        
     return render(request, 'admin_panel/create_ticket.html', {'form': form})
 
+
+# =========================================================================
+# ALL TICKETS VIEW - WITH FIXED CASCADING UNIT -> DEPARTMENT
+# =========================================================================
 
 @login_required
 @user_passes_test(is_admin, login_url='role_redirect')
 def all_tickets(request):
+    is_ajax = request.GET.get('ajax', False)
+    
+    if isinstance(is_ajax, str):
+        is_ajax = is_ajax.lower() in ['true', '1', 'yes']
+    
     tickets_qs = Ticket.objects.all().order_by('-created_at')
     units = Unit.objects.filter(is_active=True)
     departments = Department.objects.filter(is_active=True)
-
     category = request.GET.get('category', 'all')
     status = request.GET.get('status')
     priority = request.GET.get('priority')
@@ -365,72 +690,108 @@ def all_tickets(request):
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
     search = request.GET.get('search', '').strip()
-
-    if category == 'open':
+    
+    if category == 'open': 
         tickets_qs = tickets_qs.filter(status='Open')
-    elif category == 'assigned':
+    elif category == 'assigned': 
         tickets_qs = tickets_qs.filter(status='Assigned')
-    elif category == 'hold':
+    elif category == 'hold': 
         tickets_qs = tickets_qs.filter(status='Hold')
-    elif category == 'escalated':
+    elif category == 'escalated': 
         tickets_qs = tickets_qs.filter(status='Escalated')
-    elif category == 'closed':
+    elif category == 'closed': 
         tickets_qs = tickets_qs.filter(status='Closed')
-    elif category == 'critical':
+    elif category == 'critical': 
         tickets_qs = tickets_qs.filter(priority='Critical')
-
-    if unit_id:
+    
+    if unit_id: 
         tickets_qs = tickets_qs.filter(unit_id=unit_id)
-    if dept_id:
+    if dept_id: 
         tickets_qs = tickets_qs.filter(department_id=dept_id)
-    if status:
+    if status: 
         tickets_qs = tickets_qs.filter(status=status)
-    if priority:
+    if priority: 
         tickets_qs = tickets_qs.filter(priority=priority)
-    if assigned_person:
+    if assigned_person: 
         tickets_qs = tickets_qs.filter(assigned_person__icontains=assigned_person)
-    if created_by_role:
+    if created_by_role: 
         tickets_qs = tickets_qs.filter(created_by_role=created_by_role)
-    if ticket_number:
+    if ticket_number: 
         tickets_qs = tickets_qs.filter(ticket_number__icontains=ticket_number)
-    if date_from:
+    if date_from: 
         tickets_qs = tickets_qs.filter(created_at__date__gte=date_from)
-    if date_to:
+    if date_to: 
         tickets_qs = tickets_qs.filter(created_at__date__lte=date_to)
-    if search:
+    if search: 
         tickets_qs = tickets_qs.filter(
-            Q(ticket_number__icontains=search)
-            | Q(subject__icontains=search)
-            | Q(unit__code__icontains=search)
-            | Q(department__name__icontains=search)
+            Q(ticket_number__icontains=search) | 
+            Q(subject__icontains=search) | 
+            Q(unit__code__icontains=search) | 
+            Q(department__name__icontains=search)
         )
+    
+    # AJAX request for modal
+    if is_ajax:
+        filter_value = 'All'
+        if category and category != 'all':
+            filter_value = category.capitalize()
+        if status:
+            filter_value = status
+        if priority:
+            filter_value = priority
+        if unit_id:
+            unit = Unit.objects.filter(pk=unit_id).first()
+            filter_value = f"Unit: {unit.code}" if unit else "Unit"
 
+        try:
+            try:
+                html = render_to_string('admin_panel/_ticket_list_modal.html', {
+                    'tickets': tickets_qs[:50],
+                    'status_label': filter_value,
+                }, request=request)
+                return JsonResponse({'html': html, 'success': True})
+            except TemplateDoesNotExist:
+                html = generate_admin_ticket_list_html(tickets_qs[:50], filter_value)
+                return JsonResponse({'html': html, 'success': True})
+            except Exception as e:
+                logger.error(f"AJAX error in all_tickets (template): {str(e)}")
+                html = generate_admin_ticket_list_html(tickets_qs[:50], filter_value)
+                return JsonResponse({'html': html, 'success': True})
+        except Exception as e:
+            logger.error(f"AJAX error in all_tickets: {str(e)}")
+            return JsonResponse({
+                'success': False, 
+                'error': str(e),
+                'message': 'Error loading tickets. Please try again.'
+            }, status=500)
+    
+    # Regular paginated view
     paginator = Paginator(tickets_qs, 10)
     page_number = request.GET.get('page')
-    try:
+    try: 
         tickets_page = paginator.page(page_number)
-    except PageNotAnInteger:
+    except PageNotAnInteger: 
         tickets_page = paginator.page(1)
-    except EmptyPage:
+    except EmptyPage: 
         tickets_page = paginator.page(paginator.num_pages)
-
+    
     context = {
-        'tickets': tickets_page,
-        'units': units,
+        'tickets': tickets_page, 
+        'units': units, 
         'departments': departments,
-        'status_choices': Ticket.STATUS_CHOICES,
+        'status_choices': Ticket.STATUS_CHOICES, 
         'priority_choices': Ticket.PRIORITY_CHOICES,
-        'created_by_choices': Ticket.CREATED_BY_CHOICES,
+        'created_by_choices': Ticket.CREATED_BY_CHOICES, 
         'selected_status': status,
-        'selected_priority': priority,
-        'selected_unit': unit_id,
+        'selected_priority': priority, 
+        'selected_unit': unit_id, 
         'selected_department': dept_id,
-        'selected_assigned_person': assigned_person,
+        'selected_assigned_person': assigned_person, 
         'selected_created_by_role': created_by_role,
-        'selected_ticket_number': ticket_number,
-        'date_from': date_from,
+        'selected_ticket_number': ticket_number, 
+        'date_from': date_from, 
         'date_to': date_to,
-        'search_query': search,
+        'search_query': search, 
         'category': category,
     }
     return render(request, 'admin_panel/all_tickets.html', context)
@@ -441,21 +802,19 @@ def all_tickets(request):
 def ticket_detail_admin(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
     history = ticket.history.all().order_by('timestamp')
-    
     can_reopen = False
     reopen_time_left = None
     reopen_deadline = None
     if ticket.status == 'Closed' and ticket.closed_at:
         reopen_deadline = ticket.closed_at + timedelta(hours=48)
-        if timezone.now() < reopen_deadline:
+        if timezone.now() < reopen_deadline: 
             can_reopen = True
             reopen_time_left = reopen_deadline - timezone.now()
-
     time_to_close_str = ""
     if ticket.status == 'Closed' and ticket.created_at and ticket.closed_at:
         time_to_close = ticket.closed_at - ticket.created_at
         time_to_close_str = format_timedelta_display(time_to_close)
-
+    
     if request.method == 'POST':
         action_type = request.POST.get('action_type')
         remarks = request.POST.get('remarks', '')
@@ -463,110 +822,98 @@ def ticket_detail_admin(request, pk):
         with transaction.atomic():
             if action_type == 'Assign':
                 assigned_person = request.POST.get('assigned_person', '').strip()
-                if not assigned_person:
+                if not assigned_person: 
                     messages.error(request, "Assigned Person Name is mandatory.")
                     return redirect('admin_ticket_detail', pk=pk)
-                
                 ticket.status = 'Assigned'
                 ticket.assigned_person = assigned_person
                 ticket.save()
-                
                 TicketHistory.objects.create(
-                    ticket=ticket,
-                    action=f"Assigned to {assigned_person}",
-                    remarks=remarks,
+                    ticket=ticket, 
+                    action=f"Assigned to {assigned_person}", 
+                    remarks=remarks, 
                     performed_by=f"Admin {request.user.username}"
                 )
-                
                 messages.success(request, f'Ticket assigned to {assigned_person}.')
                 
             elif action_type == 'Hold':
                 hold_reason = request.POST.get('hold_reason', '').strip()
-                if not hold_reason:
+                if not hold_reason: 
                     messages.error(request, "Hold Reason is mandatory.")
                     return redirect('admin_ticket_detail', pk=pk)
-                
                 ticket.status = 'Hold'
                 ticket.hold_reason = hold_reason
                 ticket.save()
-                
                 TicketHistory.objects.create(
-                    ticket=ticket,
-                    action="Status changed to Hold",
-                    remarks=f"Reason: {hold_reason}",
+                    ticket=ticket, 
+                    action="Status changed to Hold", 
+                    remarks=f"Reason: {hold_reason}", 
                     performed_by=f"Admin {request.user.username}"
                 )
-                
                 messages.success(request, 'Ticket placed on Hold.')
                 
             elif action_type == 'Escalate':
                 vendor_ticket = request.POST.get('vendor_ticket_number', '').strip()
                 ticket.status = 'Escalated'
-                if vendor_ticket:
+                if vendor_ticket: 
                     ticket.vendor_ticket_number = vendor_ticket
                 ticket.escalated_at = timezone.now()
                 ticket.save()
-                
                 remark_str = f"Vendor Ticket: {vendor_ticket}" if vendor_ticket else "Escalated without vendor ticket number"
                 TicketHistory.objects.create(
-                    ticket=ticket,
-                    action="Escalated to ERP Vendor",
-                    remarks=remark_str,
+                    ticket=ticket, 
+                    action="Escalated to ERP Vendor", 
+                    remarks=remark_str, 
                     performed_by=f"Admin {request.user.username}"
                 )
-                
                 messages.success(request, 'Ticket escalated to ERP vendor.')
                 
             elif action_type == 'Close':
                 closing_remarks = request.POST.get('closing_remarks', '').strip()
                 error_type = request.POST.get('error_type', '').strip()
-                if not closing_remarks:
+                if not closing_remarks: 
                     messages.error(request, "Closing Remarks are mandatory.")
                     return redirect('admin_ticket_detail', pk=pk)
-                if not error_type:
+                if not error_type: 
                     messages.error(request, "Error Classification is mandatory.")
                     return redirect('admin_ticket_detail', pk=pk)
-                
                 ticket.status = 'Closed'
                 ticket.closing_remarks = closing_remarks
                 ticket.error_type = error_type
                 ticket.closed_by = request.user.username
                 ticket.closed_at = timezone.now()
                 ticket.save()
-                
                 TicketHistory.objects.create(
-                    ticket=ticket,
-                    action=f"Closed by {request.user.username}",
-                    remarks=f"Error Type: {error_type} | {closing_remarks}",
+                    ticket=ticket, 
+                    action=f"Closed by {request.user.username}", 
+                    remarks=f"Error Type: {error_type} | {closing_remarks}", 
                     performed_by=f"Admin {request.user.username}"
                 )
-                
                 send_ticket_email(ticket, 'Closed', remarks=closing_remarks)
                 messages.success(request, 'Ticket closed successfully.')
-
+                
             elif action_type == 'Reopen':
-                if not can_reopen:
-                    messages.error(request, "This ticket cannot be reopened as it was closed more than 48 hours ago.")
+                if not can_reopen: 
+                    messages.error(request, "Cannot reopen - 48 hours elapsed.")
                     return redirect('admin_ticket_detail', pk=pk)
-
                 remarks = request.POST.get('remarks', '').strip()
-                if not remarks:
+                if not remarks: 
                     messages.error(request, "Reason for reopening is mandatory.")
                     return redirect('admin_ticket_detail', pk=pk)
-                
                 reopen_ticket_logic(ticket, f"Admin {request.user.username}", remarks)
                 messages.success(request, 'Ticket reopened successfully.')
-        
+                
         return redirect('admin_ticket_detail', pk=pk)
-        
-    return render(request, 'admin_panel/ticket_detail.html', {
-        'ticket': ticket, 
-        'history': history, 
+    
+    context = {
+        'ticket': ticket,
+        'history': history,
         'can_reopen': can_reopen,
         'time_to_close': time_to_close_str,
         'reopen_time_left': reopen_time_left,
         'reopen_deadline_iso': reopen_deadline.isoformat() if reopen_deadline else None,
-    })
+    }
+    return render(request, 'admin_panel/ticket_detail.html', context)
 
 
 @login_required
@@ -584,75 +931,66 @@ def reports(request):
     created_by_role = request.GET.get('created_by_role')
     error_type = request.GET.get('error_type')
     vendor_ticket = request.GET.get('vendor_ticket_number')
-    
     created_start = request.GET.get('created_start')
     created_end = request.GET.get('created_end')
     closed_start = request.GET.get('closed_start')
     closed_end = request.GET.get('closed_end')
     escalated_start = request.GET.get('escalated_start')
     escalated_end = request.GET.get('escalated_end')
-    
     category = request.GET.get('category', 'all')
     is_reopened = request.GET.get('is_reopened', '')
-
-    if category == 'open':
+    
+    if category == 'open': 
         tickets_qs = tickets_qs.filter(status='Open')
-    elif category == 'assigned':
+    elif category == 'assigned': 
         tickets_qs = tickets_qs.filter(status='Assigned')
-    elif category == 'hold':
+    elif category == 'hold': 
         tickets_qs = tickets_qs.filter(status='Hold')
-    elif category == 'escalated':
+    elif category == 'escalated': 
         tickets_qs = tickets_qs.filter(status='Escalated')
-    elif category == 'closed':
+    elif category == 'closed': 
         tickets_qs = tickets_qs.filter(status='Closed')
-    elif category == 'escalated_closed':
+    elif category == 'escalated_closed': 
         tickets_qs = tickets_qs.filter(status='Closed', escalated_at__isnull=False)
-    elif category == 'reopened':
+    elif category == 'reopened': 
         tickets_qs = tickets_qs.filter(history__action='Ticket Reopened').distinct()
-
-    if unit_id:
+        
+    if unit_id: 
         tickets_qs = tickets_qs.filter(unit_id=unit_id)
-    if dept_id:
+    if dept_id: 
         tickets_qs = tickets_qs.filter(department_id=dept_id)
-    if priority:
+    if priority: 
         tickets_qs = tickets_qs.filter(priority=priority)
-    if status:
+    if status: 
         tickets_qs = tickets_qs.filter(status=status)
-    if assigned_person:
+    if assigned_person: 
         tickets_qs = tickets_qs.filter(assigned_person__icontains=assigned_person)
-    if created_by_role:
+    if created_by_role: 
         tickets_qs = tickets_qs.filter(created_by_role=created_by_role)
-    if error_type:
+    if error_type: 
         tickets_qs = tickets_qs.filter(error_type=error_type)
-    if vendor_ticket:
+    if vendor_ticket: 
         tickets_qs = tickets_qs.filter(vendor_ticket_number__icontains=vendor_ticket)
-
-    if created_start and created_start.strip():
+    if created_start and created_start.strip(): 
         tickets_qs = tickets_qs.filter(created_at__date__gte=created_start)
-    if created_end and created_end.strip():
+    if created_end and created_end.strip(): 
         tickets_qs = tickets_qs.filter(created_at__date__lte=created_end)
-        
-    if closed_start and closed_start.strip():
+    if closed_start and closed_start.strip(): 
         tickets_qs = tickets_qs.filter(closed_at__date__gte=closed_start)
-    if closed_end and closed_end.strip():
+    if closed_end and closed_end.strip(): 
         tickets_qs = tickets_qs.filter(closed_at__date__lte=closed_end)
-        
-    if escalated_start and escalated_start.strip():
+    if escalated_start and escalated_start.strip(): 
         tickets_qs = tickets_qs.filter(escalated_at__date__gte=escalated_start)
-    if escalated_end and escalated_end.strip():
+    if escalated_end and escalated_end.strip(): 
         tickets_qs = tickets_qs.filter(escalated_at__date__lte=escalated_end)
-
-    if is_reopened == 'yes':
+    if is_reopened == 'yes': 
         tickets_qs = tickets_qs.filter(history__action='Ticket Reopened').distinct()
-    elif is_reopened == 'no':
+    elif is_reopened == 'no': 
         tickets_qs = tickets_qs.exclude(history__action='Ticket Reopened')
-
-    if 'export' in request.GET:
-        response = HttpResponse(
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-        response['Content-Disposition'] = f'attachment; filename=GPLAST_Ticket_Report_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
         
+    if 'export' in request.GET:
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename=GPLAST_Report_{timezone.now().strftime("%Y%m%d")}.xlsx'
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Tickets Report"
@@ -660,95 +998,86 @@ def reports(request):
         title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
         header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
         data_font = Font(name='Calibri', size=11)
-        
         title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
         header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
         
         ws.merge_cells('A1:Y1')
-        ws['A1'] = "GPLAST ERP Support Ticket System - Export Report"
+        ws['A1'] = "GPLAST Ticket Report"
         ws['A1'].font = title_font
         ws['A1'].fill = title_fill
         ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
         ws.row_dimensions[1].height = 40
         
-        headers = [
-            "Ticket Number", "Status", "Unit Code", "Unit Full Name", "Department",
-            "Employee ID", "Employee Name", "Mobile Number", "Email ID", "Screen Number",
-            "Subject", "Description", "Priority", "Error Type", "Created By Role", 
-            "Time to Close",
-            "Admin Creation Reason", "Assigned Person", "Hold Reason", "Closing Remarks",
-            "Closed By", "Vendor Ticket Number", "Created At", "Closed At", "Escalated At"
-        ]
-        
-        ws.row_dimensions[3].height = 25
+        headers = ["Ticket Number","Status","Unit Code","Unit Full Name","Department","Employee ID","Employee Name","Mobile","Email","Screen Number","Subject","Description","Priority","Error Type","Created By Role","Time to Close","Admin Reason","Assigned Person","Hold Reason","Closing Remarks","Closed By","Vendor Ticket","Created At","Closed At","Escalated At"]
         for col_idx, header in enumerate(headers, 1):
             cell = ws.cell(row=3, column=col_idx)
             cell.value = header
             cell.font = header_font
             cell.fill = header_fill
-            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            cell.alignment = Alignment(horizontal='center', vertical='center')
             
         row_idx = 4
         for t in tickets_qs:
-            c_at = t.created_at.astimezone(timezone.get_current_timezone()).strftime('%d-%b-%Y %I:%M %p') if t.created_at else ""
-            cl_at = t.closed_at.astimezone(timezone.get_current_timezone()).strftime('%d-%b-%Y %I:%M %p') if t.closed_at else ""
-            esc_at = t.escalated_at.astimezone(timezone.get_current_timezone()).strftime('%d-%b-%Y %I:%M %p') if t.escalated_at else ""
-
-            time_to_close_str = ""
-            if t.status == 'Closed' and t.created_at and t.closed_at:
-                time_to_close = t.closed_at - t.created_at
-                time_to_close_str = format_timedelta_display(time_to_close)
-
-            row_data = [
-                t.ticket_number, t.status, t.unit.code, t.unit.full_name, t.department.name,
-                t.employee_id, t.employee_name, t.mobile, t.email, t.screen_number,
-                t.subject, t.description, t.priority, t.error_type, t.created_by_role,
-                time_to_close_str,
-                t.admin_creation_reason or "", t.assigned_person or "", t.hold_reason or "", t.closing_remarks or "",
-                t.closed_by or "", t.vendor_ticket_number or "", c_at, cl_at, esc_at
-            ]
+            c_at = t.created_at.strftime('%d-%b-%Y %I:%M %p') if t.created_at else ""
+            cl_at = t.closed_at.strftime('%d-%b-%Y %I:%M %p') if t.closed_at else ""
+            esc_at = t.escalated_at.strftime('%d-%b-%Y %I:%M %p') if t.escalated_at else ""
+            ttc = format_timedelta_display(t.closed_at - t.created_at) if t.status == 'Closed' and t.created_at and t.closed_at else ""
             
+            row_data = [
+                t.ticket_number,
+                t.status,
+                t.unit.code if t.unit else '',
+                t.unit.full_name if t.unit else '',
+                t.department.name if t.department else '',
+                t.employee_id,
+                t.employee_name,
+                t.mobile,
+                t.email,
+                t.screen_number,
+                t.subject,
+                t.description,
+                t.priority,
+                t.error_type,
+                t.created_by_role,
+                ttc,
+                t.admin_creation_reason or '',
+                t.assigned_person or '',
+                t.hold_reason or '',
+                t.closing_remarks or '',
+                t.closed_by or '',
+                t.vendor_ticket_number or '',
+                c_at,
+                cl_at,
+                esc_at
+            ]
             for col_idx, val in enumerate(row_data, 1):
                 cell = ws.cell(row=row_idx, column=col_idx)
                 cell.value = val
                 cell.font = data_font
-                if col_idx in [1, 2, 3, 6, 8, 13, 14, 15, 16, 22, 23, 24, 25]:
-                    cell.alignment = Alignment(horizontal='center', vertical='center')
-                else:
-                    cell.alignment = Alignment(horizontal='left', vertical='center')
-                    
-            ws.row_dimensions[row_idx].height = 20
             row_idx += 1
             
         for col in ws.columns:
-            max_len = 0
-            for cell in col:
-                if cell.row == 1:
-                    continue
-                val_str = str(cell.value or '')
-                if len(val_str) > max_len:
-                    max_len = len(val_str)
-            col_letter = openpyxl.utils.get_column_letter(col[0].column)
-            ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+            max_len = max(len(str(cell.value or '')) for cell in col if cell.row > 1)
+            ws.column_dimensions[openpyxl.utils.get_column_letter(col[0].column)].width = max(max_len + 3, 12)
             
         wb.save(response)
         return response
-
+    
     paginator = Paginator(tickets_qs, 15)
     page_number = request.GET.get('page')
-    try:
+    try: 
         tickets_page = paginator.page(page_number)
-    except PageNotAnInteger:
+    except PageNotAnInteger: 
         tickets_page = paginator.page(1)
-    except EmptyPage:
+    except EmptyPage: 
         tickets_page = paginator.page(paginator.num_pages)
-
+        
     query_params = request.GET.copy()
-    if 'page' in query_params:
+    if 'page' in query_params: 
         del query_params['page']
-
-    error_type_choices = Ticket.objects.filter(error_type__isnull=False).values_list('error_type', 'error_type').distinct().order_by('error_type')
-
+        
+    error_type_choices = Ticket.objects.filter(error_type__isnull=False).values_list('error_type','error_type').distinct().order_by('error_type')
+    
     context = {
         'tickets': tickets_page,
         'units': units,
@@ -759,7 +1088,7 @@ def reports(request):
         'status_choices': Ticket.STATUS_CHOICES,
         'priority_choices': Ticket.PRIORITY_CHOICES,
         'created_by_choices': Ticket.CREATED_BY_CHOICES,
-        'error_type_choices': error_type_choices,
+        'error_type_choices': error_type_choices
     }
     return render(request, 'admin_panel/reports.html', context)
 
@@ -768,19 +1097,16 @@ def reports(request):
 # SETTINGS VIEWS
 # =========================================================================
 
-@login_required
-@user_passes_test(is_admin, login_url='role_redirect')
-def settings_page(request):
-    contact_obj = AdminContact.objects.first()
-    if not contact_obj:
-        contact_obj = AdminContact.objects.create(admin_name="IT ADMIN", admin_phone="9999999999", admin_email="admin@gplast.com")
-
-    employee_user, _ = User.objects.get_or_create(
-        username='GPLERPUSERS',
-        defaults={'is_staff': False, 'password': 'pbkdf2_sha256$720000$j5xL6pS0LpGvLq3sRjVbWk$V/Hq7aYt2x531enqYm5d9f2uZdtsJ7MLd2y221C+L9s='}
+def _get_contact_data():
+    """Ensures an AdminContact object exists and returns it."""
+    contact_obj, _ = AdminContact.objects.get_or_create(
+        id=1,
+        defaults={'admin_name': "IT ADMIN", 'admin_phone': "9999999999", 'admin_email': "admin@gplast.com"}
     )
+    return contact_obj
 
-    # Employee search for directory
+def _get_employee_directory_data(request):
+    """Fetches and filters the employee directory."""
     emp_search = request.GET.get('emp_search', '').strip()
     employees_qs = EmployeeMaster.objects.all().order_by('employee_id')
     if emp_search:
@@ -789,22 +1115,55 @@ def settings_page(request):
             Q(employee_name__icontains=emp_search) |
             Q(email__icontains=emp_search)
         )
+    return employees_qs, emp_search
 
+def _get_credentials_data():
+    """Fetches and groups ALL department credentials for display (including inactive ones)."""
+    all_credentials = DepartmentCredential.objects.select_related('unit', 'department').order_by('unit__code', 'department__name')
+    credentials_by_unit = []
+    
+    for unit in Unit.objects.filter(is_active=True).order_by('code'):
+        unit_creds = all_credentials.filter(unit=unit)
+        if unit_creds.exists():
+            credentials_by_unit.append({
+                'unit': unit, 
+                'credentials': unit_creds
+            })
+    
+    for unit in Unit.objects.filter(is_active=False).order_by('code'):
+        unit_creds = all_credentials.filter(unit=unit)
+        if unit_creds.exists():
+            credentials_by_unit.append({
+                'unit': unit, 
+                'credentials': unit_creds
+            })
+    
+    return all_credentials, credentials_by_unit
+
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def settings_page(request):
+    """Renders the main admin settings page with data for all sections."""
+    
+    contact_obj = _get_contact_data()
+    employees_qs, emp_search = _get_employee_directory_data(request)
+    all_credentials, credentials_by_unit = _get_credentials_data()
+    
     context = {
         'contact_form': AdminContactForm(instance=contact_obj),
-        'my_password_form': AdminPasswordChangeForm(user=request.user),
-        'set_user_password_form': AdminSetUserPasswordForm(user=employee_user),
-        'employee_user': employee_user,
         'unit_form': UnitForm(),
         'dept_form': DepartmentForm(),
         'email_form': AdminNotificationEmailForm(),
         'units': Unit.objects.all().order_by('code'),
         'departments': Department.objects.all().order_by('unit__code', 'name'),
         'emails': AdminNotificationEmail.objects.all().order_by('-created_at'),
-        # Employee Directory
         'employees': employees_qs,
-        'all_units': Unit.objects.filter(is_active=True).order_by('code'),
         'emp_search': emp_search,
+        'all_units': Unit.objects.filter(is_active=True).order_by('code'),
+        'credentials': all_credentials,
+        'credentials_by_unit': credentials_by_unit,
+        'employee_users': User.objects.filter(is_staff=False, is_active=True).order_by('username'),
     }
     return render(request, 'admin_panel/settings.html', context)
 
@@ -815,7 +1174,7 @@ def settings_contact(request):
     if request.method == 'POST':
         contact_obj = AdminContact.objects.first()
         form = AdminContactForm(request.POST, instance=contact_obj)
-        if form.is_valid():
+        if form.is_valid(): 
             form.save()
             messages.success(request, "IT Support Contact updated successfully.")
     return redirect('settings_page')
@@ -828,25 +1187,22 @@ def settings_units(request):
         action = request.POST.get('action')
         if action == 'add':
             form = UnitForm(request.POST)
-            if form.is_valid():
+            if form.is_valid(): 
                 unit = form.save(commit=False)
                 unit.created_by = request.user.username
                 unit.save()
-                messages.success(request, f"Unit '{unit.code}' added successfully.")
+                messages.success(request, f"Unit '{unit.code}' added.")
         elif action == 'edit':
-            unit_id = request.POST.get('unit_id')
-            unit = get_object_or_404(Unit, pk=unit_id)
+            unit = get_object_or_404(Unit, pk=request.POST.get('unit_id'))
             form = UnitForm(request.POST, instance=unit)
-            if form.is_valid():
+            if form.is_valid(): 
                 form.save()
-                messages.success(request, f"Unit '{unit.code}' updated successfully.")
+                messages.success(request, f"Unit '{unit.code}' updated.")
         elif action == 'toggle':
-            unit_id = request.POST.get('unit_id')
-            unit = get_object_or_404(Unit, pk=unit_id)
+            unit = get_object_or_404(Unit, pk=request.POST.get('unit_id'))
             unit.is_active = not unit.is_active
             unit.save()
-            status_str = "activated" if unit.is_active else "deactivated"
-            messages.success(request, f"Unit '{unit.code}' has been {status_str}.")
+            messages.success(request, f"Unit '{unit.code}' {'activated' if unit.is_active else 'deactivated'}.")
     return redirect('settings_page')
 
 
@@ -857,23 +1213,20 @@ def settings_departments(request):
         action = request.POST.get('action')
         if action == 'add':
             form = DepartmentForm(request.POST)
-            if form.is_valid():
+            if form.is_valid(): 
                 dept = form.save()
-                messages.success(request, f"Department '{dept.name}' added under unit '{dept.unit.code}'.")
+                messages.success(request, f"Department '{dept.name}' added.")
         elif action == 'edit':
-            dept_id = request.POST.get('dept_id')
-            dept = get_object_or_404(Department, pk=dept_id)
+            dept = get_object_or_404(Department, pk=request.POST.get('dept_id'))
             form = DepartmentForm(request.POST, instance=dept)
-            if form.is_valid():
+            if form.is_valid(): 
                 form.save()
-                messages.success(request, f"Department '{dept.name}' updated successfully.")
+                messages.success(request, f"Department '{dept.name}' updated.")
         elif action == 'toggle':
-            dept_id = request.POST.get('dept_id')
-            dept = get_object_or_404(Department, pk=dept_id)
+            dept = get_object_or_404(Department, pk=request.POST.get('dept_id'))
             dept.is_active = not dept.is_active
             dept.save()
-            status_str = "activated" if dept.is_active else "deactivated"
-            messages.success(request, f"Department '{dept.name}' has been {status_str}.")
+            messages.success(request, f"Department '{dept.name}' {'activated' if dept.is_active else 'deactivated'}.")
     return redirect('settings_page')
 
 
@@ -884,15 +1237,14 @@ def settings_emails(request):
         action = request.POST.get('action')
         if action == 'add':
             form = AdminNotificationEmailForm(request.POST)
-            if form.is_valid():
+            if form.is_valid(): 
                 email = form.save()
-                messages.success(request, f"Notification email '{email.email}' added.")
+                messages.success(request, f"Email '{email.email}' added.")
         elif action == 'delete':
-            email_id = request.POST.get('email_id')
-            email_obj = get_object_or_404(AdminNotificationEmail, pk=email_id)
+            email_obj = get_object_or_404(AdminNotificationEmail, pk=request.POST.get('email_id'))
             email_str = email_obj.email
             email_obj.delete()
-            messages.success(request, f"Notification email '{email_str}' deleted.")
+            messages.success(request, f"Email '{email_str}' deleted.")
     return redirect('settings_page')
 
 
@@ -903,26 +1255,28 @@ def settings_passwords(request):
         action = request.POST.get('action')
         if action == 'change_my_password':
             form = AdminPasswordChangeForm(user=request.user, data=request.POST)
-            if form.is_valid():
+            if form.is_valid(): 
                 user = form.save()
                 update_session_auth_hash(request, user)
-                messages.success(request, 'Your password was successfully updated!')
+                messages.success(request, 'Password updated!')
             else:
-                for field, error_list in form.errors.items():
-                    for error in error_list:
-                        messages.error(request, f"Password change failed: {error}")
-
+                for e in form.errors.values():
+                    for err in e: 
+                        messages.error(request, f"Error: {err}")
         elif action == 'set_user_password':
             user_id = request.POST.get('user')
+            if not user_id:
+                messages.error(request, "Please select an employee.")
+                return redirect('settings_page')
             selected_user = get_object_or_404(User, pk=user_id, is_staff=False)
             form = AdminSetUserPasswordForm(user=selected_user, data=request.POST)
-            if form.is_valid():
+            if form.is_valid(): 
                 form.save()
-                messages.success(request, f"Password for user '{selected_user.username}' has been reset.")
+                messages.success(request, f"Password reset for '{selected_user.username}'.")
             else:
-                for field, error_list in form.errors.items():
-                    for error in error_list:
-                        messages.error(request, f"Password reset failed: {error}")
+                for e in form.errors.values():
+                    for err in e: 
+                        messages.error(request, f"Error: {err}")
     return redirect('settings_page')
 
 
@@ -933,173 +1287,130 @@ def settings_passwords(request):
 @login_required
 @user_passes_test(is_admin, login_url='role_redirect')
 def settings_employees(request):
-    """Handle Employee Directory actions: add, bulk upload, edit, toggle, delete"""
     if request.method == 'POST':
         action = request.POST.get('action')
-        
-        # Manual Add Employee
         if action == 'add_employee':
-            employee_id = request.POST.get('employee_id', '').strip().upper()
-            employee_name = request.POST.get('employee_name', '').strip().upper()
-            mobile = request.POST.get('mobile', '').strip()
-            email = request.POST.get('email', '').strip()
-            unit_id = request.POST.get('unit')
-            dept_id = request.POST.get('department')
-            
-            if not all([employee_id, employee_name, mobile, email]):
-                messages.error(request, "All fields marked with * are mandatory: Employee ID, Name, Mobile, Email.")
+            eid = request.POST.get('employee_id','').strip().upper()
+            ename = request.POST.get('employee_name','').strip().upper()
+            mob = request.POST.get('mobile','').strip()
+            email = request.POST.get('email','').strip()
+            uid = request.POST.get('unit')
+            did = request.POST.get('department')
+            if not all([eid,ename,mob,email]): 
+                messages.error(request,"All * fields required.")
                 return redirect('settings_page')
-            
             try:
                 EmployeeMaster.objects.create(
-                    employee_id=employee_id,
-                    employee_name=employee_name,
-                    mobile=mobile,
+                    employee_id=eid,
+                    employee_name=ename,
+                    mobile=mob,
                     email=email,
-                    unit_id=unit_id if unit_id else None,
-                    department_id=dept_id if dept_id else None
+                    unit_id=uid or None,
+                    department_id=did or None
                 )
-                messages.success(request, f'Employee "{employee_id} - {employee_name}" added successfully.')
-            except IntegrityError:
-                messages.error(request, f'Employee ID "{employee_id}" already exists in the directory.')
-            except Exception as e:
-                messages.error(request, f'Error adding employee: {str(e)}')
-        
-        # Bulk Upload via Excel
+                messages.success(request,f'Employee "{eid}" added.')
+            except IntegrityError: 
+                messages.error(request,f'Employee ID "{eid}" exists.')
         elif action == 'bulk_upload':
-            excel_file = request.FILES.get('excel_file')
-            if not excel_file:
-                messages.error(request, "Please select an Excel file to upload.")
+            f = request.FILES.get('excel_file')
+            if not f: 
+                messages.error(request,"Select Excel file.")
                 return redirect('settings_page')
-            
             try:
-                df = pd.read_excel(excel_file, dtype=str)
-                success_count = 0
-                error_count = 0
-                errors = []
-                
-                for index, row in df.iterrows():
+                df = pd.read_excel(f, dtype=str)
+                sc, ec, errs = 0, 0, []
+                for i, r in df.iterrows():
                     try:
-                        emp_id = str(row.get('Employee ID', row.get('employee_id', row.get('ID', '')))).strip().upper()
-                        emp_name = str(row.get('Employee Name', row.get('employee_name', row.get('Name', '')))).strip().upper()
-                        emp_mobile = str(row.get('Mobile', row.get('mobile', row.get('Phone', '')))).strip()
-                        emp_email = str(row.get('Email', row.get('email', ''))).strip()
-                        unit_code = str(row.get('Unit Code', row.get('unit_code', row.get('Unit', '')))).strip().upper()
-                        dept_name = str(row.get('Department', row.get('department', row.get('Dept', '')))).strip().upper()
-                        
-                        if not emp_id or not emp_name:
-                            error_count += 1
-                            errors.append(f'Row {index+2}: Missing Employee ID or Name')
+                        eid = str(r.get('Employee ID', r.get('employee_id', ''))).strip().upper()
+                        ename = str(r.get('Employee Name', r.get('employee_name', ''))).strip().upper()
+                        mob = str(r.get('Mobile', r.get('mobile', ''))).strip()
+                        email = str(r.get('Email', r.get('email', ''))).strip()
+                        uc = str(r.get('Unit Code', r.get('unit_code', ''))).strip().upper()
+                        dn = str(r.get('Department', r.get('department', ''))).strip().upper()
+                        if not eid or not ename: 
+                            ec += 1
+                            errs.append(f'Row {i+2}: Missing ID/Name')
                             continue
-                        
-                        unit_obj = Unit.objects.filter(code=unit_code).first() if unit_code else None
-                        dept_obj = Department.objects.filter(name=dept_name).first() if dept_name else None
-                        
+                        uo = Unit.objects.filter(code=uc).first() if uc else None
+                        do = Department.objects.filter(name=dn).first() if dn else None
                         EmployeeMaster.objects.update_or_create(
-                            employee_id=emp_id,
+                            employee_id=eid,
                             defaults={
-                                'employee_name': emp_name,
-                                'mobile': emp_mobile,
-                                'email': emp_email,
-                                'unit': unit_obj,
-                                'department': dept_obj,
+                                'employee_name': ename,
+                                'mobile': mob,
+                                'email': email,
+                                'unit': uo,
+                                'department': do,
                                 'is_active': True
                             }
                         )
-                        success_count += 1
-                    except Exception as e:
-                        error_count += 1
-                        errors.append(f'Row {index+2}: {str(e)}')
-                
-                if success_count > 0:
-                    messages.success(request, f'{success_count} employees uploaded successfully!')
-                if error_count > 0:
-                    messages.warning(request, f'{error_count} rows failed.')
-                    for err in errors[:3]:
-                        messages.warning(request, err)
-                        
-            except Exception as e:
-                messages.error(request, f'Error reading Excel file: {str(e)}. Make sure the file has columns: Employee ID, Employee Name, Mobile, Email, Unit Code, Department.')
-        
-        # Edit Employee
+                        sc += 1
+                    except Exception as ex: 
+                        ec += 1
+                        errs.append(f'Row {i+2}: {ex}')
+                if sc: 
+                    messages.success(request, f'{sc} employees uploaded!')
+                if ec: 
+                    messages.warning(request, f'{ec} failed.')
+                    for e in errs[:3]:
+                        messages.warning(request, e)
+            except Exception as ex: 
+                messages.error(request, f'Error: {ex}')
         elif action == 'edit_employee':
-            emp_id = request.POST.get('emp_id')
-            employee = get_object_or_404(EmployeeMaster, pk=emp_id)
-            employee.employee_id = request.POST.get('employee_id', '').strip().upper()
-            employee.employee_name = request.POST.get('employee_name', '').strip().upper()
-            employee.mobile = request.POST.get('mobile', '').strip()
-            employee.email = request.POST.get('email', '').strip()
-            employee.unit_id = request.POST.get('unit') or None
-            employee.department_id = request.POST.get('department') or None
-            try:
-                employee.save()
-                messages.success(request, f'Employee "{employee.employee_id}" updated successfully.')
-            except IntegrityError:
-                messages.error(request, f'Employee ID "{employee.employee_id}" already exists.')
-        
-        # Toggle Active/Inactive
+            emp = get_object_or_404(EmployeeMaster, pk=request.POST.get('emp_id'))
+            emp.employee_id = request.POST.get('employee_id','').strip().upper()
+            emp.employee_name = request.POST.get('employee_name','').strip().upper()
+            emp.mobile = request.POST.get('mobile','').strip()
+            emp.email = request.POST.get('email','').strip()
+            emp.unit_id = request.POST.get('unit') or None
+            emp.department_id = request.POST.get('department') or None
+            try: 
+                emp.save()
+                messages.success(request, f'Employee updated.')
+            except IntegrityError: 
+                messages.error(request, 'Employee ID exists.')
         elif action == 'toggle_employee':
-            emp_id = request.POST.get('emp_id')
-            employee = get_object_or_404(EmployeeMaster, pk=emp_id)
-            employee.is_active = not employee.is_active
-            employee.save()
-            status_str = "activated" if employee.is_active else "deactivated"
-            messages.success(request, f'Employee "{employee.employee_id}" {status_str}.')
-        
-        # Delete Employee
+            emp = get_object_or_404(EmployeeMaster, pk=request.POST.get('emp_id'))
+            emp.is_active = not emp.is_active
+            emp.save()
+            messages.success(request, f'Employee {"activated" if emp.is_active else "deactivated"}.')
         elif action == 'delete_employee':
-            emp_id = request.POST.get('emp_id')
-            employee = get_object_or_404(EmployeeMaster, pk=emp_id)
-            emp_identity = employee.employee_id
-            employee.delete()
-            messages.success(request, f'Employee "{emp_identity}" deleted from directory.')
-    
+            emp = get_object_or_404(EmployeeMaster, pk=request.POST.get('emp_id'))
+            eid = emp.employee_id
+            emp.delete()
+            messages.success(request, f'Employee "{eid}" deleted.')
     return redirect('settings_page')
 
 
 @login_required
 @user_passes_test(is_admin, login_url='role_redirect')
 def download_employee_list(request):
-    """Download all employees as Excel file"""
-    employees = EmployeeMaster.objects.all().order_by('employee_id')
-    
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = f'attachment; filename=GPLAST_Employee_List_{timezone.now().strftime("%Y%m%d")}.xlsx'
-    
+    emps = EmployeeMaster.objects.all().order_by('employee_id')
+    resp = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    resp['Content-Disposition'] = f'attachment; filename=Employee_List_{timezone.now().strftime("%Y%m%d")}.xlsx'
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Employee Directory"
-    
-    # Title
-    title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
-    title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+    ws.title = "Employees"
+    tf = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
+    hf = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    df = Font(name='Calibri', size=11)
+    tfill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+    hfill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
     ws.merge_cells('A1:H1')
-    ws['A1'] = "GPLAST Employee Directory"
-    ws['A1'].font = title_font
-    ws['A1'].fill = title_fill
+    ws['A1'] = "Employee Directory"
+    ws['A1'].font = tf
+    ws['A1'].fill = tfill
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 35
-    
-    # Headers
-    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
-    header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
-    headers = ['Employee ID', 'Employee Name', 'Mobile', 'Email', 'Unit Code', 'Unit Name', 'Department', 'Status']
-    
-    for col_idx, header in enumerate(headers, 1):
-        cell = ws.cell(row=3, column=col_idx)
-        cell.value = header
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.alignment = Alignment(horizontal='center', vertical='center')
+    for ci, h in enumerate(['Employee ID', 'Name', 'Mobile', 'Email', 'Unit Code', 'Unit Name', 'Department', 'Status'], 1):
+        c = ws.cell(row=3, column=ci)
+        c.value = h
+        c.font = hf
+        c.fill = hfill
+        c.alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[3].height = 25
-    
-    # Data
-    data_font = Font(name='Calibri', size=11)
-    row_idx = 4
-    for emp in employees:
-        row_data = [
+    for ri, emp in enumerate(emps, 4):
+        rd = [
             emp.employee_id,
             emp.employee_name,
             emp.mobile,
@@ -1109,27 +1420,197 @@ def download_employee_list(request):
             emp.department.name if emp.department else '',
             'Active' if emp.is_active else 'Inactive'
         ]
-        for col_idx, val in enumerate(row_data, 1):
-            cell = ws.cell(row=row_idx, column=col_idx)
-            cell.value = val
-            cell.font = data_font
-            cell.alignment = Alignment(horizontal='center' if col_idx in [1, 5, 8] else 'left', vertical='center')
-        row_idx += 1
-    
-    # Auto-width
+        for ci, v in enumerate(rd, 1):
+            c = ws.cell(row=ri, column=ci)
+            c.value = v
+            c.font = df
     for col in ws.columns:
-        max_len = 0
-        for cell in col:
-            if cell.row in [1, 3]:
-                continue
-            val_str = str(cell.value or '')
-            if len(val_str) > max_len:
-                max_len = len(val_str)
-        col_letter = openpyxl.utils.get_column_letter(col[0].column)
-        ws.column_dimensions[col_letter].width = min(max(max_len + 3, 12), 40)
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col[0].column)].width = max(
+            max(len(str(c.value or '')) for c in col if c.row > 1) + 3, 12
+        )
+    wb.save(resp)
+    return resp
+
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def download_employee_template(request):
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename=Employee_Upload_Template.xlsx'
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Employee Template"
+    
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
+    header_alignment = Alignment(horizontal='center', vertical='center')
+    
+    headers = ['Employee ID', 'Employee Name', 'Mobile', 'Email', 'Unit Code', 'Department']
+    
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+    
+    sample_data = [
+        ['EMP001', 'JOHN DOE', '9876543210', 'john.doe@company.com', 'GPL', 'Production'],
+        ['EMP002', 'JANE SMITH', '9876543211', 'jane.smith@company.com', 'GPLAST', 'QA'],
+        ['EMP003', 'MIKE JOHNSON', '9876543212', 'mike.johnson@company.com', 'IMD', 'Purchase'],
+    ]
+    
+    for row_idx, row_data in enumerate(sample_data, 2):
+        for col_idx, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.value = value
+            cell.font = Font(name='Calibri', size=11)
+    
+    note_row = len(sample_data) + 3
+    note_cell = ws.cell(row=note_row, column=1)
+    note_cell.value = "* Required columns: Employee ID, Employee Name, Mobile, Email"
+    note_cell.font = Font(name='Calibri', size=10, italic=True, color='FF0000')
+    ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=6)
+    
+    validation_row = note_row + 1
+    validation_cell = ws.cell(row=validation_row, column=1)
+    validation_cell.value = "Note: Unit Code must match existing units in the system. Department must match existing departments."
+    validation_cell.font = Font(name='Calibri', size=9, italic=True, color='666666')
+    ws.merge_cells(start_row=validation_row, start_column=1, end_row=validation_row, end_column=6)
+    
+    column_widths = [15, 20, 15, 25, 12, 15]
+    for col_idx, width in enumerate(column_widths, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col_idx)].width = width
     
     wb.save(response)
     return response
+
+
+# =========================================================================
+# DEPARTMENT CREDENTIAL VIEWS
+# =========================================================================
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def settings_credentials(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add_credential':
+            uid = request.POST.get('unit')
+            did = request.POST.get('department')
+            uname = request.POST.get('username','').strip()
+            pwd = request.POST.get('password','').strip()
+            if not all([uid, did, uname, pwd]): 
+                messages.error(request, "All fields required.")
+                return redirect('settings_page')
+            if DepartmentCredential.objects.filter(unit_id=uid, department_id=did).exists():
+                messages.error(request, "Credential exists.")
+                return redirect('settings_page')
+            try:
+                cred = DepartmentCredential.objects.create(
+                    unit_id=uid,
+                    department_id=did,
+                    username=uname,
+                    password=pwd
+                )
+                if not User.objects.filter(username=uname).exists():
+                    User.objects.create_user(username=uname, password=pwd, is_staff=False)
+                u = Unit.objects.get(pk=uid)
+                d = Department.objects.get(pk=did)
+                messages.success(request, f'Credential for {u.code}-{d.name} added!')
+            except Exception as ex: 
+                messages.error(request, f'Error: {ex}')
+        elif action == 'edit_credential':
+            cred = get_object_or_404(DepartmentCredential, pk=request.POST.get('cred_id'))
+            ou = cred.username
+            nu = request.POST.get('username','').strip()
+            np = request.POST.get('password','').strip()
+            cred.username = nu
+            if np: 
+                cred.password = np
+            try:
+                cred.save()
+                user = User.objects.filter(username=ou).first()
+                if user:
+                    if ou != nu:
+                        user.username = nu
+                    if np:
+                        user.set_password(np)
+                    user.save()
+                elif not User.objects.filter(username=nu).exists():
+                    User.objects.create_user(username=nu, password=np or cred.password, is_staff=False)
+                messages.success(request, 'Credential updated!')
+            except Exception as ex: 
+                messages.error(request, f'Error: {ex}')
+        elif action == 'toggle_credential':
+            cred = get_object_or_404(DepartmentCredential, pk=request.POST.get('cred_id'))
+            cred.is_active = not cred.is_active
+            cred.save()
+            user = User.objects.filter(username=cred.username).first()
+            if user:
+                user.is_active = cred.is_active
+                user.save()
+            messages.success(request, f'Credential {"activated" if cred.is_active else "deactivated"}.')
+        elif action == 'delete_credential':
+            cred = get_object_or_404(DepartmentCredential, pk=request.POST.get('cred_id'))
+            info = f'{cred.unit.code}-{cred.department.name}'
+            uname = cred.username
+            user = User.objects.filter(username=uname).first()
+            if user:
+                user.is_active = False
+                user.save()
+            cred.delete()
+            messages.success(request, f'Credential for {info} deleted.')
+    return redirect('settings_page')
+
+
+@login_required
+@user_passes_test(is_admin, login_url='role_redirect')
+def download_credentials(request):
+    creds = DepartmentCredential.objects.all().select_related('unit', 'department').order_by('unit__code', 'department__name')
+    resp = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    resp['Content-Disposition'] = f'attachment; filename=Credentials_{timezone.now().strftime("%Y%m%d")}.xlsx'
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Credentials"
+    tf = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
+    hf = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    df = Font(name='Calibri', size=11)
+    tfill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+    hfill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
+    ws.merge_cells('A1:F1')
+    ws['A1'] = "Department Credentials"
+    ws['A1'].font = tf
+    ws['A1'].fill = tfill
+    ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[1].height = 35
+    for ci, h in enumerate(['Unit Code', 'Unit Name', 'Department', 'Username', 'Password', 'Status'], 1):
+        c = ws.cell(row=3, column=ci)
+        c.value = h
+        c.font = hf
+        c.fill = hfill
+        c.alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[3].height = 25
+    for ri, cred in enumerate(creds, 4):
+        rd = [
+            cred.unit.code,
+            cred.unit.full_name,
+            cred.department.name,
+            cred.username,
+            cred.password,
+            'Active' if cred.is_active else 'Inactive'
+        ]
+        for ci, v in enumerate(rd, 1):
+            c = ws.cell(row=ri, column=ci)
+            c.value = v
+            c.font = df
+    for col in ws.columns:
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col[0].column)].width = max(
+            max(len(str(c.value or '')) for c in col if c.row > 1) + 3, 12
+        )
+    wb.save(resp)
+    return resp
 
 
 # =========================================================================
@@ -1138,68 +1619,99 @@ def download_employee_list(request):
 
 @login_required
 @user_passes_test(is_admin, login_url='role_redirect')
-def test_notifications(request):
+def test_notifications(request): 
     return render(request, 'admin_panel/test_notifications.html')
 
-
 @login_required
 @user_passes_test(is_admin, login_url='role_redirect')
-def test_success_message(request):
-    messages.success(request, 'This is a test success message from Django!')
+def test_success_message(request): 
+    messages.success(request, 'Test success!')
     return redirect('test_notifications')
 
-
 @login_required
 @user_passes_test(is_admin, login_url='role_redirect')
-def test_error_message(request):
-    messages.error(request, 'This is a test error message from Django!')
+def test_error_message(request): 
+    messages.error(request, 'Test error!')
     return redirect('test_notifications')
 
-
 @login_required
 @user_passes_test(is_admin, login_url='role_redirect')
-def test_warning_message(request):
-    messages.warning(request, 'This is a test warning message from Django!')
+def test_warning_message(request): 
+    messages.warning(request, 'Test warning!')
     return redirect('test_notifications')
 
-
 @login_required
 @user_passes_test(is_admin, login_url='role_redirect')
-def test_info_message(request):
-    messages.info(request, 'This is a test info message from Django!')
+def test_info_message(request): 
+    messages.info(request, 'Test info!')
     return redirect('test_notifications')
 
 
 # =========================================================================
-# AJAX ENDPOINTS
+# AJAX ENDPOINTS - UPDATED FOR CASCADING FILTER
 # =========================================================================
 
 def get_departments_by_unit(request):
+    """
+    AJAX endpoint to get departments by unit ID.
+    Used for cascading Unit -> Department filter.
+    """
     unit_id = request.GET.get('unit_id')
-    show_all = request.GET.get('show_all', 'false') == 'true'
     
-    if not unit_id:
-        return JsonResponse({'departments': []})
-        
-    depts_qs = Department.objects.filter(unit_id=unit_id)
-    if not show_all:
-        depts_qs = depts_qs.filter(is_active=True)
-        
-    depts_qs = depts_qs.order_by('name')
+    if unit_id:
+        departments = Department.objects.filter(unit_id=unit_id, is_active=True).order_by('name')
+    else:
+        departments = Department.objects.filter(is_active=True).order_by('name')
     
-    departments = [{'id': d.id, 'name': d.name} for d in depts_qs]
-    return JsonResponse({'departments': departments})
+    departments_list = []
+    for dept in departments:
+        departments_list.append({
+            'id': dept.id,
+            'name': dept.name,
+            'unit_id': dept.unit_id
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'departments': departments_list,
+        'count': len(departments_list)
+    })
 
 
 def get_employee_details(request):
-    """AJAX endpoint to fetch employee details by Employee ID."""
-    employee_id = request.GET.get('employee_id', '').strip().upper()
+    eid = request.GET.get('employee_id', '').strip().upper()
+    u_uid = request.GET.get('unit_id', '')
+    u_did = request.GET.get('department_id', '')
     
-    if not employee_id:
-        return JsonResponse({'found': False, 'message': 'Please enter an Employee ID.'})
+    if not eid: 
+        return JsonResponse({'found': False, 'message': 'Enter Employee ID.'})
     
     try:
-        emp = EmployeeMaster.objects.get(employee_id=employee_id, is_active=True)
+        emp = EmployeeMaster.objects.get(employee_id=eid, is_active=True)
+        
+        mismatches = []
+        if u_uid and emp.unit_id and str(emp.unit_id) != str(u_uid):
+            mismatches.append(f'Unit: {emp.unit.code if emp.unit else "Unknown"} (expected: {u_uid})')
+        if u_did and emp.department_id and str(emp.department_id) != str(u_did):
+            mismatches.append(f'Department: {emp.department.name if emp.department else "Unknown"} (expected: {u_did})')
+        
+        if mismatches:
+            return JsonResponse({
+                'found': False, 
+                'message': f'Employee belongs to different department/unit: {", ".join(mismatches)}',
+                'mismatch': True,
+                'employee': {
+                    'employee_id': emp.employee_id,
+                    'employee_name': emp.employee_name,
+                    'mobile': emp.mobile,
+                    'email': emp.email,
+                    'unit_id': emp.unit_id or None,
+                    'unit_code': emp.unit.code if emp.unit else None,
+                    'department_id': emp.department_id or None,
+                    'department_name': emp.department.name if emp.department else None
+                }
+            })
+        
         return JsonResponse({
             'found': True,
             'employee': {
@@ -1207,20 +1719,40 @@ def get_employee_details(request):
                 'employee_name': emp.employee_name,
                 'mobile': emp.mobile,
                 'email': emp.email,
-                'unit_id': emp.unit_id if emp.unit else None,
+                'unit_id': emp.unit_id or None,
                 'unit_code': emp.unit.code if emp.unit else None,
-                'department_id': emp.department_id if emp.department else None,
-                'department_name': emp.department.name if emp.department else None,
+                'department_id': emp.department_id or None,
+                'department_name': emp.department.name if emp.department else None
             }
         })
     except EmployeeMaster.DoesNotExist:
-        return JsonResponse({
-            'found': False,
-            'message': f'Employee "{employee_id}" not found. Please fill details manually.'
-        })
+        return JsonResponse({'found': False, 'message': f'Employee "{eid}" not found.'})
     except EmployeeMaster.MultipleObjectsReturned:
-        emp = EmployeeMaster.objects.filter(employee_id=employee_id, is_active=True).first()
+        emp = EmployeeMaster.objects.filter(employee_id=eid, is_active=True).first()
         if emp:
+            mismatches = []
+            if u_uid and emp.unit_id and str(emp.unit_id) != str(u_uid):
+                mismatches.append(f'Unit: {emp.unit.code if emp.unit else "Unknown"} (expected: {u_uid})')
+            if u_did and emp.department_id and str(emp.department_id) != str(u_did):
+                mismatches.append(f'Department: {emp.department.name if emp.department else "Unknown"} (expected: {u_did})')
+            
+            if mismatches:
+                return JsonResponse({
+                    'found': False, 
+                    'message': f'Employee belongs to different department/unit: {", ".join(mismatches)}',
+                    'mismatch': True,
+                    'employee': {
+                        'employee_id': emp.employee_id,
+                        'employee_name': emp.employee_name,
+                        'mobile': emp.mobile,
+                        'email': emp.email,
+                        'unit_id': emp.unit_id or None,
+                        'unit_code': emp.unit.code if emp.unit else None,
+                        'department_id': emp.department_id or None,
+                        'department_name': emp.department.name if emp.department else None
+                    }
+                })
+            
             return JsonResponse({
                 'found': True,
                 'employee': {
@@ -1228,10 +1760,60 @@ def get_employee_details(request):
                     'employee_name': emp.employee_name,
                     'mobile': emp.mobile,
                     'email': emp.email,
-                    'unit_id': emp.unit_id if emp.unit else None,
+                    'unit_id': emp.unit_id or None,
                     'unit_code': emp.unit.code if emp.unit else None,
-                    'department_id': emp.department_id if emp.department else None,
-                    'department_name': emp.department.name if emp.department else None,
+                    'department_id': emp.department_id or None,
+                    'department_name': emp.department.name if emp.department else None
                 }
             })
         return JsonResponse({'found': False, 'message': 'Employee not found.'})
+
+
+def get_employees_by_department(request):
+    """
+    AJAX endpoint to fetch employees for a specific department.
+    Used by the expandable department rows in the settings page.
+    """
+    dept_id = request.GET.get('department_id')
+    
+    if not dept_id:
+        return JsonResponse({
+            'success': False, 
+            'message': 'Department ID required'
+        })
+    
+    try:
+        department = Department.objects.get(id=dept_id, is_active=True)
+        employees = EmployeeMaster.objects.filter(
+            department=department
+        ).order_by('employee_id')
+        
+        employee_list = []
+        for emp in employees:
+            employee_list.append({
+                'id': emp.id,
+                'employee_id': emp.employee_id or '-',
+                'employee_name': emp.employee_name or '-',
+                'mobile': emp.mobile or '-',
+                'email': emp.email or '-',
+                'is_active': emp.is_active
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'department_name': department.name,
+            'department_id': department.id,
+            'employees': employee_list,
+            'count': len(employee_list)
+        })
+        
+    except Department.DoesNotExist:
+        return JsonResponse({
+            'success': False, 
+            'message': 'Department not found'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'message': str(e)
+        })

@@ -5,68 +5,25 @@
 {% block extra_head %}
 {{ block.super }}
 <style>    
-    .create-ticket-container {
-        animation: fadeInUp 0.5s ease;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .panel-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        box-shadow: 0 4px 20px var(--shadow-color);
-        border-radius: 14px;
-    }
-
-    .form-section {
-        background: var(--bg-card);
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border: 1px solid var(--border-color);
-    }
-
-    .form-section-title {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: var(--accent-light);
-        margin-bottom: 0.75rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid rgba(59, 130, 246, 0.2);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .form-section-title i {
-        color: var(--accent);
-        font-size: 0.9rem;
-        width: 20px;
-        text-align: center;
-    }
-
-    .form-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--text-secondary) !important;
-        margin-bottom: 0.25rem;
-    }
-
-    /* Form Controls */
+    .create-ticket-container { animation: fadeInUp 0.5s ease; max-width: 1200px; margin: 0 auto; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .panel-card { background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 4px 20px var(--shadow-color); border-radius: 14px; }
+    .form-section { background: var(--bg-card); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border-color); }
+    .form-section-title { font-size: 0.85rem; font-weight: 700; color: var(--accent-light); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid rgba(59,130,246,0.2); display: flex; align-items: center; gap: 0.5rem; }
+    .form-section-title i { color: var(--accent); font-size: 0.9rem; width: 20px; text-align: center; }
+    .form-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary) !important; margin-bottom: 0.25rem; }
+    
+    /* CRITICAL FIX: Ensure consistent background on all states */
     .form-control, 
     .form-select, 
-    textarea,
-    input[type="text"],
-    input[type="email"],
-    input[type="tel"],
-    input[type="number"],
+    textarea, 
+    input[type="text"], 
+    input[type="email"], 
+    input[type="tel"], 
+    input[type="number"], 
     select {
         background-color: var(--input-bg) !important;
+        background: var(--input-bg) !important;
         border: 2px solid var(--border-color) !important;
         color: var(--text-primary) !important;
         border-radius: 8px !important;
@@ -75,316 +32,254 @@
         transition: all 0.3s ease;
         -webkit-text-fill-color: var(--text-primary) !important;
         caret-color: var(--text-primary) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        width: 100%;
     }
 
+    /* Fix for focus state - keep same background */
     .form-control:focus, 
     .form-select:focus, 
-    textarea:focus {
+    textarea:focus,
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="tel"]:focus,
+    input[type="number"]:focus,
+    select:focus {
         border-color: var(--accent) !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
         outline: none !important;
         background-color: var(--input-bg) !important;
+        background: var(--input-bg) !important;
         color: var(--text-primary) !important;
+        -webkit-text-fill-color: var(--text-primary) !important;
     }
 
-    .form-control::placeholder,
-    textarea::placeholder {
+    /* Fix for placeholder text */
+    .form-control::placeholder, 
+    textarea::placeholder,
+    input[type="text"]::placeholder,
+    input[type="email"]::placeholder,
+    input[type="tel"]::placeholder,
+    input[type="number"]::placeholder {
         color: var(--text-muted) !important;
         -webkit-text-fill-color: var(--text-muted) !important;
         opacity: 1 !important;
     }
 
-    .form-select option,
+    /* Fix for select dropdown options */
+    .form-select option, 
     select option {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
         padding: 8px 12px;
+        background-color: var(--bg-secondary) !important;
     }
 
+    /* Fix select arrow */
     .form-select {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236B7A9E' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
         background-repeat: no-repeat !important;
         background-position: right 0.75rem center !important;
         background-size: 14px 10px !important;
         -webkit-appearance: none !important;
-        -moz-appearance: none !important;
         appearance: none !important;
         padding-right: 2rem !important;
-    }
-
-    /* Radio Buttons */
-    .radio-group {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        padding-top: 0.3rem;
-    }
-
-    .form-check-input {
         background-color: var(--input-bg) !important;
-        border: 2px solid var(--border-color) !important;
-        width: 18px !important;
-        height: 18px !important;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        background: var(--input-bg) !important;
     }
 
-    .form-check-input:checked {
-        background-color: var(--accent) !important;
-        border-color: var(--accent) !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    /* Radio group styles */
+    .radio-group { display: flex; gap: 1rem; flex-wrap: wrap; padding-top: 0.3rem; }
+    .form-check-input { 
+        background-color: var(--input-bg) !important; 
+        border: 2px solid var(--border-color) !important; 
+        width: 18px !important; 
+        height: 18px !important; 
+        cursor: pointer; 
+        transition: all 0.3s ease; 
     }
+    .form-check-input:checked { 
+        background-color: var(--accent) !important; 
+        border-color: var(--accent) !important; 
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important; 
+    }
+    .form-check-label { color: var(--text-primary) !important; font-size: 0.8rem; font-weight: 500; cursor: pointer; }
 
-    .form-check-label {
-        color: var(--text-primary) !important;
+    /* Employee ID wrapper */
+    .emp-id-wrapper { position: relative; }
+    .emp-fetch-status { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; pointer-events: none; z-index: 5; }
+    .emp-fetch-status.found { color: #22C55E; }
+    .emp-fetch-status.not-found { color: #EF4444; }
+    .emp-fetch-status.loading { color: var(--accent); animation: spin 0.8s linear infinite; }
+    .field-auto-filled { border-color: #22C55E !important; background-color: rgba(34,197,94,0.03) !important; }
+    
+    [data-theme="dark"] .field-auto-filled { border-color: #34D399 !important; background-color: rgba(52,211,153,0.05) !important; }
+    .auto-fill-badge { display: inline-block; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; background: rgba(34,197,94,0.15); color: #22C55E; margin-left: 4px; font-weight: 500; }
+    [data-theme="dark"] .auto-fill-badge { background: rgba(52,211,153,0.2); color: #34D399; }
+
+    @keyframes spin { 0% { transform: translateY(-50%) rotate(0deg); } 100% { transform: translateY(-50%) rotate(360deg); } }
+
+    /* Mismatch warning */
+    .mismatch-warning {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-top: 0.5rem;
+        color: #EF4444;
         font-size: 0.8rem;
-        font-weight: 500;
-        cursor: pointer;
+        display: none;
+        animation: shakeWarning 0.5s ease;
+    }
+    [data-theme="dark"] .mismatch-warning {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.4);
+        color: #F87171;
+    }
+    .mismatch-warning.show { display: block; }
+    .mismatch-warning i { margin-right: 0.5rem; font-size: 0.9rem; }
+    .mismatch-warning .emp-details {
+        font-size: 0.7rem;
+        opacity: 0.8;
+        margin-top: 0.25rem;
     }
 
-    /* ============================================
-       AUTO-FETCH INDICATOR STYLES
-    ============================================ */
-    .emp-id-wrapper {
-        position: relative;
+    @keyframes shakeWarning {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
     }
 
-    .emp-fetch-status {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 0.8rem;
-        pointer-events: none;
-        z-index: 5;
-    }
-
-    .emp-fetch-status.found {
+    /* Success/Valid state */
+    .employee-valid {
+        background: rgba(34, 197, 94, 0.05);
+        border: 2px solid rgba(34, 197, 94, 0.3);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        margin-top: 0.5rem;
         color: #22C55E;
+        font-size: 0.75rem;
+        display: none;
     }
-
-    .emp-fetch-status.not-found {
-        color: #F59E0B;
-    }
-
-    .emp-fetch-status.loading {
-        color: var(--accent);
-        animation: spin 0.8s linear infinite;
-    }
-
-    .field-auto-filled {
-        border-color: #22C55E !important;
-        background-color: rgba(34, 197, 94, 0.03) !important;
-    }
-
-    [data-theme="dark"] .field-auto-filled {
-        border-color: #34D399 !important;
-        background-color: rgba(52, 211, 153, 0.05) !important;
-    }
-
-    .auto-fill-badge {
-        display: inline-block;
-        font-size: 0.6rem;
-        padding: 2px 6px;
-        border-radius: 4px;
-        background: rgba(34, 197, 94, 0.15);
-        color: #22C55E;
-        margin-left: 4px;
-        font-weight: 500;
-    }
-
-    [data-theme="dark"] .auto-fill-badge {
-        background: rgba(52, 211, 153, 0.2);
+    [data-theme="dark"] .employee-valid {
+        background: rgba(52, 211, 153, 0.08);
+        border-color: rgba(52, 211, 153, 0.3);
         color: #34D399;
     }
+    .employee-valid.show { display: block; }
+    .employee-valid i { margin-right: 0.5rem; }
 
-    @keyframes spin {
-        0% { transform: translateY(-50%) rotate(0deg); }
-        100% { transform: translateY(-50%) rotate(360deg); }
-    }
-
-    /* File Input */
-    input[type="file"] {
-        background-color: var(--input-bg) !important;
-        color: var(--text-primary) !important;
+    /* File input styles */
+    input[type="file"] { 
+        background-color: var(--input-bg) !important; 
+        background: var(--input-bg) !important;
+        color: var(--text-primary) !important; 
         padding: 0.35rem !important;
+        border: 2px solid var(--border-color) !important;
+        border-radius: 8px !important;
+        width: 100%;
+    }
+    input[type="file"]::file-selector-button, 
+    input[type="file"]::-webkit-file-upload-button { 
+        background: var(--accent-gradient) !important; 
+        border: none !important; 
+        color: white !important; 
+        padding: 0.35rem 0.8rem !important; 
+        border-radius: 6px !important; 
+        cursor: pointer !important; 
+        font-size: 0.75rem !important; 
+        font-weight: 500 !important; 
+        margin-right: 0.75rem !important; 
     }
 
-    input[type="file"]::file-selector-button,
-    input[type="file"]::-webkit-file-upload-button {
-        background: var(--accent-gradient) !important;
-        border: none !important;
-        color: white !important;
-        padding: 0.35rem 0.8rem !important;
-        border-radius: 6px !important;
-        cursor: pointer !important;
-        font-size: 0.75rem !important;
-        font-weight: 500 !important;
-        margin-right: 0.75rem !important;
-    }
-
-    /* Dark Mode */
-    [data-theme="dark"] .form-control,
-    [data-theme="dark"] .form-select,
-    [data-theme="dark"] textarea,
-    [data-theme="dark"] input[type="text"],
-    [data-theme="dark"] input[type="email"],
-    [data-theme="dark"] input[type="tel"],
-    [data-theme="dark"] input[type="number"],
+    /* DARK THEME OVERRIDES */
+    [data-theme="dark"] .form-control, 
+    [data-theme="dark"] .form-select, 
+    [data-theme="dark"] textarea, 
+    [data-theme="dark"] input, 
     [data-theme="dark"] select {
-        background-color: rgba(255, 255, 255, 0.05) !important;
-        border-color: rgba(255, 255, 255, 0.1) !important;
+        background-color: rgba(255,255,255,0.05) !important;
+        background: rgba(255,255,255,0.05) !important;
+        border-color: rgba(255,255,255,0.1) !important;
         color: #E8EDF5 !important;
         -webkit-text-fill-color: #E8EDF5 !important;
     }
 
-    [data-theme="dark"] .form-control:focus,
-    [data-theme="dark"] .form-select:focus,
-    [data-theme="dark"] textarea:focus {
+    [data-theme="dark"] .form-control:focus, 
+    [data-theme="dark"] .form-select:focus, 
+    [data-theme="dark"] textarea:focus,
+    [data-theme="dark"] input:focus,
+    [data-theme="dark"] select:focus {
         border-color: #60A5FA !important;
-        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2) !important;
-        background-color: rgba(255, 255, 255, 0.08) !important;
-    }
-
-    [data-theme="dark"] .form-select option,
-    [data-theme="dark"] select option {
-        background: #1a2440 !important;
+        box-shadow: 0 0 0 3px rgba(96,165,250,0.2) !important;
+        background-color: rgba(255,255,255,0.08) !important;
+        background: rgba(255,255,255,0.08) !important;
         color: #E8EDF5 !important;
-    }
-
-    [data-theme="dark"] .form-check-input {
-        background-color: rgba(255, 255, 255, 0.08) !important;
-        border-color: rgba(255, 255, 255, 0.2) !important;
-    }
-
-    [data-theme="dark"] .form-check-input:checked {
-        background-color: #60A5FA !important;
-        border-color: #60A5FA !important;
-    }
-
-    [data-theme="dark"] .form-check-label {
-        color: #E8EDF5 !important;
-    }
-
-    [data-theme="dark"] input:-webkit-autofill,
-    [data-theme="dark"] textarea:-webkit-autofill,
-    [data-theme="dark"] select:-webkit-autofill {
         -webkit-text-fill-color: #E8EDF5 !important;
-        -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.05) inset !important;
     }
 
-    /* Light Mode */
-    :root:not([data-theme="dark"]) .form-control,
-    :root:not([data-theme="dark"]) .form-select,
-    :root:not([data-theme="dark"]) textarea,
-    :root:not([data-theme="dark"]) input[type="text"],
-    :root:not([data-theme="dark"]) input[type="email"],
-    :root:not([data-theme="dark"]) input[type="tel"],
-    :root:not([data-theme="dark"]) input[type="number"],
+    [data-theme="dark"] .form-select option, 
+    [data-theme="dark"] select option { 
+        background: #1a2440 !important; 
+        color: #E8EDF5 !important; 
+        background-color: #1a2440 !important;
+    }
+
+    [data-theme="dark"] .form-check-input { 
+        background-color: rgba(255,255,255,0.08) !important; 
+        border-color: rgba(255,255,255,0.2) !important; 
+    }
+    [data-theme="dark"] .form-check-input:checked { 
+        background-color: #60A5FA !important; 
+        border-color: #60A5FA !important; 
+    }
+    [data-theme="dark"] .form-check-label { color: #E8EDF5 !important; }
+
+    /* LIGHT THEME OVERRIDES */
+    :root:not([data-theme="dark"]) .form-control, 
+    :root:not([data-theme="dark"]) .form-select, 
+    :root:not([data-theme="dark"]) textarea, 
+    :root:not([data-theme="dark"]) input, 
     :root:not([data-theme="dark"]) select {
         background-color: #F5F8FF !important;
+        background: #F5F8FF !important;
         border-color: #DCE3F0 !important;
         color: #1A2A6C !important;
         -webkit-text-fill-color: #1A2A6C !important;
     }
 
-    :root:not([data-theme="dark"]) .form-control:focus,
-    :root:not([data-theme="dark"]) .form-select:focus,
-    :root:not([data-theme="dark"]) textarea:focus {
+    :root:not([data-theme="dark"]) .form-control:focus, 
+    :root:not([data-theme="dark"]) .form-select:focus, 
+    :root:not([data-theme="dark"]) textarea:focus,
+    :root:not([data-theme="dark"]) input:focus,
+    :root:not([data-theme="dark"]) select:focus {
         border-color: #3B82F6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
         background-color: #EEF2FF !important;
-    }
-
-    :root:not([data-theme="dark"]) .form-select option,
-    :root:not([data-theme="dark"]) select option {
-        background: #FFFFFF !important;
+        background: #EEF2FF !important;
         color: #1A2A6C !important;
-    }
-
-    :root:not([data-theme="dark"]) .form-check-input {
-        background-color: #FFFFFF !important;
-        border-color: #DCE3F0 !important;
-    }
-
-    :root:not([data-theme="dark"]) .form-check-input:checked {
-        background-color: #3B82F6 !important;
-        border-color: #3B82F6 !important;
-    }
-
-    :root:not([data-theme="dark"]) .form-check-label {
-        color: #1A2A6C !important;
-    }
-
-    :root:not([data-theme="dark"]) input:-webkit-autofill,
-    :root:not([data-theme="dark"]) textarea:-webkit-autofill,
-    :root:not([data-theme="dark"]) select:-webkit-autofill {
         -webkit-text-fill-color: #1A2A6C !important;
-        -webkit-box-shadow: 0 0 0px 1000px #F5F8FF inset !important;
     }
 
-    /* Buttons */
-    .btn-submit {
-        background: var(--accent-gradient);
-        color: white;
-        border: none;
-        border-radius: 50px;
-        padding: 0.5rem 2rem;
-        font-weight: 600;
-        font-size: 0.85rem;
-        transition: all 0.3s ease;
+    :root:not([data-theme="dark"]) .form-select option, 
+    :root:not([data-theme="dark"]) select option { 
+        background: #FFFFFF !important; 
+        color: #1A2A6C !important;
+        background-color: #FFFFFF !important;
     }
 
-    .btn-submit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
-        color: white;
+    :root:not([data-theme="dark"]) .form-check-input { 
+        background-color: #FFFFFF !important; 
+        border-color: #DCE3F0 !important; 
     }
-
-    .btn-cancel {
-        border: 2px solid var(--border-color);
-        color: var(--text-secondary);
-        border-radius: 50px;
-        padding: 0.5rem 1.5rem;
-        font-weight: 500;
-        font-size: 0.85rem;
-        background: transparent;
-        transition: all 0.3s ease;
+    :root:not([data-theme="dark"]) .form-check-input:checked { 
+        background-color: #3B82F6 !important; 
+        border-color: #3B82F6 !important; 
     }
+    :root:not([data-theme="dark"]) .form-check-label { color: #1A2A6C !important; }
 
-    .btn-cancel:hover {
-        background: var(--border-color);
-        color: var(--text-primary);
-    }
-
-    .char-counter {
-        font-size: 0.65rem;
-        color: var(--text-muted);
-        text-align: right;
-        margin-top: 0.15rem;
-    }
-
-    .char-counter.warning { color: #F59E0B !important; }
-    .char-counter.danger { color: #EF4444 !important; }
-
-    .invalid-feedback {
-        font-size: 0.7rem;
-        color: #EF4444 !important;
-    }
-
-    .alert-danger {
-        background: rgba(239, 68, 68, 0.1) !important;
-        border: 1px solid rgba(239, 68, 68, 0.2) !important;
-        color: #EF4444 !important;
-    }
-
-    [data-theme="dark"] .alert-danger {
-        background: rgba(239, 68, 68, 0.15) !important;
-        border: 1px solid rgba(239, 68, 68, 0.3) !important;
-        color: #F87171 !important;
-    }
-
-    /* Autofill */
+    /* CRITICAL: Fix for browser autofill */
     input:-webkit-autofill,
     input:-webkit-autofill:hover,
     input:-webkit-autofill:focus,
@@ -393,23 +288,82 @@
     select:-webkit-autofill {
         -webkit-text-fill-color: var(--text-primary) !important;
         -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
+        box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
         caret-color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
+        background-color: var(--input-bg) !important;
+        background: var(--input-bg) !important;
+        transition: background-color 5000s ease-in-out 0s !important;
     }
 
-    @media (max-width: 768px) {
-        .form-section { padding: 0.75rem; }
-        .form-control, .form-select, textarea { padding: 0.4rem 0.65rem !important; font-size: 0.78rem !important; }
-        .btn-submit, .btn-cancel { width: 100%; justify-content: center; }
-        .form-section-title { font-size: 0.8rem; }
-        .radio-group { gap: 0.5rem; }
+    [data-theme="dark"] input:-webkit-autofill,
+    [data-theme="dark"] input:-webkit-autofill:hover,
+    [data-theme="dark"] input:-webkit-autofill:focus,
+    [data-theme="dark"] textarea:-webkit-autofill,
+    [data-theme="dark"] select:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0px 1000px rgba(255,255,255,0.05) inset !important;
+        box-shadow: 0 0 0px 1000px rgba(255,255,255,0.05) inset !important;
+        background-color: rgba(255,255,255,0.05) !important;
+        background: rgba(255,255,255,0.05) !important;
+        -webkit-text-fill-color: #E8EDF5 !important;
     }
 
-    @media (max-width: 576px) {
-        .card-body { padding: 0.75rem !important; }
-        .form-section { padding: 0.6rem; margin-bottom: 0.6rem; }
-        .form-label { font-size: 0.7rem; }
-        .form-control, .form-select, textarea { font-size: 0.75rem !important; padding: 0.35rem 0.55rem !important; border-radius: 6px !important; }
+    :root:not([data-theme="dark"]) input:-webkit-autofill,
+    :root:not([data-theme="dark"]) input:-webkit-autofill:hover,
+    :root:not([data-theme="dark"]) input:-webkit-autofill:focus,
+    :root:not([data-theme="dark"]) textarea:-webkit-autofill,
+    :root:not([data-theme="dark"]) select:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0px 1000px #F5F8FF inset !important;
+        box-shadow: 0 0 0px 1000px #F5F8FF inset !important;
+        background-color: #F5F8FF !important;
+        background: #F5F8FF !important;
+        -webkit-text-fill-color: #1A2A6C !important;
+    }
+
+    /* Buttons */
+    .btn-submit { background: var(--accent-gradient); color: white; border: none; border-radius: 50px; padding: 0.5rem 2rem; font-weight: 600; font-size: 0.85rem; transition: all 0.3s ease; }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.3); color: white; }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-cancel { border: 2px solid var(--border-color); color: var(--text-secondary); border-radius: 50px; padding: 0.5rem 1.5rem; font-weight: 500; font-size: 0.85rem; background: transparent; transition: all 0.3s ease; }
+    .btn-cancel:hover { background: var(--border-color); color: var(--text-primary); }
+
+    /* Character counter */
+    .char-counter { font-size: 0.65rem; color: var(--text-muted); text-align: right; margin-top: 0.15rem; }
+    .char-counter.warning { color: #F59E0B !important; } 
+    .char-counter.danger { color: #EF4444 !important; }
+    .invalid-feedback { font-size: 0.7rem; color: #EF4444 !important; }
+    .alert-danger { background: rgba(239,68,68,0.1) !important; border: 1px solid rgba(239,68,68,0.2) !important; color: #EF4444 !important; }
+    [data-theme="dark"] .alert-danger { background: rgba(239,68,68,0.15) !important; border: 1px solid rgba(239,68,68,0.3) !important; color: #F87171 !important; }
+
+    /* Admin info banner */
+    .alert-info {
+        background: rgba(59,130,246,0.08) !important;
+        border-color: rgba(59,130,246,0.2) !important;
+        color: var(--accent-light) !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.8rem !important;
+    }
+    .alert-info .badge.bg-primary {
+        background: var(--accent-gradient) !important;
+        color: white !important;
+        font-size: 0.65rem !important;
+    }
+
+    /* Responsive */
+    @media (max-width:768px) { 
+        .form-section{padding:0.75rem} 
+        .form-control,.form-select,textarea{padding:0.4rem 0.65rem!important;font-size:0.78rem!important} 
+        .btn-submit,.btn-cancel{width:100%} 
+        .form-section-title{font-size:0.8rem} 
+        .radio-group{gap:0.5rem} 
+        .alert-info { font-size: 0.7rem !important; padding: 0.4rem 0.75rem !important; }
+    }
+    @media (max-width:576px) { 
+        .card-body{padding:0.75rem!important} 
+        .form-section{padding:0.6rem;margin-bottom:0.6rem} 
+        .form-label{font-size:0.7rem} 
+        .form-control,.form-select,textarea{font-size:0.75rem!important;padding:0.35rem 0.55rem!important;border-radius:6px!important} 
     }
 </style>
 {% endblock %}
@@ -418,36 +372,37 @@
 <div class="create-ticket-container">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
-            <h4 class="fw-bold mb-0" style="font-size: 1.1rem; color: var(--accent-light);">
-                <i class="fa-solid fa-plus-circle me-2" style="color: var(--accent);"></i>Create New Ticket
+            <h4 class="fw-bold mb-0" style="font-size:1.1rem;color:var(--accent-light);">
+                <i class="fa-solid fa-plus-circle me-2" style="color:var(--accent);"></i>Create New Ticket
             </h4>
-            <small style="color: var(--text-secondary); font-size: 0.75rem;">
+            <small style="color:var(--text-secondary);font-size:0.75rem;">
                 <i class="fa-regular fa-file-pen me-1"></i>Log a support ticket on behalf of an employee
             </small>
         </div>
-        <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-cancel">
-            <i class="fa-solid fa-arrow-left me-1"></i>Back
-        </a>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-cancel"><i class="fa-solid fa-arrow-left me-1"></i>Back</a>
+    </div>
+
+    <!-- Admin Info Banner -->
+    <div class="alert alert-info py-2 px-3 mb-3">
+        <i class="fa-solid fa-user-shield me-2"></i>
+        <strong>Admin Mode:</strong> You can create tickets for any employee across all units and departments.
+        <span class="badge bg-primary ms-2"><i class="fa-solid fa-check-circle me-1"></i>Full Access</span>
     </div>
 
     <div class="card panel-card">
         <div class="card-body p-3 p-md-4">
             <form method="POST" enctype="multipart/form-data" id="ticketForm">
                 {% csrf_token %}
-
                 {% if form.non_field_errors %}
-                <div class="alert alert-danger py-2 px-3 mb-3" style="font-size: 0.8rem; border-radius: 8px;">
+                <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.8rem;border-radius:8px;">
                     {% for error in form.non_field_errors %}
-                        <p class="mb-0"><i class="fa-solid fa-circle-exclamation me-1"></i>{{ error }}</p>
+                    <p class="mb-0"><i class="fa-solid fa-circle-exclamation me-1"></i>{{ error }}</p>
                     {% endfor %}
                 </div>
                 {% endif %}
 
-                <!-- Section 1: Ticket Source & Location -->
                 <div class="form-section">
-                    <div class="form-section-title">
-                        <i class="fa-solid fa-circle-1"></i>Ticket Source & Location
-                    </div>
+                    <div class="form-section-title"><i class="fa-solid fa-circle-1"></i>Ticket Source & Location</div>
                     <div class="row g-2">
                         <div class="col-md-4">
                             <label class="form-label">Created By *</label>
@@ -460,113 +415,133 @@
                                 {% endfor %}
                             </div>
                         </div>
-                        <div class="col-md-4" id="admin_reason_container" style="display: none;">
+                        <div class="col-md-4" id="admin_reason_container" style="display:none;">
                             <label class="form-label">Admin Reason *</label>
                             {{ form.admin_creation_reason }}
+                            <div class="char-counter">Why are you creating this ticket on behalf?</div>
                         </div>
                         <div class="col-md-4">
                             <label for="{{ form.unit.id_for_label }}" class="form-label">Unit / Plant *</label>
                             {{ form.unit }}
+                            {% if form.unit.errors %}<div class="text-danger small mt-1">{{ form.unit.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-4">
                             <label for="{{ form.department.id_for_label }}" class="form-label">Department *</label>
                             {{ form.department }}
-                            <div id="dept_loading" class="char-counter" style="display: none;">
+                            <div id="dept_loading" class="char-counter" style="display:none;text-align:left;">
                                 <i class="fa-solid fa-spinner fa-spin me-1"></i>Loading...
                             </div>
+                            {% if form.department.errors %}<div class="text-danger small mt-1">{{ form.department.errors }}</div>{% endif %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Section 2: Employee Details with Auto-Fetch -->
                 <div class="form-section">
-                    <div class="form-section-title">
-                        <i class="fa-solid fa-circle-2"></i>Employee Details
-                    </div>
+                    <div class="form-section-title"><i class="fa-solid fa-circle-2"></i>Employee Details</div>
                     <div class="row g-2">
                         <div class="col-md-3">
                             <label class="form-label">
-                                Employee ID *
-                                <span class="auto-fill-badge" id="autoFillBadge" style="display: none;">
+                                Employee ID * 
+                                <span class="auto-fill-badge" id="autoFillBadge" style="display:none;">
                                     <i class="fa-solid fa-magic me-1"></i>Auto-fill
+                                </span>
+                                <span class="badge bg-info text-white ms-1" id="validationBadge" style="display:none;font-size:0.55rem;padding:0.15rem 0.4rem;">
+                                    <i class="fa-solid fa-check-circle me-1"></i>Valid
                                 </span>
                             </label>
                             <div class="emp-id-wrapper">
                                 {{ form.employee_id }}
                                 <span class="emp-fetch-status" id="empFetchStatus"></span>
                             </div>
-                            <div id="empFetchMessage" class="char-counter" style="text-align: left; display: none;"></div>
+                            <div id="empFetchMessage" class="char-counter" style="text-align:left;display:none;"></div>
+                            
+                            <!-- Mismatch Warning -->
+                            <div class="mismatch-warning" id="mismatchWarning">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <span id="mismatchMessage">Employee belongs to a different department/unit.</span>
+                                <div class="emp-details" id="mismatchDetails"></div>
+                            </div>
+                            
+                            <!-- Valid Employee Message -->
+                            <div class="employee-valid" id="employeeValid">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span>Employee verified. Details auto-filled.</span>
+                            </div>
+                            
+                            {% if form.employee_id.errors %}<div class="text-danger small mt-1">{{ form.employee_id.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Employee Name *</label>
                             {{ form.employee_name }}
+                            {% if form.employee_name.errors %}<div class="text-danger small mt-1">{{ form.employee_name.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Mobile *</label>
                             {{ form.mobile }}
                             <div class="char-counter">10 digits, no spaces</div>
+                            {% if form.mobile.errors %}<div class="text-danger small mt-1">{{ form.mobile.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Email *</label>
                             {{ form.email }}
+                            {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Section 3: Issue Details -->
                 <div class="form-section">
-                    <div class="form-section-title">
-                        <i class="fa-solid fa-circle-3"></i>Issue Details
-                    </div>
+                    <div class="form-section-title"><i class="fa-solid fa-circle-3"></i>Issue Details</div>
                     <div class="row g-2">
                         <div class="col-md-4">
                             <label class="form-label">Screen Number / Module *</label>
                             {{ form.screen_number }}
                             <div class="char-counter" id="screen_counter">0 chars</div>
+                            {% if form.screen_number.errors %}<div class="text-danger small mt-1">{{ form.screen_number.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-8">
                             <label class="form-label">Subject / Issue Title *</label>
                             {{ form.subject }}
                             <div class="char-counter" id="subject_counter">0 / 150</div>
+                            {% if form.subject.errors %}<div class="text-danger small mt-1">{{ form.subject.errors }}</div>{% endif %}
                         </div>
                         <div class="col-12">
                             <label class="form-label">Description *</label>
                             {{ form.description }}
                             <div class="char-counter" id="desc_counter">0 chars (min 10)</div>
+                            {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Section 4: Classification & Attachment -->
                 <div class="form-section">
-                    <div class="form-section-title">
-                        <i class="fa-solid fa-circle-4"></i>Classification & Attachment
-                    </div>
+                    <div class="form-section-title"><i class="fa-solid fa-circle-4"></i>Classification & Attachment</div>
                     <div class="row g-2">
                         <div class="col-md-4">
                             <label class="form-label">Priority *</label>
                             {{ form.priority }}
+                            <div class="small text-muted" style="font-size:0.6rem;">
+                                <i class="fa-regular fa-circle-info me-1"></i>
+                                Critical: System down, High: Major issue, Medium: Minor issue, Low: Enhancement
+                            </div>
+                            {% if form.priority.errors %}<div class="text-danger small mt-1">{{ form.priority.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Error Type *</label>
                             {{ form.error_type }}
+                            {% if form.error_type.errors %}<div class="text-danger small mt-1">{{ form.error_type.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Attachment</label>
                             {{ form.attachment }}
-                            <div class="char-counter">Max 3MB (pdf, doc, img)</div>
+                            <div class="char-counter" style="text-align:left;">Max 3MB (pdf, doc, xls, png, jpg)</div>
+                            {% if form.attachment.errors %}<div class="text-danger small mt-1">{{ form.attachment.errors }}</div>{% endif %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
                 <div class="d-flex justify-content-end gap-2 mt-3">
-                    <a href="{% url 'admin_dashboard' %}" class="btn btn-cancel">
-                        <i class="fa-solid fa-times me-1"></i>Cancel
-                    </a>
-                    <button type="submit" class="btn btn-submit" id="submitBtn">
-                        <i class="fa-solid fa-paper-plane me-2"></i>Submit Ticket
-                    </button>
+                    <a href="{% url 'admin_dashboard' %}" class="btn btn-cancel"><i class="fa-solid fa-times me-1"></i>Cancel</a>
+                    <button type="submit" class="btn btn-submit" id="submitBtn"><i class="fa-solid fa-paper-plane me-2"></i>Submit Ticket</button>
                 </div>
             </form>
         </div>
@@ -577,275 +552,417 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ============================================
-        // EMPLOYEE AUTO-FETCH
-        // ============================================
-        const empIdInput = document.getElementById('id_employee_id');
-        const empNameInput = document.getElementById('id_employee_name');
-        const empMobileInput = document.getElementById('id_mobile');
-        const empEmailInput = document.getElementById('id_email');
-        const unitSelect = document.getElementById('id_unit');
-        const departmentSelect = document.getElementById('id_department');
-        const deptLoading = document.getElementById('dept_loading');
-        const empFetchStatus = document.getElementById('empFetchStatus');
-        const empFetchMessage = document.getElementById('empFetchMessage');
-        const autoFillBadge = document.getElementById('autoFillBadge');
-        
-        let fetchTimeout;
-        let isAutoFilled = false;
+        var empIdInput = document.getElementById('id_employee_id');
+        var empNameInput = document.getElementById('id_employee_name');
+        var empMobileInput = document.getElementById('id_mobile');
+        var empEmailInput = document.getElementById('id_email');
+        var unitSelect = document.getElementById('id_unit');
+        var departmentSelect = document.getElementById('id_department');
+        var deptLoading = document.getElementById('dept_loading');
+        var empFetchStatus = document.getElementById('empFetchStatus');
+        var empFetchMessage = document.getElementById('empFetchMessage');
+        var autoFillBadge = document.getElementById('autoFillBadge');
+        var mismatchWarning = document.getElementById('mismatchWarning');
+        var mismatchMessage = document.getElementById('mismatchMessage');
+        var mismatchDetails = document.getElementById('mismatchDetails');
+        var employeeValid = document.getElementById('employeeValid');
+        var validationBadge = document.getElementById('validationBadge');
+        var fetchTimeout, isAutoFilled = false;
+        var employeeMismatch = false;
+        var employeeValidated = false;
 
-        function showFetchStatus(status, message = '') {
+        function showFetchStatus(status, message, details) {
+            message = message || '';
+            details = details || '';
             if (!empFetchStatus || !empFetchMessage) return;
-            
             empFetchStatus.className = 'emp-fetch-status';
             empFetchMessage.style.display = 'none';
+            mismatchWarning.classList.remove('show');
+            employeeValid.classList.remove('show');
+            validationBadge.style.display = 'none';
             
             if (status === 'loading') {
                 empFetchStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                 empFetchStatus.classList.add('loading');
-                empFetchMessage.style.display = 'none';
+                employeeMismatch = false;
+                employeeValidated = false;
             } else if (status === 'found') {
+                // VALID: Employee found and belongs to the selected unit/department
+                employeeMismatch = false;
+                employeeValidated = true;
                 empFetchStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
                 empFetchStatus.classList.add('found');
-                empFetchMessage.textContent = message;
+                empFetchMessage.textContent = '✅ ' + message;
                 empFetchMessage.style.color = '#22C55E';
                 empFetchMessage.style.display = 'block';
-                autoFillBadge.style.display = 'inline-block';
-            } else if (status === 'not-found') {
-                empFetchStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+                if (autoFillBadge) autoFillBadge.style.display = 'inline-block';
+                if (validationBadge) {
+                    validationBadge.style.display = 'inline-block';
+                    validationBadge.className = 'badge bg-success text-white ms-1';
+                    validationBadge.innerHTML = '<i class="fa-solid fa-check-circle me-1"></i>Valid';
+                }
+                employeeValid.classList.add('show');
+                employeeValid.innerHTML = '<i class="fa-solid fa-circle-check"></i> Employee verified. Details auto-filled.';
+                mismatchWarning.classList.remove('show');
+            } else if (status === 'found-mismatch') {
+                // INVALID: Employee found but belongs to different unit/department
+                employeeMismatch = true;
+                employeeValidated = false;
+                empFetchStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
                 empFetchStatus.classList.add('not-found');
-                empFetchMessage.textContent = message;
-                empFetchMessage.style.color = '#F59E0B';
+                empFetchMessage.textContent = '⚠️ ' + message;
+                empFetchMessage.style.color = '#EF4444';
                 empFetchMessage.style.display = 'block';
-                autoFillBadge.style.display = 'none';
+                if (autoFillBadge) autoFillBadge.style.display = 'none';
+                if (validationBadge) {
+                    validationBadge.style.display = 'inline-block';
+                    validationBadge.className = 'badge bg-danger text-white ms-1';
+                    validationBadge.innerHTML = '<i class="fa-solid fa-times-circle me-1"></i>Mismatch';
+                }
+                mismatchWarning.classList.add('show');
+                mismatchMessage.textContent = message;
+                if (details) {
+                    mismatchDetails.textContent = details;
+                } else {
+                    mismatchDetails.textContent = 'As an Admin, you can manually select the correct Unit and Department, or enter a valid Employee ID.';
+                }
+                employeeValid.classList.remove('show');
+                // DO NOT auto-fill when mismatch occurs
+                clearAutoFilledFields();
+            } else if (status === 'not-found') {
+                // INVALID: Employee not found
+                employeeMismatch = true;
+                employeeValidated = false;
+                empFetchStatus.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                empFetchStatus.classList.add('not-found');
+                empFetchMessage.textContent = '❌ ' + message;
+                empFetchMessage.style.color = '#EF4444';
+                empFetchMessage.style.display = 'block';
+                if (autoFillBadge) autoFillBadge.style.display = 'none';
+                if (validationBadge) {
+                    validationBadge.style.display = 'inline-block';
+                    validationBadge.className = 'badge bg-danger text-white ms-1';
+                    validationBadge.innerHTML = '<i class="fa-solid fa-times-circle me-1"></i>Not Found';
+                }
+                mismatchWarning.classList.remove('show');
+                employeeValid.classList.remove('show');
+                clearAutoFilledFields();
             }
         }
 
         function markFieldAutoFilled(field, isAuto) {
             if (!field) return;
-            if (isAuto) {
-                field.classList.add('field-auto-filled');
-                field.setAttribute('data-auto-filled', 'true');
-            } else {
-                field.classList.remove('field-auto-filled');
-                field.removeAttribute('data-auto-filled');
+            if (isAuto) { 
+                field.classList.add('field-auto-filled'); 
+                field.setAttribute('data-auto-filled', 'true'); 
+            } else { 
+                field.classList.remove('field-auto-filled'); 
+                field.removeAttribute('data-auto-filled'); 
             }
         }
 
         function clearFetchStatus() {
-            if (empFetchStatus) {
-                empFetchStatus.className = 'emp-fetch-status';
-                empFetchStatus.innerHTML = '';
-            }
-            if (empFetchMessage) {
-                empFetchMessage.style.display = 'none';
-                empFetchMessage.textContent = '';
-            }
+            if (empFetchStatus) { empFetchStatus.className = 'emp-fetch-status'; empFetchStatus.innerHTML = ''; }
+            if (empFetchMessage) { empFetchMessage.style.display = 'none'; empFetchMessage.textContent = ''; }
             if (autoFillBadge) autoFillBadge.style.display = 'none';
+            if (validationBadge) validationBadge.style.display = 'none';
+            mismatchWarning.classList.remove('show');
+            employeeValid.classList.remove('show');
+            employeeMismatch = false;
+            employeeValidated = false;
         }
 
         function autoFillEmployeeDetails(data) {
-            if (data.employee_name) {
-                empNameInput.value = data.employee_name;
-                markFieldAutoFilled(empNameInput, true);
+            if (!data) return;
+            // Only auto-fill if employee is valid (no mismatch)
+            if (employeeMismatch) {
+                return;
             }
-            if (data.mobile) {
-                empMobileInput.value = data.mobile;
-                markFieldAutoFilled(empMobileInput, true);
+            if (data.employee_name) { 
+                empNameInput.value = data.employee_name; 
+                markFieldAutoFilled(empNameInput, true); 
             }
-            if (data.email) {
-                empEmailInput.value = data.email;
-                markFieldAutoFilled(empEmailInput, true);
+            if (data.mobile) { 
+                empMobileInput.value = data.mobile; 
+                markFieldAutoFilled(empMobileInput, true); 
             }
-            if (data.unit_id && unitSelect) {
-                unitSelect.value = data.unit_id;
-                markFieldAutoFilled(unitSelect, true);
-                loadDepartments(data.unit_id, data.department_id);
+            if (data.email) { 
+                empEmailInput.value = data.email; 
+                markFieldAutoFilled(empEmailInput, true); 
+            }
+            if (data.unit_id && unitSelect) { 
+                unitSelect.value = data.unit_id; 
+                markFieldAutoFilled(unitSelect, true); 
+                loadDepartments(data.unit_id, data.department_id); 
             }
             isAutoFilled = true;
         }
 
         function fetchEmployeeDetails(employeeId) {
-            if (!employeeId || employeeId.length < 2) {
-                clearFetchStatus();
-                return;
+            if (!employeeId || employeeId.length < 2) { 
+                clearFetchStatus(); 
+                clearAutoFilledFields(); 
+                employeeMismatch = false; 
+                return; 
             }
-
             showFetchStatus('loading');
-
-            fetch(`/ajax/get-employee/?employee_id=${encodeURIComponent(employeeId)}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            var url = '/ajax/get-employee/?employee_id=' + encodeURIComponent(employeeId);
+            
+            fetch(url, { 
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest', 
+                    'Accept': 'application/json' 
+                } 
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
                 if (data.found) {
-                    showFetchStatus('found', 'Employee found! Details auto-filled.');
+                    // Employee found and belongs to the correct unit/department
+                    var details = '';
+                    if (data.employee) {
+                        details = 'Unit: ' + (data.employee.unit_code || 'N/A') + ' | Department: ' + (data.employee.department_name || 'N/A');
+                    }
+                    showFetchStatus('found', 'Employee verified!', details);
                     autoFillEmployeeDetails(data.employee);
+                } else if (data.mismatch) {
+                    // Employee found but belongs to different department/unit
+                    var details = '';
+                    if (data.employee) {
+                        details = 'Employee belongs to: Unit: ' + (data.employee.unit_code || 'N/A') + ' | Department: ' + (data.employee.department_name || 'N/A');
+                    }
+                    showFetchStatus('found-mismatch', data.message || 'Employee belongs to different department/unit', details);
+                    // DO NOT auto-fill details when there's a mismatch
+                    clearAutoFilledFields();
                 } else {
-                    showFetchStatus('not-found', data.message || 'Employee not found. Please fill manually.');
+                    showFetchStatus('not-found', data.message || 'Employee not found.');
                     clearAutoFilledFields();
                 }
             })
-            .catch(err => {
-                console.error('Error:', err);
-                showFetchStatus('not-found', 'Error fetching employee. Please fill manually.');
-                clearAutoFilledFields();
+            .catch(function(err) { 
+                console.error('Error:', err); 
+                showFetchStatus('not-found', 'Error fetching employee. Please try again.'); 
+                clearAutoFilledFields(); 
             });
         }
 
         function clearAutoFilledFields() {
-            [empNameInput, empMobileInput, empEmailInput].forEach(field => {
-                if (field && field.getAttribute('data-auto-filled') === 'true') {
-                    field.value = '';
-                    markFieldAutoFilled(field, false);
+            [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
+                if (field && field.getAttribute('data-auto-filled') === 'true') { 
+                    field.value = ''; 
+                    markFieldAutoFilled(field, false); 
                 }
             });
-            if (unitSelect && unitSelect.getAttribute('data-auto-filled') === 'true') {
-                unitSelect.value = '';
-                markFieldAutoFilled(unitSelect, false);
+            if (unitSelect && unitSelect.getAttribute('data-auto-filled') === 'true') { 
+                unitSelect.value = ''; 
+                markFieldAutoFilled(unitSelect, false); 
+            }
+            if (departmentSelect && departmentSelect.getAttribute('data-auto-filled') === 'true') { 
+                departmentSelect.value = ''; 
+                markFieldAutoFilled(departmentSelect, false); 
             }
             isAutoFilled = false;
         }
 
+        // Employee ID input events
         if (empIdInput) {
             empIdInput.addEventListener('input', function() {
                 clearTimeout(fetchTimeout);
-                const value = this.value.trim();
-                
-                if (value.length >= 2) {
-                    fetchTimeout = setTimeout(() => fetchEmployeeDetails(value), 500);
-                } else {
-                    clearFetchStatus();
-                    clearAutoFilledFields();
+                var value = this.value.trim();
+                if (value.length >= 2) { 
+                    fetchTimeout = setTimeout(function() { fetchEmployeeDetails(value); }, 500); 
+                } else { 
+                    clearFetchStatus(); 
+                    clearAutoFilledFields(); 
+                    employeeMismatch = false; 
                 }
             });
-
+            
             empIdInput.addEventListener('blur', function() {
-                const value = this.value.trim();
-                if (value.length >= 2 && !isAutoFilled) {
-                    fetchEmployeeDetails(value);
+                var value = this.value.trim();
+                if (value.length >= 2 && !isAutoFilled && !employeeValidated) { 
+                    fetchEmployeeDetails(value); 
                 }
+            });
+            
+            // Also trigger on paste
+            empIdInput.addEventListener('paste', function() {
+                setTimeout(function() {
+                    var value = empIdInput.value.trim();
+                    if (value.length >= 2) {
+                        fetchEmployeeDetails(value);
+                    }
+                }, 100);
             });
         }
 
-        [empNameInput, empMobileInput, empEmailInput].forEach(field => {
-            if (field) {
-                field.addEventListener('input', function() {
-                    markFieldAutoFilled(this, false);
-                });
+        // Clear auto-fill status when user manually changes auto-filled fields
+        [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
+            if (field) { 
+                field.addEventListener('input', function() { 
+                    if (this.getAttribute('data-auto-filled') === 'true') {
+                        markFieldAutoFilled(this, false);
+                        // If user changes auto-filled fields, re-validate
+                        employeeValidated = false;
+                        if (validationBadge) {
+                            validationBadge.style.display = 'none';
+                        }
+                        employeeValid.classList.remove('show');
+                    }
+                }); 
             }
         });
-
-        if (unitSelect) {
-            unitSelect.addEventListener('change', function() {
+        
+        if (unitSelect) { 
+            unitSelect.addEventListener('change', function() { 
                 markFieldAutoFilled(this, false);
-            });
+                // Reset employee validation when unit changes
+                employeeValidated = false;
+                employeeMismatch = false;
+                clearFetchStatus();
+                clearAutoFilledFields();
+                if (empIdInput) empIdInput.value = '';
+            }); 
         }
 
-        // ============================================
-        // Department Loading
-        // ============================================
-        function getCsrfToken() {
-            return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
-        }
-
-        function loadDepartments(unitId, selectedDeptId = null) {
+        // Load departments function
+        function loadDepartments(unitId, selectedDeptId) {
+            selectedDeptId = selectedDeptId || null;
             if (!departmentSelect) return;
-            
-            if (!unitId) {
-                departmentSelect.innerHTML = '<option value="">Select Unit First</option>';
-                departmentSelect.disabled = true;
-                return;
+            if (!unitId) { 
+                departmentSelect.innerHTML = '<option value="">Select Unit First</option>'; 
+                departmentSelect.disabled = true; 
+                return; 
             }
             if (deptLoading) deptLoading.style.display = 'block';
-            departmentSelect.disabled = true;
+            departmentSelect.disabled = true; 
             departmentSelect.innerHTML = '<option value="">Loading...</option>';
-
-            fetch(`/ajax/get-departments/?unit_id=${unitId}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCsrfToken() }
+            fetch('/ajax/get-departments/?unit_id=' + unitId, { 
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest', 
+                    'Accept': 'application/json' 
+                } 
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
                 departmentSelect.innerHTML = '<option value="">Select Department</option>';
-                if (data.departments?.length) {
-                    data.departments.forEach(d => {
-                        const opt = document.createElement('option');
-                        opt.value = d.id;
+                if (data.departments && data.departments.length) {
+                    data.departments.forEach(function(d) {
+                        var opt = document.createElement('option');
+                        opt.value = d.id; 
                         opt.textContent = d.name;
                         if (selectedDeptId && d.id == selectedDeptId) opt.selected = true;
                         departmentSelect.appendChild(opt);
                     });
                     departmentSelect.disabled = false;
                     if (selectedDeptId) markFieldAutoFilled(departmentSelect, true);
-                } else {
-                    departmentSelect.innerHTML += '<option value="">No departments found</option>';
+                } else { 
+                    departmentSelect.innerHTML += '<option value="">No departments available</option>'; 
                 }
                 if (deptLoading) deptLoading.style.display = 'none';
             })
-            .catch(err => {
-                console.error('Error:', err);
-                departmentSelect.innerHTML = '<option value="">Error loading</option>';
-                if (deptLoading) deptLoading.style.display = 'none';
+            .catch(function(err) { 
+                departmentSelect.innerHTML = '<option value="">Error loading departments</option>'; 
+                if (deptLoading) deptLoading.style.display = 'none'; 
             });
         }
 
-        if (unitSelect) {
-            unitSelect.addEventListener('change', function() { loadDepartments(this.value); });
-            if (unitSelect.value) loadDepartments(unitSelect.value, departmentSelect?.value);
+        if (unitSelect) { 
+            unitSelect.addEventListener('change', function() { 
+                loadDepartments(this.value); 
+            }); 
+            if (unitSelect.value) {
+                loadDepartments(unitSelect.value, departmentSelect ? departmentSelect.value : null);
+            }
         }
 
-        // Character Counters
-        function setupCounter(inputId, counterId, maxLen = null) {
-            const input = document.getElementById(inputId);
-            const counter = document.getElementById(counterId);
+        // Character counters
+        function setupCounter(inputId, counterId, maxLen) {
+            maxLen = maxLen || null;
+            var input = document.getElementById(inputId), counter = document.getElementById(counterId);
             if (!input || !counter) return;
-
             input.addEventListener('input', function() {
-                const count = this.value.length;
-                if (maxLen) {
-                    counter.textContent = `${count} / ${maxLen}`;
-                    counter.className = count > maxLen * 0.85 ? 'char-counter danger' : 'char-counter';
-                } else if (inputId === 'id_description') {
-                    counter.textContent = `${count} chars (min 10)`;
-                    counter.className = count < 10 ? 'char-counter danger' : 'char-counter';
-                } else {
-                    counter.textContent = `${count} chars`;
-                    counter.className = count > 100 ? 'char-counter warning' : 'char-counter';
+                var count = this.value.length;
+                if (maxLen) { 
+                    counter.textContent = count + ' / ' + maxLen; 
+                    counter.className = count > maxLen * 0.85 ? 'char-counter danger' : 'char-counter'; 
+                } else if (inputId === 'id_description') { 
+                    counter.textContent = count + ' chars (min 10)'; 
+                    counter.className = count < 10 ? 'char-counter danger' : 'char-counter'; 
+                } else { 
+                    counter.textContent = count + ' chars'; 
+                    counter.className = count > 100 ? 'char-counter warning' : 'char-counter'; 
                 }
             });
             input.dispatchEvent(new Event('input'));
         }
-
         setupCounter('id_screen_number', 'screen_counter');
         setupCounter('id_subject', 'subject_counter', 150);
         setupCounter('id_description', 'desc_counter');
 
-        // Admin Reason Toggle
-        const radios = document.querySelectorAll('input[name="created_by_role"]');
-        const reasonContainer = document.getElementById('admin_reason_container');
+        // Admin Reason toggle
+        var radios = document.querySelectorAll('input[name="created_by_role"]');
+        var reasonContainer = document.getElementById('admin_reason_container');
         if (radios.length && reasonContainer) {
             function toggleReason() {
-                const selected = document.querySelector('input[name="created_by_role"]:checked');
-                reasonContainer.style.display = selected?.value === 'Admin' ? 'block' : 'none';
+                var selected = document.querySelector('input[name="created_by_role"]:checked');
+                reasonContainer.style.display = (selected && selected.value === 'Admin') ? 'block' : 'none';
             }
-            radios.forEach(r => r.addEventListener('change', toggleReason));
+            radios.forEach(function(r) { r.addEventListener('change', toggleReason); });
             toggleReason();
         }
 
-        // Submit Loading
-        const form = document.getElementById('ticketForm');
-        const submitBtn = document.getElementById('submitBtn');
+        // Attachment validation
+        var att = document.getElementById('id_attachment');
+        if (att) { 
+            att.addEventListener('change', function() { 
+                var file = this.files[0]; 
+                if (!file) return; 
+                if (file.size > 3*1024*1024) { 
+                    alert('File size exceeds 3MB. Please select a smaller file.'); 
+                    this.value = ''; 
+                } else if (!/(\.pdf|\.doc|\.docx|\.xls|\.xlsx|\.png|\.jpg|\.jpeg)$/i.exec(file.name)) { 
+                    alert('Unsupported file type. Please upload PDF, DOC, XLS, PNG, or JPG files.'); 
+                    this.value = ''; 
+                } 
+            }); 
+        }
+
+        // Form submission - Strict validation
+        var form = document.getElementById('ticketForm');
+        var submitBtn = document.getElementById('submitBtn');
         if (form && submitBtn) {
-            form.addEventListener('submit', function() {
-                if (this.checkValidity()) {
-                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Submitting...';
-                    submitBtn.disabled = true;
-                    submitBtn.style.opacity = '0.7';
+            form.addEventListener('submit', function(e) {
+                // Check if employee mismatch exists
+                if (employeeMismatch) {
+                    e.preventDefault();
+                    alert('⚠️ Employee ID Mismatch!\n\nThe Employee ID you entered belongs to a different Unit/Department.\n\nAs an Admin, you have two options:\n1. Enter a valid Employee ID from the selected Unit/Department\n2. Manually select the correct Unit and Department for this employee');
+                    return false;
+                }
+                
+                // Check if employee is validated (found)
+                if (!employeeValidated) {
+                    var empId = empIdInput ? empIdInput.value.trim() : '';
+                    if (empId) {
+                        e.preventDefault();
+                        alert('⚠️ Employee validation pending.\n\nPlease wait for the employee validation to complete.\n\nIf this issue persists, try re-entering the Employee ID.');
+                        return false;
+                    }
+                    // If no employee ID, allow submission (admin can create ticket without employee)
+                }
+                
+                // All validations passed - submit
+                if (this.checkValidity()) { 
+                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Submitting...'; 
+                    submitBtn.disabled = true; 
+                    submitBtn.style.opacity = '0.7'; 
                 }
             });
         }
 
-        console.log('✅ Admin Create Ticket Page Ready with Auto-Fetch');
+        console.log('Admin Create Ticket Ready - Strict Validation Mode');
+        console.log('✅ Admin can create tickets for any employee across all units/departments');
+        console.log('⚠️ Mismatch warnings shown when employee belongs to different unit/department');
+        console.log('📝 Admin can proceed with manual selection if mismatch occurs');
     });
 </script>
 {% endblock %}

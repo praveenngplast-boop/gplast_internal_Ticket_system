@@ -1,7 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Employee Dashboard - GPLAST{% endblock %}
 
 {% block extra_head %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Centralized Charts -->
+<script src="{% static 'js/charts.js' %}"></script>
 <style>
     /* ============================================
        Dashboard Container Animation
@@ -10,6 +15,17 @@
         animation-name: fadeInUp;
         animation-duration: 0.6s;
         animation-timing-function: ease;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* ============================================
@@ -84,6 +100,32 @@
         transform: translateX(3px);
     }
 
+    /* FIXED: Close button styles */
+    .btn-close-custom {
+        background: var(--bg-secondary) !important;
+        border: 2px solid var(--border-color) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 50px !important;
+        padding: 0.4rem 1.5rem !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+        text-decoration: none !important;
+        display: inline-block !important;
+    }
+
+    .btn-close-custom:hover {
+        background: var(--bg-card) !important;
+        border-color: var(--accent) !important;
+        color: var(--text-primary) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.1) !important;
+    }
+
+    .btn-close-custom:active {
+        transform: scale(0.95) !important;
+    }
+
     .btn-outline-primary {
         color: var(--accent) !important;
         border: 2px solid var(--accent) !important;
@@ -103,7 +145,26 @@
     }
 
     /* ============================================
-       KPI Cards - Animated
+       Department Badge
+    ============================================ */
+    .dept-badge {
+        display: inline-block;
+        background: rgba(233, 69, 96, 0.1);
+        border: 1px solid rgba(233, 69, 96, 0.2);
+        border-radius: 50px;
+        padding: 0.25rem 1rem;
+        font-size: 0.75rem;
+        color: var(--accent-light);
+        font-weight: 600;
+    }
+
+    .dept-badge i {
+        margin-right: 0.4rem;
+        color: var(--accent);
+    }
+
+    /* ============================================
+       KPI Cards - Animated with Click Effect
     ============================================ */
     .kpi-card {
         background: var(--bg-card) !important;
@@ -114,6 +175,7 @@
         position: relative;
         overflow: hidden;
         animation: cardSlideUp 0.5s ease;
+        cursor: pointer;
     }
 
     .kpi-card::before {
@@ -136,6 +198,24 @@
         transform: translateY(-5px) scale(1.02);
         box-shadow: 0 8px 40px rgba(233, 69, 96, 0.1);
         border-color: rgba(233, 69, 96, 0.25) !important;
+    }
+
+    .kpi-card:active {
+        transform: scale(0.95) !important;
+    }
+
+    .kpi-card .click-hint {
+        position: absolute;
+        bottom: 8px;
+        right: 12px;
+        font-size: 0.55rem;
+        color: var(--text-muted);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .kpi-card:hover .click-hint {
+        opacity: 0.7;
     }
 
     .kpi-card:nth-child(1) { animation-delay: 0.05s; }
@@ -205,7 +285,7 @@
     }
 
     /* ============================================
-       Panel Card Styles
+       Chart Cards - Animated
     ============================================ */
     .panel-card {
         background: var(--bg-card) !important;
@@ -216,6 +296,7 @@
         border-radius: 16px !important;
         overflow: hidden;
         animation: cardFadeIn 0.6s ease;
+        height: 100%;
     }
 
     .panel-card:nth-child(1) { animation-delay: 0.1s; }
@@ -250,8 +331,95 @@
         font-weight: 700 !important;
     }
 
+    .glass-header h6 {
+        color: var(--accent-light) !important;
+        font-weight: 700;
+        font-size: 0.85rem;
+        letter-spacing: 0.3px;
+    }
+
+    .card-body {
+        padding: 1rem;
+        background: transparent;
+    }
+
     /* ============================================
-       Table Styles - Dark Theme
+       Chart Container - Responsive
+    ============================================ */
+    .chart-container {
+        position: relative;
+        width: 100%;
+        min-height: 220px;
+        height: auto;
+        padding: 0.5rem;
+    }
+
+    .chart-container canvas {
+        max-width: 100%;
+        height: auto !important;
+        cursor: pointer;
+    }
+
+    /* ============================================
+       Chart Clickable Styles
+    ============================================ */
+    .chart-container {
+        position: relative;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .chart-container:hover {
+        background: rgba(233, 69, 96, 0.02);
+        box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.05);
+    }
+
+    .chart-container::after {
+        content: 'Click on chart segments to filter →';
+        position: absolute;
+        bottom: 8px;
+        right: 12px;
+        font-size: 0.55rem;
+        color: var(--text-muted);
+        opacity: 0.3;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .chart-container:hover::after {
+        opacity: 0.7;
+    }
+
+    .chart-container canvas:hover {
+        cursor: pointer;
+    }
+
+    /* Chart empty state */
+    .chart-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .chart-empty i {
+        font-size: 2.5rem;
+        color: var(--accent);
+        opacity: 0.3;
+        margin-bottom: 0.5rem;
+    }
+
+    .chart-empty p {
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    /* ============================================
+       Table Styles
     ============================================ */
     .table {
         color: var(--text-primary) !important;
@@ -303,15 +471,6 @@
         color: var(--text-primary) !important;
     }
 
-    .table-light {
-        background: transparent !important;
-    }
-
-    .table-light > th {
-        background: transparent !important;
-        color: var(--text-secondary) !important;
-    }
-
     /* ============================================
        Badge Styles
     ============================================ */
@@ -356,8 +515,54 @@
         color: white;
     }
 
+    .badge-priority {
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+    }
+
+    .badge-priority-critical {
+        background: #fc8181;
+        color: white;
+        animation: pulseCritical 2s ease-in-out infinite;
+        font-size: 0.55rem;
+        padding: 0.15rem 0.5rem;
+    }
+
+    @keyframes pulseCritical {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(252, 129, 129, 0.4); }
+        50% { box-shadow: 0 0 0 6px rgba(252, 129, 129, 0); }
+    }
+
+    .badge-priority-high {
+        background: #f6ad55;
+        color: #2d3748;
+    }
+
+    .badge-priority-medium {
+        background: #63b3ed;
+        color: #2d3748;
+    }
+
+    .badge-priority-low {
+        background: #a0aec0;
+        color: white;
+    }
+
+    .badge-priority i {
+        font-size: 0.4rem;
+    }
+
     /* ============================================
-       Contact Card - Theme
+       Contact Card
     ============================================ */
     .contact-card {
         background: var(--accent-gradient) !important;
@@ -405,7 +610,7 @@
     }
 
     /* ============================================
-       View Button - Compact
+       View Button
     ============================================ */
     .btn-view {
         padding: 0.2rem 0.8rem;
@@ -437,6 +642,98 @@
     }
 
     /* ============================================
+       Empty State
+    ============================================ */
+    .empty-state i {
+        color: var(--accent);
+        opacity: 0.25;
+    }
+
+    .empty-state .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    /* ============================================
+       Drill Down Modal Styles
+    ============================================ */
+    .modal-content {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 16px !important;
+    }
+    .modal-header {
+        border-bottom: 1px solid var(--border-color) !important;
+        padding: 1rem 1.5rem;
+    }
+    .modal-body {
+        padding: 1.5rem;
+        color: var(--text-primary) !important;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    .modal-footer {
+        border-top: 1px solid var(--border-color) !important;
+        padding: 1rem 1.5rem;
+    }
+    .modal-title {
+        color: var(--accent-light) !important;
+        font-weight: 700 !important;
+    }
+    .modal-header .btn-close {
+        color: var(--text-primary) !important;
+    }
+
+    /* Responsive table in modal */
+    .modal-body .table {
+        font-size: 0.8rem;
+    }
+    .modal-body .table th {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: var(--text-secondary);
+        border-bottom: 2px solid rgba(233, 69, 96, 0.2);
+    }
+    .modal-body .table td {
+        padding: 0.4rem 0.3rem;
+        font-size: 0.75rem;
+        vertical-align: middle;
+    }
+
+    /* KPI Card Filter Badge */
+    .kpi-filter-badge {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        font-size: 0.5rem;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        background: rgba(233, 69, 96, 0.1);
+        color: var(--accent);
+        border: 1px solid rgba(233, 69, 96, 0.2);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+    .kpi-card:hover .kpi-filter-badge {
+        opacity: 1;
+    }
+
+    /* ============================================
+       Modal Loading Spinner
+    ============================================ */
+    .modal-loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    .modal-loading i {
+        font-size: 2rem;
+        color: var(--accent);
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    /* ============================================
        Responsive Styles
     ============================================ */
     @media (max-width: 992px) {
@@ -448,6 +745,14 @@
 
         .kpi-value {
             font-size: 1.5rem;
+        }
+        
+        .col-lg-4 {
+            margin-bottom: 1rem;
+        }
+        
+        .chart-container {
+            min-height: 180px;
         }
     }
 
@@ -508,6 +813,17 @@
         .contact-card h4 {
             font-size: 1.1rem;
         }
+
+        .chart-container {
+            min-height: 160px;
+        }
+
+        .chart-container::after {
+            content: 'Click segments →';
+            font-size: 0.45rem;
+            bottom: 4px;
+            right: 8px;
+        }
     }
 
     @media (max-width: 576px) {
@@ -566,6 +882,35 @@
         .contact-card .fs-5 {
             font-size: 0.9rem !important;
         }
+
+        .dept-badge {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.7rem;
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+        .modal-body .table {
+            font-size: 0.7rem;
+        }
+        .modal-body .table td {
+            font-size: 0.65rem;
+            padding: 0.3rem 0.2rem;
+        }
+
+        .modal-footer .btn-close-custom {
+            font-size: 0.75rem !important;
+            padding: 0.3rem 1rem !important;
+        }
+        .modal-footer .btn-primary-custom {
+            font-size: 0.75rem !important;
+            padding: 0.3rem 1rem !important;
+        }
+        
+        .chart-container {
+            min-height: 140px;
+        }
     }
 
     @media (max-width: 400px) {
@@ -584,6 +929,12 @@
 
         .kpi-card {
             padding: 0.4rem !important;
+        }
+
+        .kpi-card .click-hint {
+            font-size: 0.45rem;
+            bottom: 4px;
+            right: 8px;
         }
     }
 
@@ -623,15 +974,33 @@
     }
 
     /* ============================================
-       Empty State
+       Icon Pulse Animation
     ============================================ */
-    .empty-state i {
-        color: var(--accent);
-        opacity: 0.25;
+    @keyframes pulseIcon {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 1; }
     }
 
-    .empty-state .text-muted {
-        color: var(--text-muted) !important;
+    /* ============================================
+       Chart Loading Animation
+    ============================================ */
+    .chart-container canvas {
+        opacity: 0;
+        animation: chartFadeIn 0.8s ease forwards;
+    }
+
+    .chart-container canvas:nth-child(1) { animation-delay: 0.2s; }
+    .chart-container canvas:nth-child(2) { animation-delay: 0.3s; }
+
+    @keyframes chartFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
 </style>
 {% endblock %}
@@ -639,7 +1008,7 @@
 {% block content %}
 <div class="dashboard-container">
     <!-- Header Section -->
-    <div class="row mb-4 animate__animated animate__fadeInDown">
+    <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
                 <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--accent-light);">
@@ -654,6 +1023,18 @@
                         Active
                     </span>
                 </p>
+                {% if show_department_tickets and department_name and unit_name %}
+                <div class="mt-2">
+                    <span class="dept-badge">
+                        <i class="fa-solid fa-building"></i>
+                        {{ unit_name }} - {{ department_name }}
+                    </span>
+                    <span class="dept-badge ms-2" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.2); color: #22C55E;">
+                        <i class="fa-solid fa-users"></i>
+                        Department Dashboard
+                    </span>
+                </div>
+                {% endif %}
             </div>
             <a href="{% url 'create_ticket' %}" class="btn btn-primary-custom">
                 <i class="fa-solid fa-circle-plus me-2"></i>New Support Ticket
@@ -661,71 +1042,100 @@
         </div>
     </div>
 
-    <!-- KPI Cards Section -->
+    <!-- Department Tickets KPI Section -->
+    <div class="row g-3 mb-3">
+        <div class="col-12">
+            <h6 class="fw-bold mb-2" style="color: var(--accent-light); font-size: 0.8rem;">
+                <i class="fa-solid fa-building me-2" style="color: var(--accent);"></i>
+                {% if show_department_tickets %}
+                    Department Tickets Dashboard
+                    <span class="badge rounded-pill ms-2" style="background: rgba(59,130,246,0.15); color: var(--accent); font-size: 0.6rem;">
+                        {{ unit_name }} - {{ department_name }}
+                    </span>
+                {% else %}
+                    My Tickets Dashboard
+                {% endif %}
+            </h6>
+        </div>
+    </div>
+
+    <!-- KPI Cards Section with Drill Down -->
     <div class="row g-3 mb-4">
         <!-- Total Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card p-3 h-100">
+            <div class="card kpi-card p-3 h-100" data-status="all" onclick="drillDownTickets('all')">
                 <div class="kpi-value text-secondary">{{ kpis.total }}</div>
                 <div class="kpi-label">
                     <i class="fa-regular fa-circle-check me-1" style="color: var(--accent);"></i>
                     Total Tickets
                 </div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View All</span>
             </div>
         </div>
         <!-- Open Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-open p-3 h-100">
+            <div class="card kpi-card kpi-open p-3 h-100" data-status="Open" onclick="drillDownTickets('Open')">
                 <div class="kpi-value text-primary">{{ kpis.open }}</div>
                 <div class="kpi-label">
                     <i class="fa-regular fa-circle me-1" style="color: var(--status-open);"></i>
                     Open
                 </div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Open</span>
             </div>
         </div>
         <!-- Assigned Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-assigned p-3 h-100">
+            <div class="card kpi-card kpi-assigned p-3 h-100" data-status="Assigned" onclick="drillDownTickets('Assigned')">
                 <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
                 <div class="kpi-label">
                     <i class="fa-solid fa-user-check me-1" style="color: var(--status-assigned);"></i>
                     Assigned
                 </div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Assigned</span>
             </div>
         </div>
         <!-- Hold Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-hold p-3 h-100">
+            <div class="card kpi-card kpi-hold p-3 h-100" data-status="Hold" onclick="drillDownTickets('Hold')">
                 <div class="kpi-value" style="color: var(--status-hold);">{{ kpis.hold }}</div>
                 <div class="kpi-label">
                     <i class="fa-solid fa-pause me-1" style="color: var(--status-hold);"></i>
                     Hold
                 </div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Hold</span>
             </div>
         </div>
         <!-- Escalated Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-escalated p-3 h-100">
+            <div class="card kpi-card kpi-escalated p-3 h-100" data-status="Escalated" onclick="drillDownTickets('Escalated')">
                 <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
                 <div class="kpi-label">
                     <i class="fa-solid fa-cloud-arrow-up me-1" style="color: var(--status-escalated);"></i>
                     Escalated
                 </div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Escalated</span>
             </div>
         </div>
         <!-- Closed Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-closed p-3 h-100">
+            <div class="card kpi-card kpi-closed p-3 h-100" data-status="Closed" onclick="drillDownTickets('Closed')">
                 <div class="kpi-value text-success">{{ kpis.closed }}</div>
                 <div class="kpi-label">
                     <i class="fa-solid fa-circle-check me-1" style="color: var(--status-closed);"></i>
                     Closed
                 </div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Closed</span>
             </div>
         </div>
         <!-- Critical Priority Tickets -->
         <div class="col-12 mt-3">
-            <div class="card kpi-card kpi-critical p-3">
+            <div class="card kpi-card kpi-critical p-3" data-status="Critical" onclick="drillDownTickets('Critical')">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="kpi-value text-danger">{{ kpis.critical }}</div>
@@ -735,6 +1145,59 @@
                         </div>
                     </div>
                     <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50" style="animation: pulseIcon 2s ease-in-out infinite;"></i>
+                </div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Critical</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section - Department Status & Priority Distribution -->
+    <div class="row g-4 mb-4">
+        <!-- Chart 1: Department Status Distribution -->
+        <div class="col-md-6">
+            <div class="card panel-card h-100">
+                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">
+                        <i class="fa-solid fa-chart-pie me-2" style="color: var(--accent);"></i>
+                        Department Ticket Status
+                    </h6>
+                    <a href="{% url 'my_tickets' %}" class="btn btn-sm btn-outline-primary rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" id="deptStatusChartContainer">
+                        <canvas id="deptStatusChart"></canvas>
+                        <div id="deptStatusEmpty" class="chart-empty" style="display:none;">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            <p>No status data available</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 2: Department Priority Distribution -->
+        <div class="col-md-6">
+            <div class="card panel-card h-100">
+                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">
+                        <i class="fa-solid fa-flag me-2" style="color: var(--accent);"></i>
+                        Department Priority Distribution
+                    </h6>
+                    <a href="{% url 'my_tickets' %}" class="btn btn-sm btn-outline-primary rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" id="deptPriorityChartContainer">
+                        <canvas id="deptPriorityChart"></canvas>
+                        <div id="deptPriorityEmpty" class="chart-empty" style="display:none;">
+                            <i class="fa-solid fa-flag"></i>
+                            <p>No priority data available</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -747,7 +1210,12 @@
             <div class="card panel-card">
                 <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="fw-bold mb-0" style="color: var(--accent-light);">
-                        <i class="fa-solid fa-clock-rotate-left me-2" style="color: var(--accent);"></i>Latest Tickets
+                        <i class="fa-solid fa-clock-rotate-left me-2" style="color: var(--accent);"></i>
+                        {% if show_department_tickets %}
+                            Recent Department Tickets
+                        {% else %}
+                            Recent Tickets
+                        {% endif %}
                     </h5>
                     <a href="{% url 'my_tickets' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
                         View All <i class="fa-solid fa-arrow-right ms-1"></i>
@@ -798,7 +1266,7 @@
                                         <td colspan="5" class="text-center py-4">
                                             <div class="empty-state">
                                                 <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--accent);"></i>
-                                                <p style="color: var(--text-muted);">No tickets found. Click "New Support Ticket" to raise one.</p>
+                                                <p style="color: var(--text-muted);">No tickets found in your department.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -816,7 +1284,7 @@
                 <div class="card-body p-4 text-center">
                     <i class="fa-solid fa-headset fa-3x mb-3 text-white-50"></i>
                     <h4 class="fw-bold mb-1">Need Help?</h4>
-                    <p class="small text-white-50 mb-4">contact our internal ERP support helpdesk </p>
+                    <p class="small text-white-50 mb-4">contact our internal ERP support helpdesk</p>
                     
                     <hr class="my-3">
                     
@@ -853,30 +1321,80 @@
     </div>
 </div>
 
-<!-- Add keyframe for icon pulse -->
-<style>
-    @keyframes pulseIcon {
-        0%, 100% { transform: scale(1); opacity: 0.5; }
-        50% { transform: scale(1.2); opacity: 1; }
-    }
-</style>
+<!-- ============================================
+     DRILL DOWN MODAL - FIXED CLOSE BUTTON
+============================================ -->
+<div class="modal fade" id="drillDownModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="drillDownModalTitle">
+                    <i class="fa-solid fa-list-ul me-2" style="color: var(--accent);"></i>
+                    Tickets - <span id="drillDownStatusLabel">All</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="drillDownModalBody">
+                <div class="modal-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <p>Loading tickets...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark me-1"></i>Close
+                </button>
+                <a href="{% url 'my_tickets' %}" class="btn btn-primary-custom rounded-pill px-4" id="drillDownViewAllBtn">
+                    <i class="fa-solid fa-arrow-right me-1"></i>View All in My Tickets
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================
+     CHART DATA - Pass from Django view
+============================================ -->
+{{ charts_data|json_script:"charts-data" }}
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Animate KPI values on load
+        // ============================================
+        // LOAD CHART DATA
+        // ============================================
+        let chartsData = {};
+        try {
+            const dataElement = document.getElementById('charts-data');
+            if (dataElement) {
+                chartsData = JSON.parse(dataElement.textContent);
+                console.log('📊 Chart data loaded:', chartsData);
+            } else {
+                console.warn('⚠️ No charts-data element found');
+                return;
+            }
+        } catch (e) {
+            console.error('❌ Error parsing chart data:', e);
+            return;
+        }
+
+        // ============================================
+        // ANIMATE KPI VALUES ON LOAD
+        // ============================================
         const kpiValues = document.querySelectorAll('.kpi-value');
         kpiValues.forEach((value, index) => {
             const originalText = value.textContent;
-            value.textContent = '0';
-            value.style.transition = 'all 0.5s ease';
-            
-            setTimeout(() => {
-                value.textContent = originalText;
-                value.style.transform = 'scale(1.1)';
+            if (!isNaN(parseInt(originalText))) {
+                value.textContent = '0';
+                value.style.transition = 'all 0.5s ease';
+                
                 setTimeout(() => {
-                    value.style.transform = 'scale(1)';
-                }, 300);
-            }, 200 + (index * 80));
+                    value.textContent = originalText;
+                    value.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        value.style.transform = 'scale(1)';
+                    }, 300);
+                }, 200 + (index * 80));
+            }
         });
 
         // Animate table rows on load
@@ -891,6 +1409,208 @@
                 }, 300 + (index * 80));
             }
         });
+
+        // Make drilldown functions available globally
+        window.drillDownTickets = drillDownTickets;
+        window.drillDownTicketsByPriority = drillDownTicketsByPriority;
+
+        // Initialize charts using centralized charts.js
+        if (typeof window.initCharts === 'function') {
+            window.initCharts({
+                employeeCharts: {
+                    dept_status: chartsData.dept_status || {},
+                    dept_priority: chartsData.dept_priority || {}
+                },
+                drillDown: {
+                    status: drillDownTickets,
+                    priority: drillDownTicketsByPriority
+                }
+            });
+        } else {
+            console.warn('⚠️ initCharts function not found. Make sure charts.js is loaded.');
+        }
+
+        const hasStatusData = chartsData.dept_status && Object.keys(chartsData.dept_status).length > 0;
+        const hasPriorityData = chartsData.dept_priority && Object.keys(chartsData.dept_priority).length > 0;
+
+        console.log('✅ Employee Dashboard loaded');
+        console.log('📊 Status data available:', hasStatusData);
+        console.log('📊 Priority data available:', hasPriorityData);
     });
+
+    // ============================================
+    // DRILL DOWN FUNCTIONS - FIXED
+    // ============================================
+
+    function drillDownTickets(status) {
+        const modal = new bootstrap.Modal(document.getElementById('drillDownModal'));
+        const modalBody = document.getElementById('drillDownModalBody');
+        const statusLabel = document.getElementById('drillDownStatusLabel');
+        const viewAllBtn = document.getElementById('drillDownViewAllBtn');
+        
+        const statusMap = {
+            'all': 'All Tickets',
+            'Open': 'Open Tickets',
+            'Assigned': 'Assigned Tickets',
+            'Hold': 'Hold Tickets',
+            'Escalated': 'Escalated Tickets',
+            'Closed': 'Closed Tickets',
+            'Critical': 'Critical Priority Tickets'
+        };
+        statusLabel.textContent = statusMap[status] || status || 'All Tickets';
+        
+        // Determine filter parameter
+        let filterParam = 'status';
+        let filterValue = status;
+        
+        if (status === 'Critical') {
+            filterParam = 'priority';
+            filterValue = 'Critical';
+        } else if (status === 'all') {
+            filterParam = '';
+            filterValue = '';
+        }
+
+        // Update View All button URL
+        if (filterParam && filterValue) {
+            viewAllBtn.href = "{% url 'my_tickets' %}?" + filterParam + "=" + encodeURIComponent(filterValue);
+        } else {
+            viewAllBtn.href = "{% url 'my_tickets' %}";
+        }
+        
+        // Show loading
+        modalBody.innerHTML = `
+            <div class="modal-loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading tickets...</p>
+            </div>
+        `;
+        
+        modal.show();
+        
+        // Build URL with proper parameters
+        let url = "{% url 'my_tickets' %}?ajax=1";
+        if (filterParam && filterValue) {
+            url += "&" + filterParam + "=" + encodeURIComponent(filterValue);
+        }
+        // Add cache buster
+        url += "&_=" + Date.now();
+        
+        console.log('🔍 Fetching tickets with URL:', url);
+        
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Server returned ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('📊 Response data:', data);
+            if (data.success === false) {
+                throw new Error(data.message || 'Server error occurred');
+            }
+            if (data.html) {
+                modalBody.innerHTML = data.html;
+                // Update title with count if available
+                if (data.count !== undefined) {
+                    statusLabel.textContent = statusMap[status] || status || 'All Tickets';
+                    statusLabel.textContent += ` (${data.count})`;
+                }
+            } else {
+                modalBody.innerHTML = `
+                    <div class="empty-state text-center py-4">
+                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--accent);"></i>
+                        <p style="color: var(--text-muted);">No tickets found with status: ${statusLabel.textContent}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching tickets:', error);
+            modalBody.innerHTML = `
+                <div class="text-center py-4" style="color: #EF4444;">
+                    <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
+                    <p><strong>Error loading tickets</strong></p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
+                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownTickets('${status}')">
+                        <i class="fa-solid fa-rotate me-1"></i>Retry
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    function drillDownTicketsByPriority(priority) {
+        const modal = new bootstrap.Modal(document.getElementById('drillDownModal'));
+        const modalBody = document.getElementById('drillDownModalBody');
+        const statusLabel = document.getElementById('drillDownStatusLabel');
+        const viewAllBtn = document.getElementById('drillDownViewAllBtn');
+        
+        statusLabel.textContent = 'Priority: ' + priority;
+        viewAllBtn.href = "{% url 'my_tickets' %}?priority=" + encodeURIComponent(priority);
+        
+        modalBody.innerHTML = `
+            <div class="modal-loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading ${priority} priority tickets...</p>
+            </div>
+        `;
+        
+        modal.show();
+        
+        let url = "{% url 'my_tickets' %}?ajax=1&priority=" + encodeURIComponent(priority);
+        url += "&_=" + Date.now();
+        
+        console.log('🔍 Fetching priority tickets with URL:', url);
+        
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Server returned ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('📊 Response data:', data);
+            if (data.success === false) {
+                throw new Error(data.message || 'Server error occurred');
+            }
+            if (data.html) {
+                modalBody.innerHTML = data.html;
+                if (data.count !== undefined) {
+                    statusLabel.textContent = 'Priority: ' + priority + ` (${data.count})`;
+                }
+            } else {
+                modalBody.innerHTML = `
+                    <div class="empty-state text-center py-4">
+                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--accent);"></i>
+                        <p style="color: var(--text-muted);">No ${priority} priority tickets found</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching tickets:', error);
+            modalBody.innerHTML = `
+                <div class="text-center py-4" style="color: #EF4444;">
+                    <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
+                    <p><strong>Error loading tickets</strong></p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
+                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownTicketsByPriority('${priority}')">
+                        <i class="fa-solid fa-rotate me-1"></i>Retry
+                    </button>
+                </div>
+            `;
+        });
+    }
 </script>
 {% endblock %}

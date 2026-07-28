@@ -753,7 +753,7 @@
                 <div class="row g-3 align-items-end">
                     <div class="col-sm-6 col-md-3">
                         <label class="form-label text-secondary">Status</label>
-                        <select class="form-select" name="status">
+                        <select class="form-select" name="status" id="filterStatus">
                             <option value="">All</option>
                             {% for value, label in status_choices %}
                                 <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
@@ -762,7 +762,7 @@
                     </div>
                     <div class="col-sm-6 col-md-3">
                         <label class="form-label text-secondary">Priority</label>
-                        <select class="form-select" name="priority">
+                        <select class="form-select" name="priority" id="filterPriority">
                             <option value="">All</option>
                             {% for value, label in priority_choices %}
                                 <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>{{ label }}</option>
@@ -925,6 +925,34 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ============================================
+        // CHECK URL PARAMETERS FOR FILTERS
+        // ============================================
+        const urlParams = new URLSearchParams(window.location.search);
+        const priorityParam = urlParams.get('priority');
+        const statusParam = urlParams.get('status');
+        
+        // If priority is set in URL, update the priority select
+        if (priorityParam) {
+            const prioritySelect = document.getElementById('filterPriority');
+            if (prioritySelect) {
+                prioritySelect.value = priorityParam;
+                console.log('✅ Priority filter set to:', priorityParam);
+            }
+        }
+        
+        // If status is set in URL, update the status select
+        if (statusParam) {
+            const statusSelect = document.getElementById('filterStatus');
+            if (statusSelect) {
+                statusSelect.value = statusParam;
+                console.log('✅ Status filter set to:', statusParam);
+            }
+        }
+
+        // ============================================
+        // TOGGLE ADVANCED FILTERS
+        // ============================================
         const toggleAdvancedEmployee = document.getElementById('toggleAdvancedEmployee');
         const employeeAdvancedFilters = document.getElementById('employeeAdvancedFilters');
         if (toggleAdvancedEmployee && employeeAdvancedFilters) {
@@ -950,6 +978,9 @@
             });
         }
 
+        // ============================================
+        // CLEAR FILTERS
+        // ============================================
         const clearEmployeeFilters = document.getElementById('clearEmployeeFilters');
         if (clearEmployeeFilters) {
             clearEmployeeFilters.addEventListener('click', function() {
@@ -969,7 +1000,9 @@
             });
         }
 
-        // Animate rows on load
+        // ============================================
+        // ANIMATE ROWS ON LOAD
+        // ============================================
         const rows = document.querySelectorAll('#ticketsTable tbody tr');
         rows.forEach((row, index) => {
             if (!row.querySelector('.empty-state')) {
@@ -983,7 +1016,9 @@
             }
         });
 
-        // Row click to view ticket detail
+        // ============================================
+        // ROW CLICK TO VIEW TICKET DETAIL
+        // ============================================
         const tableRows = document.querySelectorAll('#ticketsTable tbody tr');
         tableRows.forEach(row => {
             const viewBtn = row.querySelector('.btn-view');
@@ -999,6 +1034,10 @@
                 row.style.cursor = 'pointer';
             }
         });
+
+        console.log('✅ My Tickets page loaded successfully');
+        console.log('📊 Priority filter:', priorityParam || 'None');
+        console.log('📊 Status filter:', statusParam || 'None');
     });
 </script>
 {% endblock %}

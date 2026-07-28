@@ -2,7 +2,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Role-based redirects & auth
+    # =========================================================================
+    # AUTH URLS
+    # =========================================================================
+    path('login/', views.CustomLoginView.as_view(), name='login'),
     path('role-redirect/', views.role_redirect, name='role_redirect'),
     path('logout/', views.custom_logout, name='custom_logout'),
 
@@ -31,9 +34,14 @@ urlpatterns = [
     path('admin/settings/emails/', views.settings_emails, name='settings_emails'),
     path('admin/settings/passwords/', views.settings_passwords, name='settings_passwords'),
     
-    # Employee Directory URLs (ADD THESE TWO LINES)
+    # Employee Directory URLs
     path('admin/settings/employees/', views.settings_employees, name='settings_employees'),
     path('admin/settings/employees/download/', views.download_employee_list, name='download_employee_list'),
+    path('admin/settings/employees/template/', views.download_employee_template, name='download_employee_template'),
+
+    # Department Credential URLs
+    path('admin/settings/credentials/', views.settings_credentials, name='settings_credentials'),
+    path('admin/settings/credentials/download/', views.download_credentials, name='download_credentials'),
 
     # =========================================================================
     # TEST NOTIFICATION URLS
@@ -48,7 +56,6 @@ urlpatterns = [
     # AJAX ENDPOINTS
     # =========================================================================
     path('ajax/get-departments/', views.get_departments_by_unit, name='get_departments_by_unit'),
-    
-    # NEW: Employee Auto-Fetch Endpoint
     path('ajax/get-employee/', views.get_employee_details, name='get_employee_details'),
+    path('ajax/get-employees-by-department/', views.get_employees_by_department, name='get_employees_by_department'),
 ]

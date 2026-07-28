@@ -154,9 +154,6 @@
         background: rgba(255, 255, 255, 0.08);
     }
 
-    /* ============================================
-       FIX: Input Text Color in Search Bar
-    ============================================ */
     .search-bar input,
     .search-bar input[type="text"] {
         border: none;
@@ -186,7 +183,6 @@
         font-size: 0.8rem;
     }
 
-    /* Fix autofill in dark mode */
     .search-bar input:-webkit-autofill,
     .search-bar input:-webkit-autofill:hover,
     .search-bar input:-webkit-autofill:focus,
@@ -374,7 +370,6 @@
         transform: rotate(180deg);
     }
 
-    /* Override Bootstrap table classes */
     .table-hover > tbody > tr:hover {
         background: rgba(233, 69, 96, 0.05);
         color: var(--text-primary);
@@ -451,7 +446,6 @@
         50% { box-shadow: 0 0 25px rgba(233, 69, 96, 0.4); }
     }
 
-    /* Priority Badges - Matching Theme */
     .badge-priority {
         padding: 0.2rem 0.6rem;
         border-radius: 50px;
@@ -625,6 +619,25 @@
     }
 
     /* ============================================
+       Department Loading Spinner
+    ============================================ */
+    .dept-loading {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid var(--border-color);
+        border-top: 2px solid var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* ============================================
        Mobile Card View - Matching Theme
     ============================================ */
     
@@ -779,7 +792,6 @@
             padding: 0.1rem 0.4rem;
         }
 
-        /* Search bar responsive */
         .search-bar {
             min-width: 150px;
             max-width: 100%;
@@ -880,7 +892,6 @@
             font-size: 0.7rem;
         }
 
-        /* Search bar small screens */
         .search-bar {
             min-width: 100%;
             padding: 0.3rem;
@@ -999,7 +1010,6 @@
         color: var(--text-muted);
     }
 
-    /* No results message */
     .no-results {
         display: none;
         text-align: center;
@@ -1147,7 +1157,6 @@
     /* ============================================
        Additional Fix: All Inputs in Admin
     ============================================ */
-    /* Force all inputs in admin to use theme colors */
     input,
     textarea,
     select,
@@ -1184,7 +1193,6 @@
         opacity: 1 !important;
     }
 
-    /* Fix autofill for all inputs */
     input:-webkit-autofill,
     input:-webkit-autofill:hover,
     input:-webkit-autofill:focus,
@@ -1243,7 +1251,7 @@
         </div>
     </div>
 
-    <!-- Advanced Filters -->
+    <!-- Advanced Filters with AJAX Cascading Unit -> Department -->
     <div class="row mb-4">
         <div class="col-12">
             <form method="get" class="card panel-card shadow-sm border-0 p-3" id="filterForm">
@@ -1268,20 +1276,22 @@
                         </select>
                     </div>
                     <div class="col-sm-6 col-md-3">
-                        <label class="form-label text-secondary">Unit</label>
-                        <select class="form-select" name="unit">
-                            <option value="">All</option>
+                        <label class="form-label text-secondary">Unit <span class="text-muted" style="font-size:0.6rem;">(Filters Departments)</span></label>
+                        <select class="form-select" name="unit" id="unitSelect">
+                            <option value="">All Units</option>
                             {% for unit in units %}
                                 <option value="{{ unit.id }}" {% if selected_unit|default:'' == unit.id|stringformat:'s' %}selected{% endif %}>{{ unit.code }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-sm-6 col-md-3">
-                        <label class="form-label text-secondary">Department</label>
-                        <select class="form-select" name="department">
-                            <option value="">All</option>
+                        <label class="form-label text-secondary">Department <span id="deptCount"></span></label>
+                        <select class="form-select" name="department" id="departmentSelect">
+                            <option value="">All Departments</option>
                             {% for department in departments %}
-                                <option value="{{ department.id }}" {% if selected_department|default:'' == department.id|stringformat:'s' %}selected{% endif %}>{{ department.name }}</option>
+                                <option value="{{ department.id }}" data-unit="{{ department.unit_id }}" {% if selected_department|default:'' == department.id|stringformat:'s' %}selected{% endif %}>
+                                    {{ department.name }}
+                                </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -1364,13 +1374,11 @@
                                     <th class="ps-3" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Ticket</th>
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Date</th>
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Subject</th>
-                                    <!-- SORTABLE: Unit -->
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); cursor: pointer;" onclick="sortTable('unit')" class="sortable" id="sort-unit">
                                         Unit <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span>
                                     </th>
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Dept</th>
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem);">Priority</th>
-                                    <!-- SORTABLE: Status -->
                                     <th style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); cursor: pointer;" onclick="sortTable('status')" class="sortable" id="sort-status">
                                         Status <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span>
                                     </th>
@@ -1505,11 +1513,113 @@
 
 <script>
     // ============================================
-    // FIX: Prevent Double Render - Use flag
+    // CASCADING UNIT -> DEPARTMENT FILTER (AJAX)
     // ============================================
-    let isRendered = false;
-
     document.addEventListener('DOMContentLoaded', function() {
+        const unitSelect = document.getElementById('unitSelect');
+        const departmentSelect = document.getElementById('departmentSelect');
+        const deptCount = document.getElementById('deptCount');
+        const selectedDepartment = '{{ selected_department|default:"" }}';
+        
+        // Function to fetch departments via AJAX
+        function fetchDepartments(unitId) {
+            // Show loading state
+            if (deptCount) {
+                deptCount.innerHTML = '<span class="dept-loading"></span> Loading...';
+            }
+            
+            // Disable department select while loading
+            departmentSelect.disabled = true;
+            
+            // Build URL with parameters
+            let url = "{% url 'get_departments_by_unit' %}?unit_id=" + unitId;
+            if (selectedDepartment) {
+                url += "&selected_department=" + selectedDepartment;
+            }
+            
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Clear current options
+                departmentSelect.innerHTML = '';
+                
+                // Add "All Departments" option
+                const allOption = document.createElement('option');
+                allOption.value = '';
+                allOption.textContent = 'All Departments';
+                departmentSelect.appendChild(allOption);
+                
+                // Add departments from response
+                if (data.success && data.departments) {
+                    data.departments.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.id;
+                        option.textContent = dept.name;
+                        if (dept.selected) {
+                            option.selected = true;
+                        }
+                        departmentSelect.appendChild(option);
+                    });
+                    
+                    // Update department count
+                    if (deptCount) {
+                        const count = data.count || 0;
+                        if (unitId) {
+                            deptCount.textContent = `(${count} dept${count !== 1 ? 's' : ''})`;
+                        } else {
+                            deptCount.textContent = `(All ${count} dept${count !== 1 ? 's' : ''})`;
+                        }
+                    }
+                } else {
+                    // If no departments found
+                    if (deptCount) {
+                        deptCount.textContent = '(0 departments)';
+                    }
+                }
+                
+                // Re-enable department select
+                departmentSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error fetching departments:', error);
+                if (deptCount) {
+                    deptCount.textContent = '(Error loading)';
+                }
+                departmentSelect.disabled = false;
+            });
+        }
+        
+        // Handle unit selection change
+        if (unitSelect) {
+            unitSelect.addEventListener('change', function() {
+                const unitId = this.value;
+                fetchDepartments(unitId);
+            });
+            
+            // Initial load: fetch departments based on pre-selected unit
+            const initialUnit = unitSelect.value;
+            if (initialUnit) {
+                fetchDepartments(initialUnit);
+            } else {
+                // Show all departments count via AJAX
+                fetchDepartments('');
+            }
+        }
+        
+        // ============================================
+        // FIX: Prevent Double Render - Use flag
+        // ============================================
+        let isRendered = false;
+        
         // Prevent double rendering
         if (isRendered) {
             console.log('Already rendered, skipping...');
@@ -1639,6 +1749,14 @@
                             }
                         }
                     });
+                    // Reset department dropdown to show all
+                    if (departmentSelect) {
+                        departmentSelect.value = '';
+                        // Re-fetch departments
+                        if (unitSelect) {
+                            fetchDepartments(unitSelect.value);
+                        }
+                    }
                     adminForm.submit();
                 }
             });
@@ -1750,7 +1868,7 @@
             }
         });
 
-        console.log('All Tickets page loaded successfully (rendered once).');
+        console.log('All Tickets page loaded successfully with AJAX cascading Unit → Department filter.');
     });
 </script>
 {% endblock %}

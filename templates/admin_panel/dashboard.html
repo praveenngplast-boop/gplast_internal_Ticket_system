@@ -156,6 +156,20 @@
         transform: scale(0.98);
     }
 
+    .kpi-card .click-hint {
+        position: absolute;
+        bottom: 8px;
+        right: 12px;
+        font-size: 0.55rem;
+        color: var(--text-muted);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .kpi-card:hover .click-hint {
+        opacity: 0.7;
+    }
+
     .kpi-card:nth-child(1) { animation-delay: 0.05s; }
     .kpi-card:nth-child(2) { animation-delay: 0.1s; }
     .kpi-card:nth-child(3) { animation-delay: 0.15s; }
@@ -196,7 +210,7 @@
         margin-top: 0.25rem;
     }
 
-    /* KPI Color Variants - Force colors with !important */
+    /* KPI Color Variants */
     .kpi-open .kpi-value { color: var(--status-open, #48bb78) !important; }
     .kpi-assigned .kpi-value { color: var(--status-assigned, #4299e1) !important; }
     .kpi-hold .kpi-value { color: var(--status-hold, #ed8936) !important; }
@@ -232,6 +246,7 @@
         border-radius: 16px;
         overflow: hidden;
         animation: cardFadeIn 0.6s ease;
+        height: 100%;
     }
 
     .panel-card:nth-child(1) { animation-delay: 0.1s; }
@@ -275,13 +290,290 @@
     }
 
     /* ============================================
-       Chart Container
+       Chart Container - Responsive
     ============================================ */
     .chart-container {
         position: relative;
-        height: 250px;
         width: 100%;
+        min-height: 200px;
+        height: auto;
         padding: 0.5rem;
+    }
+
+    .chart-container canvas {
+        max-width: 100%;
+        height: auto !important;
+        cursor: pointer;
+    }
+
+    /* ============================================
+       Chart Clickable Styles - Enhanced
+    ============================================ */
+    .chart-container {
+        position: relative;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .chart-container:hover {
+        background: rgba(233, 69, 96, 0.02);
+        box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.05);
+    }
+
+    .chart-container::after {
+        content: 'Click on chart segments to filter →';
+        position: absolute;
+        bottom: 8px;
+        right: 12px;
+        font-size: 0.55rem;
+        color: var(--text-muted);
+        opacity: 0.3;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .chart-container:hover::after {
+        opacity: 0.7;
+    }
+
+    /* Segment hover effect */
+    .chart-container canvas:hover {
+        cursor: pointer;
+    }
+
+    /* ============================================
+       Drill Down Modal Styles - FIXED THEME SUPPORT
+    ============================================ */
+    .modal-content {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 16px !important;
+        color: var(--text-primary) !important;
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid var(--border-color) !important;
+        padding: 1rem 1.5rem;
+        background: var(--bg-secondary) !important;
+        border-radius: 16px 16px 0 0 !important;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+        color: var(--text-primary) !important;
+        max-height: 70vh;
+        overflow-y: auto;
+        background: var(--bg-primary) !important;
+    }
+    
+    .modal-body * {
+        color: var(--text-primary) !important;
+    }
+    
+    .modal-body .table {
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }
+    
+    .modal-body .table th {
+        color: var(--text-secondary) !important;
+        border-bottom: 2px solid var(--border-color) !important;
+        background: transparent !important;
+    }
+    
+    .modal-body .table td {
+        color: var(--text-primary) !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        background: transparent !important;
+    }
+    
+    .modal-body .table tr:hover td {
+        background: rgba(233, 69, 96, 0.05) !important;
+    }
+    
+    .modal-body .table-striped > tbody > tr:nth-of-type(odd) > * {
+        background: rgba(233, 69, 96, 0.03) !important;
+    }
+    
+    .modal-body .text-muted {
+        color: var(--text-muted) !important;
+    }
+    
+    .modal-body .text-secondary {
+        color: var(--text-secondary) !important;
+    }
+    
+    .modal-body .empty-state {
+        color: var(--text-secondary) !important;
+    }
+    
+    .modal-body .empty-state i {
+        color: var(--text-muted) !important;
+    }
+    
+    .modal-body .empty-state p {
+        color: var(--text-muted) !important;
+    }
+    
+    .modal-footer {
+        border-top: 1px solid var(--border-color) !important;
+        padding: 1rem 1.5rem;
+        background: var(--bg-secondary) !important;
+        border-radius: 0 0 16px 16px !important;
+    }
+    
+    .modal-title {
+        color: var(--accent-light) !important;
+        font-weight: 700 !important;
+    }
+    
+    .modal-header .btn-close {
+        color: var(--text-primary) !important;
+        filter: none !important;
+        opacity: 0.7 !important;
+    }
+    
+    .modal-header .btn-close:hover {
+        opacity: 1 !important;
+    }
+
+    .modal-body .table {
+        font-size: 0.8rem;
+    }
+    .modal-body .table th {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: var(--text-secondary);
+        border-bottom: 2px solid rgba(233, 69, 96, 0.2);
+    }
+    .modal-body .table td {
+        padding: 0.4rem 0.3rem;
+        font-size: 0.75rem;
+        vertical-align: middle;
+    }
+
+    .btn-close-custom {
+        background: var(--bg-secondary) !important;
+        border: 2px solid var(--border-color) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 50px !important;
+        padding: 0.4rem 1.5rem !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+        text-decoration: none !important;
+        display: inline-block !important;
+    }
+
+    .btn-close-custom:hover {
+        background: var(--bg-card) !important;
+        border-color: var(--accent) !important;
+        color: var(--text-primary) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.1) !important;
+    }
+
+    .btn-close-custom:active {
+        transform: scale(0.95) !important;
+    }
+
+    /* ============================================
+       Modal Loading Spinner
+    ============================================ */
+    .modal-loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    .modal-loading i {
+        font-size: 2rem;
+        color: var(--accent);
+        margin-bottom: 1rem;
+        display: block;
+    }
+    .modal-loading p {
+        color: var(--text-secondary) !important;
+    }
+
+    .empty-state i {
+        color: var(--accent);
+        opacity: 0.25;
+    }
+
+    .empty-state .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    /* Badge styles for modal */
+    .badge-custom {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .badge-custom:hover {
+        transform: scale(1.05);
+    }
+
+    .badge-status-open {
+        background: var(--status-open);
+        color: white;
+    }
+
+    .badge-status-assigned {
+        background: var(--status-assigned);
+        color: white;
+    }
+
+    .badge-status-hold {
+        background: var(--status-hold);
+        color: white;
+    }
+
+    .badge-status-escalated {
+        background: var(--status-escalated);
+        color: white;
+    }
+
+    .badge-status-closed {
+        background: var(--status-closed);
+        color: white;
+    }
+
+    .btn-view {
+        padding: 0.2rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: var(--accent-gradient);
+        color: white;
+        border: none;
+        white-space: nowrap;
+        display: inline-block;
+        text-decoration: none;
+    }
+
+    .btn-view:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        color: white;
+    }
+
+    .btn-view:active {
+        transform: scale(0.95);
+    }
+
+    .btn-view i {
+        font-size: 0.65rem;
+        margin-right: 0.2rem;
     }
 
     /* ============================================
@@ -297,7 +589,7 @@
         }
         
         .chart-container {
-            height: 200px;
+            min-height: 180px;
         }
     }
 
@@ -330,7 +622,7 @@
         }
 
         .chart-container {
-            height: 180px;
+            min-height: 160px;
         }
 
         .d-flex.gap-2 {
@@ -340,6 +632,15 @@
         .d-flex.gap-2 .btn {
             width: 100%;
             justify-content: center;
+        }
+
+        .modal-footer .btn-close-custom {
+            font-size: 0.75rem !important;
+            padding: 0.3rem 1rem !important;
+        }
+        .modal-footer .btn-primary-custom {
+            font-size: 0.75rem !important;
+            padding: 0.3rem 1rem !important;
         }
     }
 
@@ -361,8 +662,14 @@
             padding: 0.5rem;
         }
         
+        .kpi-card .click-hint {
+            font-size: 0.45rem;
+            bottom: 4px;
+            right: 8px;
+        }
+
         .chart-container {
-            height: 150px;
+            min-height: 140px;
         }
 
         h2.fw-bold {
@@ -382,6 +689,24 @@
         .d-flex.justify-content-between {
             flex-direction: column;
             gap: 0.5rem;
+        }
+
+        .chart-container::after {
+            content: 'Click segments →';
+            font-size: 0.45rem;
+            bottom: 4px;
+            right: 8px;
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+        .modal-body .table {
+            font-size: 0.7rem;
+        }
+        .modal-body .table td {
+            font-size: 0.65rem;
+            padding: 0.3rem 0.2rem;
         }
     }
 
@@ -466,18 +791,7 @@
     }
 
     /* ============================================
-       Chart.js Dark Mode Overrides
-    ============================================ */
-    [data-theme="dark"] .chart-container canvas {
-        filter: brightness(1);
-    }
-
-    [data-theme="light"] .chart-container canvas {
-        filter: brightness(1);
-    }
-
-    /* ============================================
-       Badge Updates for Dark/Light Mode
+       Badge Updates
     ============================================ */
     .badge.bg-primary {
         background: var(--accent-gradient);
@@ -491,7 +805,7 @@
     }
 
     /* ============================================
-       FIX: Ensure all text is visible in dark mode
+       FIX: Ensure all text is visible
     ============================================ */
     .card {
         color: var(--text-primary) !important;
@@ -524,7 +838,6 @@
         color: var(--accent) !important;
     }
 
-    /* Fix for badge text */
     .badge {
         color: var(--text-primary) !important;
     }
@@ -537,7 +850,6 @@
         color: white !important;
     }
 
-    /* Fix for paragraph text */
     p {
         color: var(--text-secondary) !important;
     }
@@ -550,7 +862,6 @@
         color: var(--status-open) !important;
     }
 
-    /* Fix for chart header text */
     .glass-header h6 {
         color: var(--accent-light) !important;
     }
@@ -558,13 +869,39 @@
     .glass-header h6 i {
         color: var(--accent) !important;
     }
+
+    /* ============================================
+       KPI Filter Badge
+    ============================================ */
+    .kpi-filter-badge {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        font-size: 0.5rem;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        background: rgba(233, 69, 96, 0.1);
+        color: var(--accent);
+        border: 1px solid rgba(233, 69, 96, 0.2);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+    .kpi-card:hover .kpi-filter-badge {
+        opacity: 1;
+    }
+
+    /* Icon Pulse Animation */
+    @keyframes pulseIcon {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 1; }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
     <!-- Header Section -->
-    <div class="row mb-4 animate__animated animate__fadeInDown">
+    <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
                 <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--accent-light);">
@@ -590,152 +927,161 @@
         </div>
     </div>
 
-    <!-- Admin KPI Cards Section - CLICKABLE -->
+    <!-- Admin KPI Cards Section - CLICKABLE WITH DRILL DOWN -->
     <div class="row g-3 mb-4">
         <!-- Total Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <a href="{% url 'all_tickets' %}" class="kpi-link">
-                <div class="card kpi-card p-3 h-100">
-                    <div class="kpi-value text-secondary">{{ kpis.total }}</div>
-                    <div class="kpi-label">
-                        <i class="fa-regular fa-circle-check me-1" style="color: var(--accent);"></i>
-                        Total Tickets
-                    </div>
+            <div class="card kpi-card p-3 h-100" onclick="drillDownAdminTickets('all')">
+                <div class="kpi-value text-secondary">{{ kpis.total }}</div>
+                <div class="kpi-label">
+                    <i class="fa-regular fa-circle-check me-1" style="color: var(--accent);"></i>
+                    Total Tickets
                 </div>
-            </a>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View All</span>
+            </div>
         </div>
 
-        <!-- Open Tickets - Clickable -->
+        <!-- Open Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <a href="{% url 'all_tickets' %}?category=open" class="kpi-link">
-                <div class="card kpi-card kpi-open p-3 h-100">
-                    <div class="kpi-value text-primary">{{ kpis.open }}</div>
-                    <div class="kpi-label">
-                        <i class="fa-regular fa-circle me-1" style="color: var(--status-open);"></i>
-                        Open
-                    </div>
+            <div class="card kpi-card kpi-open p-3 h-100" onclick="drillDownAdminTickets('Open')">
+                <div class="kpi-value text-primary">{{ kpis.open }}</div>
+                <div class="kpi-label">
+                    <i class="fa-regular fa-circle me-1" style="color: var(--status-open);"></i>
+                    Open
                 </div>
-            </a>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Open</span>
+            </div>
         </div>
 
-        <!-- Assigned Tickets - Clickable -->
+        <!-- Assigned Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <a href="{% url 'all_tickets' %}?category=assigned" class="kpi-link">
-                <div class="card kpi-card kpi-assigned p-3 h-100">
-                    <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
-                    <div class="kpi-label">
-                        <i class="fa-solid fa-user-check me-1" style="color: var(--status-assigned);"></i>
-                        Assigned
-                    </div>
+            <div class="card kpi-card kpi-assigned p-3 h-100" onclick="drillDownAdminTickets('Assigned')">
+                <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-user-check me-1" style="color: var(--status-assigned);"></i>
+                    Assigned
                 </div>
-            </a>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Assigned</span>
+            </div>
         </div>
 
-        <!-- Hold Tickets - Clickable -->
+        <!-- Hold Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <a href="{% url 'all_tickets' %}?category=hold" class="kpi-link">
-                <div class="card kpi-card kpi-hold p-3 h-100">
-                    <div class="kpi-value" style="color: var(--status-hold);">{{ kpis.hold }}</div>
-                    <div class="kpi-label">
-                        <i class="fa-solid fa-pause me-1" style="color: var(--status-hold);"></i>
-                        Hold
-                    </div>
+            <div class="card kpi-card kpi-hold p-3 h-100" onclick="drillDownAdminTickets('Hold')">
+                <div class="kpi-value" style="color: var(--status-hold);">{{ kpis.hold }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-pause me-1" style="color: var(--status-hold);"></i>
+                    Hold
                 </div>
-            </a>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Hold</span>
+            </div>
         </div>
 
-        <!-- Escalated Tickets - Clickable -->
+        <!-- Escalated Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <a href="{% url 'all_tickets' %}?category=escalated" class="kpi-link">
-                <div class="card kpi-card kpi-escalated p-3 h-100">
-                    <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
-                    <div class="kpi-label">
-                        <i class="fa-solid fa-cloud-arrow-up me-1" style="color: var(--status-escalated);"></i>
-                        Escalated
-                    </div>
+            <div class="card kpi-card kpi-escalated p-3 h-100" onclick="drillDownAdminTickets('Escalated')">
+                <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-cloud-arrow-up me-1" style="color: var(--status-escalated);"></i>
+                    Escalated
                 </div>
-            </a>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Escalated</span>
+            </div>
         </div>
 
-        <!-- Closed Tickets - Clickable -->
+        <!-- Closed Tickets -->
         <div class="col-6 col-md-3 col-lg-2">
-            <a href="{% url 'all_tickets' %}?category=closed" class="kpi-link">
-                <div class="card kpi-card kpi-closed p-3 h-100">
-                    <div class="kpi-value text-success">{{ kpis.closed }}</div>
-                    <div class="kpi-label">
-                        <i class="fa-solid fa-circle-check me-1" style="color: var(--status-closed);"></i>
-                        Closed
-                    </div>
+            <div class="card kpi-card kpi-closed p-3 h-100" onclick="drillDownAdminTickets('Closed')">
+                <div class="kpi-value text-success">{{ kpis.closed }}</div>
+                <div class="kpi-label">
+                    <i class="fa-solid fa-circle-check me-1" style="color: var(--status-closed);"></i>
+                    Closed
                 </div>
-            </a>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Closed</span>
+            </div>
         </div>
 
-        <!-- Critical Priority Tickets - Clickable -->
+        <!-- Critical Priority Tickets -->
         <div class="col-12 mt-3">
-            <a href="{% url 'all_tickets' %}?category=critical" class="kpi-link">
-                <div class="card kpi-card kpi-critical p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="kpi-value text-danger">{{ kpis.critical }}</div>
-                            <div class="kpi-label">
-                                <i class="fa-solid fa-triangle-exclamation me-1" style="color: var(--status-critical);"></i>
-                                Critical Priority Tickets System-Wide
-                            </div>
+            <div class="card kpi-card kpi-critical p-3" onclick="drillDownAdminTickets('Critical')">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="kpi-value text-danger">{{ kpis.critical }}</div>
+                        <div class="kpi-label">
+                            <i class="fa-solid fa-triangle-exclamation me-1" style="color: var(--status-critical);"></i>
+                            Critical Priority Tickets System-Wide
                         </div>
-                        <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50" style="animation: pulseIcon 2s ease-in-out infinite;"></i>
                     </div>
+                    <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50" style="animation: pulseIcon 2s ease-in-out infinite;"></i>
                 </div>
-            </a>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Critical</span>
+            </div>
         </div>
     </div>
 
-    <!-- Chart Reports Panel Grid (10 Charts) -->
+    <!-- Chart Reports Panel (3 Charts) -->
     <div class="row g-4 mb-4">
-        <!-- Chart 1: Status Distribution -->
+        <!-- Chart 1: Status Distribution - CLICKABLE -->
         <div class="col-md-6 col-lg-4">
             <div class="card panel-card h-100">
-                <div class="card-header glass-header py-3">
+                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0">
                         <i class="fa-solid fa-chart-pie me-2" style="color: var(--accent);"></i>
-                        1. Status Distribution
+                        Status Distribution
                     </h6>
+                    <a href="{% url 'all_tickets' %}" class="btn btn-sm btn-outline-primary rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container">
+                    <div class="chart-container" id="statusChartContainer">
                         <canvas id="statusChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Chart 2: Unit-wise Tickets -->
+        <!-- Chart 2: Unit-wise Tickets - CLICKABLE -->
         <div class="col-md-6 col-lg-4">
             <div class="card panel-card h-100">
-                <div class="card-header glass-header py-3">
+                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0">
                         <i class="fa-solid fa-building me-2" style="color: var(--accent);"></i>
-                        2. Unit-wise Tickets
+                        Unit-wise Tickets
                     </h6>
+                    <a href="{% url 'all_tickets' %}" class="btn btn-sm btn-outline-primary rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container">
+                    <div class="chart-container" id="unitChartContainer">
                         <canvas id="unitChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Chart 3: Priority Distribution -->
+        <!-- Chart 3: Priority Distribution - CLICKABLE -->
         <div class="col-md-6 col-lg-4">
             <div class="card panel-card h-100">
-                <div class="card-header glass-header py-3">
+                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0">
                         <i class="fa-solid fa-flag me-2" style="color: var(--accent);"></i>
-                        3. Priority Distribution
+                        Priority Distribution
                     </h6>
+                    <a href="{% url 'all_tickets' %}?priority=Critical" class="btn btn-sm btn-outline-primary rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container">
+                    <div class="chart-container" id="priorityChartContainer">
                         <canvas id="priorityChart"></canvas>
                     </div>
                 </div>
@@ -761,143 +1107,312 @@
     </div>
 </div>
 
+<!-- ============================================
+     ADMIN DRILL DOWN MODAL - FIXED THEME SUPPORT
+============================================ -->
+<div class="modal fade" id="adminDrillDownModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adminDrillDownModalTitle">
+                    <i class="fa-solid fa-list-ul me-2" style="color: var(--accent);"></i>
+                    Tickets - <span id="adminDrillDownStatusLabel">All</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="adminDrillDownModalBody">
+                <div class="modal-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <p>Loading tickets...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark me-1"></i>Close
+                </button>
+                <a href="{% url 'all_tickets' %}" class="btn btn-primary-custom rounded-pill px-4" id="adminDrillDownViewAllBtn">
+                    <i class="fa-solid fa-arrow-right me-1"></i>View All Tickets
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
-<!-- Chart Drawing Logic -->
 <script src="{% static 'js/charts.js' %}"></script>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Add loading animation to charts
-        const charts = document.querySelectorAll('.chart-container canvas');
-        charts.forEach((chart, index) => {
-            chart.style.opacity = '0';
-            setTimeout(() => {
-                chart.style.transition = 'opacity 0.6s ease';
-                chart.style.opacity = '1';
-            }, 200 + (index * 150));
+         // ============================================
+        // CONFIGURE CHART.JS DEFAULTS
+        // ============================================
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.font.size = 11;
+
+        // ============================================
+        // LOAD CHART DATA
+        // ============================================
+        let chartsData = {};
+        try {
+            const dataElement = document.getElementById('charts-data');
+            if (dataElement) {
+                chartsData = JSON.parse(dataElement.textContent);
+            }
+        } catch (e) {
+            console.error('Error parsing chart data:', e);
+            chartsData = { status: {}, units: [], priority: {}, monthly: [] };
+        }
+
+        // ============================================
+        // DRILL DOWN FUNCTIONS FOR CHARTS
+        // ============================================
+        
+        // For Status charts - uses existing drillDownAdminTickets function
+        // Already defined in the global scope below
+        
+        // For Unit-wise charts (and other filters)
+        function drillDownWithFilter(filterType, filterValue, filterLabel) {
+            const modal = new bootstrap.Modal(document.getElementById('adminDrillDownModal'));
+            const modalBody = document.getElementById('adminDrillDownModalBody');
+            const statusLabel = document.getElementById('adminDrillDownStatusLabel');
+            const viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
+
+            // Update status label
+            statusLabel.textContent = 'Unit: ' + unitLabel;
+            
+            // Update View All button URL with unit filter
+            viewAllBtn.href = "{% url 'all_tickets' %}?unit=" + encodeURIComponent(unitId);
+            
+            // Show loading
+            modalBody.innerHTML = `
+                <div class="modal-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading tickets for ${filterLabel}...</p>
+                </div>
+            `;
+            
+            // Show modal
+            modal.show();
+
+            // Fetch tickets via AJAX
+            let url = "{% url 'all_tickets' %}?ajax=1&unit=" + encodeURIComponent(unitId);
+            
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Server returned ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success === false) {
+                    throw new Error(data.message || 'Server error occurred');
+                }
+                if (data.html) {
+                    modalBody.innerHTML = data.html;
+                    modalBody.style.color = 'var(--text-primary)';
+                    
+                    const allElements = modalBody.querySelectorAll('*');
+                    allElements.forEach(el => {
+                        if (el.style && el.style.backgroundColor) {
+                            if (el.style.backgroundColor.includes('#fff') || 
+                                el.style.backgroundColor.includes('white') ||
+                                el.style.backgroundColor.includes('#f') ||
+                                el.style.backgroundColor.includes('#e')) {
+                                el.style.backgroundColor = '';
+                            }
+                        }
+                    });
+                    
+                    const tables = modalBody.querySelectorAll('.table');
+                    tables.forEach(table => {
+                        table.classList.add('table-theme-aware');
+                    });
+                } else {
+                    modalBody.innerHTML = `
+                        <div class="empty-state text-center py-4">
+                            <i class="fas fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--accent);"></i>
+                            <p style="color: var(--text-muted);">No tickets found for: ${filterLabel}</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching tickets:', error);
+                modalBody.innerHTML = `
+                    <div class="text-center py-4" style="color: #EF4444;">
+                        <i class="fas fa-circle-exclamation fa-2x mb-2 d-block"></i>
+                        <p><strong>Error loading tickets</strong></p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
+                        <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownWithFilter('${filterType}', '${filterValue}', '${filterLabel}')">
+                            <i class="fa-solid fa-rotate me-1"></i>Retry
+                        </button>
+                    </div>
+                `;
+            });
+        }
+        
+        // Make functions globally accessible for charts.js
+        window.drillDownAdminTickets = drillDownAdminTickets;
+        window.drillDownWithFilter = drillDownWithFilter;
+
+        // Initialize charts using charts.js
+        window.initCharts({
+            adminCharts: chartsData,
+            drillDown: {
+                status: function(status) {
+                    drillDownAdminTickets(status);
+                },
+                priority: function(priority) {
+                    drillDownWithFilter('priority', priority, `Priority: ${priority}`);
+                },
+                unit: function(unitId, unitLabel) {
+                    drillDownWithFilter('unit', unitId, `Unit: ${unitLabel}`);
+                }
+            }
         });
 
-        // Animate KPI values on load
+        // ============================================
+        // ANIMATE KPI VALUES ON LOAD
+        // ============================================
         const kpiValues = document.querySelectorAll('.kpi-value');
         kpiValues.forEach((value, index) => {
             const originalText = value.textContent;
-            value.textContent = '0';
-            value.style.transition = 'all 0.5s ease';
-            
-            setTimeout(() => {
-                value.textContent = originalText;
-                value.style.transform = 'scale(1.1)';
+            if (!isNaN(parseInt(originalText))) {
+                value.textContent = '0';
+                value.style.transition = 'all 0.5s ease';
+                
                 setTimeout(() => {
-                    value.style.transform = 'scale(1)';
-                }, 300);
-            }, 300 + (index * 100));
-        });
-
-        // Add pulse animation to critical icon
-        const criticalIcon = document.querySelector('.kpi-critical i.fa-triangle-exclamation');
-        if (criticalIcon) {
-            criticalIcon.style.animation = 'pulseIcon 2s ease-in-out infinite';
-        }
-
-        // Add keyframe for icon pulse
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes pulseIcon {
-                0%, 100% { transform: scale(1); opacity: 0.5; }
-                50% { transform: scale(1.2); opacity: 1; }
+                    value.textContent = originalText;
+                    value.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        value.style.transform = 'scale(1)';
+                    }, 300);
+                }, 300 + (index * 100));
             }
-        `;
-        document.head.appendChild(style);
-
-        // ============================================
-        // Chart.js Dark/Light Mode Support
-        // ============================================
-        function updateChartColors() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const textColor = isDark ? '#e2e8f0' : '#2d3748';
-            const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-            
-            // Update all charts
-            Chart.helpers.each(Chart.instances, function(instance) {
-                if (instance.options.scales) {
-                    // Update x-axis
-                    if (instance.options.scales.x) {
-                        instance.options.scales.x.ticks.color = textColor;
-                        instance.options.scales.x.grid.color = gridColor;
-                    }
-                    // Update y-axis
-                    if (instance.options.scales.y) {
-                        instance.options.scales.y.ticks.color = textColor;
-                        instance.options.scales.y.grid.color = gridColor;
-                    }
-                }
-                // Update legend
-                if (instance.options.plugins && instance.options.plugins.legend) {
-                    instance.options.plugins.legend.labels.color = textColor;
-                }
-                instance.update();
-            });
-        }
-
-        // Listen for theme changes
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.attributeName === 'data-theme') {
-                    setTimeout(updateChartColors, 100);
-                }
-            });
         });
 
-        observer.observe(document.documentElement, {
-            attributes: true
-        });
-
-        // Initial update after charts load
-        setTimeout(updateChartColors, 1000);
-
-        // ============================================
-        // FIX: Force all text colors in dark mode
-        // ============================================
-        function fixTextColors() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const textColor = isDark ? '#ffffff' : '#212529';
-            
-            // Fix all card text
-            document.querySelectorAll('.card, .card *').forEach(el => {
-                if (el.tagName !== 'I' && el.tagName !== 'svg' && !el.closest('.kpi-value')) {
-                    const currentColor = getComputedStyle(el).color;
-                    if (currentColor === 'rgb(0, 0, 0)' || currentColor === '#000000' || currentColor === 'black') {
-                        el.style.color = textColor;
-                    }
-                }
-            });
-            
-            // Fix KPI values that might be black
-            document.querySelectorAll('.kpi-value').forEach(el => {
-                const currentColor = getComputedStyle(el).color;
-                if (currentColor === 'rgb(0, 0, 0)' || currentColor === '#000000' || currentColor === 'black') {
-                    el.style.color = textColor;
-                }
-            });
-        }
-
-        // Run fix after page load
-        setTimeout(fixTextColors, 500);
-        
-        // Also run when theme changes
-        const themeObserver = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.attributeName === 'data-theme') {
-                    setTimeout(fixTextColors, 200);
-                }
-            });
-        });
-
-        themeObserver.observe(document.documentElement, {
-            attributes: true
-        });
+        console.log('✅ Admin Dashboard ready with clickable pie charts');
+        console.log('📊 Click on chart segments to filter tickets');
+        console.log('📊 Status chart: Click status segments');
+        console.log('📊 Unit chart: Click unit bars');
+        console.log('📊 Priority chart: Click priority segments');
     });
+
+    // ============================================
+    // ADMIN DRILL DOWN FUNCTION - For KPI Cards
+    // ============================================
+    function drillDownAdminTickets(filterValue) {
+        const modal = new bootstrap.Modal(document.getElementById('adminDrillDownModal'));
+        const modalBody = document.getElementById('adminDrillDownModalBody');
+        const statusLabel = document.getElementById('adminDrillDownStatusLabel');
+        const viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
+        
+        // Update status label
+        const statusMap = {
+            'all': 'All Tickets',
+            'Open': 'Open Tickets',
+            'Assigned': 'Assigned Tickets',
+            'Hold': 'Hold Tickets',
+            'Escalated': 'Escalated Tickets',
+            'Closed': 'Closed Tickets',
+            'Critical': 'Critical Priority Tickets'
+        };
+        statusLabel.textContent = statusMap[filterValue] || filterValue || 'All Tickets';
+        
+        // Update View All button URL with filter
+        let filterParam = 'status';
+        if (filterValue === 'Critical') {
+            filterParam = 'priority';
+        } else if (filterValue === 'all') {
+            filterParam = '';
+        }
+
+        if (filterParam) {
+            viewAllBtn.href = `{% url 'all_tickets' %}?${filterParam}=${encodeURIComponent(filterValue)}`;
+        } else {
+            viewAllBtn.href = `{% url 'all_tickets' %}`;
+        }
+        
+        // Show loading
+        modalBody.innerHTML = `
+            <div class="modal-loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading tickets...</p>
+            </div>
+        `;
+        
+        // Show modal
+        modal.show();
+        
+        // Fetch tickets via AJAX
+        let url = "{% url 'all_tickets' %}?ajax=1";
+        if (filterParam) {
+            url += `&${filterParam}=${encodeURIComponent(filterValue)}`;
+        }
+        
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Server returned ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success === false) {
+                throw new Error(data.message || 'Server error occurred');
+            }
+            if (data.html) {
+                modalBody.innerHTML = data.html;
+                modalBody.style.color = 'var(--text-primary)';
+                
+                const allElements = modalBody.querySelectorAll('*');
+                allElements.forEach(el => {
+                    if (el.style && el.style.backgroundColor) {
+                        if (el.style.backgroundColor.includes('#fff') || 
+                            el.style.backgroundColor.includes('white') ||
+                            el.style.backgroundColor.includes('#f') ||
+                            el.style.backgroundColor.includes('#e')) {
+                            el.style.backgroundColor = '';
+                        }
+                    }
+                });
+                
+                const tables = modalBody.querySelectorAll('.table');
+                tables.forEach(table => {
+                    table.classList.add('table-theme-aware');
+                });
+            } else {
+                modalBody.innerHTML = `
+                    <div class="empty-state text-center py-4">
+                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--accent);"></i>
+                        <p style="color: var(--text-muted);">No tickets found for: ${statusLabel.textContent}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching tickets:', error);
+            modalBody.innerHTML = `
+                <div class="text-center py-4" style="color: #EF4444;">
+                    <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
+                    <p><strong>Error loading tickets</strong></p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
+                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownAdminTickets('${filterValue}')">
+                        <i class="fa-solid fa-rotate me-1"></i>Retry
+                    </button>
+                </div>
+            `;
+        });
+    }
 </script>
 {% endblock %}

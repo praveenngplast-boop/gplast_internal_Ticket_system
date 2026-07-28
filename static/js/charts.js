@@ -1,65 +1,14 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const dataContainer = document.getElementById('charts-data');
+// ============================================
+// CENTRALIZED CHART.JS CONFIGURATION
+// ============================================
 
-    // Get current theme for dynamic colors
-    function getThemeBorderColor() {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        return isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.8)';
-    }
+(function() {
+    'use strict';
 
-    function getThemeGridColor() {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        return isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
-    }
-
-    function getThemeTextColor() {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        return isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)';
-    }
-
-    if (!dataContainer) return;
-    
-    let chartsData = {};
-    try {
-        chartsData = JSON.parse(dataContainer.textContent);
-    } catch (e) {
-        console.error("Error parsing charts data: ", e);
-        return;
-    }
-
-    // Default chart configuration
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: {
-            duration: 1000,
-            easing: 'easeInOutQuart',
-        },
-        plugins: {
-            legend: {
-                display: true,
-                position: 'bottom',
-                labels: {
-                    font: { family: 'Poppins', size: 12 },
-                    padding: 15,
-                    color: getThemeTextColor(),
-                    usePointStyle: true,
-                    pointStyleWidth: 10,
-                }
-            },
-            tooltip: {
-                padding: 12,
-                titleFont: { family: 'Poppins', size: 13, weight: 'bold' },
-                bodyFont: { family: 'Poppins', size: 12 },
-                cornerRadius: 8,
-                backgroundColor: 'rgba(26, 42, 108, 0.95)',
-                boxPadding: 8,
-            }
-        }
-    };
-
-    // Color Palette
-    const colors = {
+    // ============================================
+    // COLOR PALETTE
+    // ============================================
+    const COLORS = {
         blue: '#3B82F6',
         orange: '#F59E0B',
         amber: '#FBBF24',
@@ -71,163 +20,258 @@ document.addEventListener('DOMContentLoaded', function() {
         grey: '#6B7280',
         indigo: '#6366F1',
         pink: '#EC4899',
+        status: {
+            'Open': '#48bb78',
+            'Assigned': '#4299e1',
+            'Hold': '#ed8936',
+            'Escalated': '#9f7aea',
+            'Closed': '#718096'
+        },
+        priority: {
+            'Critical': '#fc8181',
+            'High': '#ed8936',
+            'Medium': '#4299e1',
+            'Low': '#48bb78'
+        }
     };
 
-    const colorArray = [
-        colors.blue, colors.orange, colors.purple, colors.green, 
-        colors.teal, colors.red, colors.cyan, colors.indigo, 
-        colors.pink, colors.amber
+    const COLOR_ARRAY = [
+        COLORS.blue, COLORS.orange, COLORS.purple, COLORS.green,
+        COLORS.teal, COLORS.red, COLORS.cyan, COLORS.indigo,
+        COLORS.pink, COLORS.amber
     ];
 
-    // Helper: Map data dictionary to labels and values arrays
-    const parseDict = (dict) => {
+    // ============================================
+    // THEME HELPERS
+    // ============================================
+    function getThemeColors() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        return {
+            textColor: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.8)',
+            gridColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)',
+            bgColor: isDark ? '#1a202c' : '#ffffff'
+        };
+    }
+
+    // ============================================
+    // COMMON CHART OPTIONS
+    // ============================================
+    function getCommonOptions() {
+        const theme = getThemeColors();
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart',
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        font: { family: 'Poppins, Inter, sans-serif', size: 12 },
+                        padding: 15,
+                        color: theme.textColor,
+                        usePointStyle: true,
+                        pointStyleWidth: 10,
+                    }
+                },
+                tooltip: {
+                    padding: 12,
+                    titleFont: { family: 'Poppins, Inter, sans-serif', size: 13, weight: 'bold' },
+                    bodyFont: { family: 'Poppins, Inter, sans-serif', size: 12 },
+                    cornerRadius: 8,
+                    backgroundColor: 'rgba(26, 42, 108, 0.95)',
+                    boxPadding: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    function parseDict(dict) {
         const labels = Object.keys(dict);
         const values = Object.values(dict);
         return { labels, values };
-    };
+    }
 
-    // Helper: Map data array of objects to labels, values, and ids
-    const parseArray = (arr) => {
+    function parseArray(arr) {
         const labels = arr.map(item => item.label);
         const values = arr.map(item => item.value);
         const ids = arr.map(item => item.id);
         return { labels, values, ids };
-    };
+    }
 
     // ============================================
-    // CHART 1: STATUS DISTRIBUTION (DOUGHNUT)
+    // CHART CREATORS
     // ============================================
-    const statusData = parseDict(chartsData.status || {});
-    const statusCtx = document.getElementById('statusChart');
-    if (statusCtx) {
-        new Chart(statusCtx, {
+
+    /**
+     * Create a Doughnut/Status Chart
+     */
+    function createStatusChart(canvasId, data, clickUrl, drillDownFunction) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+
+        const chartData = parseDict(data || {});
+        if (chartData.labels.length === 0) return null;
+
+        const theme = getThemeColors();
+        
+        return new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: statusData.labels,
+                labels: chartData.labels,
                 datasets: [{
-                    data: statusData.values,
-                    backgroundColor: statusData.labels.map(s => {
-                        if (s === 'Open') return colors.blue;
-                        if (s === 'Assigned') return colors.orange;
-                        if (s === 'Hold') return colors.amber;
-                        if (s === 'Escalated') return colors.purple;
-                        if (s === 'Closed') return colors.green;
-                        return colors.grey;
-                    }),
+                    data: chartData.values,
+                    backgroundColor: chartData.labels.map(label => 
+                        COLORS.status[label] || COLORS.grey
+                    ),
                     borderWidth: 2,
-                    borderColor: getThemeBorderColor(),
+                    borderColor: theme.borderColor,
                     hoverOffset: 15,
                 }]
             },
             options: {
-                ...commonOptions,
+                ...getCommonOptions(),
                 cutout: '65%',
-                onClick: (event, elements) => {
+                onClick: function(event, elements) {
                     if (elements.length > 0) {
                         const index = elements[0].index;
-                        const status = statusCtx.chart.data.labels[index];
-                        window.location.href = `/admin/tickets/?status=${encodeURIComponent(status)}`;
+                        const label = this.data.labels[index];
+                        if (drillDownFunction) {
+                            drillDownFunction(label, label);
+                        }
                     }
                 }
             }
         });
     }
 
-    // ============================================
-    // CHART 2: UNIT-WISE TICKETS (PIE)
-    // ============================================
-    const unitData = parseArray(chartsData.units || []);
-    const unitCtx = document.getElementById('unitChart');
-    if (unitCtx) {
-        new Chart(unitCtx, {
+    /**
+     * Create a Priority Chart (Pie)
+     */
+    function createPriorityChart(canvasId, data, clickUrl, drillDownFunction) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+
+        const chartData = parseDict(data || {});
+        if (chartData.labels.length === 0) return null;
+
+        const theme = getThemeColors();
+        
+        return new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: unitData.labels,
+                labels: chartData.labels,
                 datasets: [{
-                    data: unitData.values,
-                    backgroundColor: colorArray.slice(0, unitData.labels.length),
+                    data: chartData.values,
+                    backgroundColor: chartData.labels.map(label => 
+                        COLORS.priority[label] || COLORS.grey
+                    ),
                     borderWidth: 2,
-                    borderColor: getThemeBorderColor(),
+                    borderColor: theme.borderColor,
                     hoverOffset: 15,
                 }]
             },
             options: {
-                ...commonOptions,
-                onClick: (event, elements) => {
+                ...getCommonOptions(),
+                onClick: function(event, elements) {
                     if (elements.length > 0) {
                         const index = elements[0].index;
-                        const unitId = unitData.ids[index];
-                        window.location.href = `/admin/tickets/?unit=${unitId}`;
+                        const label = this.data.labels[index];
+                        if (drillDownFunction) {
+                            drillDownFunction(label, label);
+                        }
                     }
                 }
             }
         });
     }
 
-    // ============================================
-    // CHART 3: PRIORITY DISTRIBUTION (PIE)
-    // ============================================
-    const priorityData = parseDict(chartsData.priority || {});
-    const priorityCtx = document.getElementById('priorityChart');
-    if (priorityCtx) {
-        new Chart(priorityCtx, {
+    /**
+     * Create a Unit-wise Chart (Pie)
+     */
+    function createUnitChart(canvasId, data, drillDownFunction) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+
+        const chartData = parseArray(data || []);
+        if (chartData.labels.length === 0) return null;
+
+        const theme = getThemeColors();
+        
+        return new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: priorityData.labels,
+                labels: chartData.labels,
                 datasets: [{
-                    data: priorityData.values,
-                    backgroundColor: priorityData.labels.map(p => {
-                        if (p === 'Critical') return colors.red;
-                        if (p === 'High') return colors.orange;
-                        if (p === 'Medium') return colors.blue;
-                        return colors.green;
-                    }),
+                    data: chartData.values,
+                    backgroundColor: COLOR_ARRAY.slice(0, chartData.labels.length),
                     borderWidth: 2,
-                    borderColor: getThemeBorderColor(),
+                    borderColor: theme.borderColor,
                     hoverOffset: 15,
                 }]
             },
             options: {
-                ...commonOptions,
-                onClick: (event, elements) => {
+                ...getCommonOptions(),
+                onClick: function(event, elements) {
                     if (elements.length > 0) {
                         const index = elements[0].index;
-                        const priority = priorityCtx.chart.data.labels[index];
-                        window.location.href = `/admin/tickets/?priority=${encodeURIComponent(priority)}`;
+                        const unitId = chartData.ids[index];
+                        const unitLabel = chartData.labels[index];
+                        if (drillDownFunction) drillDownFunction(unitId, unitLabel);
                     }
                 }
             }
         });
     }
 
-    // ============================================
-    // CHART 4: MONTHLY TICKET CREATION (BAR CHART)
-    // ============================================
-    const monthlyData = parseArray(chartsData.monthly || []);
-    const monthlyCtx = document.getElementById('monthlyChart');
-    if (monthlyCtx) {
-        new Chart(monthlyCtx, {
+    /**
+     * Create a Monthly Bar Chart
+     */
+    function createMonthlyChart(canvasId, data) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+
+        const chartData = parseArray(data || []);
+        if (chartData.labels.length === 0) return null;
+
+        const theme = getThemeColors();
+        
+        return new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: monthlyData.labels,
+                labels: chartData.labels,
                 datasets: [{
                     label: 'Tickets Created',
-                    data: monthlyData.values,
-                    backgroundColor: monthlyData.values.map((val, i) => {
-                        const alpha = 0.6 + (i / monthlyData.values.length) * 0.4;
+                    data: chartData.values,
+                    backgroundColor: chartData.values.map((val, i) => {
+                        const alpha = 0.6 + (i / chartData.values.length) * 0.4;
                         return `rgba(59, 130, 246, ${alpha})`;
                     }),
-                    borderColor: colors.blue,
+                    borderColor: COLORS.blue,
                     borderWidth: 1,
                     borderRadius: 8,
                     borderSkipped: false,
-                    hoverBackgroundColor: colors.blue,
+                    hoverBackgroundColor: COLORS.blue,
                 }]
             },
             options: {
-                ...commonOptions,
+                ...getCommonOptions(),
                 plugins: {
-                    ...commonOptions.plugins,
+                    ...getCommonOptions().plugins,
                     legend: {
                         display: false
                     }
@@ -238,8 +282,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             display: false
                         },
                         ticks: {
-                            color: getThemeTextColor(),
-                            font: { family: 'Poppins', size: 11 },
+                            color: theme.textColor,
+                            font: { family: 'Poppins, Inter, sans-serif', size: 11 },
                             maxRotation: 45,
                             minRotation: 45,
                         }
@@ -248,11 +292,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         beginAtZero: true,
                         ticks: {
                             precision: 0,
-                            color: getThemeTextColor(),
-                            font: { family: 'Poppins', size: 11 },
+                            color: theme.textColor,
+                            font: { family: 'Poppins, Inter, sans-serif', size: 11 },
                         },
                         grid: {
-                            color: getThemeGridColor(),
+                            color: theme.gridColor,
                         }
                     }
                 }
@@ -260,34 +304,40 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ============================================
-    // CHART 5: DEPARTMENT-WISE TICKETS (HORIZONTAL BAR)
-    // ============================================
-    const deptData = parseArray(chartsData.departments || []);
-    const deptCtx = document.getElementById('departmentChart');
-    if (deptCtx && deptData.labels.length > 0) {
-        new Chart(deptCtx, {
+    /**
+     * Create a Department-wise Horizontal Bar Chart
+     */
+    function createDepartmentChart(canvasId, data, clickUrl) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+
+        const chartData = parseArray(data || []);
+        if (chartData.labels.length === 0) return null;
+
+        const theme = getThemeColors();
+        
+        return new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: deptData.labels,
+                labels: chartData.labels,
                 datasets: [{
                     label: 'Tickets',
-                    data: deptData.values,
-                    backgroundColor: deptData.values.map((val, i) => {
-                        const colorIndex = i % colorArray.length;
-                        return colorArray[colorIndex];
+                    data: chartData.values,
+                    backgroundColor: chartData.values.map((val, i) => {
+                        const colorIndex = i % COLOR_ARRAY.length;
+                        return COLOR_ARRAY[colorIndex];
                     }),
                     borderWidth: 1,
-                    borderColor: getThemeBorderColor(),
+                    borderColor: theme.borderColor,
                     borderRadius: 6,
                     borderSkipped: false,
                 }]
             },
             options: {
-                ...commonOptions,
-                indexAxis: 'y', // Makes it horizontal
+                ...getCommonOptions(),
+                indexAxis: 'y',
                 plugins: {
-                    ...commonOptions.plugins,
+                    ...getCommonOptions().plugins,
                     legend: {
                         display: false
                     }
@@ -297,33 +347,326 @@ document.addEventListener('DOMContentLoaded', function() {
                         beginAtZero: true,
                         ticks: {
                             precision: 0,
-                            color: getThemeTextColor(),
-                            font: { family: 'Poppins', size: 11 },
+                            color: theme.textColor,
+                            font: { family: 'Poppins, Inter, sans-serif', size: 11 },
                         },
                         grid: {
-                            color: getThemeGridColor(),
+                            color: theme.gridColor,
                         }
                     },
                     y: {
                         ticks: {
-                            color: getThemeTextColor(),
-                            font: { family: 'Poppins', size: 11 },
+                            color: theme.textColor,
+                            font: { family: 'Poppins, Inter, sans-serif', size: 11 },
                         },
                         grid: {
                             display: false
                         }
                     }
                 },
-                onClick: (event, elements) => {
+                onClick: function(event, elements) {
                     if (elements.length > 0) {
                         const index = elements[0].index;
-                        const deptId = deptData.ids[index];
-                        window.location.href = `/admin/tickets/?department=${deptId}`;
+                        const deptId = chartData.ids[index];
+                        if (clickUrl) {
+                            window.location.href = clickUrl + '?department=' + encodeURIComponent(deptId);
+                        }
                     }
                 }
             }
         });
     }
 
-    console.log('✅ Charts initialized successfully!');
-});
+    /**
+     * Create a Department Status Chart (for Employee Dashboard)
+     */
+    function createDeptStatusChart(canvasId, data, drillDownFunction) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+
+        const chartData = parseDict(data || {});
+        if (chartData.labels.length === 0) {
+            // Show empty state
+            const emptyEl = document.getElementById(canvasId + 'Empty');
+            if (emptyEl) emptyEl.style.display = 'flex';
+            ctx.style.display = 'none';
+            return null;
+        }
+
+        const theme = getThemeColors();
+        
+        return new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    data: chartData.values,
+                    backgroundColor: chartData.labels.map(label => 
+                        COLORS.status[label] || COLORS.grey
+                    ),
+                    borderWidth: 2,
+                    borderColor: theme.borderColor,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                ...getCommonOptions(),
+                cutout: '65%',
+                onClick: function(event, elements) {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const label = this.data.labels[index];
+                        if (drillDownFunction) {
+                            drillDownFunction(label);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Create a Department Priority Chart (for Employee Dashboard)
+     */
+    function createDeptPriorityChart(canvasId, data, drillDownFunction) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+
+        const chartData = parseDict(data || {});
+        if (chartData.labels.length === 0) {
+            const emptyEl = document.getElementById(canvasId + 'Empty');
+            if (emptyEl) emptyEl.style.display = 'flex';
+            ctx.style.display = 'none';
+            return null;
+        }
+
+        const theme = getThemeColors();
+        
+        return new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    data: chartData.values,
+                    backgroundColor: chartData.labels.map(label => 
+                        COLORS.priority[label] || COLORS.grey
+                    ),
+                    borderWidth: 2,
+                    borderColor: theme.borderColor,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                ...getCommonOptions(),
+                onClick: function(event, elements) {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const label = this.data.labels[index];
+                        if (drillDownFunction) {
+                            drillDownFunction(label);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // ============================================
+    // THEME UPDATE FUNCTION
+    // ============================================
+    function updateAllCharts() {
+        const theme = getThemeColors();
+        Chart.helpers.each(Chart.instances, function(instance) {
+            // Update border colors
+            if (instance.data && instance.data.datasets) {
+                instance.data.datasets.forEach(function(dataset) {
+                    if (dataset.borderColor && typeof dataset.borderColor === 'string') {
+                        dataset.borderColor = theme.borderColor;
+                    }
+                });
+            }
+            
+            // Update legend colors
+            if (instance.options.plugins && instance.options.plugins.legend) {
+                if (instance.options.plugins.legend.labels) {
+                    instance.options.plugins.legend.labels.color = theme.textColor;
+                }
+            }
+            
+            // Update scales colors
+            if (instance.options.scales) {
+                if (instance.options.scales.x) {
+                    if (instance.options.scales.x.ticks) {
+                        instance.options.scales.x.ticks.color = theme.textColor;
+                    }
+                    if (instance.options.scales.x.grid) {
+                        instance.options.scales.x.grid.color = theme.gridColor;
+                    }
+                }
+                if (instance.options.scales.y) {
+                    if (instance.options.scales.y.ticks) {
+                        instance.options.scales.y.ticks.color = theme.textColor;
+                    }
+                    if (instance.options.scales.y.grid) {
+                        instance.options.scales.y.grid.color = theme.gridColor;
+                    }
+                }
+            }
+            
+            instance.update();
+        });
+    }
+
+    // ============================================
+    // WATCH FOR THEME CHANGES
+    // ============================================
+    function watchThemeChanges() {
+        const themeObserver = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'data-theme') {
+                    setTimeout(updateAllCharts, 100);
+                }
+            });
+        });
+
+        themeObserver.observe(document.documentElement, {
+            attributes: true
+        });
+    }
+
+    // ============================================
+    // RESIZE HANDLER
+    // ============================================
+    function setupResizeHandler() {
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                Chart.helpers.each(Chart.instances, function(instance) {
+                    instance.resize();
+                });
+            }, 200);
+        });
+    }
+
+    // ============================================
+    // CHART INITIALIZATION FUNCTION
+    // ============================================
+    window.initCharts = function(config) {
+        const charts = {
+            status: null,
+            priority: null,
+            unit: null,
+            monthly: null,
+            department: null,
+            deptStatus: null,
+            deptPriority: null
+        };
+
+        // Admin Dashboard Charts
+        if (config.adminCharts) {
+            const data = config.adminCharts;
+            
+            // Status Chart
+            if (document.getElementById('statusChart')) {
+                charts.status = createStatusChart(
+                    'statusChart', data.status,
+                    function(status) {
+                        if (config.drillDown) config.drillDown.status(status);
+                    }
+                );
+            }
+
+            // Unit Chart
+            if (document.getElementById('unitChart')) {
+                charts.unit = createUnitChart('unitChart', data.units,
+                    function(unitId, unitLabel) {
+                        if (config.drillDown) config.drillDown.unit(unitId, unitLabel);
+                    }
+                );
+            }
+
+            // Priority Chart
+            if (document.getElementById('priorityChart')) {
+                charts.priority = createPriorityChart(
+                    'priorityChart', data.priority,
+                    function(priority) {
+                        if (config.drillDown) config.drillDown.priority(priority);
+                    }
+                );
+            }
+
+            // Monthly Chart
+            if (document.getElementById('monthlyChart')) {
+                charts.monthly = createMonthlyChart(
+                    'monthlyChart',
+                    data.monthly
+                );
+            }
+
+            // Department Chart
+            if (document.getElementById('departmentChart')) {
+                charts.department = createDepartmentChart(
+                    'departmentChart',
+                    data.departments,
+                    '/admin/tickets/'
+                );
+            }
+        }
+
+        // Employee Dashboard Charts
+        if (config.employeeCharts) {
+            const data = config.employeeCharts;
+            
+            // Department Status Chart
+            if (document.getElementById('deptStatusChart')) {
+                charts.deptStatus = createDeptStatusChart(
+                    'deptStatusChart',
+                    data.dept_status,
+                    function(status) {
+                        if (config.drillDown) {
+                            config.drillDown.status(status);
+                        }
+                    }
+                );
+            }
+
+            // Department Priority Chart
+            if (document.getElementById('deptPriorityChart')) {
+                charts.deptPriority = createDeptPriorityChart(
+                    'deptPriorityChart',
+                    data.dept_priority,
+                    function(priority) {
+                        if (config.drillDown) {
+                            config.drillDown.priority(priority);
+                        }
+                    }
+                );
+            }
+        }
+
+        // Setup theme watching and resize
+        watchThemeChanges();
+        setupResizeHandler();
+
+        // Initial theme update
+        setTimeout(updateAllCharts, 500);
+
+        console.log('✅ Charts initialized successfully!');
+        return charts;
+    };
+
+    // ============================================
+    // EXPOSE HELPERS GLOBALLY
+    // ============================================
+    window.COLORS = COLORS;
+    window.createStatusChart = createStatusChart;
+    window.createPriorityChart = createPriorityChart;
+    window.createUnitChart = createUnitChart;
+    window.createMonthlyChart = createMonthlyChart;
+    window.createDepartmentChart = createDepartmentChart;
+    window.createDeptStatusChart = createDeptStatusChart;
+    window.createDeptPriorityChart = createDeptPriorityChart;
+    window.updateAllCharts = updateAllCharts;
+
+})();

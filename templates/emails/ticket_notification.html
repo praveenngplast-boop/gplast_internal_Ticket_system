@@ -1,174 +1,388 @@
-{% extends 'base.html' %}
+<!-- templates/email/ticket_notification.html -->
 {% load static %}
-
-{% block title %}Test Notifications - GPLAST{% endblock %}
-
-{% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm" style="border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-card);">
-                <div class="card-header" style="background: var(--accent-gradient); border-radius: 16px 16px 0 0; padding: 1rem 1.5rem;">
-                    <h4 class="mb-0 text-white">
-                        <i class="fa-solid fa-bell me-2"></i>Notification Tester
-                    </h4>
-                </div>
-                <div class="card-body p-4">
-                    <h5 class="mb-3" style="color: var(--text-primary);">
-                        <i class="fa-solid fa-flask me-2" style="color: var(--accent);"></i>Toast Notification Tests
-                    </h5>
-                    <div class="row g-3">
-                        <!-- Success -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-success w-100 py-3 fw-semibold" onclick="testSuccess()" style="border-radius: 12px;">
-                                <i class="fa-solid fa-check-circle me-2"></i>Success Toast
-                            </button>
-                        </div>
-                        <!-- Error -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-danger w-100 py-3 fw-semibold" onclick="testError()" style="border-radius: 12px;">
-                                <i class="fa-solid fa-circle-xmark me-2"></i>Error Toast
-                            </button>
-                        </div>
-                        <!-- Warning -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-warning w-100 py-3 fw-semibold" onclick="testWarning()" style="border-radius: 12px;">
-                                <i class="fa-solid fa-triangle-exclamation me-2"></i>Warning Toast
-                            </button>
-                        </div>
-                        <!-- Info -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-info text-white w-100 py-3 fw-semibold" onclick="testInfo()" style="border-radius: 12px;">
-                                <i class="fa-solid fa-circle-info me-2"></i>Info Toast
-                            </button>
-                        </div>
-                        <!-- Long Message -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-primary w-100 py-3 fw-semibold" onclick="testLongMessage()" style="border-radius: 12px; background: var(--accent-gradient); border: none;">
-                                <i class="fa-solid fa-align-left me-2"></i>Long Message
-                            </button>
-                        </div>
-                        <!-- Multiple Toasts -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn w-100 py-3 fw-semibold text-white" onclick="testMultiple()" style="border-radius: 12px; background: linear-gradient(135deg, #F59E0B, #D97706); border: none;">
-                                <i class="fa-solid fa-layer-group me-2"></i>Multiple (5)
-                            </button>
-                        </div>
-                        <!-- Clear All -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-secondary w-100 py-3 fw-semibold" onclick="clearAllNotifications()" style="border-radius: 12px;">
-                                <i class="fa-solid fa-broom me-2"></i>Clear All
-                            </button>
-                        </div>
-                    </div>
-
-                    <hr style="border-color: var(--border-color); margin: 2rem 0;">
-
-                    <h5 class="mb-3" style="color: var(--text-primary);">
-                        <i class="fa-solid fa-server me-2" style="color: var(--accent);"></i>Django Messages Test (Page Reload)
-                    </h5>
-                    <p class="text-muted mb-3">These buttons redirect and show Django messages as toasts:</p>
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="{% url 'test_success' %}" class="btn btn-success" style="border-radius: 12px;">
-                            <i class="fa-solid fa-check me-2"></i>Success Message
-                        </a>
-                        <a href="{% url 'test_error' %}" class="btn btn-danger" style="border-radius: 12px;">
-                            <i class="fa-solid fa-xmark me-2"></i>Error Message
-                        </a>
-                        <a href="{% url 'test_warning' %}" class="btn btn-warning" style="border-radius: 12px;">
-                            <i class="fa-solid fa-exclamation me-2"></i>Warning Message
-                        </a>
-                        <a href="{% url 'test_info' %}" class="btn btn-info text-white" style="border-radius: 12px;">
-                            <i class="fa-solid fa-info me-2"></i>Info Message
-                        </a>
-                    </div>
-
-                    <hr style="border-color: var(--border-color); margin: 2rem 0;">
-
-                    <h5 class="mb-3" style="color: var(--text-primary);">
-                        <i class="fa-solid fa-code me-2" style="color: var(--accent);"></i>Quick Test Buttons
-                    </h5>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button class="btn btn-sm btn-outline-success" onclick="showToast('Ticket #1234 created successfully!', 'success', 'Ticket Created')">
-                            Ticket Created
-                        </button>
-                        <button class="btn btn-sm btn-outline-info" onclick="showToast('Ticket #1234 assigned to John Doe', 'info', 'Ticket Assigned')">
-                            Ticket Assigned
-                        </button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="showToast('Ticket #1234 on hold - Waiting for vendor', 'warning', 'On Hold')">
-                            Ticket On Hold
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="showToast('Failed to update ticket. Try again.', 'error', 'Update Failed')">
-                            Update Failed
-                        </button>
-                    </div>
-                </div>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket {{ ticket.ticket_number }} - {{ action }}</title>
+    <style>
+        /* Reset */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1a202c;
+            background-color: #f7fafc;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #e94560, #c0392b);
+            padding: 30px 25px 25px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 {
+            color: #ffffff;
+            font-size: 26px;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .header .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            margin: 5px 0 0;
+            font-weight: 300;
+        }
+        .header .ticket-number {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 16px;
+            border-radius: 50px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        /* Content */
+        .content {
+            padding: 30px 25px;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+        .greeting strong {
+            color: #1a202c;
+        }
+        /* Status Badge - Fixed CSS */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        /* Status Colors - Using classes instead of dynamic CSS */
+        .status-open {
+            background-color: #22C55E;
+        }
+        .status-assigned {
+            background-color: #3B82F6;
+        }
+        .status-hold {
+            background-color: #F59E0B;
+        }
+        .status-escalated {
+            background-color: #EF4444;
+        }
+        .status-closed {
+            background-color: #6B7280;
+        }
+        .status-progress {
+            background-color: #8B5CF6;
+        }
+        .status-resolved {
+            background-color: #10B981;
+        }
+        /* Priority Badge Classes */
+        .priority-critical { 
+            background: #EF4444; 
+            color: white; 
+            padding: 4px 14px; 
+            border-radius: 50px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .priority-high { 
+            background: #F59E0B; 
+            color: #1a202c; 
+            padding: 4px 14px; 
+            border-radius: 50px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .priority-medium { 
+            background: #3B82F6; 
+            color: white; 
+            padding: 4px 14px; 
+            border-radius: 50px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        .priority-low { 
+            background: #6B7280; 
+            color: white; 
+            padding: 4px 14px; 
+            border-radius: 50px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            display: inline-block; 
+        }
+        /* Details Table */
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #f7fafc;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .details-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+        .details-table tr:last-child td {
+            border-bottom: none;
+        }
+        .details-table .label {
+            font-weight: 600;
+            color: #4a5568;
+            width: 120px;
+            background: #edf2f7;
+        }
+        .details-table .value {
+            color: #1a202c;
+        }
+        /* Description Box */
+        .description-box {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 15px 0;
+            border-left: 4px solid #e94560;
+        }
+        .description-box p {
+            margin: 0;
+            color: #2d3748;
+            font-size: 14px;
+        }
+        /* Remarks Box */
+        .remarks-box {
+            background: #fffbeb;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 15px 0;
+            border-left: 4px solid #F59E0B;
+        }
+        .remarks-box p {
+            margin: 0;
+            color: #78350f;
+            font-size: 14px;
+        }
+        /* Button */
+        .btn-view {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #e94560, #c0392b);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 15px;
+            margin: 15px 0 5px;
+            transition: all 0.3s ease;
+        }
+        .btn-view:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+        }
+        /* Footer */
+        .footer {
+            padding: 20px 25px;
+            background: #f7fafc;
+            text-align: center;
+            font-size: 12px;
+            color: #718096;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer a {
+            color: #e94560;
+            text-decoration: none;
+        }
+        .footer .social-icons {
+            margin: 10px 0;
+        }
+        .footer .social-icons a {
+            margin: 0 8px;
+            font-size: 18px;
+        }
+        /* Responsive */
+        @media only screen and (max-width: 480px) {
+            .container {
+                margin: 10px;
+                border-radius: 12px;
+            }
+            .content {
+                padding: 20px 15px;
+            }
+            .header {
+                padding: 20px 15px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .details-table td {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            .details-table .label {
+                width: 80px;
+            }
+            .btn-view {
+                padding: 12px 24px;
+                font-size: 14px;
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>{{ action_icon|default:"📧" }} Ticket {{ action|default:"Updated" }}</h1>
+            <div class="subtitle">{{ company_name|default:"GPLAST" }} Support System</div>
+            <div class="ticket-number">#{{ ticket.ticket_number }}</div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Greeting -->
+            <div class="greeting">
+                Hello <strong>{{ recipient_name|default:"User" }}</strong>,
             </div>
+            
+            <p style="color: #4a5568; margin-bottom: 20px;">
+                This is to inform you that ticket <strong>#{{ ticket.ticket_number }}</strong> 
+                has been <strong>{{ action_label|default:"updated"|lower }}</strong> successfully.
+            </p>
+            
+            <!-- Status and Priority Badges - FIXED: Using classes instead of dynamic CSS -->
+            <div style="margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <span class="status-badge status-{{ ticket.status|lower|cut:' ' }}">
+                    {{ ticket.status }}
+                </span>
+                <span class="priority-{{ ticket.priority|lower }}">
+                    {{ priority_icon|default:'' }} {{ ticket.priority }} Priority
+                </span>
+            </div>
+            
+            <!-- Ticket Details -->
+            <table class="details-table">
+                <tr>
+                    <td class="label">Ticket Number</td>
+                    <td class="value"><strong>#{{ ticket.ticket_number }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="label">Subject</td>
+                    <td class="value">{{ ticket.subject }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Status</td>
+                    <td class="value">{{ ticket.status }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Priority</td>
+                    <td class="value">{{ ticket.priority }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Unit</td>
+                    <td class="value">{{ ticket.unit.full_name|default:"N/A" }} ({{ ticket.unit.code|default:"N/A" }})</td>
+                </tr>
+                <tr>
+                    <td class="label">Department</td>
+                    <td class="value">{{ ticket.department.name|default:"N/A" }}</td>
+                </tr>
+                {% if ticket.assigned_person %}
+                <tr>
+                    <td class="label">Assigned To</td>
+                    <td class="value">{{ ticket.assigned_person }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td class="label">Created By</td>
+                    <td class="value">{{ ticket.employee_name|default:"N/A" }} ({{ ticket.employee_id|default:"N/A" }})</td>
+                </tr>
+                <tr>
+                    <td class="label">Contact</td>
+                    <td class="value">
+                        {% if ticket.email %}{{ ticket.email }}{% endif %}
+                        {% if ticket.mobile %} | {{ ticket.mobile }}{% endif %}
+                        {% if not ticket.email and not ticket.mobile %}N/A{% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">Created</td>
+                    <td class="value">{{ ticket.created_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% if ticket.closed_at %}
+                <tr>
+                    <td class="label">Closed</td>
+                    <td class="value">{{ ticket.closed_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% endif %}
+            </table>
+            
+            <!-- Description -->
+            <h3 style="color: #1a202c; margin: 25px 0 10px; font-size: 16px;">📝 Description</h3>
+            <div class="description-box">
+                <p>{{ ticket.description|linebreaksbr|default:"No description provided." }}</p>
+            </div>
+            
+            <!-- Remarks -->
+            {% if remarks %}
+            <h3 style="color: #1a202c; margin: 20px 0 10px; font-size: 16px;">📌 Remarks</h3>
+            <div class="remarks-box">
+                <p>{{ remarks|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+            
+            <!-- View Ticket Button -->
+            <div style="text-align: center; margin: 25px 0 10px;">
+                <a href="{{ site_url|default:'http://localhost:8000' }}/ticket/{{ ticket.id }}/" class="btn-view">
+                    🔍 View Ticket Details
+                </a>
+            </div>
+            
+            <p style="color: #718096; font-size: 13px; text-align: center; margin-top: 15px;">
+                Or copy and paste this link in your browser:<br>
+                <span style="color: #e94560; word-break: break-all;">{{ site_url|default:'http://localhost:8000' }}/ticket/{{ ticket.id }}/</span>
+            </p>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="social-icons">
+                <span style="font-size: 16px;">🏢</span>
+                <span style="margin: 0 5px; color: #cbd5e0;">|</span>
+                <span style="font-size: 16px;">📧</span>
+            </div>
+            <p>
+                This is an automated notification from <strong>{{ company_name|default:"GPLAST" }} ERP System</strong>.<br>
+                For support, please contact: <a href="mailto:{{ support_email|default:'support@gplast.com' }}">{{ support_email|default:'support@gplast.com' }}</a>
+            </p>
+            <p style="margin: 5px 0 0; font-size: 11px; color: #a0aec0;">
+                &copy; {{ current_year|default:"2024" }} {{ company_name|default:"GPLAST" }}. All rights reserved.
+            </p>
         </div>
     </div>
-</div>
-
-<style>
-    .btn-success {
-        background: linear-gradient(135deg, #22C55E, #16A34A) !important;
-        border: none !important;
-        color: white !important;
-    }
-    .btn-success:hover {
-        background: linear-gradient(135deg, #16A34A, #15803D) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
-    }
-    
-    .btn-danger {
-        background: linear-gradient(135deg, #EF4444, #DC2626) !important;
-        border: none !important;
-        color: white !important;
-    }
-    .btn-danger:hover {
-        background: linear-gradient(135deg, #DC2626, #B91C1C) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-    }
-    
-    .btn-warning {
-        background: linear-gradient(135deg, #F59E0B, #D97706) !important;
-        border: none !important;
-        color: #1A2A6C !important;
-        font-weight: 600 !important;
-    }
-    .btn-warning:hover {
-        background: linear-gradient(135deg, #D97706, #B45309) !important;
-        color: #1A2A6C !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
-    }
-    
-    .btn-info {
-        background: linear-gradient(135deg, #3B82F6, #2563EB) !important;
-        border: none !important;
-    }
-    .btn-info:hover {
-        background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-    }
-    
-    .btn-secondary {
-        background: linear-gradient(135deg, #6B7280, #4B5563) !important;
-        border: none !important;
-    }
-    
-    .btn-outline-success, .btn-outline-info, .btn-outline-warning, 
-    .btn-outline-danger, .btn-outline-primary {
-        border-radius: 50px !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    .btn-outline-success:hover, .btn-outline-info:hover, .btn-outline-warning:hover,
-    .btn-outline-danger:hover, .btn-outline-primary:hover {
-        transform: translateY(-2px) !important;
-    }
-</style>
-
-{% endblock %}
+</body>
+</html>

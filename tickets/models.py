@@ -64,7 +64,7 @@ class AdminNotificationEmail(models.Model):
 
 
 # =========================================================================
-# EMPLOYEE MASTER MODEL (NEW - for auto-fetch)
+# EMPLOYEE MASTER MODEL
 # =========================================================================
 class EmployeeMaster(models.Model):
     """Employee directory for auto-fetching details in ticket creation"""
@@ -90,6 +90,29 @@ class EmployeeMaster(models.Model):
 
     def __str__(self):
         return f"{self.employee_id} - {self.employee_name}"
+
+
+# =========================================================================
+# DEPARTMENT CREDENTIAL MODEL (NEW - Password Management)
+# =========================================================================
+class DepartmentCredential(models.Model):
+    """Stores username & password per Unit+Department for employee login"""
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)
+    username = models.CharField(max_length=50)
+    password = models.CharField(max_length=50)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['unit__code', 'department__name']
+        verbose_name = 'Department Credential'
+        verbose_name_plural = 'Department Credentials'
+        unique_together = ['unit', 'department']  # One credential per unit+department
+
+    def __str__(self):
+        return f"{self.unit.code} - {self.department.name} ({self.username})"
 
 
 # =========================================================================

@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.contrib.auth.models import User
-from tickets.models import Ticket, Unit, Department, AdminContact, AdminNotificationEmail
+from tickets.models import Ticket, Unit, Department, AdminContact, AdminNotificationEmail, EmployeeMaster, DepartmentCredential
 from tickets.utils import validate_attachment
 
 class TicketForm(forms.ModelForm):
@@ -134,7 +134,11 @@ class AdminSetUserPasswordForm(SetPasswordForm):
 
 
 class UserSelectionForm(forms.Form):
-    user = forms.ModelChoiceField(queryset=User.objects.filter(is_staff=False).order_by('username'), label="Select Employee User", widget=forms.Select(attrs={'class': 'form-select'}))
+    user = forms.ModelChoiceField(
+        queryset=User.objects.filter(is_staff=False).order_by('username'), 
+        label="Select Employee User", 
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
 
 
 # Settings Forms
@@ -196,3 +200,42 @@ class AdminNotificationEmailForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['email'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Enter Email Address'})
         self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})
+
+
+# =========================================================================
+# NEW: Department Credential Form (if needed)
+# =========================================================================
+
+class DepartmentCredentialForm(forms.ModelForm):
+    """ Form for adding/editing department credentials """
+    class Meta:
+        model = DepartmentCredential
+        fields = ['unit', 'department', 'username', 'password', 'is_active']
+        widgets = {
+            'password': forms.PasswordInput(attrs={'class': 'form-control'}, render_value=True),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['unit'].queryset = Unit.objects.filter(is_active=True)
+        self.fields['department'].queryset = Department.objects.filter(is_active=True)
+        
+        for name, field in self.fields.items():
+            if name == 'is_active':
+                field.widget.attrs.update({'class': 'form-check-input'})
+            elif name in ['unit', 'department']:
+                field.widget.attrs.update({'class': 'form-select'})
+            else:
+                field.widget.attrs.update({'class': 'form-control'})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        unit = cleaned_data.get('unit')
+        department = cleaned_data.get('department')
+        
+        if unit and department:
+            if department.unit != unit:
+                raise ValidationError({
+                    "department": "Selected department does not belong to the selected unit."
+                })
+        return cleaned_data

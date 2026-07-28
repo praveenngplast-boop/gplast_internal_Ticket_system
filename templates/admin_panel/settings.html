@@ -30,38 +30,160 @@
     }
     .glass-header h5 { color: var(--accent-light); font-weight: 700; font-size: 0.95rem; }
 
-    .form-control, .form-select, input[type="text"], input[type="email"], input[type="password"],
-    input[type="number"], input[type="date"], textarea, select {
-        background-color: var(--input-bg) !important; border: 2px solid var(--border-color) !important;
-        color: var(--text-primary) !important; border-radius: 12px; padding: 0.6rem 1rem;
-        font-size: 0.9rem; transition: all 0.3s ease; height: 42px;
-        -webkit-text-fill-color: var(--text-primary) !important; caret-color: var(--text-primary) !important;
+    /* CRITICAL FIX: Consistent background for all input states */
+    .form-control, 
+    .form-select, 
+    input[type="text"], 
+    input[type="email"], 
+    input[type="password"],
+    input[type="number"], 
+    input[type="date"], 
+    textarea, 
+    select {
+        background-color: var(--input-bg) !important;
+        background: var(--input-bg) !important;
+        border: 2px solid var(--border-color) !important;
+        color: var(--text-primary) !important;
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        height: 42px;
+        -webkit-text-fill-color: var(--text-primary) !important;
+        caret-color: var(--text-primary) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
     }
-    .form-control:focus, .form-select:focus {
-        border-color: var(--accent) !important; box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.15) !important;
-        color: var(--text-primary) !important; outline: none !important;
+
+    .form-control:focus, 
+    .form-select:focus,
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    input[type="number"]:focus,
+    input[type="date"]:focus,
+    textarea:focus,
+    select:focus {
+        border-color: var(--accent) !important;
+        box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.15) !important;
+        color: var(--text-primary) !important;
+        outline: none !important;
+        background-color: var(--input-bg) !important;
+        background: var(--input-bg) !important;
+        -webkit-text-fill-color: var(--text-primary) !important;
     }
-    .form-control::placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
-    .form-select option, select option { background: var(--bg-secondary) !important; color: var(--text-primary) !important; padding: 8px 12px; }
+
+    .form-control::placeholder,
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--text-muted) !important;
+        -webkit-text-fill-color: var(--text-muted) !important;
+        opacity: 1 !important;
+    }
+
+    .form-select option, 
+    select option {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        padding: 8px 12px;
+        background-color: var(--bg-secondary) !important;
+    }
+
     .form-select {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adb5bd' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
-        background-repeat: no-repeat !important; background-position: right 1rem center !important;
-        background-size: 16px 12px !important; padding-right: 2.5rem !important;
-        -webkit-appearance: none !important; appearance: none !important;
+        background-repeat: no-repeat !important;
+        background-position: right 1rem center !important;
+        background-size: 16px 12px !important;
+        padding-right: 2.5rem !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        background-color: var(--input-bg) !important;
+        background: var(--input-bg) !important;
     }
-    :root:not([data-theme="dark"]) .form-control, :root:not([data-theme="dark"]) .form-select,
-    :root:not([data-theme="dark"]) input, :root:not([data-theme="dark"]) textarea, :root:not([data-theme="dark"]) select {
-        background-color: #f7fafc !important; border-color: #e2e8f0 !important; color: #2d3748 !important;
-    }
-    :root:not([data-theme="dark"]) .form-control:focus, :root:not([data-theme="dark"]) .form-select:focus {
-        background-color: #edf2f7 !important; border-color: #667eea !important;
-    }
-    :root:not([data-theme="dark"]) .form-select option, :root:not([data-theme="dark"]) select option {
-        background: #ffffff !important; color: #2d3748 !important;
-    }
-    .form-label { color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; margin-bottom: 0.4rem; }
-    .form-text { color: var(--text-secondary) !important; font-size: 0.7rem; margin-top: 0.25rem; }
 
+    /* LIGHT THEME */
+    :root:not([data-theme="dark"]) .form-control, 
+    :root:not([data-theme="dark"]) .form-select,
+    :root:not([data-theme="dark"]) input, 
+    :root:not([data-theme="dark"]) textarea, 
+    :root:not([data-theme="dark"]) select {
+        background-color: #f7fafc !important;
+        background: #f7fafc !important;
+        border-color: #e2e8f0 !important;
+        color: #2d3748 !important;
+        -webkit-text-fill-color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-control:focus, 
+    :root:not([data-theme="dark"]) .form-select:focus,
+    :root:not([data-theme="dark"]) input:focus,
+    :root:not([data-theme="dark"]) textarea:focus,
+    :root:not([data-theme="dark"]) select:focus {
+        background-color: #edf2f7 !important;
+        background: #edf2f7 !important;
+        border-color: #667eea !important;
+        color: #2d3748 !important;
+        -webkit-text-fill-color: #2d3748 !important;
+    }
+
+    :root:not([data-theme="dark"]) .form-select option, 
+    :root:not([data-theme="dark"]) select option {
+        background: #ffffff !important;
+        color: #2d3748 !important;
+        background-color: #ffffff !important;
+    }
+
+    /* DARK THEME */
+    [data-theme="dark"] .form-control, 
+    [data-theme="dark"] .form-select,
+    [data-theme="dark"] input, 
+    [data-theme="dark"] textarea, 
+    [data-theme="dark"] select {
+        background-color: rgba(255,255,255,0.05) !important;
+        background: rgba(255,255,255,0.05) !important;
+        border-color: rgba(255,255,255,0.1) !important;
+        color: #E8EDF5 !important;
+        -webkit-text-fill-color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .form-control:focus, 
+    [data-theme="dark"] .form-select:focus,
+    [data-theme="dark"] input:focus,
+    [data-theme="dark"] textarea:focus,
+    [data-theme="dark"] select:focus {
+        background-color: rgba(255,255,255,0.08) !important;
+        background: rgba(255,255,255,0.08) !important;
+        border-color: #60A5FA !important;
+        box-shadow: 0 0 0 4px rgba(96,165,250,0.2) !important;
+        color: #E8EDF5 !important;
+        -webkit-text-fill-color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .form-select option, 
+    [data-theme="dark"] select option {
+        background: #1a2440 !important;
+        color: #E8EDF5 !important;
+        background-color: #1a2440 !important;
+    }
+
+    /* Autofill override */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active,
+    textarea:-webkit-autofill,
+    select:-webkit-autofill {
+        -webkit-text-fill-color: var(--text-primary) !important;
+        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
+        box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
+        caret-color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+        background-color: var(--input-bg) !important;
+        background: var(--input-bg) !important;
+        transition: background-color 5000s ease-in-out 0s !important;
+    }
+
+    /* Password wrapper */
     .password-wrapper { position: relative; }
     .password-toggle-icon {
         position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
@@ -70,6 +192,9 @@
     }
     .password-toggle-icon:hover { color: var(--accent); }
     .password-wrapper .form-control { padding-right: 45px !important; }
+
+    .form-label { color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; margin-bottom: 0.4rem; }
+    .form-text { color: var(--text-secondary) !important; font-size: 0.7rem; margin-top: 0.25rem; }
 
     .user-badge {
         display: inline-flex; align-items: center; gap: 8px;
@@ -90,6 +215,8 @@
     .btn-danger-custom:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(229, 62, 62, 0.3); color: white; }
     .btn-success-custom { background: linear-gradient(135deg, #48bb78, #38a169); border: none; color: white; border-radius: 50px; padding: 0.6rem 1.5rem; font-weight: 600; font-size: 0.85rem; }
     .btn-success-custom:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(72, 187, 120, 0.3); color: white; }
+    .btn-warning-custom { background: linear-gradient(135deg, #F59E0B, #D97706); border: none; color: #1A2A6C; border-radius: 50px; padding: 0.6rem 1.5rem; font-weight: 600; font-size: 0.85rem; }
+    .btn-warning-custom:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3); color: #1A2A6C; }
     .btn-primary { background: var(--accent-gradient); border: none; color: white; border-radius: 50px; padding: 0.25rem 0.8rem; font-size: 0.75rem; }
     .btn-outline-primary { color: var(--accent); border: 2px solid var(--accent); border-radius: 50px; padding: 0.25rem 0.8rem; font-size: 0.75rem; background: transparent; }
     .btn-outline-primary:hover { background: var(--accent-gradient); color: white; }
@@ -135,6 +262,231 @@
     .section-divider .section-title { font-weight: 700; color: var(--accent-light); font-size: 0.95rem; white-space: nowrap; display: flex; align-items: center; gap: 0.5rem; }
     .section-divider .section-title i { color: var(--accent); }
 
+    .unit-credentials-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .unit-credentials-section .unit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(233, 69, 96, 0.2);
+        margin-bottom: 0.75rem;
+    }
+    .unit-credentials-section .unit-header h6 {
+        font-weight: 700;
+        color: var(--accent-light);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    .unit-credentials-section .unit-header .unit-badge {
+        background: rgba(233, 69, 96, 0.1);
+        color: var(--accent);
+        padding: 0.2rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    /* EXPANDABLE DEPARTMENT ROWS FOR EMPLOYEES TAB */
+    .dept-main-row {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .dept-main-row:hover {
+        background: rgba(233, 69, 96, 0.05) !important;
+    }
+    .dept-main-row .toggle-icon {
+        transition: transform 0.3s ease;
+        display: inline-block;
+        margin-right: 0.5rem;
+        color: var(--accent);
+        font-size: 0.8rem;
+    }
+    .dept-main-row .toggle-icon.expanded {
+        transform: rotate(90deg);
+    }
+    .dept-main-row .dept-name {
+        font-weight: 600;
+        color: var(--accent-light);
+        font-size: 0.85rem;
+    }
+    .dept-main-row .employee-count {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-left: 0.5rem;
+    }
+    .dept-main-row .credential-info {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-left: 0.5rem;
+    }
+    .dept-main-row .credential-info i {
+        color: var(--accent);
+    }
+    .dept-loading-spinner {
+        margin-left: 0.5rem;
+        color: var(--accent);
+    }
+
+    .employee-details-row {
+        display: none;
+        background: rgba(233, 69, 96, 0.02);
+    }
+    .employee-details-row.expanded {
+        display: table-row;
+    }
+    .employee-details-row td {
+        padding: 0 !important;
+    }
+    .employee-details-row .employee-table-wrapper {
+        padding: 0.5rem 1rem 0.5rem 2.5rem;
+    }
+    .employee-details-row .employee-table-wrapper .table {
+        margin-bottom: 0;
+        background: transparent;
+    }
+    .employee-details-row .employee-table-wrapper .table th {
+        font-size: 0.6rem;
+        padding: 0.3rem 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        background: transparent;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .employee-details-row .employee-table-wrapper .table td {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.5rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        background: transparent;
+    }
+    .employee-details-row .employee-table-wrapper .table tr:hover td {
+        background: rgba(233, 69, 96, 0.03) !important;
+    }
+    .employee-details-row .employee-table-wrapper .employee-id {
+        font-weight: 600;
+        color: var(--accent-light);
+        font-family: monospace;
+    }
+    .employee-details-row .employee-table-wrapper .no-employees {
+        padding: 0.5rem 0.5rem;
+        color: var(--text-muted);
+        font-size: 0.7rem;
+        font-style: italic;
+    }
+    .dept-loading {
+        text-align: center;
+        padding: 0.5rem;
+        color: var(--text-muted);
+        font-size: 0.7rem;
+    }
+    .dept-error {
+        text-align: center;
+        padding: 0.5rem;
+        color: #EF4444;
+        font-size: 0.7rem;
+    }
+
+    /* Credentials Table Styles */
+    .credential-table th {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: var(--text-secondary);
+        border-bottom: 2px solid rgba(233, 69, 96, 0.2);
+    }
+    .credential-table td {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.4rem;
+        vertical-align: middle;
+    }
+    .credential-table .cred-username {
+        font-family: monospace;
+        font-weight: 600;
+        color: var(--accent-light);
+    }
+    .credential-table .cred-password {
+        font-family: monospace;
+        color: var(--text-muted);
+        letter-spacing: 1px;
+    }
+    .credential-table .cred-dept {
+        font-weight: 500;
+    }
+
+    /* Toggle button styles for Unit and Department */
+    .toggle-status-btn {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        border: none;
+    }
+    .toggle-status-btn:hover {
+        transform: scale(1.05);
+    }
+    .toggle-status-btn.active {
+        background: #48bb78;
+        color: white;
+    }
+    .toggle-status-btn.inactive {
+        background: #fc8181;
+        color: white;
+    }
+
+    /* Employee Action Cards - FIXED TEXT COLORS */
+    .action-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    .action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px rgba(233, 69, 96, 0.08);
+        border-color: rgba(233, 69, 96, 0.2);
+    }
+    .action-card .card-body {
+        padding: 1.25rem;
+        text-align: center;
+    }
+    .action-card .action-icon {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    .action-card .action-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-primary) !important;
+        margin-bottom: 0.25rem;
+    }
+    .action-card .action-subtitle {
+        font-size: 0.7rem;
+        color: var(--text-muted) !important;
+        margin-bottom: 0.75rem;
+    }
+    .action-card .btn {
+        font-size: 0.75rem;
+        padding: 0.3rem 1rem;
+    }
+    .action-card .btn-success-custom {
+        color: white !important;
+    }
+    .action-card .btn-primary-custom {
+        color: white !important;
+    }
+
     .modal-content { background: var(--bg-card) !important; border: 1px solid var(--border-color) !important; border-radius: 16px; animation: modalSlideIn 0.4s ease; }
     .modal-header { border-bottom: 1px solid var(--border-color) !important; padding: 1rem 1.5rem; }
     .modal-body { padding: 1.5rem; color: var(--text-primary) !important; }
@@ -143,6 +495,41 @@
     #confirmModal .modal-header { background: var(--accent-gradient) !important; border: none !important; border-radius: 16px 16px 0 0; }
     #confirmModal .modal-header .modal-title { color: white !important; font-weight: 700; }
     #confirmModal .btn-close { filter: brightness(0) invert(1) !important; }
+
+    .password-reset-card {
+        background: rgba(245, 158, 11, 0.05);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 12px;
+        padding: 1.25rem;
+    }
+    .password-reset-card .card-title {
+        color: #F59E0B;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .no-data-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    .no-data-message i {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 0.75rem;
+        color: var(--text-muted);
+        opacity: 0.5;
+    }
+
+    /* Status indicator for inactive credentials - added this to make them more visible */
+    .credential-row.inactive {
+        opacity: 0.7;
+    }
+    .credential-row.inactive .cred-username,
+    .credential-row.inactive .cred-password {
+        opacity: 0.6;
+    }
 
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg-primary); border-radius: 10px; }
@@ -154,6 +541,13 @@
         .form-control, .form-select { font-size: 0.85rem; height: 38px; }
         .btn-primary-custom, .btn-danger-custom, .btn-success-custom { width: 100%; }
         .nav-tabs .nav-link { font-size: 0.7rem; padding: 0.5rem 0.8rem; }
+        .employee-details-row .employee-table-wrapper { padding: 0.5rem 0.5rem 0.5rem 1.5rem; }
+        .employee-details-row .employee-table-wrapper .table td,
+        .employee-details-row .employee-table-wrapper .table th {
+            font-size: 0.6rem;
+            padding: 0.2rem 0.3rem;
+        }
+        .credential-table td { font-size: 0.7rem; }
     }
     @media (max-width: 576px) {
         .card-body { padding: 0.75rem !important; }
@@ -161,6 +555,17 @@
         .nav-tabs .nav-link { font-size: 0.6rem; padding: 0.4rem 0.5rem; }
         .table { font-size: 0.7rem; }
         .badge { font-size: 0.5rem; }
+        .employee-details-row .employee-table-wrapper { padding: 0.5rem 0.3rem 0.5rem 0.8rem; }
+        .employee-details-row .employee-table-wrapper .table td,
+        .employee-details-row .employee-table-wrapper .table th {
+            font-size: 0.55rem;
+            padding: 0.15rem 0.2rem;
+        }
+        .credential-table td { font-size: 0.65rem; }
+        .credential-table .cred-username { font-size: 0.65rem; }
+        .credential-table .cred-password { font-size: 0.65rem; }
+        .action-card .action-icon { font-size: 1.5rem; }
+        .action-card .action-title { font-size: 0.75rem; }
     }
 </style>
 {% endblock %}
@@ -181,192 +586,348 @@
     <div class="card panel-card shadow-sm">
         <div class="card-header p-0 border-bottom-0">
             <ul class="nav nav-tabs" id="settingsTab" role="tablist">
-                <li class="nav-item"><button class="nav-link active" id="security-tab" data-bs-toggle="tab" data-bs-target="#security-content" type="button"><i class="fa-solid fa-shield-halved"></i>Account Security</button></li>
-                <li class="nav-item"><button class="nav-link" id="master-tab" data-bs-toggle="tab" data-bs-target="#master-content" type="button"><i class="fa-solid fa-database"></i>Master Data</button></li>
+                <li class="nav-item"><button class="nav-link active" id="master-tab" data-bs-toggle="tab" data-bs-target="#master-content" type="button"><i class="fa-solid fa-database"></i>Master Data</button></li>
                 <li class="nav-item"><button class="nav-link" id="communication-tab" data-bs-toggle="tab" data-bs-target="#communication-content" type="button"><i class="fa-solid fa-comments"></i>Communication</button></li>
-                <li class="nav-item"><button class="nav-link" id="employees-tab" data-bs-toggle="tab" data-bs-target="#employees-content" type="button"><i class="fa-solid fa-users"></i>Employee Directory</button></li>
+                <li class="nav-item"><button class="nav-link" id="employees-tab" data-bs-toggle="tab" data-bs-target="#employees-content" type="button"><i class="fa-solid fa-users"></i>Employees</button></li>
+                <li class="nav-item"><button class="nav-link" id="credentials-tab" data-bs-toggle="tab" data-bs-target="#credentials-content" type="button"><i class="fa-solid fa-key"></i>Credentials</button></li>
+                <li class="nav-item"><button class="nav-link" id="dept-employees-tab" data-bs-toggle="tab" data-bs-target="#dept-employees-content" type="button"><i class="fa-solid fa-user-tie"></i>Dept Employees</button></li>
             </ul>
         </div>
 
         <div class="card-body">
             <div class="tab-content" id="settingsTabContent">
 
-                <!-- TAB 1: ACCOUNT SECURITY -->
-                <div class="tab-pane fade show active" id="security-content">
-                    <div class="row g-4">
-                        <div class="col-lg-6">
-                            <div class="card panel-card h-100">
-                                <div class="card-header glass-header py-2"><h5 class="fw-bold mb-0"><i class="fa-solid fa-key me-2" style="color: var(--accent);"></i>Change My Password</h5></div>
-                                <div class="card-body p-3">
-                                    <div class="user-badge"><i class="fa-solid fa-user-circle"></i><span class="username">{{ request.user.username }}</span><span class="user-fullname">({{ request.user.get_full_name|default:request.user.username }})</span></div>
-                                    <form method="POST" action="{% url 'settings_passwords' %}" data-confirm="Are you sure you want to update your password?">
-                                        {% csrf_token %}<input type="hidden" name="action" value="change_my_password">
-                                        <div class="mb-2"><label class="form-label fw-bold">Current Password</label><div class="password-wrapper"><input type="password" name="current_password" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_change_current_password"><i class="fa-regular fa-eye"></i></button></div></div>
-                                        <div class="mb-2"><label class="form-label fw-bold">New Password</label><div class="password-wrapper"><input type="password" name="new_password1" id="id_change_new_password1" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_change_new_password1"><i class="fa-regular fa-eye"></i></button></div><div class="form-text"><ul><li>At least 8 characters</li><li>Can't be entirely numeric</li></ul></div></div>
-                                        <div class="mb-2"><label class="form-label fw-bold">Confirm New Password</label><div class="password-wrapper"><input type="password" name="new_password2" id="id_change_new_password2" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_change_new_password2"><i class="fa-regular fa-eye"></i></button></div></div>
-                                        <button type="submit" class="btn btn-primary-custom mt-2"><i class="fa-solid fa-save me-1"></i>Update My Password</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="card panel-card h-100">
-                                <div class="card-header glass-header py-2"><h5 class="fw-bold mb-0"><i class="fa-solid fa-user-lock me-2" style="color: var(--accent);"></i>Reset Employee Password</h5></div>
-                                <div class="card-body p-3">
-                                    <div class="user-badge"><i class="fa-solid fa-users"></i><span class="username">{{ employee_user.username }}</span></div>
-                                    <form method="POST" action="{% url 'settings_passwords' %}" data-confirm="Reset password for {{ employee_user.username }}?">
-                                        {% csrf_token %}<input type="hidden" name="action" value="set_user_password"><input type="hidden" name="user" value="{{ employee_user.id }}">
-                                        <p class="form-text">Reset password for: <strong style="color: var(--accent-light);">{{ employee_user.username }}</strong></p>
-                                        <div class="mb-2"><label class="form-label fw-bold">New Password</label><div class="password-wrapper"><input type="password" name="new_password1" id="id_reset_new_password1" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_reset_new_password1"><i class="fa-regular fa-eye"></i></button></div></div>
-                                        <div class="mb-2"><label class="form-label fw-bold">Confirm New Password</label><div class="password-wrapper"><input type="password" name="new_password2" id="id_reset_new_password2" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_reset_new_password2"><i class="fa-regular fa-eye"></i></button></div></div>
-                                        <button type="submit" class="btn btn-danger-custom mt-2"><i class="fa-solid fa-sync-alt me-1"></i>Reset User Password</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB 2: MASTER DATA -->
-                <div class="tab-pane fade" id="master-content">
-                    <div class="section-divider"><span class="section-title"><i class="fa-solid fa-industry"></i>Units Management</span><button type="button" class="btn btn-primary rounded-pill px-3 ms-auto" data-bs-toggle="modal" data-bs-target="#addUnitModal"><i class="fa-solid fa-plus me-1"></i>Add Unit</button></div>
+                <!-- TAB 1: MASTER DATA -->
+                <div class="tab-pane fade show active" id="master-content">
+                    <div class="section-divider"><span class="section-title"><i class="fa-solid fa-industry"></i>Units</span><button type="button" class="btn btn-primary rounded-pill px-3 ms-auto" data-bs-toggle="modal" data-bs-target="#addUnitModal"><i class="fa-solid fa-plus me-1"></i>Add Unit</button></div>
                     <div class="table-responsive mb-4">
                         <table class="table table-hover align-middle mb-0">
-                            <thead><tr><th class="ps-3">Code</th><th>Unit Name</th><th>Status</th><th class="text-center">Actions</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th class="ps-3">Code</th>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
                             <tbody>
                                 {% for u in units %}
                                 <tr>
-                                    <td class="ps-3 fw-bold" style="color: var(--accent-light);">{{ u.code }}</td><td>{{ u.full_name }}</td>
-                                    <td><span class="badge bg-{% if u.is_active %}success{% else %}danger{% endif %}">{% if u.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                                    <td class="ps-3 fw-bold" style="color: var(--accent-light);">{{ u.code }}</td>
+                                    <td>{{ u.full_name }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if u.is_active %}success{% else %}danger{% endif %}">
+                                            {% if u.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
                                     <td class="text-center" style="white-space: nowrap;">
-                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editUnitModal" data-id="{{ u.id }}" data-code="{{ u.code }}" data-fullname="{{ u.full_name }}"><i class="fa-solid fa-pen-to-square"></i></button>
-                                        <form method="POST" action="{% url 'settings_units' %}" class="d-inline confirm-form" data-confirm="Toggle status for {{ u.code }}?">
-                                            {% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="unit_id" value="{{ u.id }}">
-                                            <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2 ms-1">{% if u.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editUnitModal" data-id="{{ u.id }}" data-code="{{ u.code }}" data-fullname="{{ u.full_name }}">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <form method="POST" action="{% url 'settings_units' %}" class="d-inline confirm-form" data-confirm="Toggle {{ u.code }} status?">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="toggle">
+                                            <input type="hidden" name="unit_id" value="{{ u.id }}">
+                                            <button type="submit" class="btn btn-sm toggle-status-btn {% if u.is_active %}active{% else %}inactive{% endif %}">
+                                                {% if u.is_active %}Active{% else %}Inactive{% endif %}
+                                            </button>
                                         </form>
                                     </td>
                                 </tr>
-                                {% empty %}<tr><td colspan="4" class="text-center py-3 text-muted">No units defined.</td></tr>{% endfor %}
+                                {% empty %}
+                                <tr><td colspan="4" class="text-center py-3 text-muted">No units.</td></tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
 
-                    <div class="section-divider"><span class="section-title"><i class="fa-solid fa-cubes"></i>Departments Management</span><button type="button" class="btn btn-primary rounded-pill px-3 ms-auto" data-bs-toggle="modal" data-bs-target="#addDeptModal"><i class="fa-solid fa-plus me-1"></i>Add Department</button></div>
+                    <div class="section-divider"><span class="section-title"><i class="fa-solid fa-cubes"></i>Departments</span><button type="button" class="btn btn-primary rounded-pill px-3 ms-auto" data-bs-toggle="modal" data-bs-target="#addDeptModal"><i class="fa-solid fa-plus me-1"></i>Add Dept</button></div>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead><tr><th class="ps-3">Unit</th><th>Department</th><th>Status</th><th class="text-center">Actions</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th class="ps-3">Unit</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
                             <tbody>
                                 {% for d in departments %}
                                 <tr>
-                                    <td class="ps-3 fw-bold" style="color: var(--text-secondary);">{{ d.unit.code }}</td><td class="fw-bold" style="color: var(--accent-light);">{{ d.name }}</td>
-                                    <td><span class="badge bg-{% if d.is_active %}success{% else %}danger{% endif %}">{% if d.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                                    <td class="ps-3 fw-bold" style="color: var(--text-secondary);">{{ d.unit.code }}</td>
+                                    <td class="fw-bold" style="color: var(--accent-light);">{{ d.name }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if d.is_active %}success{% else %}danger{% endif %}">
+                                            {% if d.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
                                     <td class="text-center" style="white-space: nowrap;">
-                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editDeptModal" data-id="{{ d.id }}" data-name="{{ d.name }}"><i class="fa-solid fa-pen-to-square"></i></button>
-                                        <form method="POST" action="{% url 'settings_departments' %}" class="d-inline confirm-form" data-confirm="Toggle status for {{ d.name }}?">
-                                            {% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="dept_id" value="{{ d.id }}">
-                                            <button type="submit" class="btn btn-sm {% if d.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2 ms-1">{% if d.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editDeptModal" data-id="{{ d.id }}" data-name="{{ d.name }}">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <form method="POST" action="{% url 'settings_departments' %}" class="d-inline confirm-form" data-confirm="Toggle {{ d.name }} status?">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="toggle">
+                                            <input type="hidden" name="dept_id" value="{{ d.id }}">
+                                            <button type="submit" class="btn btn-sm toggle-status-btn {% if d.is_active %}active{% else %}inactive{% endif %}">
+                                                {% if d.is_active %}Active{% else %}Inactive{% endif %}
+                                            </button>
                                         </form>
                                     </td>
                                 </tr>
-                                {% empty %}<tr><td colspan="4" class="text-center py-3 text-muted">No departments defined.</td></tr>{% endfor %}
+                                {% empty %}
+                                <tr><td colspan="4" class="text-center py-3 text-muted">No departments.</td></tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- TAB 3: COMMUNICATION -->
+                <!-- TAB 2: COMMUNICATION -->
                 <div class="tab-pane fade" id="communication-content">
-                    <div class="section-divider"><span class="section-title"><i class="fa-solid fa-headset"></i>IT Helpdesk Contact Card</span></div>
-                    <div class="row mb-4"><div class="col-lg-6"><form method="POST" action="{% url 'settings_contact' %}" data-confirm="Save contact settings?">{% csrf_token %}{{ contact_form.as_p }}<button type="submit" class="btn btn-primary-custom mt-2"><i class="fa-solid fa-save me-1"></i>Save Contact Card</button></form></div></div>
+                    <div class="section-divider"><span class="section-title"><i class="fa-solid fa-headset"></i>Helpdesk Contact</span></div>
+                    <div class="row mb-4"><div class="col-lg-6"><form method="POST" action="{% url 'settings_contact' %}" data-confirm="Save contact?">{% csrf_token %}{{ contact_form.as_p }}<button type="submit" class="btn btn-primary-custom mt-2"><i class="fa-solid fa-save me-1"></i>Save</button></form></div></div>
                     <div class="section-divider"><span class="section-title"><i class="fa-solid fa-envelope-circle-check"></i>Notification Emails</span></div>
                     <div class="row">
-                        <div class="col-lg-6">
-                            <h6 style="font-size: 0.85rem;"><i class="fa-solid fa-plus-circle me-1" style="color: var(--accent);"></i>Add New Email</h6>
-                            <form method="POST" action="{% url 'settings_emails' %}" data-confirm="Add this email?">{% csrf_token %}<input type="hidden" name="action" value="add"><div class="input-group mb-3">{{ email_form.email }}<button type="submit" class="btn btn-primary">Add</button></div></form>
-                        </div>
-                        <div class="col-lg-6">
-                            <h6 style="font-size: 0.85rem;"><i class="fa-solid fa-list-check me-1" style="color: var(--accent);"></i>Active Alert Emails</h6>
-                            <div class="table-responsive" style="max-height: 200px;">
-                                <table class="table table-sm table-hover mb-0"><tbody>
-                                    {% for e in emails %}<tr><td>{{ e.email }}</td><td class="text-end"><form method="POST" action="{% url 'settings_emails' %}" class="d-inline confirm-form" data-confirm="Delete {{ e.email }}?">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="email_id" value="{{ e.id }}"><button type="submit" class="btn btn-sm btn-outline-danger border-0"><i class="fa-solid fa-trash-can"></i></button></form></td></tr>{% empty %}<tr><td colspan="2" class="text-center py-3 text-muted">No emails configured.</td></tr>{% endfor %}
-                                </tbody></table>
-                            </div>
-                        </div>
+                        <div class="col-lg-6"><h6 style="font-size: 0.85rem;"><i class="fa-solid fa-plus-circle me-1" style="color: var(--accent);"></i>Add Email</h6><form method="POST" action="{% url 'settings_emails' %}" data-confirm="Add email?">{% csrf_token %}<input type="hidden" name="action" value="add"><div class="input-group mb-3">{{ email_form.email }}<button type="submit" class="btn btn-primary">Add</button></div></form></div>
+                        <div class="col-lg-6"><h6 style="font-size: 0.85rem;"><i class="fa-solid fa-list-check me-1" style="color: var(--accent);"></i>Active Emails</h6><div class="table-responsive" style="max-height: 200px;"><table class="table table-sm table-hover mb-0"><tbody>{% for e in emails %}<tr><td>{{ e.email }}</td><td class="text-end"><form method="POST" action="{% url 'settings_emails' %}" class="d-inline confirm-form" data-confirm="Delete {{ e.email }}?">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="email_id" value="{{ e.id }}"><button type="submit" class="btn btn-sm btn-outline-danger border-0"><i class="fa-solid fa-trash-can"></i></button></form></td></tr>{% empty %}<tr><td colspan="2" class="text-center py-3 text-muted">No emails.</td></tr>{% endfor %}</tbody></table></div></div>
                     </div>
                 </div>
 
-                <!-- TAB 4: EMPLOYEE DIRECTORY -->
+                <!-- TAB 3: EMPLOYEE DIRECTORY -->
                 <div class="tab-pane fade" id="employees-content">
                     <div class="row g-3 mb-4">
+                        <!-- Download Card -->
                         <div class="col-md-4">
-                            <div class="card h-100" style="background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.2); border-radius: 12px;">
-                                <div class="card-body text-center p-3">
-                                    <i class="fa-solid fa-download fa-2x mb-2" style="color: #22C55E;"></i>
-                                    <h6 class="fw-bold mb-1" style="font-size: 0.85rem;">Download List</h6>
-                                    <p class="small text-muted mb-3" style="font-size: 0.7rem;">Export all employees to Excel</p>
-                                    <a href="{% url 'download_employee_list' %}" class="btn btn-success-custom btn-sm"><i class="fa-solid fa-file-excel me-1"></i>Download Excel</a>
+                            <div class="card action-card">
+                                <div class="card-body">
+                                    <i class="fa-solid fa-download action-icon" style="color: #22C55E;"></i>
+                                    <h6 class="action-title">Download</h6>
+                                    <p class="action-subtitle">Export employee list to Excel</p>
+                                    <a href="{% url 'download_employee_list' %}" class="btn btn-success-custom btn-sm rounded-pill px-3">
+                                        <i class="fa-solid fa-file-excel me-1"></i>Download
+                                    </a>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Bulk Upload Card -->
                         <div class="col-md-4">
-                            <div class="card h-100" style="background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px;">
-                                <div class="card-body text-center p-3">
-                                    <i class="fa-solid fa-upload fa-2x mb-2" style="color: var(--accent);"></i>
-                                    <h6 class="fw-bold mb-1" style="font-size: 0.85rem;">Bulk Upload</h6>
-                                    <p class="small text-muted mb-3" style="font-size: 0.7rem;">Upload Excel with employee data</p>
-                                    <form method="POST" action="{% url 'settings_employees' %}" enctype="multipart/form-data" class="d-inline">
-                                        {% csrf_token %}<input type="hidden" name="action" value="bulk_upload">
-                                        <label class="btn btn-primary-custom btn-sm mb-0" for="bulkExcelFile" style="cursor: pointer; font-size: 0.75rem;"><i class="fa-solid fa-file-excel me-1"></i>Choose & Upload</label>
-                                        <input type="file" name="excel_file" id="bulkExcelFile" accept=".xlsx,.xls" style="display: none;" onchange="this.form.submit()">
+                            <div class="card action-card">
+                                <div class="card-body">
+                                    <i class="fa-solid fa-upload action-icon" style="color: var(--accent);"></i>
+                                    <h6 class="action-title">Bulk Upload</h6>
+                                    <p class="action-subtitle">Upload Excel file with employee data</p>
+                                    <form method="POST" action="{% url 'settings_employees' %}" enctype="multipart/form-data" id="bulkUploadForm">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="bulk_upload">
+                                        <div class="d-flex flex-column align-items-center gap-2">
+                                            <label class="btn btn-primary-custom btn-sm rounded-pill px-3 mb-0" for="bulkExcelFile" style="cursor: pointer; font-size: 0.75rem; color: white !important;">
+                                                <i class="fa-solid fa-file-excel me-1"></i>Choose & Upload
+                                            </label>
+                                            <input type="file" name="excel_file" id="bulkExcelFile" accept=".xlsx,.xls" style="display: none;" onchange="document.getElementById('bulkUploadForm').submit()">
+                                            <small class="action-subtitle" style="font-size: 0.6rem;">.xlsx, .xls files only</small>
+                                        </div>
                                     </form>
-                                    <div class="small text-muted mt-2" style="font-size: 0.65rem;"><i class="fa-solid fa-info-circle me-1"></i>Columns: <strong>Employee ID*</strong>, <strong>Name*</strong>, Mobile, Email, Unit Code, Department</div>
+                                    <div class="mt-2 text-start" style="font-size: 0.6rem; color: var(--text-muted);">
+                                        <strong>Columns:</strong> Employee ID*, Name*, Mobile*, Email*, Unit Code, Department
+                                        <br>
+                                        <a href="{% url 'download_employee_template' %}" class="text-primary" style="font-size: 0.6rem;">
+                                            <i class="fa-solid fa-download me-1"></i>Download Template
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Add Manually Card -->
                         <div class="col-md-4">
-                            <div class="card h-100" style="background: rgba(139,92,246,0.05); border: 1px solid rgba(139,92,246,0.2); border-radius: 12px;">
-                                <div class="card-body text-center p-3">
-                                    <i class="fa-solid fa-user-plus fa-2x mb-2" style="color: #8B5CF6;"></i>
-                                    <h6 class="fw-bold mb-1" style="font-size: 0.85rem;">Add Manually</h6>
-                                    <p class="small text-muted mb-3" style="font-size: 0.7rem;">Add one employee at a time</p>
-                                    <button type="button" class="btn btn-sm rounded-pill text-white" style="background: #8B5CF6; font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#addEmployeeModal"><i class="fa-solid fa-plus me-1"></i>Add Employee</button>
+                            <div class="card action-card">
+                                <div class="card-body">
+                                    <i class="fa-solid fa-user-plus action-icon" style="color: #8B5CF6;"></i>
+                                    <h6 class="action-title">Add Manually</h6>
+                                    <p class="action-subtitle">Add one employee at a time</p>
+                                    <button type="button" class="btn rounded-pill px-3" style="background: #8B5CF6; color: white; font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                                        <i class="fa-solid fa-plus me-1"></i>Add Employee
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                        <h6 class="fw-bold mb-0" style="color: var(--accent-light); font-size: 0.9rem;"><i class="fa-solid fa-list-ul me-2" style="color: var(--accent);"></i>Employee List <span class="badge rounded-pill ms-2" style="background: rgba(59,130,246,0.15); color: var(--accent); font-size: 0.65rem;">{{ employees.count }}</span></h6>
-                        <form method="GET" action="{% url 'settings_page' %}#employees-content" class="d-flex gap-2">
-                            <input type="text" name="emp_search" class="form-control form-control-sm" placeholder="Search by ID, Name or Email..." value="{{ emp_search }}" style="width: 250px; max-width: 100%; font-size: 0.75rem;">
-                            <button type="submit" class="btn btn-sm btn-primary-custom" style="font-size: 0.75rem;"><i class="fa-solid fa-search"></i></button>
-                            {% if emp_search %}<a href="{% url 'settings_page' %}#employees-content" class="btn btn-sm btn-light-custom" style="font-size: 0.75rem;"><i class="fa-solid fa-times"></i> Clear</a>{% endif %}
-                        </form>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><h6 class="fw-bold mb-0" style="color: var(--accent-light); font-size: 0.9rem;"><i class="fa-solid fa-list-ul me-2" style="color: var(--accent);"></i>Employee List <span class="badge rounded-pill ms-2" style="background: rgba(59,130,246,0.15); color: var(--accent); font-size: 0.65rem;">{{ employees.count }}</span></h6><form method="GET" action="{% url 'settings_page' %}#employees-content" class="d-flex gap-2"><input type="text" name="emp_search" class="form-control form-control-sm" placeholder="Search..." value="{{ emp_search }}" style="width: 200px; font-size: 0.75rem;"><button type="submit" class="btn btn-sm btn-primary-custom" style="font-size: 0.75rem;"><i class="fa-solid fa-search"></i></button>{% if emp_search %}<a href="{% url 'settings_page' %}#employees-content" class="btn btn-sm btn-light-custom" style="font-size: 0.75rem;"><i class="fa-solid fa-times"></i></a>{% endif %}</form></div>
+                    <div class="table-responsive" style="max-height: 350px;"><table class="table table-hover align-middle mb-0"><thead><tr><th class="ps-3">ID</th><th>Name</th><th>Mobile</th><th>Email</th><th>Unit</th><th>Dept</th><th>Status</th><th class="text-center">Act</th></tr></thead><tbody>{% for emp in employees %}<tr><td class="ps-3 fw-bold" style="color: var(--accent-light); font-size: 0.7rem;">{{ emp.employee_id }}</td><td style="font-size: 0.7rem;">{{ emp.employee_name }}</td><td style="font-size: 0.7rem;">{{ emp.mobile }}</td><td style="font-size: 0.7rem;">{{ emp.email }}</td><td style="font-size: 0.65rem;">{{ emp.unit.code|default:"-" }}</td><td style="font-size: 0.65rem;">{{ emp.department.name|default:"-" }}</td><td><span class="badge bg-{% if emp.is_active %}success{% else %}danger{% endif %}" style="font-size: 0.5rem;">{% if emp.is_active %}Active{% else %}Inactive{% endif %}</span></td><td class="text-center" style="white-space: nowrap;"><button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-1" style="font-size: 0.55rem;" data-bs-toggle="modal" data-bs-target="#editEmployeeModal" data-id="{{ emp.id }}" data-empid="{{ emp.employee_id }}" data-name="{{ emp.employee_name }}" data-mobile="{{ emp.mobile }}" data-email="{{ emp.email }}" data-unit="{{ emp.unit_id }}" data-dept="{{ emp.department_id }}"><i class="fa-solid fa-pen-to-square"></i></button><form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Toggle {{ emp.employee_id }}?">{% csrf_token %}<input type="hidden" name="action" value="toggle_employee"><input type="hidden" name="emp_id" value="{{ emp.id }}"><button type="submit" class="btn btn-sm {% if emp.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-1 ms-1" style="font-size: 0.55rem;">{% if emp.is_active %}Off{% else %}On{% endif %}</button></form><form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Delete {{ emp.employee_id }}?">{% csrf_token %}<input type="hidden" name="action" value="delete_employee"><input type="hidden" name="emp_id" value="{{ emp.id }}"><button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-1 ms-1 border-0" style="font-size: 0.55rem;"><i class="fa-solid fa-trash-can"></i></button></form></td></tr>{% empty %}<tr><td colspan="8" class="text-center py-4 text-muted">No employees.{% if emp_search %} Try different search.{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+                </div>
+
+                <!-- TAB 4: CREDENTIALS (FIXED - Shows ALL credentials including inactive) -->
+                <div class="tab-pane fade" id="credentials-content">
+                    <!-- Admin Password Change -->
+                    <div class="row mb-4">
+                        <div class="col-lg-6">
+                            <div class="card panel-card h-100">
+                                <div class="card-header glass-header py-2"><h5 class="fw-bold mb-0"><i class="fa-solid fa-key me-2" style="color: var(--accent);"></i>Change Admin Password</h5></div>
+                                <div class="card-body p-3">
+                                    <div class="user-badge"><i class="fa-solid fa-user-shield"></i><span class="username">{{ request.user.username }}</span></div>
+                                    <form method="POST" action="{% url 'settings_passwords' %}" data-confirm="Update your password?">
+                                        {% csrf_token %}<input type="hidden" name="action" value="change_my_password">
+                                        <div class="mb-2"><label class="form-label fw-bold">Current Password</label><div class="password-wrapper"><input type="password" name="current_password" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_change_current_password"><i class="fa-regular fa-eye"></i></button></div></div>
+                                        <div class="mb-2"><label class="form-label fw-bold">New Password</label><div class="password-wrapper"><input type="password" name="new_password1" id="id_change_new_password1" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_change_new_password1"><i class="fa-regular fa-eye"></i></button></div><div class="form-text">Min 8 characters, not entirely numeric</div></div>
+                                        <div class="mb-2"><label class="form-label fw-bold">Confirm Password</label><div class="password-wrapper"><input type="password" name="new_password2" id="id_change_new_password2" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_change_new_password2"><i class="fa-regular fa-eye"></i></button></div></div>
+                                        <button type="submit" class="btn btn-primary-custom mt-2"><i class="fa-solid fa-save me-1"></i>Update Password</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card panel-card h-100 password-reset-card">
+                                <div class="card-header py-2" style="background: rgba(245, 158, 11, 0.1); border-bottom: 1px solid rgba(245, 158, 11, 0.2);"><h5 class="fw-bold mb-0" style="color: #F59E0B;"><i class="fa-solid fa-user-lock me-2"></i>Reset GPLUSERS Password</h5></div>
+                                <div class="card-body p-3">
+                                    <form method="POST" action="{% url 'settings_passwords' %}" data-confirm="Reset password for selected employee?">
+                                        {% csrf_token %}<input type="hidden" name="action" value="set_user_password">
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold">Select Employee <span class="text-danger">*</span></label>
+                                            <select name="user" class="form-select" required>
+                                                <option value="">-- Select Employee --</option>
+                                                {% if employee_users %}
+                                                    {% for emp_user in employee_users %}
+                                                    <option value="{{ emp_user.id }}">{{ emp_user.username }} </option>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <option value="" disabled>No employees available</option>
+                                                {% endif %}
+                                            </select>
+                                            <div class="form-text">Select the employee whose password needs to be reset</div>
+                                        </div>
+                                        <div class="mb-2"><label class="form-label fw-bold">New Password</label><div class="password-wrapper"><input type="password" name="new_password1" id="id_reset_new_password1" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_reset_new_password1"><i class="fa-regular fa-eye"></i></button></div></div>
+                                        <div class="mb-2"><label class="form-label fw-bold">Confirm Password</label><div class="password-wrapper"><input type="password" name="new_password2" id="id_reset_new_password2" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_reset_new_password2"><i class="fa-regular fa-eye"></i></button></div></div>
+                                        <button type="submit" class="btn btn-warning-custom mt-2"><i class="fa-solid fa-sync-alt me-1"></i>Reset Password</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="table-responsive" style="max-height: 400px;">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead><tr><th class="ps-3">Emp ID</th><th>Name</th><th>Mobile</th><th>Email</th><th>Unit</th><th>Dept</th><th>Status</th><th class="text-center">Actions</th></tr></thead>
-                            <tbody>
-                                {% for emp in employees %}
-                                <tr>
-                                    <td class="ps-3 fw-bold" style="color: var(--accent-light); font-size: 0.75rem;">{{ emp.employee_id }}</td>
-                                    <td style="font-size: 0.75rem;">{{ emp.employee_name }}</td>
-                                    <td style="font-size: 0.75rem;">{{ emp.mobile }}</td>
-                                    <td style="font-size: 0.75rem;">{{ emp.email }}</td>
-                                    <td style="font-size: 0.7rem;">{{ emp.unit.code|default:"-" }}</td>
-                                    <td style="font-size: 0.7rem;">{{ emp.department.name|default:"-" }}</td>
-                                    <td><span class="badge bg-{% if emp.is_active %}success{% else %}danger{% endif %}" style="font-size: 0.55rem;">{% if emp.is_active %}Active{% else %}Inactive{% endif %}</span></td>
-                                    <td class="text-center" style="white-space: nowrap;">
-                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" style="font-size: 0.6rem;" data-bs-toggle="modal" data-bs-target="#editEmployeeModal" data-id="{{ emp.id }}" data-empid="{{ emp.employee_id }}" data-name="{{ emp.employee_name }}" data-mobile="{{ emp.mobile }}" data-email="{{ emp.email }}" data-unit="{{ emp.unit_id }}" data-dept="{{ emp.department_id }}"><i class="fa-solid fa-pen-to-square"></i></button>
-                                        <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Toggle status for {{ emp.employee_id }}?">{% csrf_token %}<input type="hidden" name="action" value="toggle_employee"><input type="hidden" name="emp_id" value="{{ emp.id }}"><button type="submit" class="btn btn-sm {% if emp.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-2 ms-1" style="font-size: 0.6rem;">{% if emp.is_active %}Deact{% else %}Act{% endif %}</button></form>
-                                        <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Delete {{ emp.employee_id }} permanently?">{% csrf_token %}<input type="hidden" name="action" value="delete_employee"><input type="hidden" name="emp_id" value="{{ emp.id }}"><button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 ms-1 border-0" style="font-size: 0.6rem;"><i class="fa-solid fa-trash-can"></i></button></form>
-                                    </td>
-                                </tr>
-                                {% empty %}<tr><td colspan="8" class="text-center py-4 text-muted"><i class="fa-regular fa-users-slash me-1"></i>No employees in directory.{% if emp_search %} Try a different search.{% endif %}</td></tr>{% endfor %}
-                            </tbody>
-                        </table>
+                    <!-- Unit-wise Credentials (Username & Password) -->
+                    <div class="section-divider">
+                        <span class="section-title"><i class="fa-solid fa-key"></i>Unit-wise Credentials</span>
+                        <div class="d-flex gap-2 ms-auto">
+                            <a href="{% url 'download_credentials' %}" class="btn btn-success-custom btn-sm"><i class="fa-solid fa-download me-1"></i>Download All</a>
+                            <button type="button" class="btn btn-warning-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCredentialModal"><i class="fa-solid fa-plus me-1"></i>Add Credential</button>
+                        </div>
                     </div>
+
+                    {% if credentials_by_unit %}
+                        {% for unit_data in credentials_by_unit %}
+                        <div class="unit-credentials-section">
+                            <div class="unit-header">
+                                <h6><i class="fa-solid fa-building me-2" style="color: var(--accent);"></i>{{ unit_data.unit.code }} - {{ unit_data.unit.full_name }}</h6>
+                                <span class="unit-badge">{{ unit_data.credentials|length }} credentials</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 credential-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 30%;">Department</th>
+                                            <th style="width: 25%;">Username</th>
+                                            <th style="width: 25%;">Password</th>
+                                            <th style="width: 10%;">Status</th>
+                                            <th class="text-center" style="width: 10%;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for cred in unit_data.credentials %}
+                                        <tr class="credential-row {% if not cred.is_active %}inactive{% endif %}">
+                                            <td class="cred-dept">{{ cred.department.name }}</td>
+                                            <td><span class="cred-username">{{ cred.username }}</span></td>
+                                            <td><span class="cred-password">{{ cred.password }}</span></td>
+                                            <td>
+                                                <span class="badge bg-{% if cred.is_active %}success{% else %}danger{% endif %}" style="font-size: 0.55rem;">
+                                                    {% if cred.is_active %}Active{% else %}Inactive{% endif %}
+                                                </span>
+                                            </td>
+                                            <td class="text-center" style="white-space: nowrap;">
+                                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-1" style="font-size: 0.55rem;" data-bs-toggle="modal" data-bs-target="#editCredentialModal" data-id="{{ cred.id }}" data-username="{{ cred.username }}" data-password="{{ cred.password }}"><i class="fa-solid fa-pen-to-square"></i></button>
+                                                <form method="POST" action="{% url 'settings_credentials' %}" class="d-inline confirm-form" data-confirm="Toggle {{ cred.unit.code }}-{{ cred.department.name }}?">{% csrf_token %}<input type="hidden" name="action" value="toggle_credential"><input type="hidden" name="cred_id" value="{{ cred.id }}"><button type="submit" class="btn btn-sm {% if cred.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-1 ms-1" style="font-size: 0.55rem;">{% if cred.is_active %}Off{% else %}On{% endif %}</button></form>
+                                                <form method="POST" action="{% url 'settings_credentials' %}" class="d-inline confirm-form" data-confirm="Delete {{ cred.unit.code }}-{{ cred.department.name }}?">{% csrf_token %}<input type="hidden" name="action" value="delete_credential"><input type="hidden" name="cred_id" value="{{ cred.id }}"><button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-1 ms-1 border-0" style="font-size: 0.55rem;"><i class="fa-solid fa-trash-can"></i></button></form>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="5" class="text-center py-3 text-muted">No credentials for this unit.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-data-message">
+                            <i class="fa-solid fa-key"></i>
+                            <p class="mb-0">No credentials found. Add credentials for each department using the "Add Credential" button above.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- TAB 5: DEPARTMENT EMPLOYEES -->
+                <div class="tab-pane fade" id="dept-employees-content">
+                    <!-- Section Header -->
+                    <div class="section-divider">
+                        <span class="section-title"><i class="fa-solid fa-users"></i>Department-wise Employees</span>
+                        <div class="d-flex gap-2 ms-auto">
+                            <a href="{% url 'download_employee_list' %}" class="btn btn-success-custom btn-sm"><i class="fa-solid fa-download me-1"></i>Download All</a>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal"><i class="fa-solid fa-plus me-1"></i>Add Employee</button>
+                        </div>
+                    </div>
+
+                    {% if credentials_by_unit %}
+                        {% for unit_data in credentials_by_unit %}
+                        <div class="unit-credentials-section">
+                            <div class="unit-header">
+                                <h6><i class="fa-solid fa-building me-2" style="color: var(--accent);"></i>{{ unit_data.unit.code }} - {{ unit_data.unit.full_name }}</h6>
+                                <span class="unit-badge">{{ unit_data.credentials|length }} departments</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <tbody>
+                                        {% for cred in unit_data.credentials %}
+                                        <tr class="dept-main-row" data-dept-id="{{ cred.department.id }}" data-unit-id="{{ unit_data.unit.id }}">
+                                            <td colspan="1">
+                                                <span class="toggle-icon" id="toggle-icon-{{ cred.department.id }}"><i class="fa-solid fa-chevron-right"></i></span>
+                                                <span class="dept-name">{{ cred.department.name }}</span>
+                                                <span class="employee-count" id="emp-count-{{ cred.department.id }}">(0 employees)</span>
+                                                <span class="credential-info">
+                                                    <i class="fa-solid fa-user me-1"></i>{{ cred.username }}
+                                                    <i class="fa-solid fa-key ms-2 me-1"></i>{{ cred.password }}
+                                                </span>
+                                                <span class="dept-loading-spinner" id="spinner-{{ cred.department.id }}" style="display:none; margin-left: 0.5rem;">
+                                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr class="employee-details-row" id="employee-row-{{ cred.department.id }}">
+                                            <td colspan="1">
+                                                <div class="employee-table-wrapper" id="employee-content-{{ cred.department.id }}">
+                                                    <div class="dept-loading text-center py-2" id="loading-{{ cred.department.id }}">
+                                                        <i class="fa-solid fa-spinner fa-spin me-2"></i>Loading employees...
+                                                    </div>
+                                                    <div id="employee-list-{{ cred.department.id }}" style="display:none;"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="1" class="text-center py-3 text-muted">No departments found for this unit.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-data-message">
+                            <i class="fa-solid fa-users"></i>
+                            <p class="mb-0">No departments found. Add credentials for each department to manage employees.</p>
+                        </div>
+                    {% endif %}
                 </div>
 
             </div>
@@ -375,321 +936,234 @@
 </div>
 
 <!-- CONFIRMATION MODAL -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
-        <div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>Confirmation Required</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4"><p id="confirmModalBody" class="mb-0">Are you sure?</p></div>
-        <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-danger-custom rounded-pill px-4 fw-bold" id="confirmModalYesBtn">Yes, Proceed</button></div>
-    </div></div>
-</div>
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>Confirm</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><p id="confirmModalBody" class="mb-0">Are you sure?</p></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-danger-custom rounded-pill px-4 fw-bold" id="confirmModalYesBtn">Yes</button></div></div></div></div>
 
 <!-- ADD UNIT MODAL -->
-<div class="modal fade" id="addUnitModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
-    <form method="POST" action="{% url 'settings_units' %}" data-confirm="Add this unit?">{% csrf_token %}<input type="hidden" name="action" value="add">
-        <div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add New Unit</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4">
-            <div class="mb-3"><label class="form-label fw-bold">Unit Code <span class="text-danger">*</span></label>{{ unit_form.code }}<div class="form-text small">Short code (e.g., IMD). Auto-capitalized.</div></div>
-            <div class="mb-3"><label class="form-label fw-bold">Unit Full Name <span class="text-danger">*</span></label>{{ unit_form.full_name }}</div>
-            <div class="form-check mt-3"><input type="checkbox" name="is_active" id="id_unit_is_active" class="form-check-input" checked><label class="form-check-label fw-bold" for="id_unit_is_active">Active</label></div>
-        </div>
-        <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Add Unit</button></div>
-    </form>
-</div></div></div>
+<div class="modal fade" id="addUnitModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_units' %}" data-confirm="Add this unit?">{% csrf_token %}<input type="hidden" name="action" value="add"><div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add Unit</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Code <span class="text-danger">*</span></label>{{ unit_form.code }}</div><div class="mb-3"><label class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>{{ unit_form.full_name }}</div><div class="form-check"><input type="checkbox" name="is_active" id="id_unit_is_active" class="form-check-input" checked><label class="form-check-label fw-bold" for="id_unit_is_active">Active</label></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Add</button></div></form></div></div></div>
 
 <!-- EDIT UNIT MODAL -->
-<div class="modal fade" id="editUnitModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
-    <form method="POST" action="{% url 'settings_units' %}" data-confirm="Save changes?">{% csrf_token %}<input type="hidden" name="action" value="edit"><input type="hidden" name="unit_id" id="edit_unit_id">
-        <div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Unit</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4">
-            <div class="mb-3"><label class="form-label fw-bold">Unit Code <span class="text-danger">*</span></label><input type="text" name="code" id="edit_unit_code" class="form-control" required></div>
-            <div class="mb-3"><label class="form-label fw-bold">Unit Full Name <span class="text-danger">*</span></label><input type="text" name="full_name" id="edit_unit_fullname" class="form-control" required></div>
-        </div>
-        <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Save Changes</button></div>
-    </form>
-</div></div></div>
+<div class="modal fade" id="editUnitModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_units' %}" data-confirm="Save changes?">{% csrf_token %}<input type="hidden" name="action" value="edit"><input type="hidden" name="unit_id" id="edit_unit_id"><div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Unit</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Code <span class="text-danger">*</span></label><input type="text" name="code" id="edit_unit_code" class="form-control" required></div><div class="mb-3"><label class="form-label fw-bold">Full Name <span class="text-danger">*</span></label><input type="text" name="full_name" id="edit_unit_fullname" class="form-control" required></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Save</button></div></form></div></div></div>
 
 <!-- ADD DEPARTMENT MODAL -->
-<div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
-    <form method="POST" action="{% url 'settings_departments' %}" data-confirm="Add this department?">{% csrf_token %}<input type="hidden" name="action" value="add">
-        <div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add New Department</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4">
-            <div class="mb-3"><label class="form-label fw-bold">Parent Unit <span class="text-danger">*</span></label>{{ dept_form.unit }}</div>
-            <div class="mb-3"><label class="form-label fw-bold">Department Name <span class="text-danger">*</span></label>{{ dept_form.name }}</div>
-            <div class="form-check mt-3">{{ dept_form.is_active }}<label class="form-check-label fw-bold" for="id_is_active">Active</label></div>
-        </div>
-        <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Add Department</button></div>
-    </form>
-</div></div></div>
+<div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_departments' %}" data-confirm="Add this department?">{% csrf_token %}<input type="hidden" name="action" value="add"><div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add Department</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Unit <span class="text-danger">*</span></label>{{ dept_form.unit }}</div><div class="mb-3"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label>{{ dept_form.name }}</div><div class="form-check">{{ dept_form.is_active }}<label class="form-check-label fw-bold" for="id_is_active">Active</label></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Add</button></div></form></div></div></div>
 
 <!-- EDIT DEPARTMENT MODAL -->
-<div class="modal fade" id="editDeptModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg">
-    <form method="POST" action="{% url 'settings_departments' %}" data-confirm="Save changes?">{% csrf_token %}<input type="hidden" name="action" value="edit"><input type="hidden" name="dept_id" id="edit_dept_id">
-        <div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Department</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Department Name <span class="text-danger">*</span></label><input type="text" name="name" id="edit_dept_name" class="form-control" required></div></div>
-        <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Save Changes</button></div>
-    </form>
-</div></div></div>
+<div class="modal fade" id="editDeptModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_departments' %}" data-confirm="Save changes?">{% csrf_token %}<input type="hidden" name="action" value="edit"><input type="hidden" name="dept_id" id="edit_dept_id"><div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Department</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="name" id="edit_dept_name" class="form-control" required></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Save</button></div></form></div></div></div>
 
 <!-- ADD EMPLOYEE MODAL -->
-<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content border-0 shadow-lg">
-    <form method="POST" action="{% url 'settings_employees' %}" data-confirm="Add this employee?">{% csrf_token %}<input type="hidden" name="action" value="add_employee">
-        <div class="modal-header py-3" style="background: #8B5CF6;"><h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-user-plus me-2"></i>Add New Employee</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4">
-            <div class="row g-3">
-                <div class="col-md-6"><label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label><input type="text" name="employee_id" class="form-control" placeholder="e.g. EMP001" required><div class="form-text small">Unique ID. <strong>Mandatory</strong></div></div>
-                <div class="col-md-6"><label class="form-label fw-bold">Employee Name <span class="text-danger">*</span></label><input type="text" name="employee_name" class="form-control" placeholder="e.g. JOHN DOE" required><div class="form-text small">Full name. <strong>Mandatory</strong></div></div>
-                <div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" class="form-control" placeholder="10 digits" maxlength="10" required><div class="form-text small">10 digits. <strong>Mandatory</strong></div></div>
-                <div class="col-md-6"><label class="form-label fw-bold">Email <span class="text-danger">*</span></label><input type="email" name="email" class="form-control" placeholder="email@company.com" required><div class="form-text small">Valid email. <strong>Mandatory</strong></div></div>
-                <div class="col-md-6"><label class="form-label fw-bold">Unit</label><select name="unit" class="form-select"><option value="">-- Select (Optional) --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }}</option>{% endfor %}</select></div>
-                <div class="col-md-6"><label class="form-label fw-bold">Department</label><select name="department" class="form-select"><option value="">-- Select Unit First --</option></select></div>
-            </div>
-        </div>
-        <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn rounded-pill px-4 fw-bold text-white" style="background: #8B5CF6;">Add Employee</button></div>
-    </form>
-</div></div></div>
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_employees' %}" data-confirm="Add this employee?">{% csrf_token %}<input type="hidden" name="action" value="add_employee"><div class="modal-header py-3" style="background: #8B5CF6;"><h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-user-plus me-2"></i>Add Employee</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="row g-3"><div class="col-md-6"><label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label><input type="text" name="employee_id" class="form-control" placeholder="EMP001" required><div class="form-text small"><strong>Mandatory</strong></div></div><div class="col-md-6"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="employee_name" class="form-control" placeholder="JOHN DOE" required><div class="form-text small"><strong>Mandatory</strong></div></div><div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" class="form-control" placeholder="10 digits" maxlength="10" required><div class="form-text small"><strong>Mandatory</strong></div></div><div class="col-md-6"><label class="form-label fw-bold">Email <span class="text-danger">*</span></label><input type="email" name="email" class="form-control" placeholder="email@company.com" required><div class="form-text small"><strong>Mandatory</strong></div></div><div class="col-md-6"><label class="form-label fw-bold">Unit</label><select name="unit" class="form-select"><option value="">-- Optional --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }}</option>{% endfor %}</select></div><div class="col-md-6"><label class="form-label fw-bold">Department</label><select name="department" class="form-select"><option value="">-- Select Unit First --</option></select></div></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn rounded-pill px-4 fw-bold text-white" style="background: #8B5CF6;">Add</button></div></form></div></div></div>
 
 <!-- EDIT EMPLOYEE MODAL -->
-<div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content border-0 shadow-lg">
-    <form method="POST" action="{% url 'settings_employees' %}" data-confirm="Save changes?">{% csrf_token %}<input type="hidden" name="action" value="edit_employee"><input type="hidden" name="emp_id" id="edit_emp_id">
-        <div class="modal-header py-3" style="background: #8B5CF6;"><h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Employee</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body p-4">
-            <div class="row g-3">
-                <div class="col-md-6"><label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label><input type="text" name="employee_id" id="edit_emp_empid" class="form-control" required></div>
-                <div class="col-md-6"><label class="form-label fw-bold">Employee Name <span class="text-danger">*</span></label><input type="text" name="employee_name" id="edit_emp_name" class="form-control" required></div>
-                <div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" id="edit_emp_mobile" class="form-control" maxlength="10" required></div>
-                <div class="col-md-6"><label class="form-label fw-bold">Email <span class="text-danger">*</span></label><input type="email" name="email" id="edit_emp_email" class="form-control" required></div>
-                <div class="col-md-6"><label class="form-label fw-bold">Unit</label><select name="unit" id="edit_emp_unit" class="form-select"><option value="">-- Select --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }}</option>{% endfor %}</select></div>
-                <div class="col-md-6"><label class="form-label fw-bold">Department</label><select name="department" id="edit_emp_dept" class="form-select"><option value="">-- Select --</option>{% for d in departments %}<option value="{{ d.id }}">{{ d.name }} ({{ d.unit.code }})</option>{% endfor %}</select></div>
-            </div>
-        </div>
-        <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn rounded-pill px-4 fw-bold text-white" style="background: #8B5CF6;">Save Changes</button></div>
-    </form>
-</div></div></div>
+<div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_employees' %}" data-confirm="Save changes?">{% csrf_token %}<input type="hidden" name="action" value="edit_employee"><input type="hidden" name="emp_id" id="edit_emp_id"><div class="modal-header py-3" style="background: #8B5CF6;"><h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Employee</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="row g-3"><div class="col-md-6"><label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label><input type="text" name="employee_id" id="edit_emp_empid" class="form-control" required></div><div class="col-md-6"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="employee_name" id="edit_emp_name" class="form-control" required></div><div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" id="edit_emp_mobile" class="form-control" maxlength="10" required></div><div class="col-md-6"><label class="form-label fw-bold">Email <span class="text-danger">*</span></label><input type="email" name="email" id="edit_emp_email" class="form-control" required></div><div class="col-md-6"><label class="form-label fw-bold">Unit</label><select name="unit" id="edit_emp_unit" class="form-select"><option value="">-- Select --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }}</option>{% endfor %}</select></div><div class="col-md-6"><label class="form-label fw-bold">Department</label><select name="department" id="edit_emp_dept" class="form-select"><option value="">-- Select --</option>{% for d in departments %}<option value="{{ d.id }}">{{ d.name }} ({{ d.unit.code }})</option>{% endfor %}</select></div></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn rounded-pill px-4 fw-bold text-white" style="background: #8B5CF6;">Save</button></div></form></div></div></div>
+
+<!-- ADD CREDENTIAL MODAL -->
+<div class="modal fade" id="addCredentialModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_credentials' %}" data-confirm="Add this credential?">{% csrf_token %}<input type="hidden" name="action" value="add_credential"><div class="modal-header py-3" style="background: #F59E0B;"><h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-key me-2"></i>Add Credential</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Unit <span class="text-danger">*</span></label><select name="unit" class="form-select" id="credUnit" required><option value="">-- Select Unit --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }} - {{ u.full_name }}</option>{% endfor %}</select></div><div class="mb-3"><label class="form-label fw-bold">Department <span class="text-danger">*</span></label><select name="department" class="form-select" id="credDept" required><option value="">-- Select Unit First --</option></select></div><div class="mb-3"><label class="form-label fw-bold">Username <span class="text-danger">*</span></label><input type="text" name="username" class="form-control" placeholder="e.g. IMDPROD" required><div class="form-text small"><strong>Mandatory</strong></div></div><div class="mb-3"><label class="form-label fw-bold">Password <span class="text-danger">*</span></label><input type="text" name="password" class="form-control" placeholder="e.g. gplimdprod" required><div class="form-text small"><strong>Mandatory</strong></div></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn rounded-pill px-4 fw-bold text-dark" style="background: #F59E0B;">Add</button></div></form></div></div></div>
+
+<!-- EDIT CREDENTIAL MODAL -->
+<div class="modal fade" id="editCredentialModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_credentials' %}" data-confirm="Save changes?">{% csrf_token %}<input type="hidden" name="action" value="edit_credential"><input type="hidden" name="cred_id" id="edit_cred_id"><div class="modal-header py-3" style="background: #F59E0B;"><h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Credential</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Username <span class="text-danger">*</span></label><input type="text" name="username" id="edit_cred_username" class="form-control" required></div><div class="mb-3"><label class="form-label fw-bold">Password <span class="text-danger">*</span></label><input type="text" name="password" id="edit_cred_password" class="form-control" required></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn rounded-pill px-4 fw-bold text-dark" style="background: #F59E0B;">Save</button></div></form></div></div></div>
 
 {% endblock %}
-
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // ============================================
-        // CONFIRMATION MODAL - FIXED
+        // CONFIRMATION MODAL
         // ============================================
         let currentFormToSubmit = null, isProcessing = false;
         const modalEl = document.getElementById('confirmModal');
         if (modalEl) {
             const confirmBody = document.getElementById('confirmModalBody');
             const confirmYes = document.getElementById('confirmModalYesBtn');
-            
-            function forceCleanup() { 
-                document.querySelectorAll('.modal-backdrop').forEach(b => b.remove()); 
-                document.body.classList.remove('modal-open'); 
-                document.body.style.overflow = ''; 
-                document.body.style.paddingRight = '';
-                if(modalEl){
-                    modalEl.style.display = 'none';
-                    modalEl.classList.remove('show');
-                    modalEl.setAttribute('aria-hidden', 'true');
-                    modalEl.removeAttribute('aria-modal');
-                }
-            }
-            
+            function forceCleanup() { document.querySelectorAll('.modal-backdrop').forEach(b => b.remove()); document.body.classList.remove('modal-open'); document.body.style.overflow = ''; document.body.style.paddingRight = ''; if(modalEl){modalEl.style.display='none';modalEl.classList.remove('show');modalEl.setAttribute('aria-hidden','true');modalEl.removeAttribute('aria-modal');} }
             let bsModal = null;
-            function initModal() { 
-                if(window.bootstrap?.Modal){
-                    if(bsModal)try{bsModal.dispose()}catch(e){}
-                    bsModal = new bootstrap.Modal(modalEl, {
-                        backdrop: 'static',
-                        keyboard: true,
-                        focus: true
-                    });
-                    return true;
-                }
-                return false;
-            }
+            function initModal() { if(window.bootstrap?.Modal){if(bsModal)try{bsModal.dispose()}catch(e){}bsModal=new bootstrap.Modal(modalEl,{backdrop:'static',keyboard:true,focus:true});return true}return false }
             initModal();
-            
-            // Intercept all form submissions with data-confirm
             document.addEventListener('submit', function(e) {
                 const form = e.target;
-                if(form.classList.contains('confirmed')){
-                    setTimeout(() => form.classList.remove('confirmed'), 100);
-                    return;
-                }
+                if(form.classList.contains('confirmed')){setTimeout(()=>form.classList.remove('confirmed'),100);return}
                 let msg = form.getAttribute('data-confirm');
-                if(msg){
-                    e.preventDefault();
-                    e.stopPropagation();
-                    currentFormToSubmit = form;
-                    confirmBody.textContent = msg;
-                    
-                    // Hide any other open modals first
-                    document.querySelectorAll('.modal.show').forEach(m => {
-                        if(m !== modalEl) {
-                            const inst = bootstrap.Modal.getInstance(m);
-                            if(inst) inst.hide();
-                        }
-                    });
-                    
-                    // Clean up and show confirmation
-                    setTimeout(() => {
-                        forceCleanup();
-                        if(bsModal) bsModal.show();
-                        else if(initModal()) bsModal.show();
-                    }, 150);
-                }
+                if(msg){e.preventDefault();e.stopPropagation();currentFormToSubmit=form;confirmBody.textContent=msg;document.querySelectorAll('.modal.show').forEach(m=>{if(m!==modalEl){const inst=bootstrap.Modal.getInstance(m);if(inst)inst.hide();}});setTimeout(()=>{forceCleanup();if(bsModal)bsModal.show();else if(initModal())bsModal.show();},150);}
             });
-            
-            confirmYes.addEventListener('click', function(e) { 
-                e.preventDefault(); 
-                e.stopPropagation();
-                if(isProcessing || !currentFormToSubmit) return; 
-                isProcessing = true; 
-                const f = currentFormToSubmit; 
-                currentFormToSubmit = null; 
-                if(bsModal) bsModal.hide(); 
-                setTimeout(forceCleanup, 50); 
-                setTimeout(() => {
-                    if(f && f.tagName === 'FORM'){
-                        f.classList.add('confirmed');
-                        f.submit();
-                    }
-                    isProcessing = false;
-                    forceCleanup();
-                }, 200); 
-            });
-            
-            function handleCancel(){
-                currentFormToSubmit = null;
-                isProcessing = false;
-                if(bsModal) bsModal.hide();
-                setTimeout(forceCleanup, 150);
-            }
-            
-            modalEl.querySelectorAll('.btn-light-custom, [data-bs-dismiss="modal"], .btn-close').forEach(b => {
-                b.addEventListener('click', function(e) { 
-                    e.preventDefault(); 
-                    e.stopPropagation();
-                    handleCancel(); 
-                });
-            });
-            
-            modalEl.addEventListener('hidden.bs.modal', () => { 
-                forceCleanup(); 
-                currentFormToSubmit = null; 
-                isProcessing = false; 
-            });
-            
-            // Close on Escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && modalEl.classList.contains('show')) {
-                    handleCancel();
-                }
-            });
+            confirmYes.addEventListener('click', function(e) { e.preventDefault();e.stopPropagation();if(isProcessing||!currentFormToSubmit)return;isProcessing=true;const f=currentFormToSubmit;currentFormToSubmit=null;if(bsModal)bsModal.hide();setTimeout(forceCleanup,50);setTimeout(()=>{if(f&&f.tagName==='FORM'){f.classList.add('confirmed');f.submit();}isProcessing=false;forceCleanup();},200); });
+            function handleCancel(){currentFormToSubmit=null;isProcessing=false;if(bsModal)bsModal.hide();setTimeout(forceCleanup,150);}
+            modalEl.querySelectorAll('.btn-light-custom, [data-bs-dismiss="modal"], .btn-close').forEach(b=>b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();handleCancel();}));
+            modalEl.addEventListener('hidden.bs.modal',()=>{forceCleanup();currentFormToSubmit=null;isProcessing=false;});
+            document.addEventListener('keydown',function(e){if(e.key==='Escape'&&modalEl.classList.contains('show'))handleCancel();});
         }
 
-        // ============================================
-        // PASSWORD TOGGLE
-        // ============================================
-        document.querySelectorAll('.password-toggle-icon').forEach(btn => { 
-            btn.addEventListener('click', function(e){ 
-                e.preventDefault(); 
-                const input = document.getElementById(this.getAttribute('data-target')); 
-                if(input){ 
-                    const t = input.getAttribute('type') === 'password' ? 'text' : 'password'; 
-                    input.setAttribute('type', t); 
-                    const icon = this.querySelector('i'); 
-                    if(icon) icon.className = t === 'password' ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash'; 
-                    input.focus(); 
-                } 
-            }); 
-        });
+        // Password Toggle
+        document.querySelectorAll('.password-toggle-icon').forEach(btn=>{btn.addEventListener('click',function(e){e.preventDefault();const input=document.getElementById(this.getAttribute('data-target'));if(input){const t=input.getAttribute('type')==='password'?'text':'password';input.setAttribute('type',t);const icon=this.querySelector('i');if(icon)icon.className=t==='password'?'fa-regular fa-eye':'fa-regular fa-eye-slash';input.focus();}});});
+
+        // Prefill Edit Modals
+        document.getElementById('editUnitModal')?.addEventListener('show.bs.modal',function(e){const b=e.relatedTarget;document.getElementById('edit_unit_id').value=b.getAttribute('data-id');document.getElementById('edit_unit_code').value=b.getAttribute('data-code');document.getElementById('edit_unit_fullname').value=b.getAttribute('data-fullname');});
+        document.getElementById('editDeptModal')?.addEventListener('show.bs.modal',function(e){const b=e.relatedTarget;document.getElementById('edit_dept_id').value=b.getAttribute('data-id');document.getElementById('edit_dept_name').value=b.getAttribute('data-name');});
+        document.getElementById('editEmployeeModal')?.addEventListener('show.bs.modal',function(e){const b=e.relatedTarget;document.getElementById('edit_emp_id').value=b.getAttribute('data-id');document.getElementById('edit_emp_empid').value=b.getAttribute('data-empid');document.getElementById('edit_emp_name').value=b.getAttribute('data-name');document.getElementById('edit_emp_mobile').value=b.getAttribute('data-mobile');document.getElementById('edit_emp_email').value=b.getAttribute('data-email');document.getElementById('edit_emp_unit').value=b.getAttribute('data-unit')||'';document.getElementById('edit_emp_dept').value=b.getAttribute('data-dept')||'';});
+        document.getElementById('editCredentialModal')?.addEventListener('show.bs.modal',function(e){const b=e.relatedTarget;document.getElementById('edit_cred_id').value=b.getAttribute('data-id');document.getElementById('edit_cred_username').value=b.getAttribute('data-username');document.getElementById('edit_cred_password').value=b.getAttribute('data-password');});
 
         // ============================================
-        // PREFILL EDIT MODALS
+        // EXPANDABLE DEPARTMENT ROWS WITH AJAX FETCH
         // ============================================
-        document.getElementById('editUnitModal')?.addEventListener('show.bs.modal', function(e){ 
-            const b = e.relatedTarget; 
-            document.getElementById('edit_unit_id').value = b.getAttribute('data-id'); 
-            document.getElementById('edit_unit_code').value = b.getAttribute('data-code'); 
-            document.getElementById('edit_unit_fullname').value = b.getAttribute('data-fullname'); 
-        });
-        
-        document.getElementById('editDeptModal')?.addEventListener('show.bs.modal', function(e){ 
-            const b = e.relatedTarget; 
-            document.getElementById('edit_dept_id').value = b.getAttribute('data-id'); 
-            document.getElementById('edit_dept_name').value = b.getAttribute('data-name'); 
-        });
-        
-        document.getElementById('editEmployeeModal')?.addEventListener('show.bs.modal', function(e){ 
-            const b = e.relatedTarget; 
-            document.getElementById('edit_emp_id').value = b.getAttribute('data-id'); 
-            document.getElementById('edit_emp_empid').value = b.getAttribute('data-empid'); 
-            document.getElementById('edit_emp_name').value = b.getAttribute('data-name'); 
-            document.getElementById('edit_emp_mobile').value = b.getAttribute('data-mobile'); 
-            document.getElementById('edit_emp_email').value = b.getAttribute('data-email'); 
-            document.getElementById('edit_emp_unit').value = b.getAttribute('data-unit') || ''; 
-            document.getElementById('edit_emp_dept').value = b.getAttribute('data-dept') || ''; 
+
+        // Keep track of loaded departments to avoid repeated AJAX calls
+        const loadedDepartments = new Set();
+
+        document.querySelectorAll('.dept-main-row').forEach(function(row) {
+            row.addEventListener('click', function(e) {
+                // Don't toggle if clicking on action buttons inside the row
+                if (e.target.closest('button') || e.target.closest('form') || e.target.closest('a')) {
+                    return;
+                }
+                
+                const deptId = this.getAttribute('data-dept-id');
+                const employeeRow = document.getElementById('employee-row-' + deptId);
+                const toggleIcon = document.getElementById('toggle-icon-' + deptId);
+                const loadingDiv = document.getElementById('loading-' + deptId);
+                const employeeListDiv = document.getElementById('employee-list-' + deptId);
+                const spinner = document.getElementById('spinner-' + deptId);
+                const empCount = document.getElementById('emp-count-' + deptId);
+                
+                if (employeeRow) {
+                    // Toggle the row
+                    employeeRow.classList.toggle('expanded');
+                    if (toggleIcon) {
+                        toggleIcon.classList.toggle('expanded');
+                    }
+                    
+                    // If expanding and not yet loaded, fetch employees via AJAX
+                    if (employeeRow.classList.contains('expanded') && !loadedDepartments.has(deptId)) {
+                        // Show spinner and loading
+                        if (spinner) spinner.style.display = 'inline-block';
+                        if (loadingDiv) loadingDiv.style.display = 'block';
+                        if (employeeListDiv) employeeListDiv.style.display = 'none';
+                        
+                        // Fetch employees via AJAX
+                        fetch('/ajax/get-employees-by-department/?department_id=' + deptId)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                // Hide spinner and loading
+                                if (spinner) spinner.style.display = 'none';
+                                if (loadingDiv) loadingDiv.style.display = 'none';
+                                
+                                if (data.success) {
+                                    // Update employee count
+                                    if (empCount) {
+                                        empCount.textContent = '(' + data.count + ' employees)';
+                                    }
+                                    
+                                    // Build employee table
+                                    let html = '';
+                                    if (data.employees && data.employees.length > 0) {
+                                        html = `
+                                        <table class="table table-sm table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Employee ID</th>
+                                                    <th>Name</th>
+                                                    <th>Mobile</th>
+                                                    <th>Email</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                        `;
+                                        data.employees.forEach(function(emp) {
+                                            const statusBadge = emp.is_active 
+                                                ? '<span class="badge bg-success" style="font-size: 0.5rem;">Active</span>' 
+                                                : '<span class="badge bg-danger" style="font-size: 0.5rem;">Inactive</span>';
+                                            html += `
+                                                <tr>
+                                                    <td><span class="employee-id">${emp.employee_id}</span></td>
+                                                    <td>${emp.employee_name}</td>
+                                                    <td>${emp.mobile}</td>
+                                                    <td>${emp.email}</td>
+                                                    <td>${statusBadge}</td>
+                                                </tr>
+                                            `;
+                                        });
+                                        html += `</tbody></table>`;
+                                    } else {
+                                        html = `
+                                            <div class="no-employees">
+                                                <i class="fa-regular fa-user me-1"></i> No employees assigned to this department.
+                                            </div>
+                                        `;
+                                    }
+                                    
+                                    if (employeeListDiv) {
+                                        employeeListDiv.innerHTML = html;
+                                        employeeListDiv.style.display = 'block';
+                                    }
+                                    
+                                    // Mark as loaded
+                                    loadedDepartments.add(deptId);
+                                } else {
+                                    // Show error
+                                    if (employeeListDiv) {
+                                        employeeListDiv.innerHTML = `
+                                            <div class="dept-error">
+                                                <i class="fa-solid fa-circle-exclamation me-1"></i> 
+                                                Error loading employees: ${data.message || 'Unknown error'}
+                                            </div>
+                                        `;
+                                        employeeListDiv.style.display = 'block';
+                                    }
+                                    if (loadingDiv) loadingDiv.style.display = 'none';
+                                    if (spinner) spinner.style.display = 'none';
+                                }
+                            })
+                            .catch(function(error) {
+                                if (spinner) spinner.style.display = 'none';
+                                if (loadingDiv) loadingDiv.style.display = 'none';
+                                if (employeeListDiv) {
+                                    employeeListDiv.innerHTML = `
+                                        <div class="dept-error">
+                                            <i class="fa-solid fa-circle-exclamation me-1"></i> 
+                                            Error loading employees. Please try again.
+                                        </div>
+                                    `;
+                                    employeeListDiv.style.display = 'block';
+                                }
+                                console.error('Error:', error);
+                            });
+                    }
+                }
+            });
         });
 
-        // ============================================
-        // DEPARTMENT FETCH FOR ADD EMPLOYEE MODAL (FIXED)
-        // ============================================
+        // Department Fetch for Add Employee Modal
         const addEmpUnitSelect = document.querySelector('#addEmployeeModal select[name="unit"]');
         const addEmpDeptSelect = document.querySelector('#addEmployeeModal select[name="department"]');
-        
         if (addEmpUnitSelect && addEmpDeptSelect) {
             addEmpUnitSelect.addEventListener('change', function() {
                 const unitId = this.value;
-                if (!unitId) {
-                    addEmpDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>';
-                    addEmpDeptSelect.disabled = true;
-                    return;
-                }
-                
-                addEmpDeptSelect.disabled = true;
-                addEmpDeptSelect.innerHTML = '<option value="">Loading...</option>';
-                
-                fetch(`/ajax/get-departments/?unit_id=${unitId}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        addEmpDeptSelect.innerHTML = '<option value="">-- Select Department (Optional) --</option>';
-                        if (data.departments && data.departments.length > 0) {
-                            data.departments.forEach(d => {
-                                const opt = document.createElement('option');
-                                opt.value = d.id;
-                                opt.textContent = d.name;
-                                addEmpDeptSelect.appendChild(opt);
-                            });
-                            addEmpDeptSelect.disabled = false;
-                        } else {
-                            addEmpDeptSelect.innerHTML += '<option value="">No departments found</option>';
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error loading departments:', err);
-                        addEmpDeptSelect.innerHTML = '<option value="">Error loading</option>';
-                    });
+                if (!unitId) { addEmpDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>'; addEmpDeptSelect.disabled = true; return; }
+                addEmpDeptSelect.disabled = true; addEmpDeptSelect.innerHTML = '<option value="">Loading...</option>';
+                fetch(`/ajax/get-departments/?unit_id=${unitId}`).then(res=>res.json()).then(data=>{addEmpDeptSelect.innerHTML='<option value="">-- Optional --</option>';if(data.departments?.length){data.departments.forEach(d=>{const opt=document.createElement('option');opt.value=d.id;opt.textContent=d.name;addEmpDeptSelect.appendChild(opt);});addEmpDeptSelect.disabled=false;}else{addEmpDeptSelect.innerHTML+='<option value="">None</option>';}}).catch(()=>{addEmpDeptSelect.innerHTML='<option value="">Error</option>';});
             });
         }
 
-        // ============================================
-        // SMOOTH TAB TRANSITIONS
-        // ============================================
-        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(t => { 
-            t.addEventListener('shown.bs.tab', function(e){ 
-                const p = document.querySelector(this.getAttribute('data-bs-target')); 
-                if(p){
-                    p.style.animation = 'none';
-                    requestAnimationFrame(() => {
-                        p.style.animation = 'tabFadeIn 0.5s ease';
-                    });
-                } 
-            }); 
-        });
+        // Department Fetch for Add Credential Modal
+        const credUnitSelect = document.getElementById('credUnit');
+        const credDeptSelect = document.getElementById('credDept');
+        if (credUnitSelect && credDeptSelect) {
+            credUnitSelect.addEventListener('change', function() {
+                const unitId = this.value;
+                if (!unitId) { credDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>'; credDeptSelect.disabled = true; return; }
+                credDeptSelect.disabled = true; credDeptSelect.innerHTML = '<option value="">Loading...</option>';
+                fetch(`/ajax/get-departments/?unit_id=${unitId}`).then(res=>res.json()).then(data=>{credDeptSelect.innerHTML='<option value="">-- Select --</option>';if(data.departments?.length){data.departments.forEach(d=>{const opt=document.createElement('option');opt.value=d.id;opt.textContent=d.name;credDeptSelect.appendChild(opt);});credDeptSelect.disabled=false;}else{credDeptSelect.innerHTML+='<option value="">None</option>';}}).catch(()=>{credDeptSelect.innerHTML='<option value="">Error</option>';});
+            });
+        }
 
-        console.log('✅ Settings page ready');
+        // Tab animation
+        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(t=>{t.addEventListener('shown.bs.tab',function(e){const p=document.querySelector(this.getAttribute('data-bs-target'));if(p){p.style.animation='none';requestAnimationFrame(()=>{p.style.animation='tabFadeIn 0.5s ease';});}});}); 
+
+        console.log('✅ Settings ready - Inactive credentials now visible');
     });
 </script>
-
 {% endblock %}
