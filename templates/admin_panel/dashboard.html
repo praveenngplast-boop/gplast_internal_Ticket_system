@@ -13,6 +13,7 @@
     ============================================ */
     .dashboard-container {
         animation: fadeInUp 0.6s ease;
+        padding: 0 0.5rem;
     }
 
     @keyframes fadeInUp {
@@ -27,27 +28,36 @@
     }
 
     /* ============================================
-       Header Styles
+       Header Styles - FIXED BUTTON COLORS
     ============================================ */
     .text-primary {
-        color: var(--accent);
+        color: var(--accent) !important;
     }
 
     .text-muted {
-        color: var(--text-muted);
+        color: var(--text-muted) !important;
     }
 
+    /* ============================================
+       BUTTONS - FIXED FOR LIGHT/DARK MODE
+    ============================================ */
     .btn-primary-custom {
-        background: var(--accent-gradient);
-        border: none;
-        color: white;
+        background: var(--brand-gradient) !important;
+        border: none !important;
+        color: #FFFFFF !important;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 50px;
-        padding: 0.5rem 1.5rem;
-        font-size: 0.9rem;
-        font-weight: 500;
+        border-radius: 50px !important;
+        padding: 0.5rem 1.5rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
         position: relative;
         overflow: hidden;
+        font-family: 'Inter', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none !important;
+        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.25) !important;
     }
 
     .btn-primary-custom::before {
@@ -69,36 +79,253 @@
     }
 
     .btn-primary-custom:hover {
-        transform: translateY(-3px) scale(1.03);
-        box-shadow: 0 6px 30px rgba(233, 69, 96, 0.4);
-        color: white;
+        transform: translateY(-3px) scale(1.03) !important;
+        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.35) !important;
+        color: #FFFFFF !important;
     }
 
     .btn-primary-custom:active {
-        transform: scale(0.95);
+        transform: scale(0.95) !important;
     }
 
-    .btn-outline-primary {
-        color: var(--accent);
-        border: 2px solid var(--accent);
-        border-radius: 50px;
-        padding: 0.5rem 1.5rem;
-        font-size: 0.9rem;
-        font-weight: 500;
+    .btn-primary-custom i {
+        color: #FFFFFF !important;
+    }
+
+    .btn-outline-custom {
+        background: transparent !important;
+        border: 2px solid var(--brand-orange) !important;
+        color: var(--brand-orange) !important;
+        border-radius: 50px !important;
+        padding: 0.5rem 1.5rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        background: transparent;
+        font-family: 'Inter', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none !important;
     }
 
-    .btn-outline-primary:hover {
-        background: var(--accent-gradient);
-        color: white;
-        transform: translateY(-3px) scale(1.03);
-        box-shadow: 0 6px 30px rgba(233, 69, 96, 0.3);
-        border-color: transparent;
+    .btn-outline-custom:hover {
+        background: var(--brand-gradient) !important;
+        color: #FFFFFF !important;
+        border-color: transparent !important;
+        transform: translateY(-3px) scale(1.03) !important;
+        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.25) !important;
     }
 
-    .btn-outline-primary:active {
-        transform: scale(0.95);
+    .btn-outline-custom:hover i {
+        color: #FFFFFF !important;
+    }
+
+    .btn-outline-custom:active {
+        transform: scale(0.95) !important;
+    }
+
+    .btn-outline-custom i {
+        color: var(--brand-orange) !important;
+        transition: color 0.3s ease;
+    }
+
+    .btn-outline-custom:hover i {
+        color: #FFFFFF !important;
+    }
+
+    /* View All Button in Modal */
+    .btn-view-all {
+        background: var(--brand-gradient) !important;
+        border: none !important;
+        color: #FFFFFF !important;
+        padding: 0.5rem 1.5rem !important;
+        border-radius: 50px !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        transition: all 0.3s ease !important;
+        font-family: 'Inter', sans-serif !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        text-decoration: none !important;
+        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2) !important;
+    }
+
+    .btn-view-all:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 28px rgba(255, 107, 0, 0.3) !important;
+        color: #FFFFFF !important;
+    }
+
+    .btn-view-all i {
+        color: #FFFFFF !important;
+    }
+
+    /* Close Button in Modal - FIXED FOR BOTH MODES */
+    .btn-close-custom {
+        background: var(--bg-secondary) !important;
+        border: 2px solid var(--border-color) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 50px !important;
+        padding: 0.4rem 1.5rem !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    .btn-close-custom:hover {
+        background: var(--bg-card) !important;
+        border-color: var(--brand-orange) !important;
+        color: var(--text-primary) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.1) !important;
+    }
+
+    .btn-close-custom i {
+        color: var(--text-muted) !important;
+        transition: color 0.3s ease;
+    }
+
+    .btn-close-custom:hover i {
+        color: var(--brand-orange) !important;
+    }
+
+    /* ============================================
+       FIX: Modal Close Button - VISIBLE IN BOTH MODES
+    ============================================ */
+    .modal-header .btn-close {
+        color: var(--text-primary) !important;
+        opacity: 0.7 !important;
+        background: transparent !important;
+        transition: all 0.3s ease !important;
+        filter: none !important;
+        background-image: none !important;
+        font-size: 1.5rem !important;
+        padding: 0.5rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 50% !important;
+        border: 2px solid transparent !important;
+    }
+
+    .modal-header .btn-close::before {
+        content: '✕';
+        font-size: 1.2rem;
+        font-weight: 300;
+        color: var(--text-primary);
+        display: block;
+        line-height: 1;
+        transition: all 0.3s ease;
+    }
+
+    .modal-header .btn-close:hover {
+        opacity: 1 !important;
+        transform: rotate(90deg) scale(1.1) !important;
+        background: rgba(255, 107, 0, 0.08) !important;
+        border-color: var(--brand-orange) !important;
+    }
+
+    .modal-header .btn-close:focus {
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.2) !important;
+        outline: none !important;
+    }
+
+    /* Dark mode specific close button */
+    [data-theme="dark"] .modal-header .btn-close {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    [data-theme="dark"] .modal-header .btn-close::before {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    [data-theme="dark"] .modal-header .btn-close:hover {
+        background: rgba(255, 107, 0, 0.15) !important;
+        border-color: var(--brand-orange) !important;
+    }
+
+    [data-theme="dark"] .modal-header .btn-close:focus {
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.3) !important;
+    }
+
+    /* Light mode specific close button */
+    :root:not([data-theme="dark"]) .modal-header .btn-close {
+        color: rgba(0, 0, 0, 0.7) !important;
+    }
+
+    :root:not([data-theme="dark"]) .modal-header .btn-close::before {
+        color: rgba(0, 0, 0, 0.7) !important;
+    }
+
+    :root:not([data-theme="dark"]) .modal-header .btn-close:hover {
+        background: rgba(255, 107, 0, 0.08) !important;
+        border-color: var(--brand-orange) !important;
+    }
+
+    /* ============================================
+       FIX: View Button - VISIBLE WITH BORDER
+    ============================================ */
+    .btn-view {
+        padding: 0.25rem 0.8rem !important;
+        border-radius: 50px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        background: var(--brand-gradient) !important;
+        color: #FFFFFF !important;
+        border: 2px solid transparent !important;
+        white-space: nowrap !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        text-decoration: none !important;
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.2) !important;
+        min-width: 60px !important;
+        justify-content: center !important;
+    }
+
+    .btn-view:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.35) !important;
+        color: #FFFFFF !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+    }
+
+    .btn-view:active {
+        transform: scale(0.95) !important;
+    }
+
+    .btn-view i {
+        font-size: 0.65rem !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Light mode view button */
+    :root:not([data-theme="dark"]) .btn-view {
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.25) !important;
+    }
+
+    :root:not([data-theme="dark"]) .btn-view:hover {
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.4) !important;
+    }
+
+    /* Dark mode view button */
+    [data-theme="dark"] .btn-view {
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.15) !important;
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    [data-theme="dark"] .btn-view:hover {
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3) !important;
+        border-color: rgba(255, 107, 0, 0.3) !important;
     }
 
     /* ============================================
@@ -128,6 +355,8 @@
         overflow: hidden;
         animation: cardSlideUp 0.5s ease;
         cursor: pointer;
+        color: var(--text-primary) !important;
+        padding: 1rem !important;
     }
 
     .kpi-card::before {
@@ -137,7 +366,7 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: var(--accent-gradient);
+        background: var(--brand-gradient);
         opacity: 0;
         transition: all 0.4s ease;
     }
@@ -148,8 +377,8 @@
 
     .kpi-card:hover {
         transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 8px 40px rgba(233, 69, 96, 0.1);
-        border-color: rgba(233, 69, 96, 0.25);
+        box-shadow: 0 8px 40px rgba(255, 107, 0, 0.1);
+        border-color: rgba(255, 107, 0, 0.25);
     }
 
     .kpi-card:active {
@@ -210,32 +439,20 @@
         margin-top: 0.25rem;
     }
 
+    .kpi-label i {
+        color: var(--text-muted) !important;
+    }
+
     /* KPI Color Variants */
-    .kpi-open .kpi-value { color: var(--status-open, #48bb78) !important; }
-    .kpi-assigned .kpi-value { color: var(--status-assigned, #4299e1) !important; }
-    .kpi-hold .kpi-value { color: var(--status-hold, #ed8936) !important; }
-    .kpi-escalated .kpi-value { color: var(--status-escalated, #9f7aea) !important; }
-    .kpi-closed .kpi-value { color: var(--status-closed, #718096) !important; }
-    .kpi-critical .kpi-value { color: var(--status-critical, #fc8181) !important; }
-
-    .text-secondary {
-        color: var(--text-secondary) !important;
-    }
-
-    .text-danger {
-        color: var(--status-critical, #fc8181) !important;
-    }
-
-    .text-success {
-        color: var(--status-open, #48bb78) !important;
-    }
-
-    .text-primary {
-        color: var(--accent) !important;
-    }
+    .kpi-open .kpi-value { color: var(--status-open) !important; }
+    .kpi-assigned .kpi-value { color: var(--status-assigned) !important; }
+    .kpi-hold .kpi-value { color: var(--status-hold) !important; }
+    .kpi-escalated .kpi-value { color: var(--status-escalated) !important; }
+    .kpi-closed .kpi-value { color: var(--status-closed) !important; }
+    .kpi-critical .kpi-value { color: var(--status-critical) !important; }
 
     /* ============================================
-       Chart Cards - Animated
+       Chart Cards - Professional & Responsive
     ============================================ */
     .panel-card {
         background: var(--bg-card);
@@ -247,6 +464,11 @@
         overflow: hidden;
         animation: cardFadeIn 0.6s ease;
         height: 100%;
+        min-height: 320px;
+        max-height: 420px;
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
     }
 
     .panel-card:nth-child(1) { animation-delay: 0.1s; }
@@ -265,49 +487,232 @@
     }
 
     .panel-card:hover {
-        box-shadow: 0 12px 48px rgba(233, 69, 96, 0.1);
+        box-shadow: 0 12px 48px rgba(255, 107, 0, 0.1);
         transform: translateY(-4px);
-        border-color: rgba(233, 69, 96, 0.25);
+        border-color: rgba(255, 107, 0, 0.2);
+    }
+
+    .panel-card .chart-click-hint {
+        position: absolute;
+        bottom: 4px;
+        right: 8px;
+        font-size: 0.45rem;
+        color: var(--text-muted);
+        opacity: 0.3;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .panel-card:hover .chart-click-hint {
+        opacity: 0.7;
     }
 
     .glass-header {
-        background: rgba(233, 69, 96, 0.05);
+        background: rgba(255, 107, 0, 0.04);
         border-bottom: 1px solid var(--border-color);
         backdrop-filter: blur(10px);
-        padding: 0.75rem 1.25rem;
+        padding: 0.6rem 1.25rem;
+        flex-shrink: 0;
     }
 
     .glass-header h6 {
-        color: var(--accent-light) !important;
+        color: var(--text-primary) !important;
         font-weight: 700;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         letter-spacing: 0.3px;
+        margin: 0;
+        font-family: 'Fraunces', serif;
+    }
+
+    .glass-header h6 i {
+        color: var(--brand-orange) !important;
+    }
+
+    .glass-header .btn-outline-custom-sm {
+        background: transparent !important;
+        border: 1.5px solid var(--border-color) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 50px !important;
+        padding: 0.1rem 0.5rem !important;
+        font-size: 0.55rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+        cursor: pointer !important;
+    }
+
+    .glass-header .btn-outline-custom-sm:hover {
+        background: var(--brand-gradient) !important;
+        color: #FFFFFF !important;
+        border-color: transparent !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.2) !important;
     }
 
     .card-body {
-        padding: 1rem;
+        padding: 0.75rem 1rem;
         background: transparent;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
     }
 
     /* ============================================
-       Chart Container - Responsive
+       Chart Container - Clickable
     ============================================ */
     .chart-container {
         position: relative;
         width: 100%;
-        min-height: 200px;
-        height: auto;
-        padding: 0.5rem;
+        flex: 1;
+        min-height: 180px;
+        max-height: 260px;
+        height: 100%;
+        padding: 0.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .chart-container:hover {
+        background: rgba(255, 107, 0, 0.03);
+        box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.08);
     }
 
     .chart-container canvas {
-        max-width: 100%;
-        height: auto !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        width: 100% !important;
+        height: 100% !important;
         cursor: pointer;
     }
 
+    /* Chart Legend - Professional Styling - RESPONSIVE */
+    .chart-legend {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.3rem 0.8rem;
+        padding: 0.3rem 0.15rem 0;
+        margin-top: 0.15rem;
+        border-top: 1px solid var(--border-color);
+        flex-shrink: 0;
+        cursor: default;
+    }
+
+    .chart-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        font-size: 0.6rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 0.1rem 0.3rem;
+        border-radius: 4px;
+    }
+
+    .chart-legend-item:hover {
+        background: rgba(255, 107, 0, 0.05);
+        color: var(--text-primary);
+    }
+
+    .chart-legend-item .legend-color {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .chart-legend-item:hover .legend-color {
+        transform: scale(1.15);
+    }
+
+    /* Chart Responsive Sizes */
+    @media (min-width: 1400px) {
+        .panel-card { min-height: 350px; max-height: 450px; }
+        .chart-container { min-height: 200px; max-height: 280px; }
+    }
+
+    @media (max-width: 1399px) and (min-width: 992px) {
+        .panel-card { min-height: 320px; max-height: 400px; }
+        .chart-container { min-height: 180px; max-height: 240px; }
+    }
+
+    @media (max-width: 991px) and (min-width: 768px) {
+        .panel-card { min-height: 300px; max-height: 380px; }
+        .chart-container { min-height: 170px; max-height: 220px; }
+        .chart-legend-item { font-size: 0.55rem; }
+        .chart-legend-item .legend-color { width: 9px; height: 9px; }
+    }
+
+    @media (max-width: 767px) and (min-width: 576px) {
+        .panel-card { min-height: 280px; max-height: 360px; }
+        .chart-container { min-height: 160px; max-height: 200px; }
+        .chart-legend-item { font-size: 0.5rem; }
+        .chart-legend-item .legend-color { width: 8px; height: 8px; }
+    }
+
+    @media (max-width: 575px) {
+        .panel-card { min-height: 260px; max-height: 340px; }
+        .chart-container { min-height: 150px; max-height: 190px; }
+        .chart-container::after {
+            content: 'Click segments →';
+            font-size: 0.35rem;
+            bottom: 3px;
+            right: 6px;
+        }
+        .chart-legend {
+            gap: 0.2rem 0.5rem;
+            padding: 0.2rem 0.1rem 0;
+        }
+        .chart-legend-item {
+            font-size: 0.45rem;
+        }
+        .chart-legend-item .legend-color {
+            width: 7px;
+            height: 7px;
+        }
+        .glass-header h6 {
+            font-size: 0.7rem;
+        }
+        .glass-header .btn-outline-custom-sm {
+            font-size: 0.5rem !important;
+            padding: 0.08rem 0.4rem !important;
+        }
+        .card-body {
+            padding: 0.5rem;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .panel-card { min-height: 240px; max-height: 300px; }
+        .chart-container { min-height: 130px; max-height: 170px; }
+        .chart-legend-item {
+            font-size: 0.4rem;
+        }
+        .chart-legend-item .legend-color {
+            width: 6px;
+            height: 6px;
+        }
+        .glass-header h6 {
+            font-size: 0.6rem;
+        }
+    }
+
     /* ============================================
-       Chart Clickable Styles - Enhanced
+       Chart Clickable Styles
     ============================================ */
     .chart-container {
         position: relative;
@@ -316,33 +721,32 @@
     }
 
     .chart-container:hover {
-        background: rgba(233, 69, 96, 0.02);
-        box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.05);
+        background: rgba(255, 107, 0, 0.02);
+        box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.05);
     }
 
     .chart-container::after {
         content: 'Click on chart segments to filter →';
         position: absolute;
-        bottom: 8px;
-        right: 12px;
-        font-size: 0.55rem;
+        bottom: 6px;
+        right: 10px;
+        font-size: 0.5rem;
         color: var(--text-muted);
-        opacity: 0.3;
+        opacity: 0.25;
         pointer-events: none;
         transition: opacity 0.3s ease;
     }
 
     .chart-container:hover::after {
-        opacity: 0.7;
+        opacity: 0.6;
     }
 
-    /* Segment hover effect */
     .chart-container canvas:hover {
         cursor: pointer;
     }
 
     /* ============================================
-       Drill Down Modal Styles - FIXED THEME SUPPORT
+       MODAL - FIXED THEME SUPPORT
     ============================================ */
     .modal-content {
         background: var(--bg-card) !important;
@@ -388,11 +792,11 @@
     }
     
     .modal-body .table tr:hover td {
-        background: rgba(233, 69, 96, 0.05) !important;
+        background: rgba(255, 107, 0, 0.04) !important;
     }
     
     .modal-body .table-striped > tbody > tr:nth-of-type(odd) > * {
-        background: rgba(233, 69, 96, 0.03) !important;
+        background: rgba(255, 107, 0, 0.02) !important;
     }
     
     .modal-body .text-muted {
@@ -423,18 +827,13 @@
     }
     
     .modal-title {
-        color: var(--accent-light) !important;
-        font-weight: 700 !important;
-    }
-    
-    .modal-header .btn-close {
         color: var(--text-primary) !important;
-        filter: none !important;
-        opacity: 0.7 !important;
+        font-weight: 700 !important;
+        font-family: 'Fraunces', serif !important;
     }
     
-    .modal-header .btn-close:hover {
-        opacity: 1 !important;
+    .modal-title i {
+        color: var(--brand-orange) !important;
     }
 
     .modal-body .table {
@@ -445,7 +844,7 @@
         text-transform: uppercase;
         letter-spacing: 0.3px;
         color: var(--text-secondary);
-        border-bottom: 2px solid rgba(233, 69, 96, 0.2);
+        border-bottom: 2px solid rgba(255, 107, 0, 0.2);
     }
     .modal-body .table td {
         padding: 0.4rem 0.3rem;
@@ -453,34 +852,7 @@
         vertical-align: middle;
     }
 
-    .btn-close-custom {
-        background: var(--bg-secondary) !important;
-        border: 2px solid var(--border-color) !important;
-        color: var(--text-secondary) !important;
-        border-radius: 50px !important;
-        padding: 0.4rem 1.5rem !important;
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
-        transition: all 0.3s ease !important;
-        text-decoration: none !important;
-        display: inline-block !important;
-    }
-
-    .btn-close-custom:hover {
-        background: var(--bg-card) !important;
-        border-color: var(--accent) !important;
-        color: var(--text-primary) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.1) !important;
-    }
-
-    .btn-close-custom:active {
-        transform: scale(0.95) !important;
-    }
-
-    /* ============================================
-       Modal Loading Spinner
-    ============================================ */
+    /* Modal Loading Spinner */
     .modal-loading {
         text-align: center;
         padding: 2rem;
@@ -488,7 +860,7 @@
     }
     .modal-loading i {
         font-size: 2rem;
-        color: var(--accent);
+        color: var(--brand-orange);
         margin-bottom: 1rem;
         display: block;
     }
@@ -497,7 +869,7 @@
     }
 
     .empty-state i {
-        color: var(--accent);
+        color: var(--brand-orange);
         opacity: 0.25;
     }
 
@@ -547,329 +919,6 @@
         color: white;
     }
 
-    .btn-view {
-        padding: 0.2rem 0.8rem;
-        border-radius: 50px;
-        font-size: 0.7rem;
-        font-weight: 500;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        background: var(--accent-gradient);
-        color: white;
-        border: none;
-        white-space: nowrap;
-        display: inline-block;
-        text-decoration: none;
-    }
-
-    .btn-view:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
-        color: white;
-    }
-
-    .btn-view:active {
-        transform: scale(0.95);
-    }
-
-    .btn-view i {
-        font-size: 0.65rem;
-        margin-right: 0.2rem;
-    }
-
-    /* ============================================
-       Responsive Styles
-    ============================================ */
-    @media (max-width: 992px) {
-        .col-lg-4 {
-            margin-bottom: 1rem;
-        }
-        
-        .kpi-value {
-            font-size: 1.5rem;
-        }
-        
-        .chart-container {
-            min-height: 180px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .kpi-value {
-            font-size: 1.3rem;
-        }
-        
-        .kpi-label {
-            font-size: 0.65rem;
-        }
-        
-        .kpi-card {
-            padding: 0.75rem;
-        }
-        
-        .col-6.col-md-3.col-lg-2 {
-            flex: 0 0 33.333%;
-            max-width: 33.333%;
-        }
-        
-        .btn-primary-custom,
-        .btn-outline-primary {
-            font-size: 0.8rem;
-            padding: 0.4rem 1rem;
-        }
-
-        .glass-header h6 {
-            font-size: 0.75rem;
-        }
-
-        .chart-container {
-            min-height: 160px;
-        }
-
-        .d-flex.gap-2 {
-            flex-wrap: wrap;
-        }
-
-        .d-flex.gap-2 .btn {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .modal-footer .btn-close-custom {
-            font-size: 0.75rem !important;
-            padding: 0.3rem 1rem !important;
-        }
-        .modal-footer .btn-primary-custom {
-            font-size: 0.75rem !important;
-            padding: 0.3rem 1rem !important;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .col-6.col-md-3.col-lg-2 {
-            flex: 0 0 50%;
-            max-width: 50%;
-        }
-        
-        .kpi-value {
-            font-size: 1.1rem;
-        }
-        
-        .kpi-label {
-            font-size: 0.6rem;
-        }
-        
-        .kpi-card {
-            padding: 0.5rem;
-        }
-        
-        .kpi-card .click-hint {
-            font-size: 0.45rem;
-            bottom: 4px;
-            right: 8px;
-        }
-
-        .chart-container {
-            min-height: 140px;
-        }
-
-        h2.fw-bold {
-            font-size: 1.2rem;
-        }
-
-        .btn-primary-custom,
-        .btn-outline-primary {
-            font-size: 0.75rem;
-            padding: 0.3rem 0.8rem;
-        }
-
-        .panel-card {
-            margin-bottom: 0.75rem;
-        }
-
-        .d-flex.justify-content-between {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .chart-container::after {
-            content: 'Click segments →';
-            font-size: 0.45rem;
-            bottom: 4px;
-            right: 8px;
-        }
-
-        .modal-body {
-            padding: 1rem;
-        }
-        .modal-body .table {
-            font-size: 0.7rem;
-        }
-        .modal-body .table td {
-            font-size: 0.65rem;
-            padding: 0.3rem 0.2rem;
-        }
-    }
-
-    /* ============================================
-       Critical Card Special Animation
-    ============================================ */
-    .kpi-critical {
-        border-color: rgba(252, 129, 129, 0.2);
-        animation: criticalPulse 3s ease-in-out infinite;
-    }
-
-    @keyframes criticalPulse {
-        0%, 100% { border-color: rgba(252, 129, 129, 0.2); }
-        50% { border-color: rgba(252, 129, 129, 0.4); }
-    }
-
-    .kpi-critical .kpi-value {
-        animation: criticalNumber 2s ease-in-out infinite;
-    }
-
-    @keyframes criticalNumber {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-    }
-
-    /* ============================================
-       Chart Loading Animation
-    ============================================ */
-    .chart-container canvas {
-        opacity: 0;
-        animation: chartFadeIn 0.8s ease forwards;
-    }
-
-    .chart-container canvas:nth-child(1) { animation-delay: 0.2s; }
-    .chart-container canvas:nth-child(2) { animation-delay: 0.3s; }
-    .chart-container canvas:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes chartFadeIn {
-        from {
-            opacity: 0;
-            transform: scale(0.9);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-
-    /* ============================================
-       Scrollbar Styling
-    ============================================ */
-    ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: var(--bg-primary);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: var(--accent-gradient);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--accent-light);
-    }
-
-    /* ============================================
-       Text Selection
-    ============================================ */
-    ::selection {
-        background: var(--accent);
-        color: white;
-    }
-
-    ::-moz-selection {
-        background: var(--accent);
-        color: white;
-    }
-
-    /* ============================================
-       Badge Updates
-    ============================================ */
-    .badge.bg-primary {
-        background: var(--accent-gradient);
-        color: white;
-    }
-
-    .badge.rounded-pill {
-        background: rgba(233, 69, 96, 0.2);
-        color: var(--accent-light) !important;
-        border: 1px solid rgba(233, 69, 96, 0.2);
-    }
-
-    /* ============================================
-       FIX: Ensure all text is visible
-    ============================================ */
-    .card {
-        color: var(--text-primary) !important;
-    }
-
-    .card * {
-        color: var(--text-primary) !important;
-    }
-
-    .card .kpi-value,
-    .card .kpi-label,
-    .card .text-muted,
-    .card .text-secondary {
-        color: var(--text-primary) !important;
-    }
-
-    .card .kpi-label {
-        color: var(--text-secondary) !important;
-    }
-
-    .card .text-danger {
-        color: var(--status-critical, #fc8181) !important;
-    }
-
-    .card .text-success {
-        color: var(--status-open, #48bb78) !important;
-    }
-
-    .card .text-primary {
-        color: var(--accent) !important;
-    }
-
-    .badge {
-        color: var(--text-primary) !important;
-    }
-
-    .badge.bg-primary,
-    .badge.bg-success,
-    .badge.bg-danger,
-    .badge.bg-warning,
-    .badge.bg-info {
-        color: white !important;
-    }
-
-    p {
-        color: var(--text-secondary) !important;
-    }
-
-    p .badge {
-        color: var(--text-secondary) !important;
-    }
-
-    p .badge i {
-        color: var(--status-open) !important;
-    }
-
-    .glass-header h6 {
-        color: var(--accent-light) !important;
-    }
-
-    .glass-header h6 i {
-        color: var(--accent) !important;
-    }
-
     /* ============================================
        KPI Filter Badge
     ============================================ */
@@ -880,9 +929,9 @@
         font-size: 0.5rem;
         padding: 0.15rem 0.6rem;
         border-radius: 50px;
-        background: rgba(233, 69, 96, 0.1);
-        color: var(--accent);
-        border: 1px solid rgba(233, 69, 96, 0.2);
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
+        border: 1px solid rgba(255, 107, 0, 0.15);
         opacity: 0;
         transition: all 0.3s ease;
     }
@@ -895,6 +944,75 @@
         0%, 100% { transform: scale(1); opacity: 0.5; }
         50% { transform: scale(1.2); opacity: 1; }
     }
+
+    /* ============================================
+       FIX: Button text color in light mode
+    ============================================ */
+    .btn-primary-custom .fa-solid,
+    .btn-primary-custom .fa-regular {
+        color: #FFFFFF !important;
+    }
+
+    .btn-view-all .fa-solid,
+    .btn-view-all .fa-regular {
+        color: #FFFFFF !important;
+    }
+
+    /* Dark mode overrides */
+    [data-theme="dark"] .btn-primary-custom {
+        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.3) !important;
+    }
+
+    [data-theme="dark"] .btn-primary-custom:hover {
+        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.4) !important;
+    }
+
+    /* ============================================
+       Department Name Clean Display
+    ============================================ */
+    .dept-name-clean {
+        font-weight: 500;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    @media (max-width: 576px) {
+        .dept-name-clean {
+            max-width: 80px;
+            font-size: 0.7rem;
+        }
+    }
+
+    /* ============================================
+       Chart Legend Click Hint
+    ============================================ */
+    .chart-click-hint {
+        position: absolute;
+        bottom: 2px;
+        right: 6px;
+        font-size: 0.4rem;
+        color: var(--text-muted);
+        opacity: 0.3;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .panel-card:hover .chart-click-hint {
+        opacity: 0.7;
+    }
+
+    /* ============================================
+       Modal Table Row Hover Fix
+    ============================================ */
+    .modal-body .table-hover > tbody > tr:hover > * {
+        background: rgba(255, 107, 0, 0.04) !important;
+    }
 </style>
 {% endblock %}
 
@@ -904,37 +1022,37 @@
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--accent-light);">
-                    <i class="fa-solid fa-gauge-high me-2" style="color: var(--accent);"></i>GPLAST Support Admin Panel
+                <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--text-primary);">
+                    <i class="fa-solid fa-gauge-high me-2" style="color: var(--brand-orange);"></i>GPLAST Support Admin Panel
                 </h2>
                 <p class="mb-0" style="font-size: clamp(0.75rem, 1.5vw, 0.9rem); color: var(--text-secondary);">
                     <i class="fa-regular fa-clock me-1"></i>
                     System-wide operational ticket monitoring and analysis
-                    <span class="badge rounded-pill ms-2 px-2 py-1" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); background: rgba(233, 69, 96, 0.2); color: var(--accent-light) !important; border: 1px solid rgba(233, 69, 96, 0.2);">
-                        <i class="fa-regular fa-circle-check me-1"></i>
+                    <span class="badge rounded-pill ms-2 px-2 py-1" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); background: rgba(255, 107, 0, 0.1) !important; color: var(--text-secondary) !important; border: 1px solid rgba(255, 107, 0, 0.15) !important;">
+                        <i class="fa-regular fa-circle-check me-1" style="color: var(--brand-orange) !important;"></i>
                         Live
                     </span>
                 </p>
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <a href="{% url 'create_ticket_admin' %}" class="btn btn-primary-custom">
-                    <i class="fa-solid fa-plus-circle me-2"></i>Create Ticket
+                    <i class="fa-solid fa-plus-circle"></i>Create Ticket
                 </a>
-                <a href="{% url 'reports' %}" class="btn btn-outline-primary rounded-pill px-4">
-                    <i class="fa-solid fa-file-excel me-2"></i>Export Reports
+                <a href="{% url 'reports' %}" class="btn btn-outline-custom">
+                    <i class="fa-solid fa-file-excel"></i>Export Reports
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Admin KPI Cards Section - CLICKABLE WITH DRILL DOWN -->
+    <!-- Admin KPI Cards Section -->
     <div class="row g-3 mb-4">
         <!-- Total Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2 col-xxl-2">
             <div class="card kpi-card p-3 h-100" onclick="drillDownAdminTickets('all')">
                 <div class="kpi-value text-secondary">{{ kpis.total }}</div>
                 <div class="kpi-label">
-                    <i class="fa-regular fa-circle-check me-1" style="color: var(--accent);"></i>
+                    <i class="fa-regular fa-circle-check me-1"></i>
                     Total Tickets
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -943,11 +1061,11 @@
         </div>
 
         <!-- Open Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2 col-xxl-2">
             <div class="card kpi-card kpi-open p-3 h-100" onclick="drillDownAdminTickets('Open')">
-                <div class="kpi-value text-primary">{{ kpis.open }}</div>
+                <div class="kpi-value">{{ kpis.open }}</div>
                 <div class="kpi-label">
-                    <i class="fa-regular fa-circle me-1" style="color: var(--status-open);"></i>
+                    <i class="fa-regular fa-circle me-1"></i>
                     Open
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -956,11 +1074,11 @@
         </div>
 
         <!-- Assigned Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2 col-xxl-2">
             <div class="card kpi-card kpi-assigned p-3 h-100" onclick="drillDownAdminTickets('Assigned')">
-                <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
+                <div class="kpi-value">{{ kpis.assigned }}</div>
                 <div class="kpi-label">
-                    <i class="fa-solid fa-user-check me-1" style="color: var(--status-assigned);"></i>
+                    <i class="fa-solid fa-user-check me-1"></i>
                     Assigned
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -969,11 +1087,11 @@
         </div>
 
         <!-- Hold Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2 col-xxl-2">
             <div class="card kpi-card kpi-hold p-3 h-100" onclick="drillDownAdminTickets('Hold')">
-                <div class="kpi-value" style="color: var(--status-hold);">{{ kpis.hold }}</div>
+                <div class="kpi-value">{{ kpis.hold }}</div>
                 <div class="kpi-label">
-                    <i class="fa-solid fa-pause me-1" style="color: var(--status-hold);"></i>
+                    <i class="fa-solid fa-pause me-1"></i>
                     Hold
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -982,11 +1100,11 @@
         </div>
 
         <!-- Escalated Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2 col-xxl-2">
             <div class="card kpi-card kpi-escalated p-3 h-100" onclick="drillDownAdminTickets('Escalated')">
-                <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
+                <div class="kpi-value">{{ kpis.escalated }}</div>
                 <div class="kpi-label">
-                    <i class="fa-solid fa-cloud-arrow-up me-1" style="color: var(--status-escalated);"></i>
+                    <i class="fa-solid fa-cloud-arrow-up me-1"></i>
                     Escalated
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -995,11 +1113,11 @@
         </div>
 
         <!-- Closed Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2 col-xxl-2">
             <div class="card kpi-card kpi-closed p-3 h-100" onclick="drillDownAdminTickets('Closed')">
-                <div class="kpi-value text-success">{{ kpis.closed }}</div>
+                <div class="kpi-value">{{ kpis.closed }}</div>
                 <div class="kpi-label">
-                    <i class="fa-solid fa-circle-check me-1" style="color: var(--status-closed);"></i>
+                    <i class="fa-solid fa-circle-check me-1"></i>
                     Closed
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -1012,9 +1130,9 @@
             <div class="card kpi-card kpi-critical p-3" onclick="drillDownAdminTickets('Critical')">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="kpi-value text-danger">{{ kpis.critical }}</div>
+                        <div class="kpi-value">{{ kpis.critical }}</div>
                         <div class="kpi-label">
-                            <i class="fa-solid fa-triangle-exclamation me-1" style="color: var(--status-critical);"></i>
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
                             Critical Priority Tickets System-Wide
                         </div>
                     </div>
@@ -1026,64 +1144,92 @@
         </div>
     </div>
 
-    <!-- Chart Reports Panel (3 Charts) -->
+    <!-- Chart Reports Panel (4 Charts) -->
     <div class="row g-4 mb-4">
-        <!-- Chart 1: Status Distribution - CLICKABLE -->
-        <div class="col-md-6 col-lg-4">
+        <!-- Chart 1: Status Distribution -->
+        <div class="col-12 col-md-6">
             <div class="card panel-card h-100">
-                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
+                <div class="card-header glass-header py-2 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0">
-                        <i class="fa-solid fa-chart-pie me-2" style="color: var(--accent);"></i>
+                        <i class="fa-solid fa-chart-pie me-2"></i>
                         Status Distribution
                     </h6>
-                    <a href="{% url 'all_tickets' %}" class="btn btn-sm btn-outline-primary rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
-                        <i class="fa-solid fa-arrow-right"></i>
+                    <a href="{% url 'all_tickets' %}" class="btn-outline-custom-sm">
+                        <i class="fa-solid fa-arrow-right"></i> View All
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" id="statusChartContainer">
+                    <div class="chart-container" id="statusChartContainer" onclick="handleChartClick('status')">
                         <canvas id="statusChart"></canvas>
+                        <span class="chart-click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click segments to filter</span>
                     </div>
+                    <div class="chart-legend" id="statusLegend"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Chart 2: Unit-wise Tickets - CLICKABLE -->
-        <div class="col-md-6 col-lg-4">
+        <!-- Chart 2: Unit-wise Tickets -->
+        <div class="col-12 col-md-6">
             <div class="card panel-card h-100">
-                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
+                <div class="card-header glass-header py-2 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0">
-                        <i class="fa-solid fa-building me-2" style="color: var(--accent);"></i>
+                        <i class="fa-solid fa-building me-2"></i>
                         Unit-wise Tickets
                     </h6>
-                    <a href="{% url 'all_tickets' %}" class="btn btn-sm btn-outline-primary rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
-                        <i class="fa-solid fa-arrow-right"></i>
+                    <a href="{% url 'all_tickets' %}" class="btn-outline-custom-sm">
+                        <i class="fa-solid fa-arrow-right"></i> View All
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" id="unitChartContainer">
+                    <div class="chart-container" id="unitChartContainer" onclick="handleChartClick('unit')">
                         <canvas id="unitChart"></canvas>
+                        <span class="chart-click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click segments to filter</span>
                     </div>
+                    <div class="chart-legend" id="unitLegend"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Chart 3: Priority Distribution - CLICKABLE -->
-        <div class="col-md-6 col-lg-4">
+        <!-- Chart 3: Priority Distribution -->
+        <div class="col-12 col-md-6">
             <div class="card panel-card h-100">
-                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
+                <div class="card-header glass-header py-2 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0">
-                        <i class="fa-solid fa-flag me-2" style="color: var(--accent);"></i>
+                        <i class="fa-solid fa-flag me-2"></i>
                         Priority Distribution
                     </h6>
-                    <a href="{% url 'all_tickets' %}?priority=Critical" class="btn btn-sm btn-outline-primary rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
-                        <i class="fa-solid fa-arrow-right"></i>
+                    <a href="{% url 'all_tickets' %}?priority=Critical" class="btn-outline-custom-sm">
+                        <i class="fa-solid fa-arrow-right"></i> View All
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" id="priorityChartContainer">
+                    <div class="chart-container" id="priorityChartContainer" onclick="handleChartClick('priority')">
                         <canvas id="priorityChart"></canvas>
+                        <span class="chart-click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click segments to filter</span>
                     </div>
+                    <div class="chart-legend" id="priorityLegend"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 4: Error Type Distribution for Closed Tickets -->
+        <div class="col-12 col-md-6">
+            <div class="card panel-card h-100">
+                <div class="card-header glass-header py-2 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">
+                        <i class="fa-solid fa-bug me-2"></i>
+                        Error Type Distribution (Closed Tickets)
+                    </h6>
+                    <a href="{% url 'all_tickets' %}?status=Closed" class="btn-outline-custom-sm">
+                        <i class="fa-solid fa-arrow-right"></i> View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" id="errorTypeChartContainer" onclick="handleChartClick('errorType')">
+                        <canvas id="errorTypeChart"></canvas>
+                        <span class="chart-click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click segments to filter</span>
+                    </div>
+                    <div class="chart-legend" id="errorTypeLegend"></div>
                 </div>
             </div>
         </div>
@@ -1098,8 +1244,8 @@
             <p style="color: var(--text-muted); font-size: 0.75rem;">
                 <i class="fa-regular fa-clock me-1"></i>
                 Dashboard updated in real-time • 
-                <span class="badge rounded-pill px-2 py-1" style="background: rgba(233, 69, 96, 0.1); color: var(--text-secondary) !important; border: 1px solid var(--border-color);">
-                    <i class="fa-regular fa-circle me-1" style="color: var(--status-open); font-size: 0.4rem;"></i>
+                <span class="badge rounded-pill px-2 py-1" style="background: rgba(255, 107, 0, 0.08) !important; color: var(--text-secondary) !important; border: 1px solid rgba(255, 107, 0, 0.1) !important;">
+                    <i class="fa-regular fa-circle me-1" style="color: var(--brand-orange) !important; font-size: 0.4rem;"></i>
                     {% now "d-m-Y H:i:s" %}
                 </span>
             </p>
@@ -1108,14 +1254,14 @@
 </div>
 
 <!-- ============================================
-     ADMIN DRILL DOWN MODAL - FIXED THEME SUPPORT
+     ADMIN DRILL DOWN MODAL - FIXED WITH BACKDROP CLEANUP
 ============================================ -->
-<div class="modal fade" id="adminDrillDownModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="adminDrillDownModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="adminDrillDownModalTitle">
-                    <i class="fa-solid fa-list-ul me-2" style="color: var(--accent);"></i>
+                    <i class="fa-solid fa-list-ul me-2"></i>
                     Tickets - <span id="adminDrillDownStatusLabel">All</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1127,11 +1273,11 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
-                    <i class="fa-solid fa-xmark me-1"></i>Close
+                <button type="button" class="btn-close-custom" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>Close
                 </button>
-                <a href="{% url 'all_tickets' %}" class="btn btn-primary-custom rounded-pill px-4" id="adminDrillDownViewAllBtn">
-                    <i class="fa-solid fa-arrow-right me-1"></i>View All Tickets
+                <a href="{% url 'all_tickets' %}" class="btn-view-all" id="adminDrillDownViewAllBtn">
+                    <i class="fa-solid fa-arrow-right"></i>View All Tickets
                 </a>
             </div>
         </div>
@@ -1144,11 +1290,27 @@
 <script src="{% static 'js/charts.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-         // ============================================
+        // ============================================
+        // FORCE CLEANUP FUNCTION - FIX FOR BACKDROP BLUR
+        // ============================================
+        function forceCleanupBackdrops() {
+            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+                backdrop.remove();
+            });
+            document.body.classList.remove('modal-open');
+            document.body.classList.remove('modal-show');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.body.style.position = '';
+            document.documentElement.style.overflow = '';
+            console.log('Backdrops cleaned up');
+        }
+
+        // ============================================
         // CONFIGURE CHART.JS DEFAULTS
         // ============================================
         Chart.defaults.font.family = "'Inter', sans-serif";
-        Chart.defaults.font.size = 11;
+        Chart.defaults.font.size = 10;
 
         // ============================================
         // LOAD CHART DATA
@@ -1158,46 +1320,81 @@
             const dataElement = document.getElementById('charts-data');
             if (dataElement) {
                 chartsData = JSON.parse(dataElement.textContent);
+                console.log('📊 Chart data loaded:', chartsData);
             }
         } catch (e) {
             console.error('Error parsing chart data:', e);
-            chartsData = { status: {}, units: [], priority: {}, monthly: [] };
+            chartsData = { status: {}, units: [], priority: {}, errorType: {}, monthly: [] };
         }
 
         // ============================================
-        // DRILL DOWN FUNCTIONS FOR CHARTS
+        // CHART CLICK HANDLER - DRILL DOWN
         // ============================================
-        
-        // For Status charts - uses existing drillDownAdminTickets function
-        // Already defined in the global scope below
-        
-        // For Unit-wise charts (and other filters)
+        window.handleChartClick = function(chartType) {
+            if (chartType === 'status') {
+                const statusData = chartsData.status || {};
+                const statusLabels = Object.keys(statusData);
+                if (statusLabels.length === 0) return;
+                drillDownAdminTickets(statusLabels[0]);
+            } else if (chartType === 'unit') {
+                const unitData = chartsData.units || [];
+                if (unitData.length === 0) return;
+                const firstUnit = unitData[0];
+                drillDownWithFilter('unit', firstUnit.id || firstUnit.unit_id, `Unit: ${firstUnit.label || firstUnit.name || 'Unknown'}`);
+            } else if (chartType === 'priority') {
+                const priorityData = chartsData.priority || {};
+                const priorityLabels = Object.keys(priorityData);
+                if (priorityLabels.length === 0) return;
+                drillDownWithFilter('priority', priorityLabels[0], `Priority: ${priorityLabels[0]}`);
+            } else if (chartType === 'errorType') {
+                const errorTypeData = chartsData.errorType || {};
+                const errorTypeLabels = Object.keys(errorTypeData);
+                if (errorTypeLabels.length === 0) return;
+                drillDownWithFilter('errorType', errorTypeLabels[0], `Error Type: ${errorTypeLabels[0]}`);
+            }
+        };
+
+        // ============================================
+        // DRILL DOWN FUNCTIONS WITH CLEANUP
+        // ============================================
         function drillDownWithFilter(filterType, filterValue, filterLabel) {
-            const modal = new bootstrap.Modal(document.getElementById('adminDrillDownModal'));
+            forceCleanupBackdrops();
+            
+            const modalEl = document.getElementById('adminDrillDownModal');
+            const modal = new bootstrap.Modal(modalEl, {
+                backdrop: 'static',
+                keyboard: true
+            });
+            
             const modalBody = document.getElementById('adminDrillDownModalBody');
             const statusLabel = document.getElementById('adminDrillDownStatusLabel');
             const viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
 
-            // Update status label
-            statusLabel.textContent = 'Unit: ' + unitLabel;
+            statusLabel.textContent = filterLabel;
             
-            // Update View All button URL with unit filter
-            viewAllBtn.href = "{% url 'all_tickets' %}?unit=" + encodeURIComponent(unitId);
+            let url = "{% url 'all_tickets' %}?ajax=1";
+            if (filterType === 'unit') {
+                viewAllBtn.href = "{% url 'all_tickets' %}?unit=" + encodeURIComponent(filterValue);
+                url += "&unit=" + encodeURIComponent(filterValue);
+            } else if (filterType === 'priority') {
+                viewAllBtn.href = "{% url 'all_tickets' %}?priority=" + encodeURIComponent(filterValue);
+                url += "&priority=" + encodeURIComponent(filterValue);
+            } else if (filterType === 'errorType') {
+                viewAllBtn.href = "{% url 'all_tickets' %}?error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+                url += "&error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+            } else {
+                viewAllBtn.href = "{% url 'all_tickets' %}";
+            }
             
-            // Show loading
             modalBody.innerHTML = `
                 <div class="modal-loading">
-                    <i class="fas fa-spinner fa-spin"></i>
+                    <i class="fa-solid fa-spinner fa-spin"></i>
                     <p>Loading tickets for ${filterLabel}...</p>
                 </div>
             `;
             
-            // Show modal
             modal.show();
 
-            // Fetch tickets via AJAX
-            let url = "{% url 'all_tickets' %}?ajax=1&unit=" + encodeURIComponent(unitId);
-            
             fetch(url, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -1215,28 +1412,10 @@
                 }
                 if (data.html) {
                     modalBody.innerHTML = data.html;
-                    modalBody.style.color = 'var(--text-primary)';
-                    
-                    const allElements = modalBody.querySelectorAll('*');
-                    allElements.forEach(el => {
-                        if (el.style && el.style.backgroundColor) {
-                            if (el.style.backgroundColor.includes('#fff') || 
-                                el.style.backgroundColor.includes('white') ||
-                                el.style.backgroundColor.includes('#f') ||
-                                el.style.backgroundColor.includes('#e')) {
-                                el.style.backgroundColor = '';
-                            }
-                        }
-                    });
-                    
-                    const tables = modalBody.querySelectorAll('.table');
-                    tables.forEach(table => {
-                        table.classList.add('table-theme-aware');
-                    });
                 } else {
                     modalBody.innerHTML = `
                         <div class="empty-state text-center py-4">
-                            <i class="fas fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--accent);"></i>
+                            <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
                             <p style="color: var(--text-muted);">No tickets found for: ${filterLabel}</p>
                         </div>
                     `;
@@ -1246,7 +1425,7 @@
                 console.error('Error fetching tickets:', error);
                 modalBody.innerHTML = `
                     <div class="text-center py-4" style="color: #EF4444;">
-                        <i class="fas fa-circle-exclamation fa-2x mb-2 d-block"></i>
+                        <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
                         <p><strong>Error loading tickets</strong></p>
                         <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
                         <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownWithFilter('${filterType}', '${filterValue}', '${filterLabel}')">
@@ -1257,25 +1436,208 @@
             });
         }
         
-        // Make functions globally accessible for charts.js
         window.drillDownAdminTickets = drillDownAdminTickets;
         window.drillDownWithFilter = drillDownWithFilter;
 
-        // Initialize charts using charts.js
-        window.initCharts({
-            adminCharts: chartsData,
-            drillDown: {
-                status: function(status) {
-                    drillDownAdminTickets(status);
-                },
-                priority: function(priority) {
-                    drillDownWithFilter('priority', priority, `Priority: ${priority}`);
-                },
-                unit: function(unitId, unitLabel) {
-                    drillDownWithFilter('unit', unitId, `Unit: ${unitLabel}`);
+        // ============================================
+        // CUSTOM LEGEND GENERATOR - RESPONSIVE
+        // ============================================
+        function generateLegend(chartId, legendContainerId, labels, colors) {
+            const container = document.getElementById(legendContainerId);
+            if (!container) return;
+            
+            container.innerHTML = '';
+            labels.forEach((label, index) => {
+                const item = document.createElement('span');
+                item.className = 'chart-legend-item';
+                let displayLabel = label;
+                if (displayLabel.length > 12) {
+                    displayLabel = displayLabel.substring(0, 10) + '...';
                 }
+                item.innerHTML = `
+                    <span class="legend-color" style="background: ${colors[index % colors.length]};"></span>
+                    ${displayLabel}
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // ============================================
+        // INITIALIZE CHARTS WITH CUSTOM LEGENDS
+        // ============================================
+        function initChartsWithLegends() {
+            const statusColors = ['#22C55E', '#3B82F6', '#F59E0B', '#8B5CF6', '#94A3B8', '#EF4444'];
+            const unitColors = ['#FF6B00', '#FFB800', '#3B82F6', '#22C55E', '#8B5CF6', '#EF4444', '#F59E0B', '#06B6D4', '#EC4899'];
+            const priorityColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E'];
+            const errorTypeColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E', '#8B5CF6', '#EC4899', '#06B6D4', '#94A3B8'];
+
+            const statusData = chartsData.status || {};
+            const unitData = chartsData.units || [];
+            const priorityData = chartsData.priority || {};
+            const errorTypeData = chartsData.errorType || {};
+
+            const statusLabels = Object.keys(statusData);
+            if (statusLabels.length > 0) {
+                generateLegend('statusChart', 'statusLegend', statusLabels, statusColors);
             }
-        });
+
+            const unitLabels = unitData.map(u => u.label || u.name || u.unit || 'Unknown');
+            if (unitLabels.length > 0) {
+                generateLegend('unitChart', 'unitLegend', unitLabels, unitColors);
+            }
+
+            const priorityLabels = Object.keys(priorityData);
+            if (priorityLabels.length > 0) {
+                generateLegend('priorityChart', 'priorityLegend', priorityLabels, priorityColors);
+            }
+
+            const errorTypeLabels = Object.keys(errorTypeData);
+            if (errorTypeLabels.length > 0) {
+                generateLegend('errorTypeChart', 'errorTypeLegend', errorTypeLabels, errorTypeColors);
+            }
+        }
+
+        // ============================================
+        // ✅ FORCE CREATE ERROR TYPE CHART MANUALLY
+        // ============================================
+        function forceCreateErrorTypeChart() {
+            console.log('🔍 Force creating Error Type chart...');
+            
+            const canvas = document.getElementById('errorTypeChart');
+            if (!canvas) {
+                console.error('❌ errorTypeChart canvas not found!');
+                return;
+            }
+            
+            const errorTypeData = chartsData.errorType || {};
+            const labels = Object.keys(errorTypeData);
+            const values = Object.values(errorTypeData);
+            
+            console.log('📊 Error Type Data:', errorTypeData);
+            console.log('📊 Labels:', labels);
+            console.log('📊 Values:', values);
+            
+            if (labels.length === 0) {
+                console.warn('⚠️ No error type data available');
+                const container = document.getElementById('errorTypeChartContainer');
+                if (container) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-bug" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+                            <p style="margin: 0; font-size: 0.85rem;">No error type data available</p>
+                            <p style="margin: 0; font-size: 0.7rem; opacity: 0.7;">Close tickets with error classifications to see data</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
+            const colors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E', '#8B5CF6', '#EC4899', '#06B6D4', '#94A3B8'];
+            const backgroundColors = labels.map((_, i) => colors[i % colors.length]);
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+                canvas.chart = null;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: backgroundColors,
+                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#1a202c',
+                        borderWidth: 2,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%',
+                    onClick: function(event, elements) {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = this.data.labels[index];
+                            console.log('🔍 Clicked error type:', label);
+                            if (typeof drillDownWithFilter === 'function') {
+                                drillDownWithFilter('errorType', label, `Error Type: ${label}`);
+                            }
+                        }
+                    }
+                }
+            });
+            
+            canvas.chart = chart;
+            console.log('✅ Error Type chart created manually!');
+            
+            const legendContainer = document.getElementById('errorTypeLegend');
+            if (legendContainer) {
+                legendContainer.innerHTML = '';
+                labels.forEach((label, index) => {
+                    const item = document.createElement('span');
+                    item.className = 'chart-legend-item';
+                    let displayLabel = label;
+                    if (displayLabel.length > 12) {
+                        displayLabel = displayLabel.substring(0, 10) + '...';
+                    }
+                    item.innerHTML = `
+                        <span class="legend-color" style="background: ${backgroundColors[index % backgroundColors.length]};"></span>
+                        ${displayLabel}
+                    `;
+                    legendContainer.appendChild(item);
+                });
+            }
+        }
+
+        // ============================================
+        // INITIALIZE CHARTS
+        // ============================================
+        if (typeof window.initCharts === 'function') {
+            window.initCharts({
+                adminCharts: chartsData,
+                drillDown: {
+                    status: function(status) {
+                        drillDownAdminTickets(status);
+                    },
+                    priority: function(priority) {
+                        drillDownWithFilter('priority', priority, `Priority: ${priority}`);
+                    },
+                    unit: function(unitId, unitLabel) {
+                        drillDownWithFilter('unit', unitId, `Unit: ${unitLabel}`);
+                    },
+                    errorType: function(errorType) {
+                        drillDownWithFilter('errorType', errorType, `Error Type: ${errorType}`);
+                    }
+                },
+                onComplete: function() {
+                    setTimeout(initChartsWithLegends, 500);
+                }
+            });
+        } else {
+            setTimeout(initChartsWithLegends, 1000);
+        }
+
+        // ✅ FORCE CREATE ERROR TYPE CHART AFTER ALL LOADS
+        setTimeout(function() {
+            forceCreateErrorTypeChart();
+        }, 1500);
 
         // ============================================
         // ANIMATE KPI VALUES ON LOAD
@@ -1297,23 +1659,101 @@
             }
         });
 
-        console.log('✅ Admin Dashboard ready with clickable pie charts');
-        console.log('📊 Click on chart segments to filter tickets');
-        console.log('📊 Status chart: Click status segments');
-        console.log('📊 Unit chart: Click unit bars');
-        console.log('📊 Priority chart: Click priority segments');
+        // ============================================
+        // FIX: Chart Responsive Re-render
+        // ============================================
+        function resizeCharts() {
+            const canvases = document.querySelectorAll('.chart-container canvas');
+            canvases.forEach(canvas => {
+                if (canvas.chart) {
+                    canvas.chart.resize();
+                }
+            });
+        }
+
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(resizeCharts, 250);
+        });
+
+        // ============================================
+        // MODAL BACKDROP CLEANUP - FIX FOR BLUR
+        // ============================================
+        const modalEl = document.getElementById('adminDrillDownModal');
+        
+        if (modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', function() {
+                forceCleanupBackdrops();
+                console.log('Modal hidden - backdrops cleaned');
+            });
+            
+            modalEl.addEventListener('hide.bs.modal', function() {
+                setTimeout(forceCleanupBackdrops, 50);
+            });
+            
+            modalEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    setTimeout(forceCleanupBackdrops, 50);
+                }
+            });
+        }
+
+        // ============================================
+        // MUTATION OBSERVER - CLEANUP ROGUE BACKDROPS
+        // ============================================
+        const backdropObserver = new MutationObserver(function() {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            if (backdrops.length > 1) {
+                backdrops.forEach(function(backdrop, index) {
+                    if (index > 0) {
+                        backdrop.remove();
+                    }
+                });
+            }
+            
+            if (modalEl && !modalEl.classList.contains('show') && document.body.classList.contains('modal-open')) {
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }
+        });
+        
+        backdropObserver.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'style']
+        });
+
+        console.log('✅ Admin Dashboard ready with responsive charts');
+        console.log('📊 Charts are clickable for drill-down');
+        console.log('🐛 Error Type chart added for closed tickets analysis');
+        console.log('🧹 Backdrop cleanup initialized - blur will be removed on modal close');
     });
 
     // ============================================
-    // ADMIN DRILL DOWN FUNCTION - For KPI Cards
+    // ADMIN DRILL DOWN FUNCTION - WITH BACKDROP CLEANUP
     // ============================================
     function drillDownAdminTickets(filterValue) {
-        const modal = new bootstrap.Modal(document.getElementById('adminDrillDownModal'));
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(function(backdrop) {
+            backdrop.remove();
+        });
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        
+        const modalEl = document.getElementById('adminDrillDownModal');
+        const modal = new bootstrap.Modal(modalEl, {
+            backdrop: 'static',
+            keyboard: true
+        });
+        
         const modalBody = document.getElementById('adminDrillDownModalBody');
         const statusLabel = document.getElementById('adminDrillDownStatusLabel');
         const viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
         
-        // Update status label
         const statusMap = {
             'all': 'All Tickets',
             'Open': 'Open Tickets',
@@ -1325,7 +1765,6 @@
         };
         statusLabel.textContent = statusMap[filterValue] || filterValue || 'All Tickets';
         
-        // Update View All button URL with filter
         let filterParam = 'status';
         if (filterValue === 'Critical') {
             filterParam = 'priority';
@@ -1339,7 +1778,6 @@
             viewAllBtn.href = `{% url 'all_tickets' %}`;
         }
         
-        // Show loading
         modalBody.innerHTML = `
             <div class="modal-loading">
                 <i class="fa-solid fa-spinner fa-spin"></i>
@@ -1347,10 +1785,8 @@
             </div>
         `;
         
-        // Show modal
         modal.show();
         
-        // Fetch tickets via AJAX
         let url = "{% url 'all_tickets' %}?ajax=1";
         if (filterParam) {
             url += `&${filterParam}=${encodeURIComponent(filterValue)}`;
@@ -1373,28 +1809,10 @@
             }
             if (data.html) {
                 modalBody.innerHTML = data.html;
-                modalBody.style.color = 'var(--text-primary)';
-                
-                const allElements = modalBody.querySelectorAll('*');
-                allElements.forEach(el => {
-                    if (el.style && el.style.backgroundColor) {
-                        if (el.style.backgroundColor.includes('#fff') || 
-                            el.style.backgroundColor.includes('white') ||
-                            el.style.backgroundColor.includes('#f') ||
-                            el.style.backgroundColor.includes('#e')) {
-                            el.style.backgroundColor = '';
-                        }
-                    }
-                });
-                
-                const tables = modalBody.querySelectorAll('.table');
-                tables.forEach(table => {
-                    table.classList.add('table-theme-aware');
-                });
             } else {
                 modalBody.innerHTML = `
                     <div class="empty-state text-center py-4">
-                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--accent);"></i>
+                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
                         <p style="color: var(--text-muted);">No tickets found for: ${statusLabel.textContent}</p>
                     </div>
                 `;

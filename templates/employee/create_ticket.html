@@ -5,16 +5,83 @@
 {% block extra_head %}
 {{ block.super }}
 <style>
-    .create-ticket-container { animation: fadeInUp 0.5s ease; max-width: 1000px; margin: 0 auto; }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .panel-card { background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 4px 20px var(--shadow-color); border-radius: 14px; }
-    .form-section { background: var(--bg-card); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border-color); }
-    .form-section-title { font-size: 0.85rem; font-weight: 700; color: var(--accent-light); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid rgba(59,130,246,0.2); display: flex; align-items: center; gap: 0.5rem; }
-    .form-section-title i { color: var(--accent); font-size: 0.9rem; width: 20px; text-align: center; }
-    .form-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary) !important; margin-bottom: 0.25rem; }
+    /* ============================================
+       PROFESSIONAL & CLEAN STYLES
+    ============================================ */
+    .create-ticket-container {
+        animation: fadeInUp 0.5s ease;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 0.5rem;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        border-radius: 14px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .panel-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--border-light);
+    }
+
+    .form-section {
+        background: var(--bg-card);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .form-section:hover {
+        border-color: rgba(255, 107, 0, 0.15);
+    }
+
+    .form-section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(255, 107, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Fraunces', serif;
+    }
+
+    .form-section-title i {
+        color: var(--brand-orange);
+        font-size: 0.9rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary) !important;
+        margin-bottom: 0.25rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .form-label i {
+        color: var(--brand-orange);
+        width: 16px;
+    }
 
     /* ============================================
-       FIX: Consistent background for all input states
+       FORM CONTROLS - THEME AWARE
     ============================================ */
     .form-control, 
     .form-select, 
@@ -31,24 +98,18 @@
         border-radius: 8px !important;
         padding: 0.45rem 0.75rem !important;
         font-size: 0.82rem !important;
-        transition: all 0.3s ease;
+        transition: all 0.3s ease !important;
         -webkit-text-fill-color: var(--text-primary) !important;
         caret-color: var(--text-primary) !important;
         width: 100%;
-        -webkit-background-clip: text !important;
-        background-clip: text !important;
     }
 
     .form-control:focus, 
     .form-select:focus, 
     textarea:focus,
-    input[type="text"]:focus,
-    input[type="email"]:focus,
-    input[type="tel"]:focus,
-    input[type="number"]:focus,
-    select:focus {
-        border-color: var(--accent) !important;
-        box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
+    input:focus {
+        border-color: var(--brand-orange) !important;
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.08) !important;
         outline: none !important;
         background-color: var(--input-bg) !important;
         background: var(--input-bg) !important;
@@ -61,12 +122,15 @@
     input::placeholder {
         color: var(--text-muted) !important;
         -webkit-text-fill-color: var(--text-muted) !important;
-        opacity: 1 !important;
+        opacity: 0.7 !important;
     }
 
-    textarea { min-height: 100px; resize: vertical; }
+    textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
 
-    /* Select dropdown options */
+    /* Select dropdown */
     .form-select option, 
     select option {
         background: var(--bg-secondary) !important;
@@ -99,7 +163,7 @@
     }
     input[type="file"]::file-selector-button, 
     input[type="file"]::-webkit-file-upload-button { 
-        background: var(--accent-gradient) !important; 
+        background: var(--brand-gradient) !important; 
         border: none !important; 
         color: white !important; 
         padding: 0.35rem 0.8rem !important; 
@@ -108,53 +172,288 @@
         font-size: 0.75rem !important; 
         font-weight: 500 !important; 
         margin-right: 0.75rem !important; 
+        transition: all 0.3s ease !important;
+    }
+    input[type="file"]::file-selector-button:hover,
+    input[type="file"]::-webkit-file-upload-button:hover {
+        transform: scale(1.05);
     }
 
-    /* Employee ID wrapper */
-    .emp-id-wrapper { position: relative; }
-    .emp-fetch-status { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; pointer-events: none; z-index: 5; }
-    .emp-fetch-status.found { color: #22C55E; }
-    .emp-fetch-status.not-found { color: #EF4444; }
-    .emp-fetch-status.loading { color: var(--accent); animation: spin 0.8s linear infinite; }
-    .field-auto-filled { border-color: #22C55E !important; background-color: rgba(34,197,94,0.03) !important; }
-    [data-theme="dark"] .field-auto-filled { border-color: #34D399 !important; background-color: rgba(52,211,153,0.05) !important; }
-    .field-locked { pointer-events: none; opacity: 0.7; background-color: rgba(0,0,0,0.03) !important; }
-    [data-theme="dark"] .field-locked { background-color: rgba(255,255,255,0.03) !important; }
-    .auto-fill-badge { display: inline-block; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; background: rgba(34,197,94,0.15); color: #22C55E; margin-left: 4px; font-weight: 500; }
-    [data-theme="dark"] .auto-fill-badge { background: rgba(52,211,153,0.2); color: #34D399; }
-
-    @keyframes spin { 0% { transform: translateY(-50%) rotate(0deg); } 100% { transform: translateY(-50%) rotate(360deg); } }
-
     /* ============================================
-       CRITICAL: Browser autofill override - Fix white background
+       EMPLOYEE ID VALIDATION
     ============================================ */
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    input:-webkit-autofill:active,
-    textarea:-webkit-autofill,
-    select:-webkit-autofill {
-        -webkit-text-fill-color: var(--text-primary) !important;
-        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-        box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-        caret-color: var(--text-primary) !important;
-        border-color: var(--border-color) !important;
-        background-color: var(--input-bg) !important;
-        background: var(--input-bg) !important;
-        transition: background-color 5000s ease-in-out 0s !important;
+    .emp-id-wrapper {
+        position: relative;
+    }
+
+    .emp-fetch-status {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.9rem;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .emp-fetch-status.found {
+        color: #22C55E;
+    }
+
+    .emp-fetch-status.not-found {
+        color: #EF4444;
+    }
+
+    .emp-fetch-status.loading {
+        color: var(--brand-orange);
+        animation: spin 0.8s linear infinite;
+    }
+
+    .field-auto-filled {
+        border-color: #22C55E !important;
+        background-color: rgba(34, 197, 94, 0.03) !important;
+    }
+
+    [data-theme="dark"] .field-auto-filled {
+        border-color: #34D399 !important;
+        background-color: rgba(52, 211, 153, 0.05) !important;
+    }
+
+    .field-locked {
+        pointer-events: none;
+        opacity: 0.7;
+        background-color: rgba(0, 0, 0, 0.02) !important;
+        cursor: not-allowed;
+    }
+
+    [data-theme="dark"] .field-locked {
+        background-color: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    .auto-fill-badge {
+        display: inline-block;
+        font-size: 0.55rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 50px;
+        background: rgba(34, 197, 94, 0.12);
+        color: #22C55E;
+        margin-left: 4px;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+    }
+
+    [data-theme="dark"] .auto-fill-badge {
+        background: rgba(52, 211, 153, 0.15);
+        color: #34D399;
+    }
+
+    @keyframes spin {
+        0% { transform: translateY(-50%) rotate(0deg); }
+        100% { transform: translateY(-50%) rotate(360deg); }
     }
 
     /* ============================================
-       DARK THEME OVERRIDES
+       VALIDATION MESSAGES
+    ============================================ */
+    .mismatch-warning {
+        background: rgba(239, 68, 68, 0.06);
+        border: 2px solid rgba(239, 68, 68, 0.2);
+        border-radius: 8px;
+        padding: 0.6rem 0.8rem;
+        margin-top: 0.5rem;
+        color: #EF4444;
+        font-size: 0.75rem;
+        display: none;
+        animation: shakeWarning 0.5s ease;
+        font-weight: 500;
+    }
+
+    [data-theme="dark"] .mismatch-warning {
+        background: rgba(239, 68, 68, 0.08);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #F87171;
+    }
+
+    .mismatch-warning.show {
+        display: block;
+    }
+
+    .mismatch-warning i {
+        margin-right: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    @keyframes shakeWarning {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-4px); }
+        75% { transform: translateX(4px); }
+    }
+
+    .employee-valid {
+        background: rgba(34, 197, 94, 0.04);
+        border: 2px solid rgba(34, 197, 94, 0.15);
+        border-radius: 8px;
+        padding: 0.4rem 0.7rem;
+        margin-top: 0.5rem;
+        color: #22C55E;
+        font-size: 0.7rem;
+        display: none;
+        font-weight: 500;
+    }
+
+    [data-theme="dark"] .employee-valid {
+        background: rgba(52, 211, 153, 0.06);
+        border-color: rgba(52, 211, 153, 0.2);
+        color: #34D399;
+    }
+
+    .employee-valid.show {
+        display: block;
+    }
+
+    .employee-valid i {
+        margin-right: 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    /* ============================================
+       CHARACTER COUNTER
+    ============================================ */
+    .char-counter {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        text-align: right;
+        margin-top: 0.1rem;
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+    }
+
+    .char-counter.warning {
+        color: #F59E0B !important;
+    }
+
+    .char-counter.danger {
+        color: #EF4444 !important;
+    }
+
+    .text-danger.small {
+        font-size: 0.7rem;
+        color: #EF4444 !important;
+        margin-top: 0.15rem;
+    }
+
+    [data-theme="dark"] .text-danger.small {
+        color: #F87171 !important;
+    }
+
+    /* ============================================
+       BUTTONS
+    ============================================ */
+    .btn-submit {
+        background: var(--brand-gradient) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 50px !important;
+        padding: 0.5rem 2rem !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        transition: all 0.3s ease !important;
+        font-family: 'Inter', sans-serif !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2) !important;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.35) !important;
+        color: #FFFFFF !important;
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .btn-submit i {
+        color: #FFFFFF !important;
+    }
+
+    .btn-cancel {
+        border: 2px solid var(--border-color) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 50px !important;
+        padding: 0.5rem 1.5rem !important;
+        font-weight: 500 !important;
+        font-size: 0.85rem !important;
+        background: transparent !important;
+        transition: all 0.3s ease !important;
+        font-family: 'Inter', sans-serif !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        text-decoration: none !important;
+    }
+
+    .btn-cancel:hover {
+        background: var(--bg-secondary) !important;
+        border-color: var(--brand-orange) !important;
+        color: var(--text-primary) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    .btn-cancel i {
+        color: var(--text-muted) !important;
+        transition: color 0.3s ease;
+    }
+
+    .btn-cancel:hover i {
+        color: var(--brand-orange) !important;
+    }
+
+    /* ============================================
+       ALERT BANNER
+    ============================================ */
+    .alert-info {
+        background: rgba(255, 107, 0, 0.04) !important;
+        border: 1px solid rgba(255, 107, 0, 0.12) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 10px !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.8rem !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    .alert-info i {
+        color: var(--brand-orange) !important;
+    }
+
+    .alert-info .badge.bg-success {
+        background: #22C55E !important;
+        color: white !important;
+        font-size: 0.6rem !important;
+    }
+
+    .alert-info .badge.bg-warning {
+        background: #F59E0B !important;
+        color: #1A1A2E !important;
+        font-size: 0.6rem !important;
+    }
+
+    /* ============================================
+       DARK MODE OVERRIDES
     ============================================ */
     [data-theme="dark"] .form-control, 
     [data-theme="dark"] .form-select, 
     [data-theme="dark"] textarea, 
     [data-theme="dark"] input, 
     [data-theme="dark"] select {
-        background-color: rgba(255,255,255,0.05) !important;
-        background: rgba(255,255,255,0.05) !important;
-        border-color: rgba(255,255,255,0.1) !important;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
         color: #E8EDF5 !important;
         -webkit-text-fill-color: #E8EDF5 !important;
     }
@@ -162,21 +461,20 @@
     [data-theme="dark"] .form-control:focus, 
     [data-theme="dark"] .form-select:focus, 
     [data-theme="dark"] textarea:focus,
-    [data-theme="dark"] input:focus,
-    [data-theme="dark"] select:focus {
-        border-color: #60A5FA !important;
-        box-shadow: 0 0 0 3px rgba(96,165,250,0.2) !important;
-        background-color: rgba(255,255,255,0.08) !important;
-        background: rgba(255,255,255,0.08) !important;
+    [data-theme="dark"] input:focus {
+        border-color: var(--brand-orange) !important;
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.12) !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
         color: #E8EDF5 !important;
         -webkit-text-fill-color: #E8EDF5 !important;
     }
 
     [data-theme="dark"] .form-select option, 
     [data-theme="dark"] select option {
-        background: #1a2440 !important;
+        background: #1A1A2E !important;
         color: #E8EDF5 !important;
-        background-color: #1a2440 !important;
+        background-color: #1A1A2E !important;
     }
 
     [data-theme="dark"] input:-webkit-autofill,
@@ -184,10 +482,10 @@
     [data-theme="dark"] input:-webkit-autofill:focus,
     [data-theme="dark"] textarea:-webkit-autofill,
     [data-theme="dark"] select:-webkit-autofill {
-        -webkit-box-shadow: 0 0 0px 1000px rgba(255,255,255,0.05) inset !important;
-        box-shadow: 0 0 0px 1000px rgba(255,255,255,0.05) inset !important;
-        background-color: rgba(255,255,255,0.05) !important;
-        background: rgba(255,255,255,0.05) !important;
+        -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.05) inset !important;
+        box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.05) inset !important;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
         -webkit-text-fill-color: #E8EDF5 !important;
     }
 
@@ -209,10 +507,9 @@
     :root:not([data-theme="dark"]) .form-control:focus, 
     :root:not([data-theme="dark"]) .form-select:focus, 
     :root:not([data-theme="dark"]) textarea:focus,
-    :root:not([data-theme="dark"]) input:focus,
-    :root:not([data-theme="dark"]) select:focus {
-        border-color: #3B82F6 !important;
-        box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
+    :root:not([data-theme="dark"]) input:focus {
+        border-color: var(--brand-orange) !important;
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.06) !important;
         background-color: #EEF2FF !important;
         background: #EEF2FF !important;
         color: #1A2A6C !important;
@@ -238,107 +535,124 @@
         -webkit-text-fill-color: #1A2A6C !important;
     }
 
-    /* Buttons */
-    .btn-submit { background: var(--accent-gradient); color: white; border: none; border-radius: 50px; padding: 0.5rem 2rem; font-weight: 600; font-size: 0.85rem; transition: all 0.3s ease; }
-    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.3); color: white; }
-    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-    .btn-cancel { border: 2px solid var(--border-color); color: var(--text-secondary); border-radius: 50px; padding: 0.5rem 1.5rem; font-weight: 500; font-size: 0.85rem; background: transparent; transition: all 0.3s ease; }
-    .btn-cancel:hover { background: var(--border-color); color: var(--text-primary); }
-
-    /* Character counter */
-    .char-counter { font-size: 0.65rem; color: var(--text-muted); text-align: right; margin-top: 0.15rem; }
-    .char-counter.warning { color: #F59E0B !important; } 
-    .char-counter.danger { color: #EF4444 !important; }
-    .invalid-feedback, .text-danger.small { font-size: 0.7rem; color: #EF4444 !important; }
-    [data-theme="dark"] .invalid-feedback, [data-theme="dark"] .text-danger.small { color: #F87171 !important; }
-
-    /* Mismatch warning - Enhanced */
-    .mismatch-warning {
-        background: rgba(239, 68, 68, 0.1);
-        border: 2px solid rgba(239, 68, 68, 0.4);
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        margin-top: 0.5rem;
-        color: #EF4444;
-        font-size: 0.8rem;
-        display: none;
-        animation: shakeWarning 0.5s ease;
-    }
-    [data-theme="dark"] .mismatch-warning {
-        background: rgba(239, 68, 68, 0.15);
-        border-color: rgba(239, 68, 68, 0.5);
-        color: #F87171;
-    }
-    .mismatch-warning.show { display: block; }
-    .mismatch-warning i { margin-right: 0.5rem; font-size: 0.9rem; }
-
-    @keyframes shakeWarning {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-5px); }
-        75% { transform: translateX(5px); }
+    /* ============================================
+       RESPONSIVE
+    ============================================ */
+    @media (max-width: 768px) {
+        .form-section {
+            padding: 0.75rem;
+        }
+        .form-control, .form-select, textarea {
+            padding: 0.4rem 0.65rem !important;
+            font-size: 0.78rem !important;
+        }
+        .btn-submit, .btn-cancel {
+            width: 100%;
+            justify-content: center;
+        }
+        .form-section-title {
+            font-size: 0.8rem;
+        }
+        textarea {
+            min-height: 80px;
+        }
+        .alert-info {
+            font-size: 0.7rem !important;
+            padding: 0.4rem 0.75rem !important;
+        }
+        .alert-info .badge {
+            font-size: 0.55rem !important;
+        }
+        .create-ticket-container {
+            padding: 0 0.25rem;
+        }
+        .card-body {
+            padding: 0.75rem !important;
+        }
     }
 
-    /* Success/Valid state */
-    .employee-valid {
-        background: rgba(34, 197, 94, 0.05);
-        border: 2px solid rgba(34, 197, 94, 0.3);
-        border-radius: 8px;
-        padding: 0.5rem 0.75rem;
-        margin-top: 0.5rem;
-        color: #22C55E;
-        font-size: 0.75rem;
-        display: none;
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 0.6rem !important;
+        }
+        .form-section {
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .form-label {
+            font-size: 0.65rem;
+        }
+        .form-control, .form-select, textarea {
+            font-size: 0.72rem !important;
+            padding: 0.3rem 0.5rem !important;
+            border-radius: 6px !important;
+        }
+        textarea {
+            min-height: 60px;
+        }
+        .form-section-title {
+            font-size: 0.7rem;
+        }
+        .form-section-title i {
+            font-size: 0.7rem;
+        }
+        .char-counter {
+            font-size: 0.5rem;
+        }
+        .mismatch-warning {
+            font-size: 0.65rem;
+            padding: 0.4rem 0.6rem;
+        }
+        .employee-valid {
+            font-size: 0.6rem;
+            padding: 0.3rem 0.5rem;
+        }
+        .btn-submit, .btn-cancel {
+            font-size: 0.75rem !important;
+            padding: 0.4rem 0.8rem !important;
+        }
+        .alert-info {
+            font-size: 0.6rem !important;
+            padding: 0.3rem 0.6rem !important;
+        }
+        .emp-fetch-status {
+            font-size: 0.7rem;
+            right: 8px;
+        }
+        .auto-fill-badge {
+            font-size: 0.5rem;
+            padding: 0.05rem 0.4rem;
+        }
     }
-    [data-theme="dark"] .employee-valid {
-        background: rgba(52, 211, 153, 0.08);
-        border-color: rgba(52, 211, 153, 0.3);
-        color: #34D399;
-    }
-    .employee-valid.show { display: block; }
-    .employee-valid i { margin-right: 0.5rem; }
 
-    /* Alert info banner */
-    .alert-info {
-        background: rgba(59,130,246,0.08) !important;
-        border-color: rgba(59,130,246,0.2) !important;
-        color: var(--accent-light) !important;
-        border-radius: 8px !important;
-        padding: 0.5rem 1rem !important;
-        font-size: 0.8rem !important;
-    }
-    .alert-info .badge.bg-success {
-        background: #22C55E !important;
-        color: white !important;
-    }
-    .alert-info .badge.bg-warning {
-        background: #F59E0B !important;
-        color: #1A2A6C !important;
-    }
-    [data-theme="dark"] .alert-info .badge.bg-warning {
-        color: #1A2A6C !important;
+    /* ============================================
+       SCROLLBAR
+    ============================================ */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
     }
 
-    /* Responsive */
-    @media (max-width:768px) { 
-        .form-section{padding:0.75rem} 
-        .form-control,.form-select,textarea{padding:0.4rem 0.65rem!important;font-size:0.78rem!important} 
-        .btn-submit,.btn-cancel{width:100%} 
-        .form-section-title{font-size:0.8rem} 
-        textarea{min-height:80px} 
-        .alert-info { font-size: 0.7rem !important; padding: 0.4rem 0.75rem !important; }
-        .alert-info .badge { font-size: 0.55rem !important; }
+    ::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 10px;
     }
-    @media (max-width:576px) { 
-        .card-body{padding:0.75rem!important} 
-        .form-section{padding:0.6rem;margin-bottom:0.6rem} 
-        .form-label{font-size:0.7rem} 
-        .form-control,.form-select,textarea{font-size:0.75rem!important;padding:0.35rem 0.55rem!important;border-radius:6px!important} 
-        textarea{min-height:70px} 
-        .form-section-title{font-size:0.7rem}
-        .form-section-title i{font-size:0.75rem}
-        .char-counter{font-size:0.55rem}
-        .mismatch-warning{font-size:0.7rem;padding:0.5rem 0.75rem}
-        .employee-valid{font-size:0.65rem;padding:0.4rem 0.6rem}
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--brand-orange);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--brand-orange-dark);
+    }
+
+    /* ============================================
+       SELECTION
+    ============================================ */
+    ::selection {
+        background: var(--brand-orange);
+        color: #FFFFFF;
     }
 </style>
 {% endblock %}
@@ -347,10 +661,10 @@
 <div class="create-ticket-container">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
-            <h4 class="fw-bold mb-0" style="font-size:1.1rem;color:var(--accent-light);">
-                <i class="fa-solid fa-ticket me-2" style="color:var(--accent);"></i>Create Support Ticket
+            <h4 class="fw-bold mb-0" style="font-size: clamp(1rem, 2vw, 1.1rem); color: var(--text-primary);">
+                <i class="fa-solid fa-ticket me-2" style="color: var(--brand-orange);"></i>Create Support Ticket
             </h4>
-            <small style="color:var(--text-secondary);font-size:0.75rem;">
+            <small style="color: var(--text-secondary); font-size: 0.75rem;">
                 <i class="fa-regular fa-pen-to-square me-1"></i>Report an IT or ERP system issue
             </small>
         </div>
@@ -363,8 +677,8 @@
         <i class="fa-solid fa-info-circle me-2"></i>
         <strong>You are creating a ticket for:</strong> 
         {{ user_credential.unit.code }} - {{ user_credential.department.name }}
-        <span class="badge bg-success ms-2">Assigned</span>
-        <span class="badge bg-warning text-dark ms-1">Only your department members</span>
+        <span class="badge bg-success ms-2"><i class="fa-regular fa-circle-check me-1"></i>Assigned</span>
+        <span class="badge bg-warning ms-1"><i class="fa-solid fa-users me-1"></i>Same Department Only</span>
     </div>
     {% endif %}
 
@@ -380,20 +694,24 @@
                 </div>
                 {% endif %}
 
+                <!-- Section 1: Employee & Unit Information -->
                 <div class="form-section">
                     <div class="form-section-title"><i class="fa-solid fa-circle-1"></i>Employee & Unit Information</div>
                     <div class="row g-2">
                         <div class="col-md-4">
                             <label for="{{ form.employee_id.id_for_label }}" class="form-label">
-                                Employee ID * 
+                                <i class="fa-regular fa-id-card"></i>Employee ID <span class="text-danger">*</span>
                                 <span class="auto-fill-badge" id="autoFillBadge" style="display:none;">
                                     <i class="fa-solid fa-magic me-1"></i>Auto-fill
                                 </span>
-                                <span class="badge bg-info text-white ms-1" id="validationBadge" style="display:none;font-size:0.55rem;padding:0.15rem 0.4rem;">
-                                    <i class="fa-solid fa-check-circle me-1"></i>Valid
+                                <span class="badge bg-success text-white ms-1" id="validationBadge" style="display:none;font-size:0.5rem;padding:0.1rem 0.4rem;">
+                                    <i class="fa-regular fa-check-circle me-1"></i>Valid
                                 </span>
                             </label>
-                            <div class="emp-id-wrapper">{{ form.employee_id }}<span class="emp-fetch-status" id="empFetchStatus"></span></div>
+                            <div class="emp-id-wrapper">
+                                {{ form.employee_id }}
+                                <span class="emp-fetch-status" id="empFetchStatus"></span>
+                            </div>
                             <div id="empFetchMessage" class="char-counter" style="text-align:left;display:none;"></div>
                             
                             <!-- Mismatch Warning -->
@@ -404,86 +722,91 @@
                             
                             <!-- Valid Employee Message -->
                             <div class="employee-valid" id="employeeValid">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span>Employee verified and belongs to your department. Details auto-filled.</span>
+                                <i class="fa-regular fa-circle-check"></i>
+                                <span>Employee verified and belongs to your department.</span>
                             </div>
                             
                             {% if form.employee_id.errors %}<div class="text-danger small mt-1">{{ form.employee_id.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-4">
-                            <label for="{{ form.employee_name.id_for_label }}" class="form-label">Employee Name *</label>
+                            <label for="{{ form.employee_name.id_for_label }}" class="form-label"><i class="fa-regular fa-user"></i>Employee Name <span class="text-danger">*</span></label>
                             {{ form.employee_name }}
                             {% if form.employee_name.errors %}<div class="text-danger small mt-1">{{ form.employee_name.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-2">
-                            <label for="{{ form.mobile.id_for_label }}" class="form-label">Mobile *</label>
+                            <label for="{{ form.mobile.id_for_label }}" class="form-label"><i class="fa-regular fa-phone"></i>Mobile <span class="text-danger">*</span></label>
                             {{ form.mobile }}
                             <div class="char-counter">10 digits</div>
                             {% if form.mobile.errors %}<div class="text-danger small mt-1">{{ form.mobile.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-2">
-                            <label for="{{ form.email.id_for_label }}" class="form-label">Email *</label>
+                            <label for="{{ form.email.id_for_label }}" class="form-label"><i class="fa-regular fa-envelope"></i>Email <span class="text-danger">*</span></label>
                             {{ form.email }}
                             {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-6">
-                            <label for="{{ form.unit.id_for_label }}" class="form-label">Unit / Plant * {% if user_credential %}<small style="color:#22C55E;">(Assigned)</small>{% endif %}</label>
+                            <label for="{{ form.unit.id_for_label }}" class="form-label"><i class="fa-regular fa-building"></i>Unit / Plant <span class="text-danger">*</span> {% if user_credential %}<small style="color:#22C55E;font-weight:400;">(Assigned)</small>{% endif %}</label>
                             {{ form.unit }}
                             {% if form.unit.errors %}<div class="text-danger small mt-1">{{ form.unit.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-6">
-                            <label for="{{ form.department.id_for_label }}" class="form-label">Department * {% if user_credential %}<small style="color:#22C55E;">(Assigned)</small>{% endif %}</label>
-                            <div id="department-wrapper">{{ form.department }}<div id="dept-loading" class="char-counter" style="display:none;"><i class="fa-solid fa-spinner fa-spin me-1"></i>Loading...</div></div>
+                            <label for="{{ form.department.id_for_label }}" class="form-label"><i class="fa-regular fa-layer-group"></i>Department <span class="text-danger">*</span> {% if user_credential %}<small style="color:#22C55E;font-weight:400;">(Assigned)</small>{% endif %}</label>
+                            <div id="department-wrapper">
+                                {{ form.department }}
+                                <div id="dept-loading" class="char-counter" style="display:none;"><i class="fa-solid fa-spinner fa-spin me-1"></i>Loading...</div>
+                            </div>
                             {% if form.department.errors %}<div class="text-danger small mt-1">{{ form.department.errors }}</div>{% endif %}
                         </div>
                     </div>
                 </div>
 
+                <!-- Section 2: Issue Details -->
                 <div class="form-section">
                     <div class="form-section-title"><i class="fa-solid fa-circle-2"></i>Issue Details</div>
                     <div class="row g-2">
                         <div class="col-md-4">
-                            <label for="{{ form.screen_number.id_for_label }}" class="form-label">Screen Number / Module *</label>
+                            <label for="{{ form.screen_number.id_for_label }}" class="form-label"><i class="fa-regular fa-desktop"></i>Screen Number / Module <span class="text-danger">*</span></label>
                             {{ form.screen_number }}
                             <div class="char-counter" id="screen_counter">0 chars</div>
                             {% if form.screen_number.errors %}<div class="text-danger small mt-1">{{ form.screen_number.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-4">
-                            <label for="{{ form.priority.id_for_label }}" class="form-label">Priority *</label>
+                            <label for="{{ form.priority.id_for_label }}" class="form-label"><i class="fa-solid fa-flag"></i>Priority <span class="text-danger">*</span></label>
                             {{ form.priority }}
-                            <div class="small text-muted" style="font-size:0.6rem;">
+                            <div class="small text-muted" style="font-size:0.55rem;">
                                 <i class="fa-regular fa-circle-info me-1"></i>
                                 Critical: System down, High: Major issue, Medium: Minor issue, Low: Enhancement
                             </div>
                             {% if form.priority.errors %}<div class="text-danger small mt-1">{{ form.priority.errors }}</div>{% endif %}
                         </div>
                         <div class="col-md-4">
-                            <label for="{{ form.error_type.id_for_label }}" class="form-label">Error Type *</label>
+                            <label for="{{ form.error_type.id_for_label }}" class="form-label"><i class="fa-solid fa-bug"></i>Error Type <span class="text-danger">*</span></label>
                             {{ form.error_type }}
                             {% if form.error_type.errors %}<div class="text-danger small mt-1">{{ form.error_type.errors }}</div>{% endif %}
                         </div>
                         <div class="col-12">
-                            <label for="{{ form.subject.id_for_label }}" class="form-label">Subject *</label>
+                            <label for="{{ form.subject.id_for_label }}" class="form-label"><i class="fa-regular fa-message"></i>Subject <span class="text-danger">*</span></label>
                             {{ form.subject }}
                             <div class="char-counter" id="subject_counter">0 / 150</div>
                             {% if form.subject.errors %}<div class="text-danger small mt-1">{{ form.subject.errors }}</div>{% endif %}
                         </div>
                         <div class="col-12">
-                            <label for="{{ form.description.id_for_label }}" class="form-label">Description *</label>
+                            <label for="{{ form.description.id_for_label }}" class="form-label"><i class="fa-regular fa-file-lines"></i>Description <span class="text-danger">*</span></label>
                             {{ form.description }}
                             <div class="char-counter" id="desc_counter">0 chars (min 10)</div>
                             {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
                         </div>
                         <div class="col-12">
-                            <label for="{{ form.attachment.id_for_label }}" class="form-label">Attachment</label>
+                            <label for="{{ form.attachment.id_for_label }}" class="form-label"><i class="fa-solid fa-paperclip"></i>Attachment</label>
                             {{ form.attachment }}
-                            <div class="char-counter" style="text-align:left;">Max 3MB (pdf,doc,xls,png,jpg)</div>
+                            <div class="char-counter" style="text-align:left;">Max 3MB (pdf, doc, xls, png, jpg)</div>
                             {% if form.attachment.errors %}<div class="text-danger small mt-1">{{ form.attachment.errors }}</div>{% endif %}
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end gap-2 mt-3">
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-end gap-2 mt-3 flex-wrap">
                     <a href="{% url 'employee_dashboard' %}" class="btn btn-cancel"><i class="fa-solid fa-times me-1"></i>Cancel</a>
                     <button type="submit" class="btn btn-submit" id="submitBtn"><i class="fa-solid fa-paper-plane me-2"></i>Submit Ticket</button>
                 </div>
@@ -496,6 +819,9 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ============================================
+        // DOM ELEMENTS
+        // ============================================
         var empIdInput = document.getElementById('id_employee_id');
         var empNameInput = document.getElementById('id_employee_name');
         var empMobileInput = document.getElementById('id_mobile');
@@ -511,6 +837,7 @@
         var employeeValid = document.getElementById('employeeValid');
         var validationBadge = document.getElementById('validationBadge');
         var form = document.getElementById('ticketForm');
+        var submitBtn = document.getElementById('submitBtn');
         
         var userUnitId = form.getAttribute('data-user-unit') || '';
         var userDeptId = form.getAttribute('data-user-dept') || '';
@@ -519,12 +846,23 @@
         var employeeValidated = false;
         var isCredentialedUser = form.getAttribute('data-is-credentialed') === 'true';
 
-        // Lock Unit & Department fields for credentialed users
+        // ============================================
+        // LOCK FIELDS FOR CREDENTIALED USERS
+        // ============================================
         if (isCredentialedUser) {
-            if (unitSelect) { unitSelect.classList.add('field-locked'); }
-            if (deptSelect) { deptSelect.classList.add('field-locked'); }
+            if (unitSelect) { 
+                unitSelect.classList.add('field-locked');
+                unitSelect.title = 'This field is locked as per your department assignment';
+            }
+            if (deptSelect) { 
+                deptSelect.classList.add('field-locked');
+                deptSelect.title = 'This field is locked as per your department assignment';
+            }
         }
 
+        // ============================================
+        // SHOW FETCH STATUS
+        // ============================================
         function showFetchStatus(status, message) {
             message = message || '';
             if (!empFetchStatus || !empFetchMessage) return;
@@ -540,10 +878,9 @@
                 employeeMismatch = false;
                 employeeValidated = false;
             } else if (status === 'found') {
-                // VALID: Employee belongs to the same unit and department
                 employeeMismatch = false;
                 employeeValidated = true;
-                empFetchStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                empFetchStatus.innerHTML = '<i class="fa-regular fa-circle-check"></i>';
                 empFetchStatus.classList.add('found');
                 empFetchMessage.textContent = '✅ ' + message;
                 empFetchMessage.style.color = '#22C55E';
@@ -552,13 +889,12 @@
                 if (validationBadge) {
                     validationBadge.style.display = 'inline-block';
                     validationBadge.className = 'badge bg-success text-white ms-1';
-                    validationBadge.innerHTML = '<i class="fa-solid fa-check-circle me-1"></i>Valid';
+                    validationBadge.innerHTML = '<i class="fa-regular fa-check-circle me-1"></i>Valid';
                 }
                 employeeValid.classList.add('show');
-                employeeValid.innerHTML = '<i class="fa-solid fa-circle-check"></i> Employee verified and belongs to your department. Details auto-filled.';
+                employeeValid.innerHTML = '<i class="fa-regular fa-circle-check"></i> Employee verified and belongs to your department.';
                 mismatchWarning.classList.remove('show');
             } else if (status === 'found-mismatch') {
-                // INVALID: Employee found but belongs to different unit/department
                 employeeMismatch = true;
                 employeeValidated = false;
                 empFetchStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
@@ -575,15 +911,12 @@
                 mismatchWarning.classList.add('show');
                 mismatchMessage.textContent = message;
                 employeeValid.classList.remove('show');
-                // CRITICAL: Clear any auto-filled fields when mismatch occurs
                 clearAutoFilledFields();
-                // Also clear the employee ID field to force user to re-enter
                 if (empIdInput) {
                     empIdInput.value = '';
                     empIdInput.focus();
                 }
             } else if (status === 'not-found') {
-                // INVALID: Employee not found
                 employeeMismatch = true;
                 employeeValidated = false;
                 empFetchStatus.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
@@ -600,7 +933,6 @@
                 mismatchWarning.classList.remove('show');
                 employeeValid.classList.remove('show');
                 clearAutoFilledFields();
-                // Clear the employee ID field to force user to re-enter
                 if (empIdInput) {
                     empIdInput.value = '';
                     empIdInput.focus();
@@ -608,6 +940,9 @@
             }
         }
 
+        // ============================================
+        // MARK FIELD AUTO-FILLED
+        // ============================================
         function markFieldAutoFilled(field, isAuto) {
             if (!field) return;
             if (isAuto) { 
@@ -619,6 +954,9 @@
             }
         }
 
+        // ============================================
+        // CLEAR FETCH STATUS
+        // ============================================
         function clearFetchStatus() {
             if (empFetchStatus) { empFetchStatus.className = 'emp-fetch-status'; empFetchStatus.innerHTML = ''; }
             if (empFetchMessage) { empFetchMessage.style.display = 'none'; empFetchMessage.textContent = ''; }
@@ -630,8 +968,10 @@
             employeeValidated = false;
         }
 
+        // ============================================
+        // AUTO-FILL EMPLOYEE DETAILS
+        // ============================================
         function autoFillEmployeeDetails(data) {
-            // CRITICAL FIX: Only auto-fill if employee is valid (no mismatch)
             if (employeeMismatch) {
                 console.log('❌ Auto-fill blocked: Employee mismatch detected');
                 return;
@@ -661,6 +1001,9 @@
             isAutoFilled = true;
         }
 
+        // ============================================
+        // FETCH EMPLOYEE DETAILS
+        // ============================================
         function fetchEmployeeDetails(employeeId) {
             if (!employeeId || employeeId.length < 2) { 
                 clearFetchStatus(); 
@@ -682,21 +1025,16 @@
             .then(function(res) { return res.json(); })
             .then(function(data) {
                 if (data.found) {
-                    // Employee found and belongs to the correct unit/department
                     showFetchStatus('found', 'Employee verified! Belongs to your department.');
                     autoFillEmployeeDetails(data.employee);
                 } else if (data.mismatch) {
-                    // Employee found but belongs to different unit/department
-                    // Determine what the mismatch is
                     var errorMsg = 'Employee ID belongs to different ';
                     var mismatchType = [];
                     
                     if (data.employee) {
-                        // Check unit mismatch
                         if (userUnitId && data.employee.unit_id && data.employee.unit_id.toString() !== userUnitId.toString()) {
                             mismatchType.push('Unit');
                         }
-                        // Check department mismatch
                         if (userDeptId && data.employee.department_id && data.employee.department_id.toString() !== userDeptId.toString()) {
                             mismatchType.push('Department');
                         }
@@ -709,10 +1047,9 @@
                     }
                     
                     showFetchStatus('found-mismatch', errorMsg);
-                    // CRITICAL: DO NOT auto-fill details when there's a mismatch
                     console.log('❌ Mismatch detected - blocking auto-fill');
                 } else {
-                    showFetchStatus('not-found', 'Employee ID not found');
+                    showFetchStatus('not-found', 'Employee ID not found. Please check and try again.');
                 }
             })
             .catch(function(err) { 
@@ -722,6 +1059,9 @@
             });
         }
 
+        // ============================================
+        // CLEAR AUTO-FILLED FIELDS
+        // ============================================
         function clearAutoFilledFields() {
             [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
                 if (field && field.getAttribute('data-auto-filled') === 'true') { 
@@ -740,7 +1080,9 @@
             isAutoFilled = false;
         }
 
-        // Employee ID input events
+        // ============================================
+        // EMPLOYEE ID INPUT EVENTS
+        // ============================================
         if (empIdInput) {
             empIdInput.addEventListener('input', function() {
                 clearTimeout(fetchTimeout);
@@ -761,7 +1103,6 @@
                 }
             });
             
-            // Also trigger on paste
             empIdInput.addEventListener('paste', function() {
                 setTimeout(function() {
                     var value = empIdInput.value.trim();
@@ -772,13 +1113,14 @@
             });
         }
 
-        // Clear auto-fill status when user manually changes auto-filled fields
+        // ============================================
+        // CLEAR AUTO-FILL ON MANUAL CHANGE
+        // ============================================
         [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
             if (field) { 
                 field.addEventListener('input', function() { 
                     if (this.getAttribute('data-auto-filled') === 'true') {
                         markFieldAutoFilled(this, false);
-                        // If user changes auto-filled fields, re-validate
                         employeeValidated = false;
                         if (validationBadge) {
                             validationBadge.style.display = 'none';
@@ -789,10 +1131,9 @@
             }
         });
         
-        if (unitSelect) { 
+        if (unitSelect && !unitSelect.classList.contains('field-locked')) { 
             unitSelect.addEventListener('change', function() { 
                 markFieldAutoFilled(this, false);
-                // Reset employee validation when unit changes
                 employeeValidated = false;
                 employeeMismatch = false;
                 clearFetchStatus();
@@ -801,6 +1142,9 @@
             }); 
         }
 
+        // ============================================
+        // LOAD DEPARTMENTS
+        // ============================================
         function loadDepartments(unitId, selectedDeptId) {
             selectedDeptId = selectedDeptId || null;
             if (!deptSelect || deptSelect.classList.contains('field-locked')) return;
@@ -843,10 +1187,17 @@
         }
 
         if (unitSelect && !unitSelect.classList.contains('field-locked')) { 
-            unitSelect.addEventListener('change', function() { loadDepartments(this.value); }); 
-            if (unitSelect.value) loadDepartments(unitSelect.value, deptSelect ? deptSelect.value : null); 
+            unitSelect.addEventListener('change', function() { 
+                loadDepartments(this.value); 
+            }); 
+            if (unitSelect.value) {
+                loadDepartments(unitSelect.value, deptSelect ? deptSelect.value : null);
+            }
         }
 
+        // ============================================
+        // CHARACTER COUNTERS
+        // ============================================
         function setupCounter(inputId, counterId, maxLen) {
             maxLen = maxLen || null;
             var input = document.getElementById(inputId), counter = document.getElementById(counterId);
@@ -870,12 +1221,15 @@
         setupCounter('id_subject', 'subject_counter', 150);
         setupCounter('id_description', 'desc_counter');
 
+        // ============================================
+        // ATTACHMENT VALIDATION
+        // ============================================
         var att = document.getElementById('id_attachment');
         if (att) { 
             att.addEventListener('change', function() { 
                 var file = this.files[0]; 
                 if (!file) return; 
-                if (file.size > 3*1024*1024) { 
+                if (file.size > 3 * 1024 * 1024) { 
                     alert('File size exceeds 3MB. Please select a smaller file.'); 
                     this.value = ''; 
                 } else if (!/(\.pdf|\.doc|\.docx|\.xls|\.xlsx|\.png|\.jpg|\.jpeg)$/i.exec(file.name)) { 
@@ -885,7 +1239,9 @@
             }); 
         }
 
-        var submitBtn = document.getElementById('submitBtn');
+        // ============================================
+        // FORM SUBMISSION VALIDATION
+        // ============================================
         if (form && submitBtn) {
             form.addEventListener('submit', function(e) {
                 // Check if employee mismatch exists
@@ -913,11 +1269,57 @@
             });
         }
 
-        console.log('Employee Create Ticket Ready - Strict Validation Mode');
-        console.log('User Unit ID:', userUnitId);
-        console.log('User Dept ID:', userDeptId);
-        console.log('Is Credentialed User:', isCredentialedUser);
-        console.log('✅ Validation Rules: Employee must belong to same Unit AND Department');
+        // ============================================
+        // THEME CHANGE HANDLER
+        // ============================================
+        function updateFormTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const inputs = document.querySelectorAll('.form-control, .form-select, textarea, input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select');
+            
+            inputs.forEach(function(input) {
+                input.style.display = 'none';
+                void input.offsetHeight;
+                input.style.display = '';
+                
+                if (isDark) {
+                    input.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    input.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                    input.style.color = '#E8EDF5';
+                } else {
+                    input.style.backgroundColor = '#F5F8FF';
+                    input.style.borderColor = '#DCE3F0';
+                    input.style.color = '#1A2A6C';
+                }
+            });
+        }
+
+        var themeToggleBtn = document.getElementById('themeToggleFloating');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', function() {
+                setTimeout(updateFormTheme, 100);
+            });
+        }
+
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'data-theme') {
+                    updateFormTheme();
+                }
+            });
+        });
+        
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
+
+        setTimeout(updateFormTheme, 200);
+
+        console.log('✅ Employee Create Ticket Ready - Strict Validation Mode');
+        console.log('👤 User Unit ID:', userUnitId);
+        console.log('🏢 User Dept ID:', userDeptId);
+        console.log('🔒 Is Credentialed User:', isCredentialedUser);
+        console.log('📋 Validation Rules: Employee must belong to same Unit AND Department');
         console.log('❌ Mismatch: Auto-fill is BLOCKED, fields are cleared');
     });
 </script>

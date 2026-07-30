@@ -15,6 +15,7 @@
         animation-name: fadeInUp;
         animation-duration: 0.6s;
         animation-timing-function: ease;
+        padding: 0 0.5rem;
     }
 
     @keyframes fadeInUp {
@@ -32,7 +33,7 @@
        Header Styles
     ============================================ */
     .text-primary {
-        color: var(--accent) !important;
+        color: var(--brand-orange) !important;
     }
 
     .text-muted {
@@ -51,17 +52,26 @@
         color: var(--text-secondary) !important;
     }
 
+    /* ============================================
+       BUTTONS - FIXED FOR LIGHT/DARK MODE
+    ============================================ */
     .btn-primary-custom {
-        background: var(--accent-gradient) !important;
+        background: var(--brand-gradient) !important;
         border: none !important;
-        color: white !important;
+        color: #FFFFFF !important;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 50px !important;
-        padding: 0.5rem 1.5rem;
-        font-size: clamp(0.8rem, 1vw, 0.9rem);
-        font-weight: 500;
+        padding: 0.5rem 1.5rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
         position: relative;
         overflow: hidden;
+        font-family: 'Inter', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none !important;
+        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.25) !important;
     }
 
     .btn-primary-custom::before {
@@ -83,24 +93,89 @@
     }
 
     .btn-primary-custom:hover {
-        transform: translateY(-3px) scale(1.03);
-        box-shadow: 0 6px 30px rgba(233, 69, 96, 0.4);
-        color: white !important;
+        transform: translateY(-3px) scale(1.03) !important;
+        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.35) !important;
+        color: #FFFFFF !important;
     }
 
     .btn-primary-custom:active {
-        transform: scale(0.95);
+        transform: scale(0.95) !important;
     }
 
     .btn-primary-custom i {
-        transition: all 0.3s ease;
+        color: #FFFFFF !important;
     }
 
-    .btn-primary-custom:hover i {
-        transform: translateX(3px);
+    .btn-outline-custom {
+        background: transparent !important;
+        border: 2px solid var(--brand-orange) !important;
+        color: var(--brand-orange) !important;
+        border-radius: 50px !important;
+        padding: 0.4rem 1.2rem !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: 'Inter', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none !important;
     }
 
-    /* FIXED: Close button styles */
+    .btn-outline-custom:hover {
+        background: var(--brand-gradient) !important;
+        color: #FFFFFF !important;
+        border-color: transparent !important;
+        transform: translateY(-3px) scale(1.03) !important;
+        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.25) !important;
+    }
+
+    .btn-outline-custom:hover i {
+        color: #FFFFFF !important;
+    }
+
+    .btn-outline-custom:active {
+        transform: scale(0.95) !important;
+    }
+
+    .btn-outline-custom i {
+        color: var(--brand-orange) !important;
+        transition: color 0.3s ease;
+    }
+
+    .btn-outline-custom:hover i {
+        color: #FFFFFF !important;
+    }
+
+    /* View All Button in Modal */
+    .btn-view-all {
+        background: var(--brand-gradient) !important;
+        border: none !important;
+        color: #FFFFFF !important;
+        padding: 0.5rem 1.5rem !important;
+        border-radius: 50px !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        transition: all 0.3s ease !important;
+        font-family: 'Inter', sans-serif !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        text-decoration: none !important;
+        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2) !important;
+    }
+
+    .btn-view-all:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 28px rgba(255, 107, 0, 0.3) !important;
+        color: #FFFFFF !important;
+    }
+
+    .btn-view-all i {
+        color: #FFFFFF !important;
+    }
+
+    /* Close Button in Modal - FIXED FOR BOTH MODES */
     .btn-close-custom {
         background: var(--bg-secondary) !important;
         border: 2px solid var(--border-color) !important;
@@ -111,37 +186,160 @@
         font-weight: 500 !important;
         transition: all 0.3s ease !important;
         text-decoration: none !important;
-        display: inline-block !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        font-family: 'Inter', sans-serif !important;
     }
 
     .btn-close-custom:hover {
         background: var(--bg-card) !important;
-        border-color: var(--accent) !important;
+        border-color: var(--brand-orange) !important;
         color: var(--text-primary) !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.1) !important;
+        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.1) !important;
     }
 
-    .btn-close-custom:active {
+    .btn-close-custom i {
+        color: var(--text-muted) !important;
+        transition: color 0.3s ease;
+    }
+
+    .btn-close-custom:hover i {
+        color: var(--brand-orange) !important;
+    }
+
+    /* ============================================
+       FIX: Modal Close Button - VISIBLE IN BOTH MODES
+    ============================================ */
+    .modal-header .btn-close {
+        color: var(--text-primary) !important;
+        opacity: 0.7 !important;
+        background: transparent !important;
+        transition: all 0.3s ease !important;
+        filter: none !important;
+        background-image: none !important;
+        font-size: 1.5rem !important;
+        padding: 0.5rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 50% !important;
+        border: 2px solid transparent !important;
+    }
+
+    .modal-header .btn-close::before {
+        content: '✕';
+        font-size: 1.2rem;
+        font-weight: 300;
+        color: var(--text-primary);
+        display: block;
+        line-height: 1;
+        transition: all 0.3s ease;
+    }
+
+    .modal-header .btn-close:hover {
+        opacity: 1 !important;
+        transform: rotate(90deg) scale(1.1) !important;
+        background: rgba(255, 107, 0, 0.08) !important;
+        border-color: var(--brand-orange) !important;
+    }
+
+    .modal-header .btn-close:focus {
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.2) !important;
+        outline: none !important;
+    }
+
+    /* Dark mode specific close button */
+    [data-theme="dark"] .modal-header .btn-close {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    [data-theme="dark"] .modal-header .btn-close::before {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    [data-theme="dark"] .modal-header .btn-close:hover {
+        background: rgba(255, 107, 0, 0.15) !important;
+        border-color: var(--brand-orange) !important;
+    }
+
+    [data-theme="dark"] .modal-header .btn-close:focus {
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.3) !important;
+    }
+
+    /* Light mode specific close button */
+    :root:not([data-theme="dark"]) .modal-header .btn-close {
+        color: rgba(0, 0, 0, 0.7) !important;
+    }
+
+    :root:not([data-theme="dark"]) .modal-header .btn-close::before {
+        color: rgba(0, 0, 0, 0.7) !important;
+    }
+
+    :root:not([data-theme="dark"]) .modal-header .btn-close:hover {
+        background: rgba(255, 107, 0, 0.08) !important;
+        border-color: var(--brand-orange) !important;
+    }
+
+    /* ============================================
+       FIX: View Button - VISIBLE WITH BORDER
+    ============================================ */
+    .btn-view {
+        padding: 0.25rem 0.8rem !important;
+        border-radius: 50px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        background: var(--brand-gradient) !important;
+        color: #FFFFFF !important;
+        border: 2px solid transparent !important;
+        white-space: nowrap !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        text-decoration: none !important;
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.2) !important;
+        min-width: 60px !important;
+        justify-content: center !important;
+    }
+
+    .btn-view:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.35) !important;
+        color: #FFFFFF !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+    }
+
+    .btn-view:active {
         transform: scale(0.95) !important;
     }
 
-    .btn-outline-primary {
-        color: var(--accent) !important;
-        border: 2px solid var(--accent) !important;
-        border-radius: 50px !important;
-        padding: 0.25rem 0.8rem;
-        font-size: 0.75rem;
-        transition: all 0.3s ease;
-        background: transparent !important;
+    .btn-view i {
+        font-size: 0.65rem !important;
+        color: #FFFFFF !important;
     }
 
-    .btn-outline-primary:hover {
-        background: var(--accent-gradient) !important;
-        color: white !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
-        border-color: transparent !important;
+    /* Light mode view button */
+    :root:not([data-theme="dark"]) .btn-view {
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.25) !important;
+    }
+
+    :root:not([data-theme="dark"]) .btn-view:hover {
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.4) !important;
+    }
+
+    /* Dark mode view button */
+    [data-theme="dark"] .btn-view {
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.15) !important;
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    [data-theme="dark"] .btn-view:hover {
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3) !important;
+        border-color: rgba(255, 107, 0, 0.3) !important;
     }
 
     /* ============================================
@@ -149,18 +347,19 @@
     ============================================ */
     .dept-badge {
         display: inline-block;
-        background: rgba(233, 69, 96, 0.1);
-        border: 1px solid rgba(233, 69, 96, 0.2);
+        background: rgba(255, 107, 0, 0.08);
+        border: 1px solid rgba(255, 107, 0, 0.12);
         border-radius: 50px;
-        padding: 0.25rem 1rem;
-        font-size: 0.75rem;
-        color: var(--accent-light);
+        padding: 0.2rem 0.8rem;
+        font-size: 0.7rem;
+        color: var(--brand-orange);
         font-weight: 600;
+        font-family: 'Inter', sans-serif;
     }
 
     .dept-badge i {
         margin-right: 0.4rem;
-        color: var(--accent);
+        color: var(--brand-orange);
     }
 
     /* ============================================
@@ -176,6 +375,8 @@
         overflow: hidden;
         animation: cardSlideUp 0.5s ease;
         cursor: pointer;
+        padding: 1rem !important;
+        color: var(--text-primary) !important;
     }
 
     .kpi-card::before {
@@ -185,7 +386,7 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: var(--accent-gradient);
+        background: var(--brand-gradient);
         opacity: 0;
         transition: all 0.4s ease;
     }
@@ -196,8 +397,8 @@
 
     .kpi-card:hover {
         transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 8px 40px rgba(233, 69, 96, 0.1);
-        border-color: rgba(233, 69, 96, 0.25) !important;
+        box-shadow: 0 8px 40px rgba(255, 107, 0, 0.1);
+        border-color: rgba(255, 107, 0, 0.25) !important;
     }
 
     .kpi-card:active {
@@ -242,6 +443,7 @@
         font-weight: 700;
         line-height: 1.2;
         transition: all 0.3s ease;
+        color: var(--text-primary) !important;
     }
 
     .kpi-card:hover .kpi-value {
@@ -255,6 +457,11 @@
         color: var(--text-secondary);
         font-weight: 500;
         margin-top: 0.25rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .kpi-label i {
+        color: var(--text-muted) !important;
     }
 
     /* KPI Color Variants */
@@ -266,13 +473,13 @@
     .kpi-critical .kpi-value { color: var(--status-critical) !important; }
 
     .kpi-critical {
-        border-color: rgba(252, 129, 129, 0.2) !important;
+        border-color: rgba(239, 68, 68, 0.2) !important;
         animation: criticalPulse 3s ease-in-out infinite;
     }
 
     @keyframes criticalPulse {
-        0%, 100% { border-color: rgba(252, 129, 129, 0.2); }
-        50% { border-color: rgba(252, 129, 129, 0.4); }
+        0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
+        50% { border-color: rgba(239, 68, 68, 0.4); }
     }
 
     .kpi-critical .kpi-value {
@@ -291,12 +498,16 @@
         background: var(--bg-card) !important;
         backdrop-filter: blur(10px);
         border: 1px solid var(--border-color) !important;
-        box-shadow: 0 8px 32px var(--shadow-color) !important;
+        box-shadow: var(--shadow-sm) !important;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 16px !important;
         overflow: hidden;
         animation: cardFadeIn 0.6s ease;
         height: 100%;
+        min-height: 320px;
+        max-height: 400px;
+        display: flex;
+        flex-direction: column;
     }
 
     .panel-card:nth-child(1) { animation-delay: 0.1s; }
@@ -314,80 +525,98 @@
     }
 
     .panel-card:hover {
-        box-shadow: 0 12px 48px rgba(233, 69, 96, 0.1) !important;
+        box-shadow: var(--shadow-md) !important;
         transform: translateY(-4px);
-        border-color: rgba(233, 69, 96, 0.25) !important;
+        border-color: rgba(255, 107, 0, 0.2) !important;
     }
 
     .glass-header {
-        background: rgba(233, 69, 96, 0.05) !important;
+        background: rgba(255, 107, 0, 0.03) !important;
         border-bottom: 1px solid var(--border-color) !important;
         backdrop-filter: blur(10px);
-        padding: 0.75rem 1.25rem;
+        padding: 0.6rem 1.25rem;
+        flex-shrink: 0;
     }
 
     .glass-header h5 {
-        color: var(--accent-light) !important;
+        color: var(--text-primary) !important;
         font-weight: 700 !important;
+        font-family: 'Fraunces', serif;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .glass-header h5 i {
+        color: var(--brand-orange) !important;
     }
 
     .glass-header h6 {
-        color: var(--accent-light) !important;
+        color: var(--text-primary) !important;
         font-weight: 700;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         letter-spacing: 0.3px;
+        margin: 0;
+        font-family: 'Fraunces', serif;
+    }
+
+    .glass-header h6 i {
+        color: var(--brand-orange) !important;
     }
 
     .card-body {
-        padding: 1rem;
+        padding: 0.75rem 1rem;
         background: transparent;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     /* ============================================
-       Chart Container - Responsive
+       Chart Container - Clickable
     ============================================ */
     .chart-container {
         position: relative;
         width: 100%;
-        min-height: 220px;
-        height: auto;
-        padding: 0.5rem;
-    }
-
-    .chart-container canvas {
-        max-width: 100%;
-        height: auto !important;
+        flex: 1;
+        min-height: 180px;
+        max-height: 240px;
+        padding: 0.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-    }
-
-    /* ============================================
-       Chart Clickable Styles
-    ============================================ */
-    .chart-container {
-        position: relative;
         border-radius: 8px;
         transition: all 0.3s ease;
     }
 
     .chart-container:hover {
-        background: rgba(233, 69, 96, 0.02);
-        box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.05);
+        background: rgba(255, 107, 0, 0.02);
+        box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.05);
+    }
+
+    .chart-container canvas {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        cursor: pointer;
     }
 
     .chart-container::after {
         content: 'Click on chart segments to filter →';
         position: absolute;
-        bottom: 8px;
-        right: 12px;
-        font-size: 0.55rem;
+        bottom: 6px;
+        right: 10px;
+        font-size: 0.5rem;
         color: var(--text-muted);
-        opacity: 0.3;
+        opacity: 0.25;
         pointer-events: none;
         transition: opacity 0.3s ease;
     }
 
     .chart-container:hover::after {
-        opacity: 0.7;
+        opacity: 0.6;
     }
 
     .chart-container canvas:hover {
@@ -400,22 +629,23 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 200px;
+        min-height: 160px;
         color: var(--text-muted);
         text-align: center;
         padding: 1rem;
     }
 
     .chart-empty i {
-        font-size: 2.5rem;
-        color: var(--accent);
+        font-size: 2rem;
+        color: var(--brand-orange);
         opacity: 0.3;
         margin-bottom: 0.5rem;
     }
 
     .chart-empty p {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         margin: 0;
+        font-family: 'Inter', sans-serif;
     }
 
     /* ============================================
@@ -429,7 +659,7 @@
     .table > :not(caption) > * > * {
         background: transparent !important;
         color: var(--text-primary) !important;
-        border-color: var(--border-light) !important;
+        border-color: var(--border-color) !important;
     }
 
     .table-hover-zoom tbody tr {
@@ -439,27 +669,27 @@
     }
 
     .table-hover-zoom tbody tr:hover {
-        transform: scale(1.02) translateY(-2px);
-        background: rgba(233, 69, 96, 0.05) !important;
-        box-shadow: 0 4px 25px rgba(233, 69, 96, 0.08);
+        transform: scale(1.01) translateY(-2px);
+        background: rgba(255, 107, 0, 0.04) !important;
+        box-shadow: 0 4px 25px rgba(255, 107, 0, 0.06);
     }
 
     .table td {
         vertical-align: middle;
-        padding: 0.6rem 0.4rem;
-        font-size: 0.8rem;
-        border-color: var(--border-light) !important;
+        padding: 0.5rem 0.4rem;
+        font-size: 0.78rem;
+        border-color: var(--border-color) !important;
         color: var(--text-primary) !important;
         background: transparent !important;
     }
 
     .table th {
-        padding: 0.6rem 0.4rem;
-        font-size: 0.65rem;
+        padding: 0.5rem 0.4rem;
+        font-size: 0.6rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        font-weight: 600;
-        border-bottom: 2px solid rgba(233, 69, 96, 0.2) !important;
+        font-weight: 700;
+        border-bottom: 2px solid rgba(255, 107, 0, 0.15) !important;
         white-space: nowrap;
         color: var(--text-secondary) !important;
         background: transparent !important;
@@ -467,7 +697,7 @@
     }
 
     .table-hover > tbody > tr:hover {
-        background: rgba(233, 69, 96, 0.05) !important;
+        background: rgba(255, 107, 0, 0.04) !important;
         color: var(--text-primary) !important;
     }
 
@@ -516,9 +746,9 @@
     }
 
     .badge-priority {
-        padding: 0.2rem 0.6rem;
+        padding: 0.15rem 0.5rem;
         border-radius: 50px;
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.3px;
@@ -530,46 +760,45 @@
     }
 
     .badge-priority-critical {
-        background: #fc8181;
+        background: #EF4444;
         color: white;
         animation: pulseCritical 2s ease-in-out infinite;
-        font-size: 0.55rem;
-        padding: 0.15rem 0.5rem;
     }
 
     @keyframes pulseCritical {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(252, 129, 129, 0.4); }
-        50% { box-shadow: 0 0 0 6px rgba(252, 129, 129, 0); }
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
     }
 
     .badge-priority-high {
-        background: #f6ad55;
-        color: #2d3748;
+        background: #F59E0B;
+        color: #1A1A2E;
     }
 
     .badge-priority-medium {
-        background: #63b3ed;
-        color: #2d3748;
+        background: #3B82F6;
+        color: white;
     }
 
     .badge-priority-low {
-        background: #a0aec0;
+        background: #94A3B8;
         color: white;
     }
 
     .badge-priority i {
-        font-size: 0.4rem;
+        font-size: 0.35rem;
     }
 
     /* ============================================
        Contact Card
     ============================================ */
     .contact-card {
-        background: var(--accent-gradient) !important;
+        background: var(--brand-gradient) !important;
         border: none !important;
         border-radius: 16px !important;
         overflow: hidden;
         position: relative;
+        color: #FFFFFF !important;
     }
 
     .contact-card::before {
@@ -592,14 +821,15 @@
     .contact-card .card-body {
         position: relative;
         z-index: 1;
+        padding: 1.5rem !important;
     }
 
     .contact-card hr {
-        border-color: rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
     }
 
     .contact-card a {
-        color: white !important;
+        color: #FFFFFF !important;
         text-decoration: none;
         transition: all 0.3s ease;
     }
@@ -609,98 +839,18 @@
         opacity: 0.8;
     }
 
-    /* ============================================
-       View Button
-    ============================================ */
-    .btn-view {
-        padding: 0.2rem 0.8rem;
-        border-radius: 50px;
-        font-size: 0.7rem;
-        font-weight: 500;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        background: var(--accent-gradient);
-        color: white;
-        border: none;
-        white-space: nowrap;
-        display: inline-block;
-        text-decoration: none;
+    .contact-card .text-white-50 {
+        color: rgba(255, 255, 255, 0.6) !important;
     }
 
-    .btn-view:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
-        color: white;
-    }
-
-    .btn-view:active {
-        transform: scale(0.95);
-    }
-
-    .btn-view i {
-        font-size: 0.65rem;
-        margin-right: 0.2rem;
+    .contact-card .fs-5 {
+        font-size: 1rem !important;
+        color: #FFFFFF !important;
     }
 
     /* ============================================
-       Empty State
+       KPI Filter Badge
     ============================================ */
-    .empty-state i {
-        color: var(--accent);
-        opacity: 0.25;
-    }
-
-    .empty-state .text-muted {
-        color: var(--text-muted) !important;
-    }
-
-    /* ============================================
-       Drill Down Modal Styles
-    ============================================ */
-    .modal-content {
-        background: var(--bg-card) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 16px !important;
-    }
-    .modal-header {
-        border-bottom: 1px solid var(--border-color) !important;
-        padding: 1rem 1.5rem;
-    }
-    .modal-body {
-        padding: 1.5rem;
-        color: var(--text-primary) !important;
-        max-height: 70vh;
-        overflow-y: auto;
-    }
-    .modal-footer {
-        border-top: 1px solid var(--border-color) !important;
-        padding: 1rem 1.5rem;
-    }
-    .modal-title {
-        color: var(--accent-light) !important;
-        font-weight: 700 !important;
-    }
-    .modal-header .btn-close {
-        color: var(--text-primary) !important;
-    }
-
-    /* Responsive table in modal */
-    .modal-body .table {
-        font-size: 0.8rem;
-    }
-    .modal-body .table th {
-        font-size: 0.6rem;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        color: var(--text-secondary);
-        border-bottom: 2px solid rgba(233, 69, 96, 0.2);
-    }
-    .modal-body .table td {
-        padding: 0.4rem 0.3rem;
-        font-size: 0.75rem;
-        vertical-align: middle;
-    }
-
-    /* KPI Card Filter Badge */
     .kpi-filter-badge {
         position: absolute;
         top: 8px;
@@ -708,9 +858,9 @@
         font-size: 0.5rem;
         padding: 0.15rem 0.6rem;
         border-radius: 50px;
-        background: rgba(233, 69, 96, 0.1);
-        color: var(--accent);
-        border: 1px solid rgba(233, 69, 96, 0.2);
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
+        border: 1px solid rgba(255, 107, 0, 0.12);
         opacity: 0;
         transition: all 0.3s ease;
     }
@@ -728,9 +878,176 @@
     }
     .modal-loading i {
         font-size: 2rem;
-        color: var(--accent);
+        color: var(--brand-orange);
         margin-bottom: 1rem;
         display: block;
+    }
+    .modal-loading p {
+        color: var(--text-secondary) !important;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ============================================
+       MODAL - FIXED FOR BOTH LIGHT & DARK MODES
+    ============================================ */
+    .modal-content {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 16px !important;
+        box-shadow: var(--shadow-lg) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--border-color) !important;
+        background: rgba(255, 107, 0, 0.03) !important;
+        border-radius: 16px 16px 0 0 !important;
+        padding: 1rem 1.5rem !important;
+    }
+
+    .modal-header .modal-title {
+        color: var(--text-primary) !important;
+        font-weight: 700 !important;
+        font-family: 'Fraunces', serif !important;
+        font-size: 1.1rem !important;
+    }
+
+    .modal-header .modal-title i {
+        color: var(--brand-orange) !important;
+    }
+
+    .modal-header .modal-title #drillDownStatusLabel {
+        color: var(--brand-orange) !important;
+    }
+
+    .modal-body {
+        padding: 1.25rem !important;
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .modal-body .table {
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }
+
+    .modal-body .table > :not(caption) > * > * {
+        background: transparent !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    .modal-body .table th {
+        color: var(--text-secondary) !important;
+        border-bottom: 2px solid var(--border-color) !important;
+        background: transparent !important;
+        font-size: 0.6rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .modal-body .table td {
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+        font-size: 0.75rem !important;
+        vertical-align: middle !important;
+        padding: 0.5rem !important;
+        background: transparent !important;
+    }
+
+    .modal-body .table tr {
+        background: transparent !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .modal-body .table tr:hover {
+        background: rgba(255, 107, 0, 0.04) !important;
+    }
+
+    .modal-body .badge-custom {
+        font-size: 0.55rem !important;
+        padding: 0.15rem 0.5rem !important;
+    }
+
+    .modal-body .btn-view {
+        padding: 0.15rem 0.6rem !important;
+        font-size: 0.6rem !important;
+        min-width: 50px !important;
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--border-color) !important;
+        background: rgba(255, 107, 0, 0.02) !important;
+        border-radius: 0 0 16px 16px !important;
+        padding: 0.75rem 1.5rem !important;
+    }
+
+    /* Empty state in modal */
+    .modal-body .empty-state {
+        color: var(--text-muted) !important;
+    }
+
+    .modal-body .empty-state i {
+        color: var(--brand-orange) !important;
+        opacity: 0.3 !important;
+    }
+
+    .modal-body .empty-state p {
+        color: var(--text-muted) !important;
+    }
+
+    /* Dark mode modal overrides */
+    [data-theme="dark"] .modal-content {
+        background: var(--bg-card) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    [data-theme="dark"] .modal-header {
+        background: rgba(255, 107, 0, 0.05) !important;
+        border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    [data-theme="dark"] .modal-body {
+        background: var(--bg-secondary) !important;
+    }
+
+    [data-theme="dark"] .modal-footer {
+        border-top-color: rgba(255, 255, 255, 0.06) !important;
+        background: rgba(255, 107, 0, 0.03) !important;
+    }
+
+    [data-theme="dark"] .modal-body .table td {
+        border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    [data-theme="dark"] .modal-body .table th {
+        border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    [data-theme="dark"] .modal-body .table tr:hover {
+        background: rgba(255, 107, 0, 0.06) !important;
+    }
+
+    /* Light mode modal overrides */
+    :root:not([data-theme="dark"]) .modal-content {
+        background: var(--bg-card) !important;
+        border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+
+    :root:not([data-theme="dark"]) .modal-header {
+        background: rgba(255, 107, 0, 0.03) !important;
+        border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+    }
+
+    :root:not([data-theme="dark"]) .modal-body {
+        background: var(--bg-secondary) !important;
+    }
+
+    :root:not([data-theme="dark"]) .modal-footer {
+        border-top-color: rgba(0, 0, 0, 0.06) !important;
+        background: rgba(255, 107, 0, 0.01) !important;
     }
 
     /* ============================================
@@ -752,7 +1069,13 @@
         }
         
         .chart-container {
-            min-height: 180px;
+            min-height: 160px;
+            max-height: 200px;
+        }
+        
+        .panel-card {
+            min-height: 280px;
+            max-height: 360px;
         }
     }
 
@@ -775,8 +1098,8 @@
         }
 
         .btn-primary-custom {
-            font-size: 0.8rem;
-            padding: 0.4rem 1rem;
+            font-size: 0.8rem !important;
+            padding: 0.4rem 1rem !important;
         }
 
         .d-flex.justify-content-between {
@@ -815,14 +1138,20 @@
         }
 
         .chart-container {
-            min-height: 160px;
+            min-height: 150px;
+            max-height: 190px;
         }
 
         .chart-container::after {
             content: 'Click segments →';
-            font-size: 0.45rem;
+            font-size: 0.4rem;
             bottom: 4px;
             right: 8px;
+        }
+
+        .panel-card {
+            min-height: 260px;
+            max-height: 340px;
         }
     }
 
@@ -849,12 +1178,14 @@
         }
 
         .btn-primary-custom {
-            font-size: 0.75rem;
-            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem !important;
+            padding: 0.3rem 0.8rem !important;
         }
 
         .panel-card {
             margin-bottom: 0.75rem;
+            min-height: 240px;
+            max-height: 320px;
         }
 
         .table {
@@ -867,8 +1198,8 @@
         }
 
         .btn-view {
-            font-size: 0.65rem;
-            padding: 0.15rem 0.6rem;
+            font-size: 0.6rem;
+            padding: 0.15rem 0.5rem;
         }
 
         .btn-view i {
@@ -884,32 +1215,64 @@
         }
 
         .dept-badge {
-            font-size: 0.65rem;
-            padding: 0.2rem 0.7rem;
+            font-size: 0.6rem;
+            padding: 0.15rem 0.6rem;
         }
 
         .modal-body {
-            padding: 1rem;
+            padding: 1rem !important;
+            max-height: 400px;
         }
         .modal-body .table {
-            font-size: 0.7rem;
+            font-size: 0.7rem !important;
         }
         .modal-body .table td {
-            font-size: 0.65rem;
-            padding: 0.3rem 0.2rem;
+            font-size: 0.65rem !important;
+            padding: 0.3rem 0.2rem !important;
         }
 
         .modal-footer .btn-close-custom {
             font-size: 0.75rem !important;
             padding: 0.3rem 1rem !important;
         }
-        .modal-footer .btn-primary-custom {
+        .modal-footer .btn-view-all {
             font-size: 0.75rem !important;
             padding: 0.3rem 1rem !important;
         }
         
         .chart-container {
-            min-height: 140px;
+            min-height: 130px;
+            max-height: 170px;
+        }
+
+        .chart-container::after {
+            content: 'Click →';
+            font-size: 0.35rem;
+            bottom: 3px;
+            right: 6px;
+        }
+
+        .glass-header {
+            padding: 0.4rem 0.75rem;
+        }
+
+        .glass-header h5 {
+            font-size: 0.75rem;
+        }
+        .glass-header h6 {
+            font-size: 0.7rem;
+        }
+        .card-body {
+            padding: 0.4rem;
+        }
+        .chart-empty {
+            min-height: 120px;
+        }
+        .chart-empty i {
+            font-size: 1.5rem;
+        }
+        .chart-empty p {
+            font-size: 0.7rem;
         }
     }
 
@@ -920,7 +1283,7 @@
         }
 
         .kpi-value {
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         .kpi-label {
@@ -932,9 +1295,22 @@
         }
 
         .kpi-card .click-hint {
-            font-size: 0.45rem;
+            font-size: 0.4rem;
             bottom: 4px;
-            right: 8px;
+            right: 6px;
+        }
+
+        .panel-card {
+            min-height: 220px;
+            max-height: 280px;
+        }
+        .chart-container {
+            min-height: 110px;
+            max-height: 150px;
+        }
+        .btn-primary-custom {
+            font-size: 0.65rem !important;
+            padding: 0.25rem 0.6rem !important;
         }
     }
 
@@ -942,34 +1318,29 @@
        Scrollbar Styling
     ============================================ */
     ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
     }
 
     ::-webkit-scrollbar-track {
-        background: var(--bg-primary);
+        background: var(--bg-secondary);
         border-radius: 10px;
     }
 
     ::-webkit-scrollbar-thumb {
-        background: var(--accent-gradient);
+        background: var(--brand-gradient);
         border-radius: 10px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        background: var(--accent-light);
+        background: var(--brand-orange);
     }
 
     /* ============================================
        Text Selection
     ============================================ */
     ::selection {
-        background: var(--accent);
-        color: white;
-    }
-
-    ::-moz-selection {
-        background: var(--accent);
+        background: var(--brand-orange);
         color: white;
     }
 
@@ -1002,6 +1373,33 @@
             transform: scale(1);
         }
     }
+
+    /* ============================================
+       DARK MODE OVERRIDES
+    ============================================ */
+    [data-theme="dark"] .kpi-card {
+        border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    [data-theme="dark"] .kpi-card:hover {
+        border-color: rgba(255, 107, 0, 0.3) !important;
+    }
+
+    [data-theme="dark"] .panel-card {
+        border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    [data-theme="dark"] .panel-card:hover {
+        border-color: rgba(255, 107, 0, 0.25) !important;
+    }
+
+    [data-theme="dark"] .contact-card {
+        background: var(--brand-gradient) !important;
+    }
+
+    [data-theme="dark"] .glass-header {
+        background: rgba(255, 107, 0, 0.05) !important;
+    }
 </style>
 {% endblock %}
 
@@ -1011,14 +1409,14 @@
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--accent-light);">
-                    <i class="fa-solid fa-gauge-high me-2" style="color: var(--accent);"></i>
+                <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--text-primary);">
+                    <i class="fa-solid fa-gauge-high me-2" style="color: var(--brand-orange);"></i>
                     Welcome, {{ user.username|upper }}
                 </h2>
                 <p class="mb-0" style="font-size: clamp(0.75rem, 1.5vw, 0.9rem); color: var(--text-secondary);">
                     <i class="fa-regular fa-clock me-1"></i>
                     Manage and monitor your IT & ERP support requests
-                    <span class="badge rounded-pill ms-2 px-2 py-1" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); background: rgba(233, 69, 96, 0.2); color: var(--accent-light); border: 1px solid rgba(233, 69, 96, 0.2);">
+                    <span class="badge rounded-pill ms-2 px-2 py-1" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); background: rgba(255, 107, 0, 0.08); color: var(--brand-orange); border: 1px solid rgba(255, 107, 0, 0.1);">
                         <i class="fa-regular fa-circle-check me-1"></i>
                         Active
                     </span>
@@ -1029,7 +1427,7 @@
                         <i class="fa-solid fa-building"></i>
                         {{ unit_name }} - {{ department_name }}
                     </span>
-                    <span class="dept-badge ms-2" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.2); color: #22C55E;">
+                    <span class="dept-badge ms-2" style="background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.15); color: #22C55E;">
                         <i class="fa-solid fa-users"></i>
                         Department Dashboard
                     </span>
@@ -1037,7 +1435,7 @@
                 {% endif %}
             </div>
             <a href="{% url 'create_ticket' %}" class="btn btn-primary-custom">
-                <i class="fa-solid fa-circle-plus me-2"></i>New Support Ticket
+                <i class="fa-solid fa-circle-plus"></i>New Support Ticket
             </a>
         </div>
     </div>
@@ -1045,11 +1443,11 @@
     <!-- Department Tickets KPI Section -->
     <div class="row g-3 mb-3">
         <div class="col-12">
-            <h6 class="fw-bold mb-2" style="color: var(--accent-light); font-size: 0.8rem;">
-                <i class="fa-solid fa-building me-2" style="color: var(--accent);"></i>
+            <h6 class="fw-bold mb-2" style="color: var(--text-primary); font-size: 0.8rem; font-family: 'Fraunces', serif;">
+                <i class="fa-solid fa-building me-2" style="color: var(--brand-orange);"></i>
                 {% if show_department_tickets %}
                     Department Tickets Dashboard
-                    <span class="badge rounded-pill ms-2" style="background: rgba(59,130,246,0.15); color: var(--accent); font-size: 0.6rem;">
+                    <span class="badge rounded-pill ms-2" style="background: rgba(255, 107, 0, 0.08); color: var(--brand-orange); font-size: 0.6rem; border: 1px solid rgba(255, 107, 0, 0.1);">
                         {{ unit_name }} - {{ department_name }}
                     </span>
                 {% else %}
@@ -1062,11 +1460,11 @@
     <!-- KPI Cards Section with Drill Down -->
     <div class="row g-3 mb-4">
         <!-- Total Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card p-3 h-100" data-status="all" onclick="drillDownTickets('all')">
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
+            <div class="card kpi-card p-3 h-100" onclick="drillDownTickets('all')">
                 <div class="kpi-value text-secondary">{{ kpis.total }}</div>
                 <div class="kpi-label">
-                    <i class="fa-regular fa-circle-check me-1" style="color: var(--accent);"></i>
+                    <i class="fa-regular fa-circle-check me-1"></i>
                     Total Tickets
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -1074,11 +1472,11 @@
             </div>
         </div>
         <!-- Open Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-open p-3 h-100" data-status="Open" onclick="drillDownTickets('Open')">
-                <div class="kpi-value text-primary">{{ kpis.open }}</div>
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-open p-3 h-100" onclick="drillDownTickets('Open')">
+                <div class="kpi-value">{{ kpis.open }}</div>
                 <div class="kpi-label">
-                    <i class="fa-regular fa-circle me-1" style="color: var(--status-open);"></i>
+                    <i class="fa-regular fa-circle me-1"></i>
                     Open
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -1086,11 +1484,11 @@
             </div>
         </div>
         <!-- Assigned Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-assigned p-3 h-100" data-status="Assigned" onclick="drillDownTickets('Assigned')">
-                <div class="kpi-value" style="color: var(--status-assigned);">{{ kpis.assigned }}</div>
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-assigned p-3 h-100" onclick="drillDownTickets('Assigned')">
+                <div class="kpi-value">{{ kpis.assigned }}</div>
                 <div class="kpi-label">
-                    <i class="fa-solid fa-user-check me-1" style="color: var(--status-assigned);"></i>
+                    <i class="fa-solid fa-user-check me-1"></i>
                     Assigned
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -1098,11 +1496,11 @@
             </div>
         </div>
         <!-- Hold Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-hold p-3 h-100" data-status="Hold" onclick="drillDownTickets('Hold')">
-                <div class="kpi-value" style="color: var(--status-hold);">{{ kpis.hold }}</div>
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-hold p-3 h-100" onclick="drillDownTickets('Hold')">
+                <div class="kpi-value">{{ kpis.hold }}</div>
                 <div class="kpi-label">
-                    <i class="fa-solid fa-pause me-1" style="color: var(--status-hold);"></i>
+                    <i class="fa-solid fa-pause me-1"></i>
                     Hold
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -1110,11 +1508,11 @@
             </div>
         </div>
         <!-- Escalated Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-escalated p-3 h-100" data-status="Escalated" onclick="drillDownTickets('Escalated')">
-                <div class="kpi-value" style="color: var(--status-escalated);">{{ kpis.escalated }}</div>
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-escalated p-3 h-100" onclick="drillDownTickets('Escalated')">
+                <div class="kpi-value">{{ kpis.escalated }}</div>
                 <div class="kpi-label">
-                    <i class="fa-solid fa-cloud-arrow-up me-1" style="color: var(--status-escalated);"></i>
+                    <i class="fa-solid fa-cloud-arrow-up me-1"></i>
                     Escalated
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -1122,11 +1520,11 @@
             </div>
         </div>
         <!-- Closed Tickets -->
-        <div class="col-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-closed p-3 h-100" data-status="Closed" onclick="drillDownTickets('Closed')">
-                <div class="kpi-value text-success">{{ kpis.closed }}</div>
+        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
+            <div class="card kpi-card kpi-closed p-3 h-100" onclick="drillDownTickets('Closed')">
+                <div class="kpi-value">{{ kpis.closed }}</div>
                 <div class="kpi-label">
-                    <i class="fa-solid fa-circle-check me-1" style="color: var(--status-closed);"></i>
+                    <i class="fa-solid fa-circle-check me-1"></i>
                     Closed
                 </div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
@@ -1135,12 +1533,12 @@
         </div>
         <!-- Critical Priority Tickets -->
         <div class="col-12 mt-3">
-            <div class="card kpi-card kpi-critical p-3" data-status="Critical" onclick="drillDownTickets('Critical')">
+            <div class="card kpi-card kpi-critical p-3" onclick="drillDownTickets('Critical')">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="kpi-value text-danger">{{ kpis.critical }}</div>
+                        <div class="kpi-value">{{ kpis.critical }}</div>
                         <div class="kpi-label">
-                            <i class="fa-solid fa-triangle-exclamation me-1" style="color: var(--status-critical);"></i>
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
                             Critical Priority Tickets
                         </div>
                     </div>
@@ -1155,19 +1553,19 @@
     <!-- Charts Section - Department Status & Priority Distribution -->
     <div class="row g-4 mb-4">
         <!-- Chart 1: Department Status Distribution -->
-        <div class="col-md-6">
+        <div class="col-12 col-md-6">
             <div class="card panel-card h-100">
                 <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0">
-                        <i class="fa-solid fa-chart-pie me-2" style="color: var(--accent);"></i>
+                        <i class="fa-solid fa-chart-pie me-2"></i>
                         Department Ticket Status
                     </h6>
-                    <a href="{% url 'my_tickets' %}" class="btn btn-sm btn-outline-primary rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
-                        <i class="fa-solid fa-arrow-right"></i>
+                    <a href="{% url 'my_tickets' %}" class="btn-outline-custom btn-sm">
+                        <i class="fa-solid fa-arrow-right"></i> View All
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" id="deptStatusChartContainer">
+                    <div class="chart-container" id="deptStatusChartContainer" onclick="handleStatusChartClick()">
                         <canvas id="deptStatusChart"></canvas>
                         <div id="deptStatusEmpty" class="chart-empty" style="display:none;">
                             <i class="fa-solid fa-chart-pie"></i>
@@ -1179,19 +1577,19 @@
         </div>
 
         <!-- Chart 2: Department Priority Distribution -->
-        <div class="col-md-6">
+        <div class="col-12 col-md-6">
             <div class="card panel-card h-100">
                 <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0">
-                        <i class="fa-solid fa-flag me-2" style="color: var(--accent);"></i>
+                        <i class="fa-solid fa-flag me-2"></i>
                         Department Priority Distribution
                     </h6>
-                    <a href="{% url 'my_tickets' %}" class="btn btn-sm btn-outline-primary rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
-                        <i class="fa-solid fa-arrow-right"></i>
+                    <a href="{% url 'my_tickets' %}" class="btn-outline-custom btn-sm">
+                        <i class="fa-solid fa-arrow-right"></i> View All
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" id="deptPriorityChartContainer">
+                    <div class="chart-container" id="deptPriorityChartContainer" onclick="handlePriorityChartClick()">
                         <canvas id="deptPriorityChart"></canvas>
                         <div id="deptPriorityEmpty" class="chart-empty" style="display:none;">
                             <i class="fa-solid fa-flag"></i>
@@ -1206,18 +1604,18 @@
     <!-- Latest Tickets & Contact Section -->
     <div class="row g-4">
         <!-- Latest Tickets Table -->
-        <div class="col-lg-8">
+        <div class="col-12 col-lg-8">
             <div class="card panel-card">
                 <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="fw-bold mb-0" style="color: var(--accent-light);">
-                        <i class="fa-solid fa-clock-rotate-left me-2" style="color: var(--accent);"></i>
+                    <h5 class="fw-bold mb-0">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i>
                         {% if show_department_tickets %}
                             Recent Department Tickets
                         {% else %}
                             Recent Tickets
                         {% endif %}
                     </h5>
-                    <a href="{% url 'my_tickets' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <a href="{% url 'my_tickets' %}" class="btn-outline-custom btn-sm">
                         View All <i class="fa-solid fa-arrow-right ms-1"></i>
                     </a>
                 </div>
@@ -1226,18 +1624,18 @@
                         <table class="table table-hover table-hover-zoom align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th class="ps-4" style="font-size: 0.65rem;">Ticket Number</th>
-                                    <th style="font-size: 0.65rem;">Created Date</th>
-                                    <th style="font-size: 0.65rem;">Subject</th>
-                                    <th style="font-size: 0.65rem;">Status</th>
-                                    <th class="pe-4 text-center" style="font-size: 0.65rem;">Action</th>
+                                    <th class="ps-4">Ticket Number</th>
+                                    <th>Created Date</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                    <th class="pe-4 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for ticket in latest_tickets %}
                                     <tr>
-                                        <td class="ps-4 fw-bold" style="color: var(--accent-light); font-size: clamp(0.7rem, 0.9vw, 0.8rem);">
-                                            <i class="fa-regular fa-hashtag me-1" style="color: var(--accent); font-size: 0.5rem;"></i>
+                                        <td class="ps-4 fw-bold" style="color: var(--brand-orange); font-size: clamp(0.7rem, 0.9vw, 0.8rem);">
+                                            <i class="fa-regular fa-hashtag me-1" style="color: var(--brand-orange); font-size: 0.5rem;"></i>
                                             {{ ticket.ticket_number }}
                                         </td>
                                         <td style="color: var(--text-secondary); font-size: clamp(0.6rem, 0.8vw, 0.7rem);">
@@ -1246,7 +1644,7 @@
                                             <span class="d-block" style="color: var(--text-muted); font-size: 0.6rem;">{{ ticket.created_at|date:"h:i A" }}</span>
                                         </td>
                                         <td class="fw-medium text-truncate" style="max-width: 150px; font-size: clamp(0.65rem, 0.8vw, 0.75rem);" title="{{ ticket.subject }}">
-                                            <i class="fa-regular fa-message me-1" style="color: var(--accent); font-size: 0.4rem;"></i>
+                                            <i class="fa-regular fa-message me-1" style="color: var(--brand-orange); font-size: 0.4rem;"></i>
                                             {{ ticket.subject }}
                                         </td>
                                         <td>
@@ -1265,7 +1663,7 @@
                                     <tr>
                                         <td colspan="5" class="text-center py-4">
                                             <div class="empty-state">
-                                                <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--accent);"></i>
+                                                <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25"></i>
                                                 <p style="color: var(--text-muted);">No tickets found in your department.</p>
                                             </div>
                                         </td>
@@ -1278,12 +1676,12 @@
             </div>
         </div>
 
-        <!-- Contact Info Support Card -->
-        <div class="col-lg-4">
-            <div class="card panel-card border-0 text-white contact-card">
+        <!-- Contact Info Support Card - FIXED with correct field names -->
+        <div class="col-12 col-lg-4">
+            <div class="card contact-card">
                 <div class="card-body p-4 text-center">
                     <i class="fa-solid fa-headset fa-3x mb-3 text-white-50"></i>
-                    <h4 class="fw-bold mb-1">Need Help?</h4>
+                    <h4 class="fw-bold mb-1" style="color: #FFFFFF;">Need Help?</h4>
                     <p class="small text-white-50 mb-4">contact our internal ERP support helpdesk</p>
                     
                     <hr class="my-3">
@@ -1294,21 +1692,14 @@
                                 <i class="fa-solid fa-user-tie me-3 text-white-50"></i>
                                 <span>
                                     <span class="d-block small text-white-50">Assigned ERP Executive</span>
-                                    <strong class="fs-5">{{ contact.admin_name }}</strong>
+                                    <strong class="fs-5" style="color: #FFFFFF;">{{ contact.admin_name|default:"Not Set" }}</strong>
                                 </span>
                             </p>
                             <p class="mb-3 d-flex align-items-center">
-                                <i class="fa-solid fa-phone me-3 text-white-50"></i>
-                                <span>
-                                    <span class="d-block small text-white-50">Phone Number</span>
-                                    <strong class="fs-5">{{ contact.admin_phone }}</strong>
-                                </span>
-                            </p>
-                            <p class="mb-0 d-flex align-items-center">
                                 <i class="fa-solid fa-envelope me-3 text-white-50"></i>
                                 <span>
                                     <span class="d-block small text-white-50">Email Address</span>
-                                    <a href="mailto:{{ contact.admin_email }}" class="fw-bold">{{ contact.admin_email }}</a>
+                                    <a href="mailto:{{ contact.admin_email }}" class="fw-bold" style="color: #FFFFFF;">{{ contact.admin_email|default:"Not Set" }}</a>
                                 </span>
                             </p>
                         </div>
@@ -1322,14 +1713,14 @@
 </div>
 
 <!-- ============================================
-     DRILL DOWN MODAL - FIXED CLOSE BUTTON
+     DRILL DOWN MODAL - FIXED WITH BACKDROP CLEANUP
 ============================================ -->
-<div class="modal fade" id="drillDownModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="drillDownModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="drillDownModalTitle">
-                    <i class="fa-solid fa-list-ul me-2" style="color: var(--accent);"></i>
+                    <i class="fa-solid fa-list-ul me-2"></i>
                     Tickets - <span id="drillDownStatusLabel">All</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1341,10 +1732,10 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-close-custom" data-bs-dismiss="modal">
+                <button type="button" class="btn-close-custom" data-bs-dismiss="modal">
                     <i class="fa-solid fa-xmark me-1"></i>Close
                 </button>
-                <a href="{% url 'my_tickets' %}" class="btn btn-primary-custom rounded-pill px-4" id="drillDownViewAllBtn">
+                <a href="{% url 'my_tickets' %}" class="btn-view-all" id="drillDownViewAllBtn">
                     <i class="fa-solid fa-arrow-right me-1"></i>View All in My Tickets
                 </a>
             </div>
@@ -1360,6 +1751,22 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // ============================================
+        // FORCE CLEANUP FUNCTION - FIX FOR BACKDROP BLUR
+        // ============================================
+        function forceCleanupBackdrops() {
+            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+                backdrop.remove();
+            });
+            document.body.classList.remove('modal-open');
+            document.body.classList.remove('modal-show');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.body.style.position = '';
+            document.documentElement.style.overflow = '';
+            console.log('Backdrops cleaned up');
+        }
+
+        // ============================================
         // LOAD CHART DATA
         // ============================================
         let chartsData = {};
@@ -1370,12 +1777,29 @@
                 console.log('📊 Chart data loaded:', chartsData);
             } else {
                 console.warn('⚠️ No charts-data element found');
-                return;
             }
         } catch (e) {
             console.error('❌ Error parsing chart data:', e);
-            return;
         }
+
+        // ============================================
+        // CHART CLICK HANDLERS
+        // ============================================
+        window.handleStatusChartClick = function() {
+            const statusData = chartsData.dept_status || {};
+            const statusLabels = Object.keys(statusData);
+            if (statusLabels.length > 0) {
+                drillDownTickets(statusLabels[0]);
+            }
+        };
+
+        window.handlePriorityChartClick = function() {
+            const priorityData = chartsData.dept_priority || {};
+            const priorityLabels = Object.keys(priorityData);
+            if (priorityLabels.length > 0) {
+                drillDownTicketsByPriority(priorityLabels[0]);
+            }
+        };
 
         // ============================================
         // ANIMATE KPI VALUES ON LOAD
@@ -1397,53 +1821,258 @@
             }
         });
 
-        // Animate table rows on load
-        const rows = document.querySelectorAll('.table tbody tr');
-        rows.forEach((row, index) => {
-            if (!row.querySelector('.empty-state')) {
-                row.style.opacity = '0';
-                setTimeout(() => {
-                    row.style.transition = 'all 0.3s ease';
-                    row.style.opacity = '1';
-                    row.style.transform = 'translateX(0)';
-                }, 300 + (index * 80));
-            }
-        });
+        // ============================================
+        // CHECK DATA AVAILABILITY
+        // ============================================
+        const hasStatusData = chartsData.dept_status && Object.keys(chartsData.dept_status).length > 0;
+        const hasPriorityData = chartsData.dept_priority && Object.keys(chartsData.dept_priority).length > 0;
+
+        const statusEmpty = document.getElementById('deptStatusEmpty');
+        const priorityEmpty = document.getElementById('deptPriorityEmpty');
+        const statusCanvas = document.getElementById('deptStatusChart');
+        const priorityCanvas = document.getElementById('deptPriorityChart');
+
+        // ============================================
+        // CHART 1: STATUS DISTRIBUTION - WITH LEGEND
+        // ============================================
+        if (statusCanvas && hasStatusData) {
+            const statusLabels = Object.keys(chartsData.dept_status);
+            const statusValues = Object.values(chartsData.dept_status);
+            const statusColors = {
+                'Open': '#22C55E',
+                'Assigned': '#3B82F6',
+                'Hold': '#F59E0B',
+                'Escalated': '#8B5CF6',
+                'Closed': '#94A3B8'
+            };
+            
+            const colors = statusLabels.map(label => statusColors[label] || '#6B7280');
+            
+            const ctx = statusCanvas.getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusValues,
+                        backgroundColor: colors,
+                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#1a202c',
+                        borderWidth: 2,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Inter, sans-serif', size: 11 },
+                                padding: 12,
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#1A2A6C',
+                                usePointStyle: true,
+                                pointStyleWidth: 10,
+                                boxWidth: 12,
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%',
+                    onClick: function(event, elements) {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = this.data.labels[index];
+                            drillDownTickets(label);
+                        }
+                    }
+                }
+            });
+            statusCanvas.chart = chart;
+            console.log('✅ Status chart rendered with legend');
+        } else if (statusCanvas && statusEmpty) {
+            statusCanvas.style.display = 'none';
+            statusEmpty.style.display = 'flex';
+            console.log('ℹ️ No status data available');
+        }
+
+        // ============================================
+        // CHART 2: PRIORITY DISTRIBUTION - WITH LEGEND
+        // ============================================
+        if (priorityCanvas && hasPriorityData) {
+            const priorityLabels = Object.keys(chartsData.dept_priority);
+            const priorityValues = Object.values(chartsData.dept_priority);
+            const priorityColors = {
+                'Critical': '#EF4444',
+                'High': '#F59E0B',
+                'Medium': '#3B82F6',
+                'Low': '#94A3B8'
+            };
+            
+            const colors = priorityLabels.map(label => priorityColors[label] || '#6B7280');
+            
+            const ctx = priorityCanvas.getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: priorityLabels,
+                    datasets: [{
+                        data: priorityValues,
+                        backgroundColor: colors,
+                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#1a202c',
+                        borderWidth: 2,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Inter, sans-serif', size: 11 },
+                                padding: 12,
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#1A2A6C',
+                                usePointStyle: true,
+                                pointStyleWidth: 10,
+                                boxWidth: 12,
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    },
+                    onClick: function(event, elements) {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = this.data.labels[index];
+                            drillDownTicketsByPriority(label);
+                        }
+                    }
+                }
+            });
+            priorityCanvas.chart = chart;
+            console.log('✅ Priority chart rendered with legend');
+        } else if (priorityCanvas && priorityEmpty) {
+            priorityCanvas.style.display = 'none';
+            priorityEmpty.style.display = 'flex';
+            console.log('ℹ️ No priority data available');
+        }
 
         // Make drilldown functions available globally
         window.drillDownTickets = drillDownTickets;
         window.drillDownTicketsByPriority = drillDownTicketsByPriority;
 
-        // Initialize charts using centralized charts.js
-        if (typeof window.initCharts === 'function') {
-            window.initCharts({
-                employeeCharts: {
-                    dept_status: chartsData.dept_status || {},
-                    dept_priority: chartsData.dept_priority || {}
-                },
-                drillDown: {
-                    status: drillDownTickets,
-                    priority: drillDownTicketsByPriority
+        // ============================================
+        // CHART RESIZE HANDLER
+        // ============================================
+        function resizeCharts() {
+            const canvases = document.querySelectorAll('.chart-container canvas');
+            canvases.forEach(canvas => {
+                if (canvas.chart) {
+                    canvas.chart.resize();
                 }
             });
-        } else {
-            console.warn('⚠️ initCharts function not found. Make sure charts.js is loaded.');
         }
 
-        const hasStatusData = chartsData.dept_status && Object.keys(chartsData.dept_status).length > 0;
-        const hasPriorityData = chartsData.dept_priority && Object.keys(chartsData.dept_priority).length > 0;
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(resizeCharts, 250);
+        });
+
+        // ============================================
+        // MODAL BACKDROP CLEANUP - FIX FOR BLUR
+        // ============================================
+        const modalEl = document.getElementById('drillDownModal');
+        
+        if (modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', function() {
+                forceCleanupBackdrops();
+                console.log('Modal hidden - backdrops cleaned');
+            });
+            
+            modalEl.addEventListener('hide.bs.modal', function() {
+                setTimeout(forceCleanupBackdrops, 50);
+            });
+            
+            modalEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    setTimeout(forceCleanupBackdrops, 50);
+                }
+            });
+        }
+
+        // ============================================
+        // MUTATION OBSERVER - CLEANUP ROGUE BACKDROPS
+        // ============================================
+        const backdropObserver = new MutationObserver(function() {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            if (backdrops.length > 1) {
+                backdrops.forEach(function(backdrop, index) {
+                    if (index > 0) {
+                        backdrop.remove();
+                    }
+                });
+            }
+            
+            if (modalEl && !modalEl.classList.contains('show') && document.body.classList.contains('modal-open')) {
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }
+        });
+        
+        backdropObserver.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'style']
+        });
 
         console.log('✅ Employee Dashboard loaded');
         console.log('📊 Status data available:', hasStatusData);
         console.log('📊 Priority data available:', hasPriorityData);
+        console.log('🔄 Charts will auto-resize on window resize');
+        console.log('🧹 Backdrop cleanup initialized - blur will be removed on modal close');
     });
 
     // ============================================
-    // DRILL DOWN FUNCTIONS - FIXED
+    // DRILL DOWN FUNCTIONS WITH BACKDROP CLEANUP
     // ============================================
 
     function drillDownTickets(status) {
-        const modal = new bootstrap.Modal(document.getElementById('drillDownModal'));
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(function(backdrop) {
+            backdrop.remove();
+        });
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+
+        const modalEl = document.getElementById('drillDownModal');
+        const modal = new bootstrap.Modal(modalEl, {
+            backdrop: 'static',
+            keyboard: true
+        });
+        
         const modalBody = document.getElementById('drillDownModalBody');
         const statusLabel = document.getElementById('drillDownStatusLabel');
         const viewAllBtn = document.getElementById('drillDownViewAllBtn');
@@ -1459,7 +2088,6 @@
         };
         statusLabel.textContent = statusMap[status] || status || 'All Tickets';
         
-        // Determine filter parameter
         let filterParam = 'status';
         let filterValue = status;
         
@@ -1471,14 +2099,12 @@
             filterValue = '';
         }
 
-        // Update View All button URL
         if (filterParam && filterValue) {
             viewAllBtn.href = "{% url 'my_tickets' %}?" + filterParam + "=" + encodeURIComponent(filterValue);
         } else {
             viewAllBtn.href = "{% url 'my_tickets' %}";
         }
         
-        // Show loading
         modalBody.innerHTML = `
             <div class="modal-loading">
                 <i class="fa-solid fa-spinner fa-spin"></i>
@@ -1488,12 +2114,10 @@
         
         modal.show();
         
-        // Build URL with proper parameters
         let url = "{% url 'my_tickets' %}?ajax=1";
         if (filterParam && filterValue) {
             url += "&" + filterParam + "=" + encodeURIComponent(filterValue);
         }
-        // Add cache buster
         url += "&_=" + Date.now();
         
         console.log('🔍 Fetching tickets with URL:', url);
@@ -1516,7 +2140,6 @@
             }
             if (data.html) {
                 modalBody.innerHTML = data.html;
-                // Update title with count if available
                 if (data.count !== undefined) {
                     statusLabel.textContent = statusMap[status] || status || 'All Tickets';
                     statusLabel.textContent += ` (${data.count})`;
@@ -1524,7 +2147,7 @@
             } else {
                 modalBody.innerHTML = `
                     <div class="empty-state text-center py-4">
-                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--accent);"></i>
+                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
                         <p style="color: var(--text-muted);">No tickets found with status: ${statusLabel.textContent}</p>
                     </div>
                 `;
@@ -1546,7 +2169,20 @@
     }
 
     function drillDownTicketsByPriority(priority) {
-        const modal = new bootstrap.Modal(document.getElementById('drillDownModal'));
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(function(backdrop) {
+            backdrop.remove();
+        });
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+
+        const modalEl = document.getElementById('drillDownModal');
+        const modal = new bootstrap.Modal(modalEl, {
+            backdrop: 'static',
+            keyboard: true
+        });
+        
         const modalBody = document.getElementById('drillDownModalBody');
         const statusLabel = document.getElementById('drillDownStatusLabel');
         const viewAllBtn = document.getElementById('drillDownViewAllBtn');
@@ -1592,7 +2228,7 @@
             } else {
                 modalBody.innerHTML = `
                     <div class="empty-state text-center py-4">
-                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--accent);"></i>
+                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
                         <p style="color: var(--text-muted);">No ${priority} priority tickets found</p>
                     </div>
                 `;
@@ -1611,6 +2247,6 @@
                 </div>
             `;
         });
-    }
+    }       
 </script>
 {% endblock %}

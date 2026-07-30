@@ -93,6 +93,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('submit', function(e) {
         const form = e.target;
         
+        // FIX: If form has 'no-confirm' class, skip the confirmation logic entirely.
+        if (form.classList.contains('no-confirm')) {
+            return;
+        }
+
         if (form.classList.contains('confirmed')) {
             setTimeout(() => {
                 form.classList.remove('confirmed');

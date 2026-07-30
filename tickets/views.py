@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
+from django.contrib.auth import login as auth_login
+from django.urls import reverse_lazy
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -13,6 +15,8 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.loader import render_to_string
 from django.template import TemplateDoesNotExist
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.cache import never_cache
 
 from datetime import datetime, timedelta
 import json
@@ -248,17 +252,44 @@ def generate_admin_ticket_list_html(tickets, status):
 
 
 # =========================================================================
-# AUTH VIEWS
+# AUTH VIEWS - FIXED LOGIN
 # =========================================================================
 
 class CustomLoginView(LoginView):
-    """Custom login view that passes IT contact info to the template"""
+    """
+    Custom login view that passes IT contact info to the template.
+    Handles redirects properly without relying on settings.LOGIN_REDIRECT_URL.
+    """
     template_name = 'login.html'
+    redirect_authenticated_user = True
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['contact'] = AdminContact.objects.first()
+        contact = AdminContact.objects.first()
+        context['contact'] = contact
         return context
+    
+    def get_success_url(self):
+        if self.request.user.is_staff:
+            return reverse_lazy('admin_dashboard')
+        return reverse_lazy('employee_dashboard')
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Welcome back, {self.request.user.username}!")
+        return response
+    
+    def form_invalid(self, form):
+        messages.error(self.request, "Invalid username or password. Please try again.")
+        return super().form_invalid(form)
+    
+    @never_cache
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            if request.user.is_staff:
+                return redirect('admin_dashboard')
+            return redirect('employee_dashboard')
+        return super().dispatch(request, *args, **kwargs)
 
 
 @login_required
@@ -270,6 +301,7 @@ def role_redirect(request):
 
 def custom_logout(request):
     logout(request)
+    messages.success(request, "You have been logged out successfully.")
     return redirect('login')
 
 
@@ -278,13 +310,14 @@ def custom_logout(request):
 # =========================================================================
 
 @login_required
-@user_passes_test(lambda u: not u.is_staff, login_url='role_redirect')
+@user_passes_test(lambda u: not u.is_staff, login_url='login')
 def employee_dashboard(request):
     user_credential = DepartmentCredential.objects.filter(
         username=request.user.username, is_active=True
     ).first()
     
-    # Get the base queryset based on user credentials
+    contact = AdminContact.objects.first()
+    
     if user_credential:
         department_tickets = Ticket.objects.filter(
             unit=user_credential.unit,
@@ -308,14 +341,9 @@ def employee_dashboard(request):
         
         latest_tickets = tickets_qs.order_by('-created_at')[:5]
         
-        # ============================================
-        # CHART DATA FOR EMPLOYEE DASHBOARD
-        # ============================================
-        # Status distribution for department
         dept_status_counts = department_tickets.values('status').annotate(count=Count('id'))
         chart_dept_status = {item['status']: item['count'] for item in dept_status_counts}
         
-        # Priority distribution for department
         dept_priority_counts = department_tickets.values('priority').annotate(count=Count('id'))
         chart_dept_priority = {item['priority']: item['count'] for item in dept_priority_counts}
         
@@ -327,7 +355,7 @@ def employee_dashboard(request):
         context = {
             'kpis': kpis,
             'latest_tickets': latest_tickets,
-            'contact': AdminContact.objects.first(),
+            'contact': contact,
             'user_credential': user_credential,
             'department_name': user_credential.department.name if user_credential else None,
             'unit_name': user_credential.unit.code if user_credential else None,
@@ -350,7 +378,6 @@ def employee_dashboard(request):
         }
         latest_tickets = user_tickets.order_by('-created_at')[:5]
         
-        # Chart data for personal tickets
         personal_status_counts = user_tickets.values('status').annotate(count=Count('id'))
         chart_dept_status = {item['status']: item['count'] for item in personal_status_counts}
         
@@ -365,7 +392,7 @@ def employee_dashboard(request):
         context = {
             'kpis': kpis,
             'latest_tickets': latest_tickets,
-            'contact': AdminContact.objects.first(),
+            'contact': contact,
             'user_credential': None,
             'department_name': None,
             'unit_name': None,
@@ -377,7 +404,7 @@ def employee_dashboard(request):
 
 
 @login_required
-@user_passes_test(lambda u: not u.is_staff, login_url='role_redirect')
+@user_passes_test(lambda u: not u.is_staff, login_url='login')
 def create_ticket(request):
     user_credential = DepartmentCredential.objects.filter(
         username=request.user.username, is_active=True
@@ -461,7 +488,7 @@ def create_ticket(request):
 
 
 @login_required
-@user_passes_test(lambda u: not u.is_staff, login_url='role_redirect')
+@user_passes_test(lambda u: not u.is_staff, login_url='login')
 def my_tickets(request):
     status = request.GET.get('status')
     priority = request.GET.get('priority')
@@ -470,34 +497,26 @@ def my_tickets(request):
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
     is_ajax = request.GET.get('ajax', False)
-    filter_type = request.GET.get('filter_type')  # For chart drilldown
+    filter_type = request.GET.get('filter_type')
     
     if isinstance(is_ajax, str):
         is_ajax = is_ajax.lower() in ['true', '1', 'yes']
     
-    # ============================================
-    # FIX: Get user's department for filtering
-    # ============================================
     user_credential = DepartmentCredential.objects.filter(
         username=request.user.username, is_active=True
     ).first()
     
     if user_credential:
-        # If user has department credentials, show department tickets
         tickets_qs = Ticket.objects.filter(
             unit=user_credential.unit,
             department=user_credential.department
         ).order_by('-created_at')
-        
-        # Add personal tickets as well (so users see both)
         personal_tickets = Ticket.objects.filter(created_by_user=request.user)
         tickets_qs = tickets_qs | personal_tickets
         tickets_qs = tickets_qs.distinct().order_by('-created_at')
     else:
-        # Fallback to personal tickets only
         tickets_qs = Ticket.objects.filter(created_by_user=request.user).order_by('-created_at')
     
-    # Apply filters
     if status: 
         tickets_qs = tickets_qs.filter(status=status)
     if priority: 
@@ -515,19 +534,12 @@ def my_tickets(request):
     if date_to: 
         tickets_qs = tickets_qs.filter(created_at__date__lte=date_to)
     
-    # ============================================
-    # AJAX request for modal - FIXED
-    # ============================================
     if is_ajax:
         filter_value = status or priority or 'All'
         if filter_type == 'priority':
             filter_value = priority
         elif filter_type == 'status':
             filter_value = status
-        
-        # Log for debugging
-        logger.info(f"📊 AJAX filter: status={status}, priority={priority}, filter_type={filter_type}")
-        logger.info(f"📊 Found {tickets_qs.count()} tickets")
 
         try:
             try:
@@ -537,7 +549,6 @@ def my_tickets(request):
                 }, request=request)
                 return JsonResponse({'html': html, 'success': True, 'count': tickets_qs.count()})
             except TemplateDoesNotExist:
-                # Fallback HTML generation
                 html = generate_ticket_list_html(tickets_qs[:50], status or priority)
                 return JsonResponse({'html': html, 'success': True, 'count': tickets_qs.count()})
             except Exception as e:
@@ -552,7 +563,6 @@ def my_tickets(request):
                 'message': 'Error loading tickets. Please try again.'
             }, status=500)
     
-    # Regular paginated view
     paginator = Paginator(tickets_qs, 10)
     page_number = request.GET.get('page')
     try: 
@@ -575,32 +585,57 @@ def my_tickets(request):
     })
 
 
+# =========================================================================
+# FIXED: TICKET DETAIL - Allows employees to view department tickets
+# =========================================================================
 @login_required
-@user_passes_test(lambda u: not u.is_staff, login_url='role_redirect')
+@user_passes_test(lambda u: not u.is_staff, login_url='login')
 def ticket_detail(request, pk):
-    ticket = get_object_or_404(Ticket, pk=pk, created_by_user=request.user)
+    user_credential = DepartmentCredential.objects.filter(
+        username=request.user.username, is_active=True
+    ).first()
+    
+    if user_credential:
+        tickets_qs = Ticket.objects.filter(
+            Q(created_by_user=request.user) |
+            Q(unit=user_credential.unit, department=user_credential.department)
+        ).distinct()
+    else:
+        tickets_qs = Ticket.objects.filter(created_by_user=request.user)
+    
+    ticket = get_object_or_404(tickets_qs, pk=pk)
+    
     history = ticket.history.all().order_by('timestamp')
     can_reopen = False
     reopen_time_left = None
     reopen_deadline = None
+    
     if ticket.status == 'Closed' and ticket.closed_at:
         reopen_deadline = ticket.closed_at + timedelta(hours=48)
         if timezone.now() < reopen_deadline:
             can_reopen = True
             reopen_time_left = reopen_deadline - timezone.now()
+    
     time_to_close_str = ""
     if ticket.status == 'Closed' and ticket.created_at and ticket.closed_at:
         time_to_close = ticket.closed_at - ticket.created_at
         time_to_close_str = format_timedelta_display(time_to_close)
+    
     if request.method == 'POST' and can_reopen:
         remarks = request.POST.get('remarks', '').strip()
         if remarks:
             reopen_ticket_logic(ticket, f"Employee {request.user.username}", remarks)
             messages.success(request, f"Ticket {ticket.ticket_number} has been reopened.")
             return redirect('ticket_detail', pk=pk)
+        else:
+            messages.error(request, "Please provide a reason for reopening.")
+    
     context = {
-        'ticket': ticket, 'history': history, 'can_reopen': can_reopen,
-        'time_to_close': time_to_close_str, 'reopen_time_left': reopen_time_left,
+        'ticket': ticket,
+        'history': history,
+        'can_reopen': can_reopen,
+        'time_to_close': time_to_close_str,
+        'reopen_time_left': reopen_time_left,
         'reopen_deadline_iso': reopen_deadline.isoformat() if reopen_deadline else None,
     }
     return render(request, 'employee/ticket_detail.html', context)
@@ -611,9 +646,10 @@ def ticket_detail(request, pk):
 # =========================================================================
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def admin_dashboard(request):
     all_tickets = Ticket.objects.all()
+    
     kpis = {
         'total': all_tickets.count(), 
         'open': all_tickets.filter(status='Open').count(),
@@ -623,22 +659,53 @@ def admin_dashboard(request):
         'closed': all_tickets.filter(status='Closed').count(),
         'critical': all_tickets.filter(priority='Critical').count(),
     }
+    
+    # Chart 1: Status Distribution
     status_counts = list(all_tickets.values('status').annotate(count=Count('id')))
     chart_status = {item['status']: item['count'] for item in status_counts}
+    
+    # Chart 2: Unit-wise Tickets
     unit_counts = list(all_tickets.filter(unit__isnull=False).values('unit_id', 'unit__code').annotate(count=Count('id')).order_by('unit__code'))
     chart_units = [{'id': item['unit_id'], 'label': item['unit__code'], 'value': item['count']} for item in unit_counts]
+    
+    # Chart 3: Priority Distribution
     prio_counts = list(all_tickets.values('priority').annotate(count=Count('id')))
     chart_priority = {item['priority']: item['count'] for item in prio_counts}
+    
+    # Chart 4: Error Type Distribution for Closed Tickets
+    closed_tickets = Ticket.objects.filter(status='Closed')
+    error_type_counts = (
+        closed_tickets
+        .exclude(error_type__isnull=True)
+        .exclude(error_type__exact='')
+        .values('error_type')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    chart_error_type = {item['error_type']: item['count'] for item in error_type_counts}
+    
+    # Log the data for debugging
+    logger.info(f"📊 Error Type Data: {chart_error_type}")
+    
+    # Monthly trend
     twelve_months_ago = timezone.now() - timedelta(days=365)
     monthly_counts_qs = Ticket.objects.filter(created_at__gte=twelve_months_ago).annotate(month=TruncMonth(Cast('created_at', output_field=DateField()))).values('month').annotate(count=Count('id')).order_by('month')
     chart_monthly = [{'label': item['month'].strftime('%b %Y'), 'value': item['count']} for item in monthly_counts_qs]
-    charts_data = {'status': chart_status, 'units': chart_units, 'priority': chart_priority, 'monthly': chart_monthly}
+    
+    charts_data = {
+        'status': chart_status,
+        'units': chart_units,
+        'priority': chart_priority,
+        'errorType': chart_error_type,
+        'monthly': chart_monthly,
+    }
+    
     context = {'kpis': kpis, 'charts_data': charts_data}
     return render(request, 'admin_panel/dashboard.html', context)
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def create_ticket_admin(request):
     if request.method == 'POST':
         form = AdminTicketForm(request.POST, request.FILES)
@@ -664,12 +731,8 @@ def create_ticket_admin(request):
     return render(request, 'admin_panel/create_ticket.html', {'form': form})
 
 
-# =========================================================================
-# ALL TICKETS VIEW - WITH FIXED CASCADING UNIT -> DEPARTMENT
-# =========================================================================
-
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def all_tickets(request):
     is_ajax = request.GET.get('ajax', False)
     
@@ -730,33 +793,40 @@ def all_tickets(request):
             Q(department__name__icontains=search)
         )
     
-    # AJAX request for modal
     if is_ajax:
         filter_value = 'All'
-        if category and category != 'all':
-            filter_value = category.capitalize()
+        filter_type = 'status'
+        
         if status:
             filter_value = status
-        if priority:
+            filter_type = 'status'
+        elif priority:
             filter_value = priority
-        if unit_id:
+            filter_type = 'priority'
+        elif unit_id:
             unit = Unit.objects.filter(pk=unit_id).first()
-            filter_value = f"Unit: {unit.code}" if unit else "Unit"
+            filter_value = unit.code if unit else 'Unit'
+            filter_type = 'unit'
+        elif category and category != 'all':
+            filter_value = category.capitalize()
+            filter_type = 'status'
 
         try:
             try:
                 html = render_to_string('admin_panel/_ticket_list_modal.html', {
                     'tickets': tickets_qs[:50],
                     'status_label': filter_value,
+                    'filter_type': filter_type,
+                    'filter_value': filter_value,
                 }, request=request)
-                return JsonResponse({'html': html, 'success': True})
+                return JsonResponse({'html': html, 'success': True, 'count': tickets_qs.count()})
             except TemplateDoesNotExist:
                 html = generate_admin_ticket_list_html(tickets_qs[:50], filter_value)
-                return JsonResponse({'html': html, 'success': True})
+                return JsonResponse({'html': html, 'success': True, 'count': tickets_qs.count()})
             except Exception as e:
                 logger.error(f"AJAX error in all_tickets (template): {str(e)}")
                 html = generate_admin_ticket_list_html(tickets_qs[:50], filter_value)
-                return JsonResponse({'html': html, 'success': True})
+                return JsonResponse({'html': html, 'success': True, 'count': tickets_qs.count()})
         except Exception as e:
             logger.error(f"AJAX error in all_tickets: {str(e)}")
             return JsonResponse({
@@ -765,7 +835,6 @@ def all_tickets(request):
                 'message': 'Error loading tickets. Please try again.'
             }, status=500)
     
-    # Regular paginated view
     paginator = Paginator(tickets_qs, 10)
     page_number = request.GET.get('page')
     try: 
@@ -798,7 +867,7 @@ def all_tickets(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def ticket_detail_admin(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
     history = ticket.history.all().order_by('timestamp')
@@ -917,7 +986,7 @@ def ticket_detail_admin(request, pk):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def reports(request):
     tickets_qs = Ticket.objects.all().order_by('-created_at')
     units = Unit.objects.all()
@@ -1098,15 +1167,14 @@ def reports(request):
 # =========================================================================
 
 def _get_contact_data():
-    """Ensures an AdminContact object exists and returns it."""
     contact_obj, _ = AdminContact.objects.get_or_create(
         id=1,
         defaults={'admin_name': "IT ADMIN", 'admin_phone': "9999999999", 'admin_email': "admin@gplast.com"}
     )
     return contact_obj
 
+
 def _get_employee_directory_data(request):
-    """Fetches and filters the employee directory."""
     emp_search = request.GET.get('emp_search', '').strip()
     employees_qs = EmployeeMaster.objects.all().order_by('employee_id')
     if emp_search:
@@ -1117,8 +1185,8 @@ def _get_employee_directory_data(request):
         )
     return employees_qs, emp_search
 
+
 def _get_credentials_data():
-    """Fetches and groups ALL department credentials for display (including inactive ones)."""
     all_credentials = DepartmentCredential.objects.select_related('unit', 'department').order_by('unit__code', 'department__name')
     credentials_by_unit = []
     
@@ -1142,15 +1210,14 @@ def _get_credentials_data():
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def settings_page(request):
-    """Renders the main admin settings page with data for all sections."""
-    
     contact_obj = _get_contact_data()
     employees_qs, emp_search = _get_employee_directory_data(request)
     all_credentials, credentials_by_unit = _get_credentials_data()
     
     context = {
+        'contact': contact_obj,
         'contact_form': AdminContactForm(instance=contact_obj),
         'unit_form': UnitForm(),
         'dept_form': DepartmentForm(),
@@ -1169,19 +1236,32 @@ def settings_page(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def settings_contact(request):
     if request.method == 'POST':
         contact_obj = AdminContact.objects.first()
-        form = AdminContactForm(request.POST, instance=contact_obj)
-        if form.is_valid(): 
-            form.save()
-            messages.success(request, "IT Support Contact updated successfully.")
+        if not contact_obj:
+            contact_obj = AdminContact.objects.create(
+                admin_name="IT ADMIN",
+                admin_phone="9999999999",
+                admin_email="admin@gplast.com"
+            )
+        
+        admin_name = request.POST.get('admin_name', '').strip()
+        admin_email = request.POST.get('admin_email', '').strip()
+        
+        if admin_name:
+            contact_obj.admin_name = admin_name
+        if admin_email:
+            contact_obj.admin_email = admin_email
+        
+        contact_obj.save()
+        messages.success(request, "IT Support Contact updated successfully.")
     return redirect('settings_page')
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def settings_units(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -1207,7 +1287,7 @@ def settings_units(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def settings_departments(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -1231,7 +1311,7 @@ def settings_departments(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def settings_emails(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -1249,7 +1329,7 @@ def settings_emails(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def settings_passwords(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -1285,7 +1365,7 @@ def settings_passwords(request):
 # =========================================================================
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def settings_employees(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -1383,7 +1463,7 @@ def settings_employees(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def download_employee_list(request):
     emps = EmployeeMaster.objects.all().order_by('employee_id')
     resp = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -1433,7 +1513,7 @@ def download_employee_list(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def download_employee_template(request):
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=Employee_Upload_Template.xlsx'
@@ -1492,7 +1572,7 @@ def download_employee_template(request):
 # =========================================================================
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def settings_credentials(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -1566,7 +1646,7 @@ def settings_credentials(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def download_credentials(request):
     creds = DepartmentCredential.objects.all().select_related('unit', 'department').order_by('unit__code', 'department__name')
     resp = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -1618,44 +1698,40 @@ def download_credentials(request):
 # =========================================================================
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def test_notifications(request): 
     return render(request, 'admin_panel/test_notifications.html')
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def test_success_message(request): 
     messages.success(request, 'Test success!')
     return redirect('test_notifications')
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def test_error_message(request): 
     messages.error(request, 'Test error!')
     return redirect('test_notifications')
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def test_warning_message(request): 
     messages.warning(request, 'Test warning!')
     return redirect('test_notifications')
 
 @login_required
-@user_passes_test(is_admin, login_url='role_redirect')
+@user_passes_test(is_admin, login_url='admin_dashboard')
 def test_info_message(request): 
     messages.info(request, 'Test info!')
     return redirect('test_notifications')
 
 
 # =========================================================================
-# AJAX ENDPOINTS - UPDATED FOR CASCADING FILTER
+# AJAX ENDPOINTS
 # =========================================================================
 
 def get_departments_by_unit(request):
-    """
-    AJAX endpoint to get departments by unit ID.
-    Used for cascading Unit -> Department filter.
-    """
     unit_id = request.GET.get('unit_id')
     
     if unit_id:
@@ -1727,53 +1803,11 @@ def get_employee_details(request):
         })
     except EmployeeMaster.DoesNotExist:
         return JsonResponse({'found': False, 'message': f'Employee "{eid}" not found.'})
-    except EmployeeMaster.MultipleObjectsReturned:
-        emp = EmployeeMaster.objects.filter(employee_id=eid, is_active=True).first()
-        if emp:
-            mismatches = []
-            if u_uid and emp.unit_id and str(emp.unit_id) != str(u_uid):
-                mismatches.append(f'Unit: {emp.unit.code if emp.unit else "Unknown"} (expected: {u_uid})')
-            if u_did and emp.department_id and str(emp.department_id) != str(u_did):
-                mismatches.append(f'Department: {emp.department.name if emp.department else "Unknown"} (expected: {u_did})')
-            
-            if mismatches:
-                return JsonResponse({
-                    'found': False, 
-                    'message': f'Employee belongs to different department/unit: {", ".join(mismatches)}',
-                    'mismatch': True,
-                    'employee': {
-                        'employee_id': emp.employee_id,
-                        'employee_name': emp.employee_name,
-                        'mobile': emp.mobile,
-                        'email': emp.email,
-                        'unit_id': emp.unit_id or None,
-                        'unit_code': emp.unit.code if emp.unit else None,
-                        'department_id': emp.department_id or None,
-                        'department_name': emp.department.name if emp.department else None
-                    }
-                })
-            
-            return JsonResponse({
-                'found': True,
-                'employee': {
-                    'employee_id': emp.employee_id,
-                    'employee_name': emp.employee_name,
-                    'mobile': emp.mobile,
-                    'email': emp.email,
-                    'unit_id': emp.unit_id or None,
-                    'unit_code': emp.unit.code if emp.unit else None,
-                    'department_id': emp.department_id or None,
-                    'department_name': emp.department.name if emp.department else None
-                }
-            })
-        return JsonResponse({'found': False, 'message': 'Employee not found.'})
+    except Exception:
+        return JsonResponse({'found': False, 'message': 'Error fetching employee details.'})
 
 
 def get_employees_by_department(request):
-    """
-    AJAX endpoint to fetch employees for a specific department.
-    Used by the expandable department rows in the settings page.
-    """
     dept_id = request.GET.get('department_id')
     
     if not dept_id:

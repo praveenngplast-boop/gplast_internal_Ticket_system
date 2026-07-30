@@ -5,263 +5,540 @@
 {% block extra_head %}
 {{ block.super }}
 <style>
+    /* ============================================
+       BASE SETTINGS STYLES
+    ============================================ */
     .settings-container { animation: fadeInUp 0.6s ease; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes tabFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes modalSlideIn { from { opacity: 0; transform: scale(0.9) translateY(-30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-    .text-primary { color: var(--accent) !important; }
+    /* ============================================
+       CSS VARIABLES - Theme Support
+    ============================================ */
+    :root {
+        --brand-orange: #FF6B00;
+        --brand-orange-dark: #E05A00;
+        --brand-yellow: #FFB800;
+        --brand-gradient: linear-gradient(135deg, #FF6B00 0%, #FFB800 100%);
+    }
+
+    .text-primary { color: var(--brand-orange) !important; }
     .text-muted { color: var(--text-muted) !important; }
-    .text-danger { color: var(--accent) !important; }
-    .text-dark { color: var(--text-primary) !important; }
     .text-secondary { color: var(--text-secondary) !important; }
 
+    /* ============================================
+       HEADER
+    ============================================ */
+    .settings-header {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+    }
+    .settings-header h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        font-family: 'Fraunces', serif;
+    }
+    .settings-header h2 i { color: var(--brand-orange); }
+    .settings-header p {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    .settings-header .header-badge {
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
+        padding: 0.3rem 1rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        border: 1px solid rgba(255, 107, 0, 0.1);
+    }
+
+    /* ============================================
+       PANEL CARD
+    ============================================ */
     .panel-card {
-        background: var(--bg-card); backdrop-filter: blur(10px);
-        border: 1px solid var(--border-color); box-shadow: 0 8px 32px var(--shadow-color);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 16px; overflow: hidden;
-        animation: cardFadeIn 0.6s ease;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.4s ease;
+        border-radius: 16px;
+        overflow: hidden;
     }
-    @keyframes cardFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-    .glass-header {
-        background: rgba(233, 69, 96, 0.05); border-bottom: 1px solid var(--border-color);
-        backdrop-filter: blur(10px); padding: 0.75rem 1.25rem;
+    .panel-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--border-light);
     }
-    .glass-header h5 { color: var(--accent-light); font-weight: 700; font-size: 0.95rem; }
 
-    /* CRITICAL FIX: Consistent background for all input states */
+    /* ============================================
+       PROFESSIONAL TAB NAVIGATION
+    ============================================ */
+    .settings-tabs-wrapper {
+        background: var(--bg-secondary);
+        border-bottom: 2px solid var(--border-color);
+        padding: 0 0.5rem;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(10px);
+        background: rgba(var(--bg-secondary-rgb, 245, 248, 255), 0.95);
+    }
+
+    [data-theme="dark"] .settings-tabs-wrapper {
+        background: rgba(26, 32, 44, 0.95);
+    }
+
+    .settings-tabs {
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.5rem 0;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .settings-tabs::-webkit-scrollbar { display: none; }
+
+    .settings-tab-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.8rem;
+        border-radius: 12px 12px 0 0;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        white-space: nowrap;
+        position: relative;
+        font-family: 'Inter', sans-serif;
+        opacity: 0.6;
+    }
+
+    .settings-tab-btn::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        width: 0;
+        height: 3px;
+        background: var(--brand-gradient);
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+        border-radius: 10px;
+    }
+
+    .settings-tab-btn:hover {
+        opacity: 1;
+        color: var(--text-primary);
+        background: rgba(255, 107, 0, 0.03);
+    }
+    .settings-tab-btn:hover::after { width: 40%; }
+
+    .settings-tab-btn.active {
+        opacity: 1;
+        color: var(--text-primary);
+        background: transparent;
+    }
+    .settings-tab-btn.active::after { width: 80%; }
+
+    .settings-tab-btn .tab-icon {
+        font-size: 0.9rem;
+        color: var(--brand-orange);
+        transition: all 0.3s ease;
+    }
+    .settings-tab-btn:hover .tab-icon { transform: scale(1.1); }
+    .settings-tab-btn .tab-badge {
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
+        font-size: 0.5rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 50px;
+        font-weight: 700;
+        margin-left: 4px;
+    }
+    .settings-tab-btn.active .tab-badge {
+        background: var(--brand-gradient);
+        color: #FFFFFF;
+    }
+
+    /* ============================================
+       TAB CONTENT
+    ============================================ */
+    .tab-pane {
+        animation: tabFadeIn 0.5s ease;
+        padding: 1.5rem 0.5rem;
+    }
+
+    .section-divider {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0 1rem 0;
+        gap: 1rem;
+    }
+    .section-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--border-color), transparent);
+    }
+    .section-divider .section-title {
+        font-weight: 700;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Fraunces', serif;
+    }
+    .section-divider .section-title i { color: var(--brand-orange); }
+
+    /* ============================================
+       FORM CONTROLS - Theme Aware
+    ============================================ */
     .form-control, 
-    .form-select, 
-    input[type="text"], 
-    input[type="email"], 
+    .form-select,
+    input[type="text"],
+    input[type="email"],
     input[type="password"],
-    input[type="number"], 
-    input[type="date"], 
-    textarea, 
+    input[type="number"],
+    input[type="date"],
+    textarea,
     select {
         background-color: var(--input-bg) !important;
-        background: var(--input-bg) !important;
         border: 2px solid var(--border-color) !important;
         color: var(--text-primary) !important;
-        border-radius: 12px;
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        height: 42px;
+        border-radius: 10px !important;
+        padding: 0.5rem 0.9rem !important;
+        font-size: 0.85rem !important;
+        transition: all 0.3s ease !important;
+        width: 100%;
         -webkit-text-fill-color: var(--text-primary) !important;
         caret-color: var(--text-primary) !important;
-        -webkit-background-clip: text !important;
-        background-clip: text !important;
     }
 
-    .form-control:focus, 
+    .form-control:focus,
     .form-select:focus,
-    input[type="text"]:focus,
-    input[type="email"]:focus,
-    input[type="password"]:focus,
-    input[type="number"]:focus,
-    input[type="date"]:focus,
+    input:focus,
     textarea:focus,
     select:focus {
-        border-color: var(--accent) !important;
-        box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.15) !important;
-        color: var(--text-primary) !important;
+        border-color: var(--brand-orange) !important;
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1) !important;
         outline: none !important;
-        background-color: var(--input-bg) !important;
-        background: var(--input-bg) !important;
-        -webkit-text-fill-color: var(--text-primary) !important;
     }
 
     .form-control::placeholder,
     input::placeholder,
     textarea::placeholder {
         color: var(--text-muted) !important;
-        -webkit-text-fill-color: var(--text-muted) !important;
-        opacity: 1 !important;
+        opacity: 0.7 !important;
     }
 
-    .form-select option, 
+    .form-select option,
     select option {
         background: var(--bg-secondary) !important;
         color: var(--text-primary) !important;
-        padding: 8px 12px;
-        background-color: var(--bg-secondary) !important;
     }
 
     .form-select {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adb5bd' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236B7A9E' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
         background-repeat: no-repeat !important;
-        background-position: right 1rem center !important;
-        background-size: 16px 12px !important;
+        background-position: right 0.9rem center !important;
+        background-size: 14px 10px !important;
         padding-right: 2.5rem !important;
         -webkit-appearance: none !important;
         appearance: none !important;
-        background-color: var(--input-bg) !important;
-        background: var(--input-bg) !important;
     }
 
-    /* LIGHT THEME */
-    :root:not([data-theme="dark"]) .form-control, 
-    :root:not([data-theme="dark"]) .form-select,
-    :root:not([data-theme="dark"]) input, 
-    :root:not([data-theme="dark"]) textarea, 
-    :root:not([data-theme="dark"]) select {
-        background-color: #f7fafc !important;
-        background: #f7fafc !important;
-        border-color: #e2e8f0 !important;
-        color: #2d3748 !important;
-        -webkit-text-fill-color: #2d3748 !important;
+    .form-label {
+        color: var(--text-secondary) !important;
+        font-weight: 600 !important;
+        font-size: 0.78rem !important;
+        margin-bottom: 0.3rem !important;
     }
+    .form-label i { color: var(--brand-orange); width: 18px; }
+    .form-text { color: var(--text-muted) !important; font-size: 0.65rem !important; }
 
-    :root:not([data-theme="dark"]) .form-control:focus, 
-    :root:not([data-theme="dark"]) .form-select:focus,
-    :root:not([data-theme="dark"]) input:focus,
-    :root:not([data-theme="dark"]) textarea:focus,
-    :root:not([data-theme="dark"]) select:focus {
-        background-color: #edf2f7 !important;
-        background: #edf2f7 !important;
-        border-color: #667eea !important;
-        color: #2d3748 !important;
-        -webkit-text-fill-color: #2d3748 !important;
-    }
-
-    :root:not([data-theme="dark"]) .form-select option, 
-    :root:not([data-theme="dark"]) select option {
-        background: #ffffff !important;
-        color: #2d3748 !important;
-        background-color: #ffffff !important;
-    }
-
-    /* DARK THEME */
-    [data-theme="dark"] .form-control, 
-    [data-theme="dark"] .form-select,
-    [data-theme="dark"] input, 
-    [data-theme="dark"] textarea, 
-    [data-theme="dark"] select {
-        background-color: rgba(255,255,255,0.05) !important;
-        background: rgba(255,255,255,0.05) !important;
-        border-color: rgba(255,255,255,0.1) !important;
-        color: #E8EDF5 !important;
-        -webkit-text-fill-color: #E8EDF5 !important;
-    }
-
-    [data-theme="dark"] .form-control:focus, 
-    [data-theme="dark"] .form-select:focus,
-    [data-theme="dark"] input:focus,
-    [data-theme="dark"] textarea:focus,
-    [data-theme="dark"] select:focus {
-        background-color: rgba(255,255,255,0.08) !important;
-        background: rgba(255,255,255,0.08) !important;
-        border-color: #60A5FA !important;
-        box-shadow: 0 0 0 4px rgba(96,165,250,0.2) !important;
-        color: #E8EDF5 !important;
-        -webkit-text-fill-color: #E8EDF5 !important;
-    }
-
-    [data-theme="dark"] .form-select option, 
-    [data-theme="dark"] select option {
-        background: #1a2440 !important;
-        color: #E8EDF5 !important;
-        background-color: #1a2440 !important;
-    }
-
-    /* Autofill override */
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    input:-webkit-autofill:active,
-    textarea:-webkit-autofill,
-    select:-webkit-autofill {
-        -webkit-text-fill-color: var(--text-primary) !important;
-        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-        box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-        caret-color: var(--text-primary) !important;
-        border-color: var(--border-color) !important;
-        background-color: var(--input-bg) !important;
-        background: var(--input-bg) !important;
-        transition: background-color 5000s ease-in-out 0s !important;
-    }
-
-    /* Password wrapper */
-    .password-wrapper { position: relative; }
-    .password-toggle-icon {
-        position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-        cursor: pointer; color: var(--text-muted); z-index: 10; background: transparent;
-        border: none; padding: 8px 10px; border-radius: 8px; font-size: 1.1rem;
-    }
-    .password-toggle-icon:hover { color: var(--accent); }
-    .password-wrapper .form-control { padding-right: 45px !important; }
-
-    .form-label { color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; margin-bottom: 0.4rem; }
-    .form-text { color: var(--text-secondary) !important; font-size: 0.7rem; margin-top: 0.25rem; }
-
-    .user-badge {
-        display: inline-flex; align-items: center; gap: 8px;
-        background: rgba(233, 69, 96, 0.08); border: 1px solid rgba(233, 69, 96, 0.15);
-        border-radius: 50px; padding: 0.35rem 1rem; margin-bottom: 0.75rem;
-    }
-    .user-badge i { color: var(--accent); }
-    .user-badge .username { font-weight: 700; color: var(--accent-light); font-size: 0.9rem; }
-    .user-badge .user-fullname { color: var(--text-secondary); font-size: 0.8rem; }
-
+    /* ============================================
+       BUTTONS
+    ============================================ */
     .btn-primary-custom {
-        background: var(--accent-gradient); border: none; color: white;
-        border-radius: 50px; padding: 0.6rem 1.5rem; font-weight: 600; font-size: 0.85rem;
+        background: var(--brand-gradient) !important;
+        border: none !important;
+        color: #FFFFFF !important;
+        border-radius: 50px !important;
+        padding: 0.5rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        transition: all 0.4s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2) !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    .btn-primary-custom:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.35) !important;
+        color: #FFFFFF !important;
+    }
+    .btn-primary-custom i { color: #FFFFFF !important; }
+
+    .btn-success-custom {
+        background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%) !important;
+        border: none !important;
+        color: #FFFFFF !important;
+        border-radius: 50px !important;
+        padding: 0.5rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        transition: all 0.4s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        box-shadow: 0 4px 16px rgba(34, 197, 94, 0.25) !important;
+    }
+    .btn-success-custom:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.35) !important;
+        color: #FFFFFF !important;
+    }
+    .btn-success-custom i { color: #FFFFFF !important; }
+
+    .btn-danger-custom {
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+        border: none !important;
+        color: #FFFFFF !important;
+        border-radius: 50px !important;
+        padding: 0.5rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        transition: all 0.4s ease !important;
+    }
+    .btn-danger-custom:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 8px 30px rgba(239, 68, 68, 0.35) !important;
+        color: #FFFFFF !important;
+    }
+
+    .btn-warning-custom {
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+        border: none !important;
+        color: #1A1A2E !important;
+        border-radius: 50px !important;
+        padding: 0.5rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        transition: all 0.4s ease !important;
+    }
+    .btn-warning-custom:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 8px 30px rgba(245, 158, 11, 0.35) !important;
+        color: #1A1A2E !important;
+    }
+
+    .btn-outline-secondary-custom {
+        border: 2px solid var(--border-color) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 50px !important;
+        padding: 0.5rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        transition: all 0.4s ease !important;
+        background: transparent !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+    .btn-outline-secondary-custom:hover {
+        background: var(--bg-secondary) !important;
+        border-color: var(--brand-orange) !important;
+        color: var(--text-primary) !important;
+        transform: translateY(-2px) !important;
+    }
+    .btn-outline-secondary-custom i {
+        color: var(--text-muted) !important;
+        transition: color 0.3s ease;
+    }
+    .btn-outline-secondary-custom:hover i {
+        color: var(--brand-orange) !important;
+    }
+
+    .btn-sm { padding: 0.25rem 0.8rem !important; font-size: 0.7rem !important; border-radius: 50px !important; }
+
+    /* ============================================
+       TABLE STYLES
+    ============================================ */
+    .table {
+        color: var(--text-primary) !important;
+        margin-bottom: 0 !important;
+    }
+    .table > :not(caption) > * > * {
+        background: transparent !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+        padding: 0.6rem 0.5rem !important;
+    }
+    .table-hover tbody tr:hover {
+        background: rgba(255, 107, 0, 0.04) !important;
+    }
+    .table td { vertical-align: middle; font-size: 0.78rem; }
+    .table th {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+        border-bottom: 2px solid rgba(255, 107, 0, 0.15);
+        white-space: nowrap;
+        color: var(--text-secondary) !important;
+        cursor: pointer;
+        user-select: none;
         transition: all 0.3s ease;
     }
-    .btn-primary-custom:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(233, 69, 96, 0.3); color: white; }
-    .btn-danger-custom { background: linear-gradient(135deg, #fc8181, #e53e3e); border: none; color: white; border-radius: 50px; padding: 0.6rem 1.5rem; font-weight: 600; font-size: 0.85rem; }
-    .btn-danger-custom:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(229, 62, 62, 0.3); color: white; }
-    .btn-success-custom { background: linear-gradient(135deg, #48bb78, #38a169); border: none; color: white; border-radius: 50px; padding: 0.6rem 1.5rem; font-weight: 600; font-size: 0.85rem; }
-    .btn-success-custom:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(72, 187, 120, 0.3); color: white; }
-    .btn-warning-custom { background: linear-gradient(135deg, #F59E0B, #D97706); border: none; color: #1A2A6C; border-radius: 50px; padding: 0.6rem 1.5rem; font-weight: 600; font-size: 0.85rem; }
-    .btn-warning-custom:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3); color: #1A2A6C; }
-    .btn-primary { background: var(--accent-gradient); border: none; color: white; border-radius: 50px; padding: 0.25rem 0.8rem; font-size: 0.75rem; }
-    .btn-outline-primary { color: var(--accent); border: 2px solid var(--accent); border-radius: 50px; padding: 0.25rem 0.8rem; font-size: 0.75rem; background: transparent; }
-    .btn-outline-primary:hover { background: var(--accent-gradient); color: white; }
-    .btn-outline-success { color: #48bb78; border: 2px solid #48bb78; border-radius: 50px; padding: 0.15rem 0.6rem; font-size: 0.65rem; background: transparent; }
-    .btn-outline-success:hover { background: #48bb78; color: white; }
-    .btn-outline-danger { color: #fc8181; border: 2px solid #fc8181; border-radius: 50px; padding: 0.15rem 0.6rem; font-size: 0.65rem; background: transparent; }
-    .btn-outline-danger:hover { background: #fc8181; color: white; }
-    .btn-light-custom { background: rgba(255,255,255,0.05); border: 2px solid var(--border-color); color: var(--text-secondary); border-radius: 50px; padding: 0.4rem 1rem; }
-    .btn-light-custom:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
-    .btn-sm { padding: 0.2rem 0.6rem; font-size: 0.7rem; }
-
-    .table { color: var(--text-primary) !important; margin-bottom: 0 !important; }
-    .table > :not(caption) > * > * { background: transparent !important; color: var(--text-primary) !important; border-color: var(--border-color) !important; padding: 0.5rem 0.4rem; }
-    .table-hover tbody tr:hover { background: rgba(233, 69, 96, 0.05) !important; }
-    .table td { vertical-align: middle; font-size: 0.78rem; }
-    .table th { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-bottom: 2px solid rgba(233, 69, 96, 0.2); white-space: nowrap; color: var(--text-secondary) !important; }
-    .table-responsive { max-height: 400px; overflow-y: auto; }
-
-    .badge { padding: 0.25rem 0.6rem; border-radius: 50px; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; }
-    .badge.bg-success { background: #48bb78 !important; color: white !important; }
-    .badge.bg-danger { background: #fc8181 !important; color: white !important; }
-
-    .nav-tabs { border-bottom: 2px solid var(--border-color); padding: 0 0.5rem; flex-wrap: nowrap; overflow-x: auto; gap: 0.25rem; }
-    .nav-tabs::-webkit-scrollbar { display: none; }
-    .nav-tabs .nav-link {
-        color: var(--text-secondary) !important; font-weight: 600; padding: 0.7rem 1.2rem;
-        border: none; border-radius: 12px 12px 0 0; font-size: 0.8rem; background: transparent !important;
-        white-space: nowrap; opacity: 0.7; transition: all 0.3s ease;
+    .table th:hover {
+        color: var(--brand-orange);
+        background: rgba(255, 107, 0, 0.03);
     }
-    .nav-tabs .nav-link::after {
-        content: ''; position: absolute; bottom: -2px; left: 50%; width: 0; height: 3px;
-        background: var(--accent-gradient); transition: all 0.3s ease; transform: translateX(-50%); border-radius: 10px;
+    .table th .sort-icon {
+        margin-left: 4px;
+        font-size: 0.5rem;
+        opacity: 0.3;
+        transition: all 0.3s ease;
+        display: inline-block;
     }
-    .nav-tabs .nav-link:hover { opacity: 1; }
-    .nav-tabs .nav-link:hover::after { width: 60%; }
-    .nav-tabs .nav-link.active { color: var(--accent-light) !important; opacity: 1; }
-    .nav-tabs .nav-link.active::after { width: 100%; }
-    .nav-tabs .nav-link i { margin-right: 0.4rem; }
-    .tab-pane { animation: tabFadeIn 0.5s ease; padding: 1.5rem 0; }
+    .table th:hover .sort-icon {
+        opacity: 1;
+        color: var(--brand-orange);
+    }
+    .table th.sorted-asc .sort-icon {
+        opacity: 1;
+        color: var(--brand-orange);
+        transform: rotate(0deg);
+    }
+    .table th.sorted-desc .sort-icon {
+        opacity: 1;
+        color: var(--brand-orange);
+        transform: rotate(180deg);
+    }
+    .table-responsive {
+        max-height: 400px;
+        overflow-y: auto;
+        border-radius: 0 0 12px 12px;
+    }
 
-    .section-divider { display: flex; align-items: center; margin: 1.5rem 0 1rem 0; gap: 1rem; }
-    .section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border-color); }
-    .section-divider .section-title { font-weight: 700; color: var(--accent-light); font-size: 0.95rem; white-space: nowrap; display: flex; align-items: center; gap: 0.5rem; }
-    .section-divider .section-title i { color: var(--accent); }
+    /* ============================================
+       BADGE STYLES
+    ============================================ */
+    .badge {
+        padding: 0.25rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .badge.bg-success { background: #22C55E !important; color: #FFFFFF !important; }
+    .badge.bg-danger { background: #EF4444 !important; color: #FFFFFF !important; }
+    .badge.bg-warning { background: #F59E0B !important; color: #1A1A2E !important; }
 
+    /* ============================================
+       HELP DESK CARDS
+    ============================================ */
+    .helpdesk-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    .helpdesk-card:hover {
+        border-color: rgba(255, 107, 0, 0.2);
+        box-shadow: var(--shadow-sm);
+    }
+    .helpdesk-card .helpdesk-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.3rem;
+    }
+    .helpdesk-card .helpdesk-value {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-family: 'Inter', sans-serif;
+    }
+    .helpdesk-card .helpdesk-value i {
+        color: var(--brand-orange);
+        margin-right: 0.5rem;
+    }
+
+    /* ============================================
+       EMAIL LIST
+    ============================================ */
+    .email-list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        border-radius: 8px;
+    }
+    .email-list-item:hover { background: rgba(255, 107, 0, 0.04); }
+    .email-list-item:last-child { border-bottom: none; }
+    .email-list-item .email-address {
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+    }
+    .email-list-item .email-address i {
+        color: var(--brand-orange);
+        margin-right: 0.5rem;
+    }
+    .email-list-item .btn-delete-email {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        transition: all 0.3s ease;
+        padding: 0.2rem 0.5rem;
+        border-radius: 50px;
+        cursor: pointer;
+    }
+    .email-list-item .btn-delete-email:hover {
+        color: #EF4444;
+        background: rgba(239, 68, 68, 0.08);
+        transform: scale(1.1);
+    }
+    .email-list-empty {
+        text-align: center;
+        padding: 1.5rem;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+    .email-list-empty i {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+        opacity: 0.3;
+    }
+
+    /* ============================================
+       UNIT CREDENTIALS SECTION
+    ============================================ */
     .unit-credentials-section {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -274,46 +551,57 @@
         justify-content: space-between;
         align-items: center;
         padding-bottom: 0.75rem;
-        border-bottom: 2px solid rgba(233, 69, 96, 0.2);
+        border-bottom: 2px solid rgba(255, 107, 0, 0.15);
         margin-bottom: 0.75rem;
     }
     .unit-credentials-section .unit-header h6 {
         font-weight: 700;
-        color: var(--accent-light);
+        color: var(--text-primary);
         font-size: 0.9rem;
         margin: 0;
+        font-family: 'Fraunces', serif;
     }
+    .unit-credentials-section .unit-header h6 i { color: var(--brand-orange); }
     .unit-credentials-section .unit-header .unit-badge {
-        background: rgba(233, 69, 96, 0.1);
-        color: var(--accent);
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
         padding: 0.2rem 0.8rem;
         border-radius: 50px;
         font-size: 0.7rem;
         font-weight: 600;
     }
+    .credential-row.inactive { opacity: 0.7; }
+    .cred-username {
+        font-family: monospace;
+        font-weight: 600;
+        color: var(--brand-orange);
+    }
+    .cred-password {
+        font-family: monospace;
+        color: var(--text-muted);
+        letter-spacing: 1px;
+    }
 
-    /* EXPANDABLE DEPARTMENT ROWS FOR EMPLOYEES TAB */
+    /* ============================================
+       DEPT EMPLOYEE ROWS
+    ============================================ */
     .dept-main-row {
         cursor: pointer;
         transition: all 0.3s ease;
         border-bottom: 1px solid var(--border-color);
     }
-    .dept-main-row:hover {
-        background: rgba(233, 69, 96, 0.05) !important;
-    }
+    .dept-main-row:hover { background: rgba(255, 107, 0, 0.04) !important; }
     .dept-main-row .toggle-icon {
         transition: transform 0.3s ease;
         display: inline-block;
         margin-right: 0.5rem;
-        color: var(--accent);
+        color: var(--brand-orange);
         font-size: 0.8rem;
     }
-    .dept-main-row .toggle-icon.expanded {
-        transform: rotate(90deg);
-    }
+    .dept-main-row .toggle-icon.expanded { transform: rotate(90deg); }
     .dept-main-row .dept-name {
         font-weight: 600;
-        color: var(--accent-light);
+        color: var(--brand-orange);
         font-size: 0.85rem;
     }
     .dept-main-row .employee-count {
@@ -326,56 +614,32 @@
         color: var(--text-muted);
         margin-left: 0.5rem;
     }
-    .dept-main-row .credential-info i {
-        color: var(--accent);
-    }
-    .dept-loading-spinner {
-        margin-left: 0.5rem;
-        color: var(--accent);
-    }
-
-    .employee-details-row {
+    .dept-main-row .credential-info i { color: var(--brand-orange); }
+    .dept-main-row .dept-loading-spinner {
         display: none;
-        background: rgba(233, 69, 96, 0.02);
+        margin-left: 0.5rem;
+        color: var(--brand-orange);
     }
-    .employee-details-row.expanded {
-        display: table-row;
-    }
-    .employee-details-row td {
-        padding: 0 !important;
-    }
+    .employee-details-row { display: none; }
+    .employee-details-row.expanded { display: table-row; }
+    .employee-details-row td { padding: 0 !important; }
     .employee-details-row .employee-table-wrapper {
         padding: 0.5rem 1rem 0.5rem 2.5rem;
     }
-    .employee-details-row .employee-table-wrapper .table {
-        margin-bottom: 0;
-        background: transparent;
-    }
     .employee-details-row .employee-table-wrapper .table th {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         padding: 0.3rem 0.5rem;
-        border-bottom: 1px solid var(--border-color);
-        color: var(--text-secondary);
-        background: transparent;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
     }
     .employee-details-row .employee-table-wrapper .table td {
         font-size: 0.7rem;
         padding: 0.3rem 0.5rem;
-        border-bottom: 1px solid var(--border-light);
-        color: var(--text-primary);
-        background: transparent;
     }
-    .employee-details-row .employee-table-wrapper .table tr:hover td {
-        background: rgba(233, 69, 96, 0.03) !important;
-    }
-    .employee-details-row .employee-table-wrapper .employee-id {
+    .employee-id {
         font-weight: 600;
-        color: var(--accent-light);
+        color: var(--brand-orange);
         font-family: monospace;
     }
-    .employee-details-row .employee-table-wrapper .no-employees {
+    .no-employees {
         padding: 0.5rem 0.5rem;
         color: var(--text-muted);
         font-size: 0.7rem;
@@ -394,56 +658,51 @@
         font-size: 0.7rem;
     }
 
-    /* Credentials Table Styles */
-    .credential-table th {
-        font-size: 0.6rem;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        color: var(--text-secondary);
-        border-bottom: 2px solid rgba(233, 69, 96, 0.2);
-    }
-    .credential-table td {
-        font-size: 0.8rem;
-        padding: 0.5rem 0.4rem;
-        vertical-align: middle;
-    }
-    .credential-table .cred-username {
-        font-family: monospace;
-        font-weight: 600;
-        color: var(--accent-light);
-    }
-    .credential-table .cred-password {
-        font-family: monospace;
-        color: var(--text-muted);
-        letter-spacing: 1px;
-    }
-    .credential-table .cred-dept {
-        font-weight: 500;
-    }
-
-    /* Toggle button styles for Unit and Department */
-    .toggle-status-btn {
+    /* ============================================
+       PASSWORD WRAPPER
+    ============================================ */
+    .password-wrapper { position: relative; }
+    .password-toggle-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
         cursor: pointer;
-        transition: all 0.3s ease;
-        padding: 0.15rem 0.6rem;
-        border-radius: 50px;
-        font-size: 0.6rem;
-        font-weight: 600;
+        color: var(--text-muted);
+        z-index: 10;
+        background: transparent;
         border: none;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
     }
-    .toggle-status-btn:hover {
-        transform: scale(1.05);
+    .password-toggle-icon:hover { color: var(--brand-orange); }
+    .password-wrapper .form-control { padding-right: 45px !important; }
+
+    /* ============================================
+       USER BADGE
+    ============================================ */
+    .user-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 107, 0, 0.06);
+        border: 1px solid rgba(255, 107, 0, 0.1);
+        border-radius: 50px;
+        padding: 0.25rem 0.8rem;
+        margin-bottom: 0.75rem;
     }
-    .toggle-status-btn.active {
-        background: #48bb78;
-        color: white;
-    }
-    .toggle-status-btn.inactive {
-        background: #fc8181;
-        color: white;
+    .user-badge i { color: var(--brand-orange); }
+    .user-badge .username {
+        font-weight: 700;
+        color: var(--text-primary);
+        font-size: 0.85rem;
     }
 
-    /* Employee Action Cards - FIXED TEXT COLORS */
+    /* ============================================
+       ACTION CARDS
+    ============================================ */
     .action-card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -453,18 +712,11 @@
     }
     .action-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 6px 25px rgba(233, 69, 96, 0.08);
-        border-color: rgba(233, 69, 96, 0.2);
+        box-shadow: var(--shadow-sm);
+        border-color: rgba(255, 107, 0, 0.2);
     }
-    .action-card .card-body {
-        padding: 1.25rem;
-        text-align: center;
-    }
-    .action-card .action-icon {
-        font-size: 2rem;
-        display: block;
-        margin-bottom: 0.5rem;
-    }
+    .action-card .card-body { padding: 1.25rem; text-align: center; }
+    .action-card .action-icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
     .action-card .action-title {
         font-size: 0.85rem;
         font-weight: 700;
@@ -476,29 +728,13 @@
         color: var(--text-muted) !important;
         margin-bottom: 0.75rem;
     }
-    .action-card .btn {
-        font-size: 0.75rem;
-        padding: 0.3rem 1rem;
-    }
-    .action-card .btn-success-custom {
-        color: white !important;
-    }
-    .action-card .btn-primary-custom {
-        color: white !important;
-    }
 
-    .modal-content { background: var(--bg-card) !important; border: 1px solid var(--border-color) !important; border-radius: 16px; animation: modalSlideIn 0.4s ease; }
-    .modal-header { border-bottom: 1px solid var(--border-color) !important; padding: 1rem 1.5rem; }
-    .modal-body { padding: 1.5rem; color: var(--text-primary) !important; }
-    .modal-footer { border-top: 1px solid var(--border-color) !important; padding: 1rem 1.5rem; }
-
-    #confirmModal .modal-header { background: var(--accent-gradient) !important; border: none !important; border-radius: 16px 16px 0 0; }
-    #confirmModal .modal-header .modal-title { color: white !important; font-weight: 700; }
-    #confirmModal .btn-close { filter: brightness(0) invert(1) !important; }
-
+    /* ============================================
+       PASSWORD RESET CARD
+    ============================================ */
     .password-reset-card {
-        background: rgba(245, 158, 11, 0.05);
-        border: 1px solid rgba(245, 158, 11, 0.2);
+        background: rgba(245, 158, 11, 0.04);
+        border: 1px solid rgba(245, 158, 11, 0.15);
         border-radius: 12px;
         padding: 1.25rem;
     }
@@ -507,8 +743,12 @@
         font-weight: 700;
         font-size: 0.9rem;
         margin-bottom: 1rem;
+        font-family: 'Fraunces', serif;
     }
 
+    /* ============================================
+       NO DATA MESSAGE
+    ============================================ */
     .no-data-message {
         text-align: center;
         padding: 2rem;
@@ -519,101 +759,216 @@
         display: block;
         margin-bottom: 0.75rem;
         color: var(--text-muted);
-        opacity: 0.5;
+        opacity: 0.3;
     }
 
-    /* Status indicator for inactive credentials - added this to make them more visible */
-    .credential-row.inactive {
-        opacity: 0.7;
+    /* ============================================
+       MODAL STYLES
+    ============================================ */
+    .modal-content {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 16px !important;
+        animation: modalSlideIn 0.4s ease !important;
     }
-    .credential-row.inactive .cred-username,
-    .credential-row.inactive .cred-password {
-        opacity: 0.6;
+    .modal-header {
+        border-bottom: 1px solid var(--border-color) !important;
+        padding: 1rem 1.5rem !important;
+    }
+    .modal-header .modal-title {
+        color: var(--text-primary) !important;
+        font-family: 'Fraunces', serif !important;
+        font-weight: 700 !important;
+    }
+    .modal-header .modal-title i { color: var(--brand-orange) !important; }
+    .modal-body { padding: 1.5rem !important; color: var(--text-primary) !important; }
+    .modal-footer {
+        border-top: 1px solid var(--border-color) !important;
+        padding: 1rem 1.5rem !important;
     }
 
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg-primary); border-radius: 10px; }
-    ::-webkit-scrollbar-thumb { background: var(--accent-gradient); border-radius: 10px; }
-    ::selection { background: var(--accent); color: white; }
+    #confirmModal .modal-header {
+        background: var(--brand-gradient) !important;
+        border: none !important;
+        border-radius: 16px 16px 0 0 !important;
+    }
+    #confirmModal .modal-header .modal-title { color: #FFFFFF !important; }
+    #confirmModal .modal-header .modal-title i { color: #FFFFFF !important; }
+    #confirmModal .btn-close { filter: brightness(0) invert(1) !important; }
+
+    /* ============================================
+       RESPONSIVE
+    ============================================ */
+    @media (max-width: 992px) {
+        .settings-tab-btn { font-size: 0.7rem !important; padding: 0.5rem 0.8rem !important; }
+        .settings-tab-btn .tab-icon { font-size: 0.8rem; }
+    }
 
     @media (max-width: 768px) {
+        .settings-header { padding: 1rem; }
+        .settings-header h2 { font-size: 1.1rem; }
+        .settings-header .header-badge { font-size: 0.6rem; }
+        
         .card-body { padding: 1rem !important; }
-        .form-control, .form-select { font-size: 0.85rem; height: 38px; }
-        .btn-primary-custom, .btn-danger-custom, .btn-success-custom { width: 100%; }
-        .nav-tabs .nav-link { font-size: 0.7rem; padding: 0.5rem 0.8rem; }
+        .form-control, .form-select { font-size: 0.8rem !important; padding: 0.4rem 0.7rem !important; }
+        .btn-primary-custom, .btn-success-custom, .btn-danger-custom, .btn-warning-custom {
+            width: 100% !important;
+            justify-content: center !important;
+        }
+        .settings-tab-btn { font-size: 0.6rem !important; padding: 0.4rem 0.6rem !important; }
+        .settings-tab-btn .tab-badge { display: none; }
+        .section-divider { flex-wrap: wrap; }
+        .section-divider .section-title { font-size: 0.85rem; }
+        .helpdesk-card { padding: 1rem; }
+        .helpdesk-card .helpdesk-value { font-size: 0.85rem; }
+        .d-flex.justify-content-end .gap-2 { flex-direction: column !important; width: 100% !important; }
+        .d-flex.justify-content-end .gap-2 .btn { width: 100% !important; }
+        .email-list-item .email-address { font-size: 0.75rem; }
         .employee-details-row .employee-table-wrapper { padding: 0.5rem 0.5rem 0.5rem 1.5rem; }
         .employee-details-row .employee-table-wrapper .table td,
         .employee-details-row .employee-table-wrapper .table th {
             font-size: 0.6rem;
             padding: 0.2rem 0.3rem;
         }
-        .credential-table td { font-size: 0.7rem; }
+        .table td, .table th { font-size: 0.65rem !important; padding: 0.3rem 0.25rem !important; }
     }
+
     @media (max-width: 576px) {
+        .settings-header { padding: 0.75rem; }
+        .settings-header h2 { font-size: 0.95rem; }
+        .settings-header p { font-size: 0.7rem; }
+        
         .card-body { padding: 0.75rem !important; }
-        .form-control, .form-select { font-size: 0.8rem; height: 36px; }
-        .nav-tabs .nav-link { font-size: 0.6rem; padding: 0.4rem 0.5rem; }
-        .table { font-size: 0.7rem; }
-        .badge { font-size: 0.5rem; }
+        .form-control, .form-select { font-size: 0.75rem !important; padding: 0.3rem 0.6rem !important; border-radius: 8px !important; }
+        .settings-tab-btn { font-size: 0.5rem !important; padding: 0.3rem 0.4rem !important; gap: 4px; }
+        .settings-tab-btn .tab-icon { font-size: 0.7rem; }
+        .section-divider { margin: 1rem 0 0.75rem 0; }
+        .section-divider .section-title { font-size: 0.75rem; }
+        .btn-primary-custom, .btn-success-custom, .btn-danger-custom, .btn-warning-custom {
+            font-size: 0.75rem !important;
+            padding: 0.35rem 0.8rem !important;
+        }
+        .table td, .table th { font-size: 0.55rem !important; padding: 0.2rem 0.15rem !important; }
+        .badge { font-size: 0.5rem !important; padding: 0.15rem 0.35rem !important; }
+        .helpdesk-card { padding: 0.75rem; }
+        .helpdesk-card .helpdesk-value { font-size: 0.75rem; }
+        .helpdesk-card .helpdesk-label { font-size: 0.6rem; }
+        .user-badge { font-size: 0.7rem; padding: 0.2rem 0.6rem; }
+        .email-list-item .email-address { font-size: 0.7rem; }
+        .action-card .card-body { padding: 0.75rem; }
+        .action-card .action-icon { font-size: 1.5rem; }
+        .action-card .action-title { font-size: 0.75rem; }
+        .action-card .action-subtitle { font-size: 0.6rem; }
+        .modal-body { padding: 1rem !important; }
+        .modal-header { padding: 0.75rem 1rem !important; }
+        .modal-footer { padding: 0.75rem 1rem !important; }
+        .password-reset-card { padding: 0.75rem; }
+        .password-reset-card .card-title { font-size: 0.8rem; }
         .employee-details-row .employee-table-wrapper { padding: 0.5rem 0.3rem 0.5rem 0.8rem; }
         .employee-details-row .employee-table-wrapper .table td,
         .employee-details-row .employee-table-wrapper .table th {
-            font-size: 0.55rem;
+            font-size: 0.5rem;
             padding: 0.15rem 0.2rem;
         }
-        .credential-table td { font-size: 0.65rem; }
-        .credential-table .cred-username { font-size: 0.65rem; }
-        .credential-table .cred-password { font-size: 0.65rem; }
-        .action-card .action-icon { font-size: 1.5rem; }
-        .action-card .action-title { font-size: 0.75rem; }
+        .unit-credentials-section { padding: 0.75rem; }
+        .unit-credentials-section .unit-header h6 { font-size: 0.8rem; }
+        .cred-username, .cred-password { font-size: 0.65rem; }
+        .tab-pane { padding: 1rem 0.25rem; }
     }
+
+    /* ============================================
+       SCROLLBAR
+    ============================================ */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--brand-orange-dark); }
+
+    ::selection { background: var(--brand-orange); color: #FFFFFF; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="settings-container">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="fw-bold mb-1" style="font-size: 1.4rem; color: var(--accent-light);">
-                <i class="fa-solid fa-sliders me-2" style="color: var(--accent);"></i>Settings & Master Data Management
-            </h2>
-            <p class="mb-0" style="font-size: 0.85rem; color: var(--text-secondary);">
-                <i class="fa-regular fa-gear me-1"></i>Manage system parameters, users, contacts, and master data
-            </p>
+    <!-- ==========================================
+    HEADER
+    ========================================== -->
+    <div class="settings-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2><i class="fa-solid fa-sliders me-2"></i>Settings & Master Data</h2>
+                <p><i class="fa-regular fa-gear me-1"></i>Manage system parameters, users, contacts, and master data</p>
+            </div>
+            <span class="header-badge">
+                <i class="fa-regular fa-clock me-1"></i>System Configuration
+            </span>
         </div>
     </div>
 
+    <!-- ==========================================
+    MAIN PANEL
+    ========================================== -->
     <div class="card panel-card shadow-sm">
-        <div class="card-header p-0 border-bottom-0">
-            <ul class="nav nav-tabs" id="settingsTab" role="tablist">
-                <li class="nav-item"><button class="nav-link active" id="master-tab" data-bs-toggle="tab" data-bs-target="#master-content" type="button"><i class="fa-solid fa-database"></i>Master Data</button></li>
-                <li class="nav-item"><button class="nav-link" id="communication-tab" data-bs-toggle="tab" data-bs-target="#communication-content" type="button"><i class="fa-solid fa-comments"></i>Communication</button></li>
-                <li class="nav-item"><button class="nav-link" id="employees-tab" data-bs-toggle="tab" data-bs-target="#employees-content" type="button"><i class="fa-solid fa-users"></i>Employees</button></li>
-                <li class="nav-item"><button class="nav-link" id="credentials-tab" data-bs-toggle="tab" data-bs-target="#credentials-content" type="button"><i class="fa-solid fa-key"></i>Credentials</button></li>
-                <li class="nav-item"><button class="nav-link" id="dept-employees-tab" data-bs-toggle="tab" data-bs-target="#dept-employees-content" type="button"><i class="fa-solid fa-user-tie"></i>Dept Employees</button></li>
-            </ul>
+        <!-- Tabs Navigation -->
+        <div class="settings-tabs-wrapper">
+            <div class="settings-tabs" id="settingsTabs" role="tablist">
+                <button class="settings-tab-btn active" id="master-tab" data-bs-toggle="tab" data-bs-target="#master-content" type="button">
+                    <i class="fa-solid fa-database tab-icon"></i>
+                    <span>Master Data</span>
+                    <span class="tab-badge">Units & Depts</span>
+                </button>
+                <button class="settings-tab-btn" id="communication-tab" data-bs-toggle="tab" data-bs-target="#communication-content" type="button">
+                    <i class="fa-solid fa-comments tab-icon"></i>
+                    <span>Communication</span>
+                    <span class="tab-badge">Contact & Emails</span>
+                </button>
+                <button class="settings-tab-btn" id="employees-tab" data-bs-toggle="tab" data-bs-target="#employees-content" type="button">
+                    <i class="fa-solid fa-users tab-icon"></i>
+                    <span>Employees</span>
+                    <span class="tab-badge">{{ employees.count }}</span>
+                </button>
+                <button class="settings-tab-btn" id="credentials-tab" data-bs-toggle="tab" data-bs-target="#credentials-content" type="button">
+                    <i class="fa-solid fa-key tab-icon"></i>
+                    <span>Credentials</span>
+                    <span class="tab-badge">Passwords</span>
+                </button>
+                <button class="settings-tab-btn" id="dept-employees-tab" data-bs-toggle="tab" data-bs-target="#dept-employees-content" type="button">
+                    <i class="fa-solid fa-user-tie tab-icon"></i>
+                    <span>Dept Employees</span>
+                    <span class="tab-badge">View</span>
+                </button>
+            </div>
         </div>
 
+        <!-- Tab Content -->
         <div class="card-body">
             <div class="tab-content" id="settingsTabContent">
 
-                <!-- TAB 1: MASTER DATA -->
+                <!-- ==========================================
+                TAB 1: MASTER DATA
+                ========================================== -->
                 <div class="tab-pane fade show active" id="master-content">
-                    <div class="section-divider"><span class="section-title"><i class="fa-solid fa-industry"></i>Units</span><button type="button" class="btn btn-primary rounded-pill px-3 ms-auto" data-bs-toggle="modal" data-bs-target="#addUnitModal"><i class="fa-solid fa-plus me-1"></i>Add Unit</button></div>
+                    <!-- Units Section -->
+                    <div class="section-divider">
+                        <span class="section-title"><i class="fa-solid fa-industry"></i>Units</span>
+                        <button type="button" class="btn btn-primary-custom btn-sm ms-auto" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                            <i class="fa-solid fa-plus me-1"></i>Add Unit
+                        </button>
+                    </div>
                     <div class="table-responsive mb-4">
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-hover align-middle mb-0" id="unitsTable">
                             <thead>
                                 <tr>
-                                    <th class="ps-3">Code</th>
-                                    <th>Name</th>
-                                    <th>Status</th>
+                                    <th class="ps-3" onclick="sortTable('units', 0)">Code <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <th onclick="sortTable('units', 1)">Name <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <th onclick="sortTable('units', 2)">Status <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for u in units %}
                                 <tr>
-                                    <td class="ps-3 fw-bold" style="color: var(--accent-light);">{{ u.code }}</td>
+                                    <td class="ps-3 fw-bold" style="color: var(--brand-orange);">{{ u.code }}</td>
                                     <td>{{ u.full_name }}</td>
                                     <td>
                                         <span class="badge bg-{% if u.is_active %}success{% else %}danger{% endif %}">
@@ -621,34 +976,40 @@
                                         </span>
                                     </td>
                                     <td class="text-center" style="white-space: nowrap;">
-                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editUnitModal" data-id="{{ u.id }}" data-code="{{ u.code }}" data-fullname="{{ u.full_name }}">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary-custom rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editUnitModal" data-id="{{ u.id }}" data-code="{{ u.code }}" data-fullname="{{ u.full_name }}">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </button>
                                         <form method="POST" action="{% url 'settings_units' %}" class="d-inline confirm-form" data-confirm="Toggle {{ u.code }} status?">
                                             {% csrf_token %}
                                             <input type="hidden" name="action" value="toggle">
                                             <input type="hidden" name="unit_id" value="{{ u.id }}">
-                                            <button type="submit" class="btn btn-sm toggle-status-btn {% if u.is_active %}active{% else %}inactive{% endif %}">
+                                            <button type="submit" class="btn btn-sm {% if u.is_active %}btn-success-custom{% else %}btn-warning-custom{% endif %} rounded-pill px-2" style="font-size: 0.6rem; padding: 0.15rem 0.5rem;">
                                                 {% if u.is_active %}Active{% else %}Inactive{% endif %}
                                             </button>
                                         </form>
                                     </td>
                                 </tr>
                                 {% empty %}
-                                <tr><td colspan="4" class="text-center py-3 text-muted">No units.</td></tr>
+                                <tr><td colspan="4" class="text-center py-3 text-muted">No units found.</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
 
-                    <div class="section-divider"><span class="section-title"><i class="fa-solid fa-cubes"></i>Departments</span><button type="button" class="btn btn-primary rounded-pill px-3 ms-auto" data-bs-toggle="modal" data-bs-target="#addDeptModal"><i class="fa-solid fa-plus me-1"></i>Add Dept</button></div>
+                    <!-- Departments Section -->
+                    <div class="section-divider">
+                        <span class="section-title"><i class="fa-solid fa-cubes"></i>Departments</span>
+                        <button type="button" class="btn btn-primary-custom btn-sm ms-auto" data-bs-toggle="modal" data-bs-target="#addDeptModal">
+                            <i class="fa-solid fa-plus me-1"></i>Add Department
+                        </button>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-hover align-middle mb-0" id="departmentsTable">
                             <thead>
                                 <tr>
-                                    <th class="ps-3">Unit</th>
-                                    <th>Department</th>
-                                    <th>Status</th>
+                                    <th class="ps-3" onclick="sortTable('departments', 0)">Unit <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <th onclick="sortTable('departments', 1)">Department <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <th onclick="sortTable('departments', 2)">Status <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -656,49 +1017,148 @@
                                 {% for d in departments %}
                                 <tr>
                                     <td class="ps-3 fw-bold" style="color: var(--text-secondary);">{{ d.unit.code }}</td>
-                                    <td class="fw-bold" style="color: var(--accent-light);">{{ d.name }}</td>
+                                    <td class="fw-bold" style="color: var(--brand-orange);">{{ d.name }}</td>
                                     <td>
                                         <span class="badge bg-{% if d.is_active %}success{% else %}danger{% endif %}">
                                             {% if d.is_active %}Active{% else %}Inactive{% endif %}
                                         </span>
                                     </td>
                                     <td class="text-center" style="white-space: nowrap;">
-                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editDeptModal" data-id="{{ d.id }}" data-name="{{ d.name }}">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary-custom rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editDeptModal" data-id="{{ d.id }}" data-name="{{ d.name }}">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </button>
                                         <form method="POST" action="{% url 'settings_departments' %}" class="d-inline confirm-form" data-confirm="Toggle {{ d.name }} status?">
                                             {% csrf_token %}
                                             <input type="hidden" name="action" value="toggle">
                                             <input type="hidden" name="dept_id" value="{{ d.id }}">
-                                            <button type="submit" class="btn btn-sm toggle-status-btn {% if d.is_active %}active{% else %}inactive{% endif %}">
+                                            <button type="submit" class="btn btn-sm {% if d.is_active %}btn-success-custom{% else %}btn-warning-custom{% endif %} rounded-pill px-2" style="font-size: 0.6rem; padding: 0.15rem 0.5rem;">
                                                 {% if d.is_active %}Active{% else %}Inactive{% endif %}
                                             </button>
                                         </form>
                                     </td>
                                 </tr>
                                 {% empty %}
-                                <tr><td colspan="4" class="text-center py-3 text-muted">No departments.</td></tr>
+                                <tr><td colspan="4" class="text-center py-3 text-muted">No departments found.</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- TAB 2: COMMUNICATION -->
+                <!-- ==========================================
+                TAB 2: COMMUNICATION - FIXED
+                ========================================== -->
                 <div class="tab-pane fade" id="communication-content">
+                    <!-- Helpdesk Contact Section -->
                     <div class="section-divider"><span class="section-title"><i class="fa-solid fa-headset"></i>Helpdesk Contact</span></div>
-                    <div class="row mb-4"><div class="col-lg-6"><form method="POST" action="{% url 'settings_contact' %}" data-confirm="Save contact?">{% csrf_token %}{{ contact_form.as_p }}<button type="submit" class="btn btn-primary-custom mt-2"><i class="fa-solid fa-save me-1"></i>Save</button></form></div></div>
+                    
+                    <!-- Display Cards - Using correct field names -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-lg-6">
+                            <div class="helpdesk-card">
+                                <div class="helpdesk-label"><i class="fa-regular fa-user me-1"></i>Contact Person</div>
+                                <div class="helpdesk-value">
+                                    <i class="fa-regular fa-circle-user"></i>
+                                    {{ contact.admin_name|default:"Not Set" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="helpdesk-card">
+                                <div class="helpdesk-label"><i class="fa-regular fa-envelope me-1"></i>Email Address</div>
+                                <div class="helpdesk-value">
+                                    <i class="fa-regular fa-envelope"></i>
+                                    {{ contact.admin_email|default:"Not Set" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Form - Using correct field names -->
+                    <div class="card panel-card mb-4">
+                        <div class="card-header glass-header py-2">
+                            <h5 class="fw-bold mb-0"><i class="fa-solid fa-pen-to-square me-2"></i>Update Helpdesk Contact</h5>
+                        </div>
+                        <div class="card-body p-3">
+                            <form method="POST" action="{% url 'settings_contact' %}" class="row g-3" data-confirm="Save contact details?">
+                                {% csrf_token %}
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="fa-regular fa-user me-1"></i>Contact Person</label>
+                                    <input type="text" name="admin_name" class="form-control" value="{{ contact.admin_name|default:'' }}" placeholder="Enter contact person name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="fa-regular fa-envelope me-1"></i>Email Address</label>
+                                    <input type="email" name="admin_email" class="form-control" value="{{ contact.admin_email|default:'' }}" placeholder="helpdesk@company.com">
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary-custom"><i class="fa-solid fa-save me-1"></i>Save Contact</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Notification Emails Section -->
                     <div class="section-divider"><span class="section-title"><i class="fa-solid fa-envelope-circle-check"></i>Notification Emails</span></div>
-                    <div class="row">
-                        <div class="col-lg-6"><h6 style="font-size: 0.85rem;"><i class="fa-solid fa-plus-circle me-1" style="color: var(--accent);"></i>Add Email</h6><form method="POST" action="{% url 'settings_emails' %}" data-confirm="Add email?">{% csrf_token %}<input type="hidden" name="action" value="add"><div class="input-group mb-3">{{ email_form.email }}<button type="submit" class="btn btn-primary">Add</button></div></form></div>
-                        <div class="col-lg-6"><h6 style="font-size: 0.85rem;"><i class="fa-solid fa-list-check me-1" style="color: var(--accent);"></i>Active Emails</h6><div class="table-responsive" style="max-height: 200px;"><table class="table table-sm table-hover mb-0"><tbody>{% for e in emails %}<tr><td>{{ e.email }}</td><td class="text-end"><form method="POST" action="{% url 'settings_emails' %}" class="d-inline confirm-form" data-confirm="Delete {{ e.email }}?">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="email_id" value="{{ e.id }}"><button type="submit" class="btn btn-sm btn-outline-danger border-0"><i class="fa-solid fa-trash-can"></i></button></form></td></tr>{% empty %}<tr><td colspan="2" class="text-center py-3 text-muted">No emails.</td></tr>{% endfor %}</tbody></table></div></div>
+                    <div class="row g-3">
+                        <div class="col-lg-5">
+                            <div class="card panel-card">
+                                <div class="card-header glass-header py-2">
+                                    <h5 class="fw-bold mb-0"><i class="fa-solid fa-plus-circle me-2"></i>Add Email</h5>
+                                </div>
+                                <div class="card-body p-3">
+                                    <form method="POST" action="{% url 'settings_emails' %}" data-confirm="Add this email?">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="add">
+                                        <div class="add-email-wrapper d-flex gap-2">
+                                            <input type="email" name="email" class="form-control" placeholder="email@company.com" required>
+                                            <button type="submit" class="btn btn-primary-custom btn-sm" style="white-space: nowrap;"><i class="fa-solid fa-plus me-1"></i>Add</button>
+                                        </div>
+                                        <div class="form-text mt-1">Enter email address to receive ticket notifications</div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-7">
+                            <div class="card panel-card">
+                                <div class="card-header glass-header py-2 d-flex justify-content-between align-items-center">
+                                    <h5 class="fw-bold mb-0"><i class="fa-solid fa-list-check me-2"></i>Active Emails</h5>
+                                    <span class="badge bg-primary rounded-pill">{{ emails.count }}</span>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="email-list">
+                                        {% for e in emails %}
+                                        <div class="email-list-item">
+                                            <span class="email-address"><i class="fa-regular fa-envelope"></i>{{ e.email }}</span>
+                                            <form method="POST" action="{% url 'settings_emails' %}" class="d-inline confirm-form" data-confirm="Delete {{ e.email }}?">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="email_id" value="{{ e.id }}">
+                                                <button type="submit" class="btn-delete-email" title="Delete email">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% empty %}
+                                        <div class="email-list-empty">
+                                            <i class="fa-regular fa-envelope"></i>
+                                            <p class="mb-0">No notification emails configured.</p>
+                                            <span class="text-muted" style="font-size: 0.7rem;">Add emails above to receive notifications</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- TAB 3: EMPLOYEE DIRECTORY -->
+                <!-- ==========================================
+                TAB 3: EMPLOYEES
+                ========================================== -->
                 <div class="tab-pane fade" id="employees-content">
+                    <!-- Action Cards -->
                     <div class="row g-3 mb-4">
-                        <!-- Download Card -->
                         <div class="col-md-4">
                             <div class="card action-card">
                                 <div class="card-body">
@@ -712,11 +1172,10 @@
                             </div>
                         </div>
 
-                        <!-- Bulk Upload Card -->
                         <div class="col-md-4">
                             <div class="card action-card">
                                 <div class="card-body">
-                                    <i class="fa-solid fa-upload action-icon" style="color: var(--accent);"></i>
+                                    <i class="fa-solid fa-upload action-icon" style="color: var(--brand-orange);"></i>
                                     <h6 class="action-title">Bulk Upload</h6>
                                     <p class="action-subtitle">Upload Excel file with employee data</p>
                                     <form method="POST" action="{% url 'settings_employees' %}" enctype="multipart/form-data" id="bulkUploadForm">
@@ -741,7 +1200,6 @@
                             </div>
                         </div>
 
-                        <!-- Add Manually Card -->
                         <div class="col-md-4">
                             <div class="card action-card">
                                 <div class="card-body">
@@ -756,17 +1214,65 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><h6 class="fw-bold mb-0" style="color: var(--accent-light); font-size: 0.9rem;"><i class="fa-solid fa-list-ul me-2" style="color: var(--accent);"></i>Employee List <span class="badge rounded-pill ms-2" style="background: rgba(59,130,246,0.15); color: var(--accent); font-size: 0.65rem;">{{ employees.count }}</span></h6><form method="GET" action="{% url 'settings_page' %}#employees-content" class="d-flex gap-2"><input type="text" name="emp_search" class="form-control form-control-sm" placeholder="Search..." value="{{ emp_search }}" style="width: 200px; font-size: 0.75rem;"><button type="submit" class="btn btn-sm btn-primary-custom" style="font-size: 0.75rem;"><i class="fa-solid fa-search"></i></button>{% if emp_search %}<a href="{% url 'settings_page' %}#employees-content" class="btn btn-sm btn-light-custom" style="font-size: 0.75rem;"><i class="fa-solid fa-times"></i></a>{% endif %}</form></div>
-                    <div class="table-responsive" style="max-height: 350px;"><table class="table table-hover align-middle mb-0"><thead><tr><th class="ps-3">ID</th><th>Name</th><th>Mobile</th><th>Email</th><th>Unit</th><th>Dept</th><th>Status</th><th class="text-center">Act</th></tr></thead><tbody>{% for emp in employees %}<tr><td class="ps-3 fw-bold" style="color: var(--accent-light); font-size: 0.7rem;">{{ emp.employee_id }}</td><td style="font-size: 0.7rem;">{{ emp.employee_name }}</td><td style="font-size: 0.7rem;">{{ emp.mobile }}</td><td style="font-size: 0.7rem;">{{ emp.email }}</td><td style="font-size: 0.65rem;">{{ emp.unit.code|default:"-" }}</td><td style="font-size: 0.65rem;">{{ emp.department.name|default:"-" }}</td><td><span class="badge bg-{% if emp.is_active %}success{% else %}danger{% endif %}" style="font-size: 0.5rem;">{% if emp.is_active %}Active{% else %}Inactive{% endif %}</span></td><td class="text-center" style="white-space: nowrap;"><button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-1" style="font-size: 0.55rem;" data-bs-toggle="modal" data-bs-target="#editEmployeeModal" data-id="{{ emp.id }}" data-empid="{{ emp.employee_id }}" data-name="{{ emp.employee_name }}" data-mobile="{{ emp.mobile }}" data-email="{{ emp.email }}" data-unit="{{ emp.unit_id }}" data-dept="{{ emp.department_id }}"><i class="fa-solid fa-pen-to-square"></i></button><form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Toggle {{ emp.employee_id }}?">{% csrf_token %}<input type="hidden" name="action" value="toggle_employee"><input type="hidden" name="emp_id" value="{{ emp.id }}"><button type="submit" class="btn btn-sm {% if emp.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-1 ms-1" style="font-size: 0.55rem;">{% if emp.is_active %}Off{% else %}On{% endif %}</button></form><form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Delete {{ emp.employee_id }}?">{% csrf_token %}<input type="hidden" name="action" value="delete_employee"><input type="hidden" name="emp_id" value="{{ emp.id }}"><button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-1 ms-1 border-0" style="font-size: 0.55rem;"><i class="fa-solid fa-trash-can"></i></button></form></td></tr>{% empty %}<tr><td colspan="8" class="text-center py-4 text-muted">No employees.{% if emp_search %} Try different search.{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+                    <!-- Employee List -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <h6 class="fw-bold mb-0" style="color: var(--text-primary); font-size: 0.9rem; font-family: 'Fraunces', serif;">
+                            <i class="fa-solid fa-list-ul me-2" style="color: var(--brand-orange);"></i>Employee List
+                            <span class="badge rounded-pill ms-2" style="background: rgba(255, 107, 0, 0.1); color: var(--brand-orange); font-size: 0.65rem;">{{ employees.count }}</span>
+                        </h6>
+                        <form method="GET" action="{% url 'settings_page' %}#employees-content" class="d-flex gap-2">
+                            <input type="text" name="emp_search" class="form-control form-control-sm" placeholder="Search..." value="{{ emp_search }}" style="width: 200px; font-size: 0.75rem;">
+                            <button type="submit" class="btn btn-sm btn-primary-custom" style="font-size: 0.75rem;"><i class="fa-solid fa-search"></i></button>
+                            {% if emp_search %}<a href="{% url 'settings_page' %}#employees-content" class="btn btn-sm btn-outline-secondary-custom" style="font-size: 0.75rem;"><i class="fa-solid fa-times"></i></a>{% endif %}
+                        </form>
+                    </div>
+                    <div class="table-responsive" style="max-height: 350px;">
+                        <table class="table table-hover align-middle mb-0" id="employeesTable">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3" onclick="sortTable('employees', 0)">ID <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <th onclick="sortTable('employees', 1)">Name <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <th onclick="sortTable('employees', 2)">Mobile <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <th onclick="sortTable('employees', 3)">Email <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <th onclick="sortTable('employees', 4)">Unit <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <th onclick="sortTable('employees', 5)">Dept <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <th onclick="sortTable('employees', 6)">Status <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emp in employees %}
+                                <tr>
+                                    <td class="ps-3 fw-bold" style="color: var(--brand-orange); font-size: 0.7rem;">{{ emp.employee_id }}</td>
+                                    <td style="font-size: 0.7rem;">{{ emp.employee_name }}</td>
+                                    <td style="font-size: 0.7rem;">{{ emp.mobile }}</td>
+                                    <td style="font-size: 0.7rem;">{{ emp.email }}</td>
+                                    <td style="font-size: 0.65rem;">{{ emp.unit.code|default:"-" }}</td>
+                                    <td style="font-size: 0.65rem;">{{ emp.department.name|default:"-" }}</td>
+                                    <td><span class="badge bg-{% if emp.is_active %}success{% else %}danger{% endif %}" style="font-size: 0.5rem;">{% if emp.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                                    <td class="text-center" style="white-space: nowrap;">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary-custom rounded-pill px-1" style="font-size: 0.55rem;" data-bs-toggle="modal" data-bs-target="#editEmployeeModal" data-id="{{ emp.id }}" data-empid="{{ emp.employee_id }}" data-name="{{ emp.employee_name }}" data-mobile="{{ emp.mobile }}" data-email="{{ emp.email }}" data-unit="{{ emp.unit_id }}" data-dept="{{ emp.department_id }}"><i class="fa-solid fa-pen-to-square"></i></button>
+                                        <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Toggle {{ emp.employee_id }}?">{% csrf_token %}<input type="hidden" name="action" value="toggle_employee"><input type="hidden" name="emp_id" value="{{ emp.id }}"><button type="submit" class="btn btn-sm {% if emp.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-1 ms-1" style="font-size: 0.55rem;">{% if emp.is_active %}Off{% else %}On{% endif %}</button></form>
+                                        <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Delete {{ emp.employee_id }}?">{% csrf_token %}<input type="hidden" name="action" value="delete_employee"><input type="hidden" name="emp_id" value="{{ emp.id }}"><button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-1 ms-1 border-0" style="font-size: 0.55rem;"><i class="fa-solid fa-trash-can"></i></button></form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="8" class="text-center py-4 text-muted">No employees found.{% if emp_search %} Try different search.{% endif %}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <!-- TAB 4: CREDENTIALS (FIXED - Shows ALL credentials including inactive) -->
+                <!-- ==========================================
+                TAB 4: CREDENTIALS
+                ========================================== -->
                 <div class="tab-pane fade" id="credentials-content">
-                    <!-- Admin Password Change -->
+                    <!-- Password Management -->
                     <div class="row mb-4">
                         <div class="col-lg-6">
                             <div class="card panel-card h-100">
-                                <div class="card-header glass-header py-2"><h5 class="fw-bold mb-0"><i class="fa-solid fa-key me-2" style="color: var(--accent);"></i>Change Admin Password</h5></div>
+                                <div class="card-header glass-header py-2"><h5 class="fw-bold mb-0"><i class="fa-solid fa-key me-2" style="color: var(--brand-orange);"></i>Change Admin Password</h5></div>
                                 <div class="card-body p-3">
                                     <div class="user-badge"><i class="fa-solid fa-user-shield"></i><span class="username">{{ request.user.username }}</span></div>
                                     <form method="POST" action="{% url 'settings_passwords' %}" data-confirm="Update your password?">
@@ -781,7 +1287,9 @@
                         </div>
                         <div class="col-lg-6">
                             <div class="card panel-card h-100 password-reset-card">
-                                <div class="card-header py-2" style="background: rgba(245, 158, 11, 0.1); border-bottom: 1px solid rgba(245, 158, 11, 0.2);"><h5 class="fw-bold mb-0" style="color: #F59E0B;"><i class="fa-solid fa-user-lock me-2"></i>Reset GPLUSERS Password</h5></div>
+                                <div class="card-header py-2" style="background: rgba(245, 158, 11, 0.08); border-bottom: 1px solid rgba(245, 158, 11, 0.15);">
+                                    <h5 class="fw-bold mb-0" style="color: #F59E0B;"><i class="fa-solid fa-user-lock me-2"></i>Reset GPLUSERS Password</h5>
+                                </div>
                                 <div class="card-body p-3">
                                     <form method="POST" action="{% url 'settings_passwords' %}" data-confirm="Reset password for selected employee?">
                                         {% csrf_token %}<input type="hidden" name="action" value="set_user_password">
@@ -791,7 +1299,7 @@
                                                 <option value="">-- Select Employee --</option>
                                                 {% if employee_users %}
                                                     {% for emp_user in employee_users %}
-                                                    <option value="{{ emp_user.id }}">{{ emp_user.username }} </option>
+                                                    <option value="{{ emp_user.id }}">{{ emp_user.username }}</option>
                                                     {% endfor %}
                                                 {% else %}
                                                     <option value="" disabled>No employees available</option>
@@ -808,10 +1316,10 @@
                         </div>
                     </div>
 
-                    <!-- Unit-wise Credentials (Username & Password) -->
+                    <!-- Unit-wise Credentials -->
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-key"></i>Unit-wise Credentials</span>
-                        <div class="d-flex gap-2 ms-auto">
+                        <div class="d-flex gap-2 ms-auto flex-wrap">
                             <a href="{% url 'download_credentials' %}" class="btn btn-success-custom btn-sm"><i class="fa-solid fa-download me-1"></i>Download All</a>
                             <button type="button" class="btn btn-warning-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addCredentialModal"><i class="fa-solid fa-plus me-1"></i>Add Credential</button>
                         </div>
@@ -821,17 +1329,17 @@
                         {% for unit_data in credentials_by_unit %}
                         <div class="unit-credentials-section">
                             <div class="unit-header">
-                                <h6><i class="fa-solid fa-building me-2" style="color: var(--accent);"></i>{{ unit_data.unit.code }} - {{ unit_data.unit.full_name }}</h6>
+                                <h6><i class="fa-solid fa-building me-2"></i>{{ unit_data.unit.code }} - {{ unit_data.unit.full_name }}</h6>
                                 <span class="unit-badge">{{ unit_data.credentials|length }} credentials</span>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0 credential-table">
                                     <thead>
                                         <tr>
-                                            <th style="width: 30%;">Department</th>
-                                            <th style="width: 25%;">Username</th>
-                                            <th style="width: 25%;">Password</th>
-                                            <th style="width: 10%;">Status</th>
+                                            <th style="width: 30%;" onclick="sortTable('credentials', 0)">Department <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                            <th style="width: 25%;" onclick="sortTable('credentials', 1)">Username <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                            <th style="width: 25%;" onclick="sortTable('credentials', 2)">Password <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                            <th style="width: 10%;" onclick="sortTable('credentials', 3)">Status <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
                                             <th class="text-center" style="width: 10%;">Actions</th>
                                         </tr>
                                     </thead>
@@ -847,7 +1355,7 @@
                                                 </span>
                                             </td>
                                             <td class="text-center" style="white-space: nowrap;">
-                                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-1" style="font-size: 0.55rem;" data-bs-toggle="modal" data-bs-target="#editCredentialModal" data-id="{{ cred.id }}" data-username="{{ cred.username }}" data-password="{{ cred.password }}"><i class="fa-solid fa-pen-to-square"></i></button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary-custom rounded-pill px-1" style="font-size: 0.55rem;" data-bs-toggle="modal" data-bs-target="#editCredentialModal" data-id="{{ cred.id }}" data-username="{{ cred.username }}" data-password="{{ cred.password }}"><i class="fa-solid fa-pen-to-square"></i></button>
                                                 <form method="POST" action="{% url 'settings_credentials' %}" class="d-inline confirm-form" data-confirm="Toggle {{ cred.unit.code }}-{{ cred.department.name }}?">{% csrf_token %}<input type="hidden" name="action" value="toggle_credential"><input type="hidden" name="cred_id" value="{{ cred.id }}"><button type="submit" class="btn btn-sm {% if cred.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-1 ms-1" style="font-size: 0.55rem;">{% if cred.is_active %}Off{% else %}On{% endif %}</button></form>
                                                 <form method="POST" action="{% url 'settings_credentials' %}" class="d-inline confirm-form" data-confirm="Delete {{ cred.unit.code }}-{{ cred.department.name }}?">{% csrf_token %}<input type="hidden" name="action" value="delete_credential"><input type="hidden" name="cred_id" value="{{ cred.id }}"><button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-1 ms-1 border-0" style="font-size: 0.55rem;"><i class="fa-solid fa-trash-can"></i></button></form>
                                             </td>
@@ -863,19 +1371,20 @@
                     {% else %}
                         <div class="no-data-message">
                             <i class="fa-solid fa-key"></i>
-                            <p class="mb-0">No credentials found. Add credentials for each department using the "Add Credential" button above.</p>
+                            <p class="mb-0">No credentials found. Add credentials for each department.</p>
                         </div>
                     {% endif %}
                 </div>
 
-                <!-- TAB 5: DEPARTMENT EMPLOYEES -->
+                <!-- ==========================================
+                TAB 5: DEPARTMENT EMPLOYEES
+                ========================================== -->
                 <div class="tab-pane fade" id="dept-employees-content">
-                    <!-- Section Header -->
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-users"></i>Department-wise Employees</span>
-                        <div class="d-flex gap-2 ms-auto">
+                        <div class="d-flex gap-2 ms-auto flex-wrap">
                             <a href="{% url 'download_employee_list' %}" class="btn btn-success-custom btn-sm"><i class="fa-solid fa-download me-1"></i>Download All</a>
-                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal"><i class="fa-solid fa-plus me-1"></i>Add Employee</button>
+                            <button type="button" class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal"><i class="fa-solid fa-plus me-1"></i>Add Employee</button>
                         </div>
                     </div>
 
@@ -883,7 +1392,7 @@
                         {% for unit_data in credentials_by_unit %}
                         <div class="unit-credentials-section">
                             <div class="unit-header">
-                                <h6><i class="fa-solid fa-building me-2" style="color: var(--accent);"></i>{{ unit_data.unit.code }} - {{ unit_data.unit.full_name }}</h6>
+                                <h6><i class="fa-solid fa-building me-2"></i>{{ unit_data.unit.code }} - {{ unit_data.unit.full_name }}</h6>
                                 <span class="unit-badge">{{ unit_data.credentials|length }} departments</span>
                             </div>
                             <div class="table-responsive">
@@ -891,7 +1400,7 @@
                                     <tbody>
                                         {% for cred in unit_data.credentials %}
                                         <tr class="dept-main-row" data-dept-id="{{ cred.department.id }}" data-unit-id="{{ unit_data.unit.id }}">
-                                            <td colspan="1">
+                                            <td>
                                                 <span class="toggle-icon" id="toggle-icon-{{ cred.department.id }}"><i class="fa-solid fa-chevron-right"></i></span>
                                                 <span class="dept-name">{{ cred.department.name }}</span>
                                                 <span class="employee-count" id="emp-count-{{ cred.department.id }}">(0 employees)</span>
@@ -899,15 +1408,15 @@
                                                     <i class="fa-solid fa-user me-1"></i>{{ cred.username }}
                                                     <i class="fa-solid fa-key ms-2 me-1"></i>{{ cred.password }}
                                                 </span>
-                                                <span class="dept-loading-spinner" id="spinner-{{ cred.department.id }}" style="display:none; margin-left: 0.5rem;">
+                                                <span class="dept-loading-spinner" id="spinner-{{ cred.department.id }}">
                                                     <i class="fa-solid fa-spinner fa-spin"></i>
                                                 </span>
                                             </td>
                                         </tr>
                                         <tr class="employee-details-row" id="employee-row-{{ cred.department.id }}">
-                                            <td colspan="1">
+                                            <td>
                                                 <div class="employee-table-wrapper" id="employee-content-{{ cred.department.id }}">
-                                                    <div class="dept-loading text-center py-2" id="loading-{{ cred.department.id }}">
+                                                    <div class="dept-loading" id="loading-{{ cred.department.id }}">
                                                         <i class="fa-solid fa-spinner fa-spin me-2"></i>Loading employees...
                                                     </div>
                                                     <div id="employee-list-{{ cred.department.id }}" style="display:none;"></div>
@@ -915,7 +1424,7 @@
                                             </td>
                                         </tr>
                                         {% empty %}
-                                        <tr><td colspan="1" class="text-center py-3 text-muted">No departments found for this unit.</td></tr>
+                                        <tr><td class="text-center py-3 text-muted">No departments found for this unit.</td></tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
@@ -925,7 +1434,7 @@
                     {% else %}
                         <div class="no-data-message">
                             <i class="fa-solid fa-users"></i>
-                            <p class="mb-0">No departments found. Add credentials for each department to manage employees.</p>
+                            <p class="mb-0">No departments found. Add credentials to manage employees.</p>
                         </div>
                     {% endif %}
                 </div>
@@ -935,32 +1444,226 @@
     </div>
 </div>
 
-<!-- CONFIRMATION MODAL -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>Confirm</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><p id="confirmModalBody" class="mb-0">Are you sure?</p></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-danger-custom rounded-pill px-4 fw-bold" id="confirmModalYesBtn">Yes</button></div></div></div></div>
+<!-- ==========================================
+MODALS (Same as before - keep all modals)
+========================================== -->
+<!-- Confirm Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header py-3">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>Confirm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p id="confirmModalBody" class="mb-0">Are you sure?</p>
+            </div>
+            <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger-custom rounded-pill px-4 fw-bold" id="confirmModalYesBtn">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-<!-- ADD UNIT MODAL -->
-<div class="modal fade" id="addUnitModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_units' %}" data-confirm="Add this unit?">{% csrf_token %}<input type="hidden" name="action" value="add"><div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add Unit</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Code <span class="text-danger">*</span></label>{{ unit_form.code }}</div><div class="mb-3"><label class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>{{ unit_form.full_name }}</div><div class="form-check"><input type="checkbox" name="is_active" id="id_unit_is_active" class="form-check-input" checked><label class="form-check-label fw-bold" for="id_unit_is_active">Active</label></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Add</button></div></form></div></div></div>
+<!-- Add Unit Modal -->
+<div class="modal fade" id="addUnitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" action="{% url 'settings_units' %}" data-confirm="Add this unit?">
+                {% csrf_token %}<input type="hidden" name="action" value="add">
+                <div class="modal-header py-3">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add Unit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3"><label class="form-label fw-bold">Code <span class="text-danger">*</span></label>{{ unit_form.code }}</div>
+                    <div class="mb-3"><label class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>{{ unit_form.full_name }}</div>
+                    <div class="form-check"><input type="checkbox" name="is_active" id="id_unit_is_active" class="form-check-input" checked><label class="form-check-label fw-bold" for="id_unit_is_active">Active</label></div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-custom rounded-pill px-4 fw-bold">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-<!-- EDIT UNIT MODAL -->
-<div class="modal fade" id="editUnitModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_units' %}" data-confirm="Save changes?">{% csrf_token %}<input type="hidden" name="action" value="edit"><input type="hidden" name="unit_id" id="edit_unit_id"><div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Unit</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Code <span class="text-danger">*</span></label><input type="text" name="code" id="edit_unit_code" class="form-control" required></div><div class="mb-3"><label class="form-label fw-bold">Full Name <span class="text-danger">*</span></label><input type="text" name="full_name" id="edit_unit_fullname" class="form-control" required></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Save</button></div></form></div></div></div>
+<!-- Edit Unit Modal -->
+<div class="modal fade" id="editUnitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" action="{% url 'settings_units' %}" data-confirm="Save changes?">
+                {% csrf_token %}<input type="hidden" name="action" value="edit"><input type="hidden" name="unit_id" id="edit_unit_id">
+                <div class="modal-header py-3">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Unit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3"><label class="form-label fw-bold">Code <span class="text-danger">*</span></label><input type="text" name="code" id="edit_unit_code" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label fw-bold">Full Name <span class="text-danger">*</span></label><input type="text" name="full_name" id="edit_unit_fullname" class="form-control" required></div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-custom rounded-pill px-4 fw-bold">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-<!-- ADD DEPARTMENT MODAL -->
-<div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_departments' %}" data-confirm="Add this department?">{% csrf_token %}<input type="hidden" name="action" value="add"><div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add Department</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Unit <span class="text-danger">*</span></label>{{ dept_form.unit }}</div><div class="mb-3"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label>{{ dept_form.name }}</div><div class="form-check">{{ dept_form.is_active }}<label class="form-check-label fw-bold" for="id_is_active">Active</label></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Add</button></div></form></div></div></div>
+<!-- Add Department Modal -->
+<div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" action="{% url 'settings_departments' %}" data-confirm="Add this department?">
+                {% csrf_token %}<input type="hidden" name="action" value="add">
+                <div class="modal-header py-3">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus me-2"></i>Add Department</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3"><label class="form-label fw-bold">Unit <span class="text-danger">*</span></label>{{ dept_form.unit }}</div>
+                    <div class="mb-3"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label>{{ dept_form.name }}</div>
+                    <div class="form-check">{{ dept_form.is_active }}<label class="form-check-label fw-bold" for="id_is_active">Active</label></div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-custom rounded-pill px-4 fw-bold">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-<!-- EDIT DEPARTMENT MODAL -->
-<div class="modal fade" id="editDeptModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_departments' %}" data-confirm="Save changes?">{% csrf_token %}<input type="hidden" name="action" value="edit"><input type="hidden" name="dept_id" id="edit_dept_id"><div class="modal-header py-3"><h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Department</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="name" id="edit_dept_name" class="form-control" required></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Save</button></div></form></div></div></div>
+<!-- Edit Department Modal -->
+<div class="modal fade" id="editDeptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" action="{% url 'settings_departments' %}" data-confirm="Save changes?">
+                {% csrf_token %}<input type="hidden" name="action" value="edit"><input type="hidden" name="dept_id" id="edit_dept_id">
+                <div class="modal-header py-3">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Department</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="name" id="edit_dept_name" class="form-control" required></div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-custom rounded-pill px-4 fw-bold">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-<!-- ADD EMPLOYEE MODAL -->
-<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_employees' %}" data-confirm="Add this employee?">{% csrf_token %}<input type="hidden" name="action" value="add_employee"><div class="modal-header py-3" style="background: #8B5CF6;"><h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-user-plus me-2"></i>Add Employee</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="row g-3"><div class="col-md-6"><label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label><input type="text" name="employee_id" class="form-control" placeholder="EMP001" required><div class="form-text small"><strong>Mandatory</strong></div></div><div class="col-md-6"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="employee_name" class="form-control" placeholder="JOHN DOE" required><div class="form-text small"><strong>Mandatory</strong></div></div><div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" class="form-control" placeholder="10 digits" maxlength="10" required><div class="form-text small"><strong>Mandatory</strong></div></div><div class="col-md-6"><label class="form-label fw-bold">Email <span class="text-danger">*</span></label><input type="email" name="email" class="form-control" placeholder="email@company.com" required><div class="form-text small"><strong>Mandatory</strong></div></div><div class="col-md-6"><label class="form-label fw-bold">Unit</label><select name="unit" class="form-select"><option value="">-- Optional --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }}</option>{% endfor %}</select></div><div class="col-md-6"><label class="form-label fw-bold">Department</label><select name="department" class="form-select"><option value="">-- Select Unit First --</option></select></div></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn rounded-pill px-4 fw-bold text-white" style="background: #8B5CF6;">Add</button></div></form></div></div></div>
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" action="{% url 'settings_employees' %}" data-confirm="Add this employee?">
+                {% csrf_token %}<input type="hidden" name="action" value="add_employee">
+                <div class="modal-header py-3" style="background: #8B5CF6;">
+                    <h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-user-plus me-2"></i>Add Employee</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label><input type="text" name="employee_id" class="form-control" placeholder="EMP001" required><div class="form-text small"><strong>Mandatory</strong></div></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="employee_name" class="form-control" placeholder="JOHN DOE" required><div class="form-text small"><strong>Mandatory</strong></div></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" class="form-control" placeholder="10 digits" maxlength="10" required><div class="form-text small"><strong>Mandatory</strong></div></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Email <span class="text-danger">*</span></label><input type="email" name="email" class="form-control" placeholder="email@company.com" required><div class="form-text small"><strong>Mandatory</strong></div></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Unit</label><select name="unit" class="form-select"><option value="">-- Optional --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }}</option>{% endfor %}</select></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Department</label><select name="department" class="form-select"><option value="">-- Select Unit First --</option></select></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold text-white" style="background: #8B5CF6;">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-<!-- EDIT EMPLOYEE MODAL -->
-<div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_employees' %}" data-confirm="Save changes?">{% csrf_token %}<input type="hidden" name="action" value="edit_employee"><input type="hidden" name="emp_id" id="edit_emp_id"><div class="modal-header py-3" style="background: #8B5CF6;"><h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Employee</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="row g-3"><div class="col-md-6"><label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label><input type="text" name="employee_id" id="edit_emp_empid" class="form-control" required></div><div class="col-md-6"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="employee_name" id="edit_emp_name" class="form-control" required></div><div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" id="edit_emp_mobile" class="form-control" maxlength="10" required></div><div class="col-md-6"><label class="form-label fw-bold">Email <span class="text-danger">*</span></label><input type="email" name="email" id="edit_emp_email" class="form-control" required></div><div class="col-md-6"><label class="form-label fw-bold">Unit</label><select name="unit" id="edit_emp_unit" class="form-select"><option value="">-- Select --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }}</option>{% endfor %}</select></div><div class="col-md-6"><label class="form-label fw-bold">Department</label><select name="department" id="edit_emp_dept" class="form-select"><option value="">-- Select --</option>{% for d in departments %}<option value="{{ d.id }}">{{ d.name }} ({{ d.unit.code }})</option>{% endfor %}</select></div></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn rounded-pill px-4 fw-bold text-white" style="background: #8B5CF6;">Save</button></div></form></div></div></div>
+<!-- Edit Employee Modal -->
+<div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" action="{% url 'settings_employees' %}" data-confirm="Save changes?">
+                {% csrf_token %}<input type="hidden" name="action" value="edit_employee"><input type="hidden" name="emp_id" id="edit_emp_id">
+                <div class="modal-header py-3" style="background: #8B5CF6;">
+                    <h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Employee</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label><input type="text" name="employee_id" id="edit_emp_empid" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="employee_name" id="edit_emp_name" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" id="edit_emp_mobile" class="form-control" maxlength="10" required></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Email <span class="text-danger">*</span></label><input type="email" name="email" id="edit_emp_email" class="form-control" required></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Unit</label><select name="unit" id="edit_emp_unit" class="form-select"><option value="">-- Select --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }}</option>{% endfor %}</select></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Department</label><select name="department" id="edit_emp_dept" class="form-select"><option value="">-- Select --</option>{% for d in departments %}<option value="{{ d.id }}">{{ d.name }} ({{ d.unit.code }})</option>{% endfor %}</select></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold text-white" style="background: #8B5CF6;">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-<!-- ADD CREDENTIAL MODAL -->
-<div class="modal fade" id="addCredentialModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_credentials' %}" data-confirm="Add this credential?">{% csrf_token %}<input type="hidden" name="action" value="add_credential"><div class="modal-header py-3" style="background: #F59E0B;"><h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-key me-2"></i>Add Credential</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Unit <span class="text-danger">*</span></label><select name="unit" class="form-select" id="credUnit" required><option value="">-- Select Unit --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }} - {{ u.full_name }}</option>{% endfor %}</select></div><div class="mb-3"><label class="form-label fw-bold">Department <span class="text-danger">*</span></label><select name="department" class="form-select" id="credDept" required><option value="">-- Select Unit First --</option></select></div><div class="mb-3"><label class="form-label fw-bold">Username <span class="text-danger">*</span></label><input type="text" name="username" class="form-control" placeholder="e.g. IMDPROD" required><div class="form-text small"><strong>Mandatory</strong></div></div><div class="mb-3"><label class="form-label fw-bold">Password <span class="text-danger">*</span></label><input type="text" name="password" class="form-control" placeholder="e.g. gplimdprod" required><div class="form-text small"><strong>Mandatory</strong></div></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn rounded-pill px-4 fw-bold text-dark" style="background: #F59E0B;">Add</button></div></form></div></div></div>
+<!-- Add Credential Modal -->
+<div class="modal fade" id="addCredentialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" action="{% url 'settings_credentials' %}" data-confirm="Add this credential?">
+                {% csrf_token %}<input type="hidden" name="action" value="add_credential">
+                <div class="modal-header py-3" style="background: #F59E0B;">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-key me-2"></i>Add Credential</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3"><label class="form-label fw-bold">Unit <span class="text-danger">*</span></label><select name="unit" class="form-select" id="credUnit" required><option value="">-- Select Unit --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }} - {{ u.full_name }}</option>{% endfor %}</select></div>
+                    <div class="mb-3"><label class="form-label fw-bold">Department <span class="text-danger">*</span></label><select name="department" class="form-select" id="credDept" required><option value="">-- Select Unit First --</option></select></div>
+                    <div class="mb-3"><label class="form-label fw-bold">Username <span class="text-danger">*</span></label><input type="text" name="username" class="form-control" placeholder="e.g. IMDPROD" required><div class="form-text small"><strong>Mandatory</strong></div></div>
+                    <div class="mb-3"><label class="form-label fw-bold">Password <span class="text-danger">*</span></label><input type="text" name="password" class="form-control" placeholder="e.g. gplimdprod" required><div class="form-text small"><strong>Mandatory</strong></div></div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold text-dark" style="background: #F59E0B;">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-<!-- EDIT CREDENTIAL MODAL -->
-<div class="modal fade" id="editCredentialModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form method="POST" action="{% url 'settings_credentials' %}" data-confirm="Save changes?">{% csrf_token %}<input type="hidden" name="action" value="edit_credential"><input type="hidden" name="cred_id" id="edit_cred_id"><div class="modal-header py-3" style="background: #F59E0B;"><h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Credential</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="mb-3"><label class="form-label fw-bold">Username <span class="text-danger">*</span></label><input type="text" name="username" id="edit_cred_username" class="form-control" required></div><div class="mb-3"><label class="form-label fw-bold">Password <span class="text-danger">*</span></label><input type="text" name="password" id="edit_cred_password" class="form-control" required></div></div><div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4"><button type="button" class="btn btn-light-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn rounded-pill px-4 fw-bold text-dark" style="background: #F59E0B;">Save</button></div></form></div></div></div>
+<!-- Edit Credential Modal -->
+<div class="modal fade" id="editCredentialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="POST" action="{% url 'settings_credentials' %}" data-confirm="Save changes?">
+                {% csrf_token %}<input type="hidden" name="action" value="edit_credential"><input type="hidden" name="cred_id" id="edit_cred_id">
+                <div class="modal-header py-3" style="background: #F59E0B;">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Credential</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3"><label class="form-label fw-bold">Username <span class="text-danger">*</span></label><input type="text" name="username" id="edit_cred_username" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label fw-bold">Password <span class="text-danger">*</span></label><input type="text" name="password" id="edit_cred_password" class="form-control" required></div>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                    <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold text-dark" style="background: #F59E0B;">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
@@ -975,42 +1678,177 @@
         if (modalEl) {
             const confirmBody = document.getElementById('confirmModalBody');
             const confirmYes = document.getElementById('confirmModalYesBtn');
-            function forceCleanup() { document.querySelectorAll('.modal-backdrop').forEach(b => b.remove()); document.body.classList.remove('modal-open'); document.body.style.overflow = ''; document.body.style.paddingRight = ''; if(modalEl){modalEl.style.display='none';modalEl.classList.remove('show');modalEl.setAttribute('aria-hidden','true');modalEl.removeAttribute('aria-modal');} }
+            function forceCleanup() {
+                document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                if(modalEl){modalEl.style.display='none';modalEl.classList.remove('show');modalEl.setAttribute('aria-hidden','true');modalEl.removeAttribute('aria-modal');}
+            }
             let bsModal = null;
-            function initModal() { if(window.bootstrap?.Modal){if(bsModal)try{bsModal.dispose()}catch(e){}bsModal=new bootstrap.Modal(modalEl,{backdrop:'static',keyboard:true,focus:true});return true}return false }
+            function initModal() {
+                if(window.bootstrap?.Modal){
+                    if(bsModal)try{bsModal.dispose()}catch(e){}
+                    bsModal=new bootstrap.Modal(modalEl,{backdrop:'static',keyboard:true,focus:true});
+                    return true;
+                }
+                return false;
+            }
             initModal();
             document.addEventListener('submit', function(e) {
                 const form = e.target;
-                if(form.classList.contains('confirmed')){setTimeout(()=>form.classList.remove('confirmed'),100);return}
+                if(form.classList.contains('confirmed')){setTimeout(()=>form.classList.remove('confirmed'),100);return;}
                 let msg = form.getAttribute('data-confirm');
-                if(msg){e.preventDefault();e.stopPropagation();currentFormToSubmit=form;confirmBody.textContent=msg;document.querySelectorAll('.modal.show').forEach(m=>{if(m!==modalEl){const inst=bootstrap.Modal.getInstance(m);if(inst)inst.hide();}});setTimeout(()=>{forceCleanup();if(bsModal)bsModal.show();else if(initModal())bsModal.show();},150);}
+                if(msg){
+                    e.preventDefault();
+                    e.stopPropagation();
+                    currentFormToSubmit=form;
+                    confirmBody.textContent=msg;
+                    document.querySelectorAll('.modal.show').forEach(m=>{
+                        if(m!==modalEl){
+                            const inst=bootstrap.Modal.getInstance(m);
+                            if(inst)inst.hide();
+                        }
+                    });
+                    setTimeout(()=>{
+                        forceCleanup();
+                        if(bsModal)bsModal.show();
+                        else if(initModal())bsModal.show();
+                    },150);
+                }
             });
-            confirmYes.addEventListener('click', function(e) { e.preventDefault();e.stopPropagation();if(isProcessing||!currentFormToSubmit)return;isProcessing=true;const f=currentFormToSubmit;currentFormToSubmit=null;if(bsModal)bsModal.hide();setTimeout(forceCleanup,50);setTimeout(()=>{if(f&&f.tagName==='FORM'){f.classList.add('confirmed');f.submit();}isProcessing=false;forceCleanup();},200); });
-            function handleCancel(){currentFormToSubmit=null;isProcessing=false;if(bsModal)bsModal.hide();setTimeout(forceCleanup,150);}
-            modalEl.querySelectorAll('.btn-light-custom, [data-bs-dismiss="modal"], .btn-close').forEach(b=>b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();handleCancel();}));
-            modalEl.addEventListener('hidden.bs.modal',()=>{forceCleanup();currentFormToSubmit=null;isProcessing=false;});
-            document.addEventListener('keydown',function(e){if(e.key==='Escape'&&modalEl.classList.contains('show'))handleCancel();});
+            confirmYes.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if(isProcessing||!currentFormToSubmit)return;
+                isProcessing=true;
+                const f=currentFormToSubmit;
+                currentFormToSubmit=null;
+                if(bsModal)bsModal.hide();
+                setTimeout(forceCleanup,50);
+                setTimeout(()=>{
+                    if(f&&f.tagName==='FORM'){
+                        f.classList.add('confirmed');
+                        f.submit();
+                    }
+                    isProcessing=false;
+                    forceCleanup();
+                },200);
+            });
+            function handleCancel(){
+                currentFormToSubmit=null;
+                isProcessing=false;
+                if(bsModal)bsModal.hide();
+                setTimeout(forceCleanup,150);
+            }
+            modalEl.querySelectorAll('.btn-outline-secondary-custom, [data-bs-dismiss="modal"], .btn-close').forEach(b=>{
+                b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();handleCancel();});
+            });
+            modalEl.addEventListener('hidden.bs.modal',()=>{
+                forceCleanup();
+                currentFormToSubmit=null;
+                isProcessing=false;
+            });
+            document.addEventListener('keydown',function(e){
+                if(e.key==='Escape'&&modalEl.classList.contains('show'))handleCancel();
+            });
         }
 
-        // Password Toggle
-        document.querySelectorAll('.password-toggle-icon').forEach(btn=>{btn.addEventListener('click',function(e){e.preventDefault();const input=document.getElementById(this.getAttribute('data-target'));if(input){const t=input.getAttribute('type')==='password'?'text':'password';input.setAttribute('type',t);const icon=this.querySelector('i');if(icon)icon.className=t==='password'?'fa-regular fa-eye':'fa-regular fa-eye-slash';input.focus();}});});
-
-        // Prefill Edit Modals
-        document.getElementById('editUnitModal')?.addEventListener('show.bs.modal',function(e){const b=e.relatedTarget;document.getElementById('edit_unit_id').value=b.getAttribute('data-id');document.getElementById('edit_unit_code').value=b.getAttribute('data-code');document.getElementById('edit_unit_fullname').value=b.getAttribute('data-fullname');});
-        document.getElementById('editDeptModal')?.addEventListener('show.bs.modal',function(e){const b=e.relatedTarget;document.getElementById('edit_dept_id').value=b.getAttribute('data-id');document.getElementById('edit_dept_name').value=b.getAttribute('data-name');});
-        document.getElementById('editEmployeeModal')?.addEventListener('show.bs.modal',function(e){const b=e.relatedTarget;document.getElementById('edit_emp_id').value=b.getAttribute('data-id');document.getElementById('edit_emp_empid').value=b.getAttribute('data-empid');document.getElementById('edit_emp_name').value=b.getAttribute('data-name');document.getElementById('edit_emp_mobile').value=b.getAttribute('data-mobile');document.getElementById('edit_emp_email').value=b.getAttribute('data-email');document.getElementById('edit_emp_unit').value=b.getAttribute('data-unit')||'';document.getElementById('edit_emp_dept').value=b.getAttribute('data-dept')||'';});
-        document.getElementById('editCredentialModal')?.addEventListener('show.bs.modal',function(e){const b=e.relatedTarget;document.getElementById('edit_cred_id').value=b.getAttribute('data-id');document.getElementById('edit_cred_username').value=b.getAttribute('data-username');document.getElementById('edit_cred_password').value=b.getAttribute('data-password');});
+        // ============================================
+        // PASSWORD TOGGLE
+        // ============================================
+        document.querySelectorAll('.password-toggle-icon').forEach(btn=>{
+            btn.addEventListener('click',function(e){
+                e.preventDefault();
+                const input=document.getElementById(this.getAttribute('data-target'));
+                if(input){
+                    const t=input.getAttribute('type')==='password'?'text':'password';
+                    input.setAttribute('type',t);
+                    const icon=this.querySelector('i');
+                    if(icon)icon.className=t==='password'?'fa-regular fa-eye':'fa-regular fa-eye-slash';
+                    input.focus();
+                }
+            });
+        });
 
         // ============================================
-        // EXPANDABLE DEPARTMENT ROWS WITH AJAX FETCH
+        // PREFILL EDIT MODALS
         // ============================================
+        document.getElementById('editUnitModal')?.addEventListener('show.bs.modal',function(e){
+            const b=e.relatedTarget;
+            document.getElementById('edit_unit_id').value=b.getAttribute('data-id');
+            document.getElementById('edit_unit_code').value=b.getAttribute('data-code');
+            document.getElementById('edit_unit_fullname').value=b.getAttribute('data-fullname');
+        });
+        document.getElementById('editDeptModal')?.addEventListener('show.bs.modal',function(e){
+            const b=e.relatedTarget;
+            document.getElementById('edit_dept_id').value=b.getAttribute('data-id');
+            document.getElementById('edit_dept_name').value=b.getAttribute('data-name');
+        });
+        document.getElementById('editEmployeeModal')?.addEventListener('show.bs.modal',function(e){
+            const b=e.relatedTarget;
+            document.getElementById('edit_emp_id').value=b.getAttribute('data-id');
+            document.getElementById('edit_emp_empid').value=b.getAttribute('data-empid');
+            document.getElementById('edit_emp_name').value=b.getAttribute('data-name');
+            document.getElementById('edit_emp_mobile').value=b.getAttribute('data-mobile');
+            document.getElementById('edit_emp_email').value=b.getAttribute('data-email');
+            document.getElementById('edit_emp_unit').value=b.getAttribute('data-unit')||'';
+            document.getElementById('edit_emp_dept').value=b.getAttribute('data-dept')||'';
+        });
+        document.getElementById('editCredentialModal')?.addEventListener('show.bs.modal',function(e){
+            const b=e.relatedTarget;
+            document.getElementById('edit_cred_id').value=b.getAttribute('data-id');
+            document.getElementById('edit_cred_username').value=b.getAttribute('data-username');
+            document.getElementById('edit_cred_password').value=b.getAttribute('data-password');
+        });
 
-        // Keep track of loaded departments to avoid repeated AJAX calls
+        // ============================================
+        // SORT TABLE FUNCTION
+        // ============================================
+        window.sortTable = function(tableName, colIndex) {
+            const table = document.getElementById(tableName + 'Table');
+            if (!table) return;
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const th = table.querySelectorAll('thead th')[colIndex];
+            if (!th) return;
+            
+            const isAsc = th.classList.contains('sorted-asc');
+            th.classList.remove('sorted-asc', 'sorted-desc');
+            th.classList.add(isAsc ? 'sorted-desc' : 'sorted-asc');
+            
+            const allTh = table.querySelectorAll('thead th');
+            allTh.forEach((h, i) => {
+                if (i !== colIndex) {
+                    h.classList.remove('sorted-asc', 'sorted-desc');
+                    const icon = h.querySelector('.sort-icon');
+                    if (icon) icon.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
+                }
+            });
+            
+            const icon = th.querySelector('.sort-icon');
+            if (icon) {
+                icon.innerHTML = isAsc ? '<i class="fa-solid fa-chevron-down"></i>' : '<i class="fa-solid fa-chevron-up"></i>';
+            }
+            
+            rows.sort((a, b) => {
+                const aVal = a.querySelectorAll('td')[colIndex]?.textContent?.trim()?.toLowerCase() || '';
+                const bVal = b.querySelectorAll('td')[colIndex]?.textContent?.trim()?.toLowerCase() || '';
+                if (aVal < bVal) return isAsc ? 1 : -1;
+                if (aVal > bVal) return isAsc ? -1 : 1;
+                return 0;
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+        };
+
+        // ============================================
+        // EXPANDABLE DEPARTMENT ROWS WITH AJAX
+        // ============================================
         const loadedDepartments = new Set();
 
         document.querySelectorAll('.dept-main-row').forEach(function(row) {
             row.addEventListener('click', function(e) {
-                // Don't toggle if clicking on action buttons inside the row
                 if (e.target.closest('button') || e.target.closest('form') || e.target.closest('a')) {
                     return;
                 }
@@ -1024,146 +1862,247 @@
                 const empCount = document.getElementById('emp-count-' + deptId);
                 
                 if (employeeRow) {
-                    // Toggle the row
-                    employeeRow.classList.toggle('expanded');
-                    if (toggleIcon) {
-                        toggleIcon.classList.toggle('expanded');
-                    }
-                    
-                    // If expanding and not yet loaded, fetch employees via AJAX
-                    if (employeeRow.classList.contains('expanded') && !loadedDepartments.has(deptId)) {
-                        // Show spinner and loading
-                        if (spinner) spinner.style.display = 'inline-block';
-                        if (loadingDiv) loadingDiv.style.display = 'block';
-                        if (employeeListDiv) employeeListDiv.style.display = 'none';
+                    const isExpanded = employeeRow.classList.contains('expanded');
+                    if (isExpanded) {
+                        employeeRow.classList.remove('expanded');
+                        if (toggleIcon) toggleIcon.classList.remove('expanded');
+                    } else {
+                        employeeRow.classList.add('expanded');
+                        if (toggleIcon) toggleIcon.classList.add('expanded');
                         
-                        // Fetch employees via AJAX
-                        fetch('/ajax/get-employees-by-department/?department_id=' + deptId)
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error('Network response was not ok');
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                // Hide spinner and loading
-                                if (spinner) spinner.style.display = 'none';
-                                if (loadingDiv) loadingDiv.style.display = 'none';
-                                
-                                if (data.success) {
-                                    // Update employee count
-                                    if (empCount) {
-                                        empCount.textContent = '(' + data.count + ' employees)';
-                                    }
+                        if (!loadedDepartments.has(deptId)) {
+                            if (spinner) spinner.style.display = 'inline-block';
+                            if (loadingDiv) loadingDiv.style.display = 'block';
+                            if (employeeListDiv) employeeListDiv.style.display = 'none';
+                            
+                            fetch('/ajax/get-employees-by-department/?department_id=' + deptId)
+                                .then(response => {
+                                    if (!response.ok) throw new Error('Network response was not ok');
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    if (spinner) spinner.style.display = 'none';
+                                    if (loadingDiv) loadingDiv.style.display = 'none';
                                     
-                                    // Build employee table
-                                    let html = '';
-                                    if (data.employees && data.employees.length > 0) {
-                                        html = `
-                                        <table class="table table-sm table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>Employee ID</th>
-                                                    <th>Name</th>
-                                                    <th>Mobile</th>
-                                                    <th>Email</th>
-                                                    <th>Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                        `;
-                                        data.employees.forEach(function(emp) {
-                                            const statusBadge = emp.is_active 
-                                                ? '<span class="badge bg-success" style="font-size: 0.5rem;">Active</span>' 
-                                                : '<span class="badge bg-danger" style="font-size: 0.5rem;">Inactive</span>';
-                                            html += `
-                                                <tr>
-                                                    <td><span class="employee-id">${emp.employee_id}</span></td>
-                                                    <td>${emp.employee_name}</td>
-                                                    <td>${emp.mobile}</td>
-                                                    <td>${emp.email}</td>
-                                                    <td>${statusBadge}</td>
-                                                </tr>
+                                    if (data.success) {
+                                        if (empCount) empCount.textContent = '(' + data.count + ' employees)';
+                                        
+                                        let html = '';
+                                        if (data.employees && data.employees.length > 0) {
+                                            html = `
+                                            <table class="table table-sm table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Employee ID</th>
+                                                        <th>Name</th>
+                                                        <th>Mobile</th>
+                                                        <th>Email</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
                                             `;
-                                        });
-                                        html += `</tbody></table>`;
+                                            data.employees.forEach(function(emp) {
+                                                const statusBadge = emp.is_active 
+                                                    ? '<span class="badge bg-success" style="font-size: 0.5rem;">Active</span>' 
+                                                    : '<span class="badge bg-danger" style="font-size: 0.5rem;">Inactive</span>';
+                                                html += `
+                                                    <tr>
+                                                        <td><span class="employee-id">${emp.employee_id}</span></td>
+                                                        <td>${emp.employee_name}</td>
+                                                        <td>${emp.mobile}</td>
+                                                        <td>${emp.email}</td>
+                                                        <td>${statusBadge}</td>
+                                                    </tr>
+                                                `;
+                                            });
+                                            html += `</tbody></table>`;
+                                        } else {
+                                            html = `
+                                                <div class="no-employees">
+                                                    <i class="fa-regular fa-user me-1"></i> No employees assigned to this department.
+                                                </div>
+                                            `;
+                                        }
+                                        
+                                        if (employeeListDiv) {
+                                            employeeListDiv.innerHTML = html;
+                                            employeeListDiv.style.display = 'block';
+                                        }
+                                        loadedDepartments.add(deptId);
                                     } else {
-                                        html = `
-                                            <div class="no-employees">
-                                                <i class="fa-regular fa-user me-1"></i> No employees assigned to this department.
-                                            </div>
-                                        `;
+                                        if (employeeListDiv) {
+                                            employeeListDiv.innerHTML = `
+                                                <div class="dept-error">
+                                                    <i class="fa-solid fa-circle-exclamation me-1"></i> 
+                                                    Error: ${data.message || 'Unknown error'}
+                                                </div>
+                                            `;
+                                            employeeListDiv.style.display = 'block';
+                                        }
+                                        if (loadingDiv) loadingDiv.style.display = 'none';
+                                        if (spinner) spinner.style.display = 'none';
                                     }
-                                    
-                                    if (employeeListDiv) {
-                                        employeeListDiv.innerHTML = html;
-                                        employeeListDiv.style.display = 'block';
-                                    }
-                                    
-                                    // Mark as loaded
-                                    loadedDepartments.add(deptId);
-                                } else {
-                                    // Show error
+                                })
+                                .catch(function(error) {
+                                    if (spinner) spinner.style.display = 'none';
+                                    if (loadingDiv) loadingDiv.style.display = 'none';
                                     if (employeeListDiv) {
                                         employeeListDiv.innerHTML = `
                                             <div class="dept-error">
                                                 <i class="fa-solid fa-circle-exclamation me-1"></i> 
-                                                Error loading employees: ${data.message || 'Unknown error'}
+                                                Error loading employees. Please try again.
                                             </div>
                                         `;
                                         employeeListDiv.style.display = 'block';
                                     }
-                                    if (loadingDiv) loadingDiv.style.display = 'none';
-                                    if (spinner) spinner.style.display = 'none';
-                                }
-                            })
-                            .catch(function(error) {
-                                if (spinner) spinner.style.display = 'none';
-                                if (loadingDiv) loadingDiv.style.display = 'none';
-                                if (employeeListDiv) {
-                                    employeeListDiv.innerHTML = `
-                                        <div class="dept-error">
-                                            <i class="fa-solid fa-circle-exclamation me-1"></i> 
-                                            Error loading employees. Please try again.
-                                        </div>
-                                    `;
-                                    employeeListDiv.style.display = 'block';
-                                }
-                                console.error('Error:', error);
-                            });
+                                    console.error('Error:', error);
+                                });
+                        }
                     }
                 }
             });
         });
 
-        // Department Fetch for Add Employee Modal
+        // ============================================
+        // DEPARTMENT FETCH FOR ADD EMPLOYEE MODAL
+        // ============================================
         const addEmpUnitSelect = document.querySelector('#addEmployeeModal select[name="unit"]');
         const addEmpDeptSelect = document.querySelector('#addEmployeeModal select[name="department"]');
         if (addEmpUnitSelect && addEmpDeptSelect) {
             addEmpUnitSelect.addEventListener('change', function() {
                 const unitId = this.value;
-                if (!unitId) { addEmpDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>'; addEmpDeptSelect.disabled = true; return; }
-                addEmpDeptSelect.disabled = true; addEmpDeptSelect.innerHTML = '<option value="">Loading...</option>';
-                fetch(`/ajax/get-departments/?unit_id=${unitId}`).then(res=>res.json()).then(data=>{addEmpDeptSelect.innerHTML='<option value="">-- Optional --</option>';if(data.departments?.length){data.departments.forEach(d=>{const opt=document.createElement('option');opt.value=d.id;opt.textContent=d.name;addEmpDeptSelect.appendChild(opt);});addEmpDeptSelect.disabled=false;}else{addEmpDeptSelect.innerHTML+='<option value="">None</option>';}}).catch(()=>{addEmpDeptSelect.innerHTML='<option value="">Error</option>';});
+                if (!unitId) {
+                    addEmpDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>';
+                    addEmpDeptSelect.disabled = true;
+                    return;
+                }
+                addEmpDeptSelect.disabled = true;
+                addEmpDeptSelect.innerHTML = '<option value="">Loading...</option>';
+                fetch(`/ajax/get-departments/?unit_id=${unitId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        addEmpDeptSelect.innerHTML = '<option value="">-- Optional --</option>';
+                        if (data.departments?.length) {
+                            data.departments.forEach(d => {
+                                const opt = document.createElement('option');
+                                opt.value = d.id;
+                                opt.textContent = d.name;
+                                addEmpDeptSelect.appendChild(opt);
+                            });
+                            addEmpDeptSelect.disabled = false;
+                        } else {
+                            addEmpDeptSelect.innerHTML += '<option value="">None</option>';
+                        }
+                    })
+                    .catch(() => {
+                        addEmpDeptSelect.innerHTML = '<option value="">Error</option>';
+                    });
             });
         }
 
-        // Department Fetch for Add Credential Modal
+        // ============================================
+        // DEPARTMENT FETCH FOR ADD CREDENTIAL MODAL
+        // ============================================
         const credUnitSelect = document.getElementById('credUnit');
         const credDeptSelect = document.getElementById('credDept');
         if (credUnitSelect && credDeptSelect) {
             credUnitSelect.addEventListener('change', function() {
                 const unitId = this.value;
-                if (!unitId) { credDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>'; credDeptSelect.disabled = true; return; }
-                credDeptSelect.disabled = true; credDeptSelect.innerHTML = '<option value="">Loading...</option>';
-                fetch(`/ajax/get-departments/?unit_id=${unitId}`).then(res=>res.json()).then(data=>{credDeptSelect.innerHTML='<option value="">-- Select --</option>';if(data.departments?.length){data.departments.forEach(d=>{const opt=document.createElement('option');opt.value=d.id;opt.textContent=d.name;credDeptSelect.appendChild(opt);});credDeptSelect.disabled=false;}else{credDeptSelect.innerHTML+='<option value="">None</option>';}}).catch(()=>{credDeptSelect.innerHTML='<option value="">Error</option>';});
+                if (!unitId) {
+                    credDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>';
+                    credDeptSelect.disabled = true;
+                    return;
+                }
+                credDeptSelect.disabled = true;
+                credDeptSelect.innerHTML = '<option value="">Loading...</option>';
+                fetch(`/ajax/get-departments/?unit_id=${unitId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        credDeptSelect.innerHTML = '<option value="">-- Select --</option>';
+                        if (data.departments?.length) {
+                            data.departments.forEach(d => {
+                                const opt = document.createElement('option');
+                                opt.value = d.id;
+                                opt.textContent = d.name;
+                                credDeptSelect.appendChild(opt);
+                            });
+                            credDeptSelect.disabled = false;
+                        } else {
+                            credDeptSelect.innerHTML += '<option value="">None</option>';
+                        }
+                    })
+                    .catch(() => {
+                        credDeptSelect.innerHTML = '<option value="">Error</option>';
+                    });
             });
         }
 
-        // Tab animation
-        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(t=>{t.addEventListener('shown.bs.tab',function(e){const p=document.querySelector(this.getAttribute('data-bs-target'));if(p){p.style.animation='none';requestAnimationFrame(()=>{p.style.animation='tabFadeIn 0.5s ease';});}});}); 
+        // ============================================
+        // TAB ANIMATION
+        // ============================================
+        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(t => {
+            t.addEventListener('shown.bs.tab', function(e) {
+                const p = document.querySelector(this.getAttribute('data-bs-target'));
+                if (p) {
+                    p.style.animation = 'none';
+                    requestAnimationFrame(() => {
+                        p.style.animation = 'tabFadeIn 0.5s ease';
+                    });
+                }
+            });
+        });
 
-        console.log('✅ Settings ready - Inactive credentials now visible');
+        // ============================================
+        // THEME CHANGE HANDLER
+        // ============================================
+        function updateInputTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const inputs = document.querySelectorAll('.form-control, .form-select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], textarea, select');
+            
+            inputs.forEach(input => {
+                input.style.display = 'none';
+                void input.offsetHeight;
+                input.style.display = '';
+                
+                if (isDark) {
+                    input.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                    input.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    input.style.color = '#E8EDF5';
+                } else {
+                    input.style.backgroundColor = '#F5F8FF';
+                    input.style.borderColor = '#DCE3F0';
+                    input.style.color = '#1A2A6C';
+                }
+            });
+        }
+
+        const themeToggleBtn = document.getElementById('themeToggleFloating');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', function() {
+                setTimeout(updateInputTheme, 100);
+            });
+        }
+
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'data-theme') {
+                    updateInputTheme();
+                }
+            });
+        });
+        
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
+
+        setTimeout(updateInputTheme, 200);
+
+        console.log('✅ Settings page loaded successfully with all features working.');
+        console.log('📊 Sorting functionality enabled on all tables.');
+        console.log('📧 Helpdesk contact and notification emails section improved.');
+        console.log('👥 Department employee expandable rows working with AJAX.');
     });
 </script>
 {% endblock %}

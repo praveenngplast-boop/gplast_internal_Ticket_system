@@ -7,16 +7,130 @@
     <title>{% block title %}GPLAST Ticketing System{% endblock %}</title>
     
     <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-    <!-- FontAwesome for Premium Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts - Poppins -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Custom Theme Styling -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- Professional Fonts: Inter + Fraunces -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     
     <style>
+        /* ============================================
+           CSS VARIABLES - Professional Design System
+        ============================================ */
+        :root {
+            /* Brand Colors (Yellow & Orange) */
+            --brand-orange: #FF6B00;
+            --brand-orange-dark: #E05A00;
+            --brand-orange-light: #FF8C3A;
+            --brand-yellow: #FFB800;
+            --brand-yellow-dark: #E5A600;
+            --brand-gradient: linear-gradient(135deg, #FF6B00 0%, #FFB800 100%);
+            --brand-gradient-subtle: linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(255, 184, 0, 0.1) 100%);
+            
+            /* Light Mode */
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F8FAFC;
+            --bg-tertiary: #F1F4F9;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F8FAFC;
+            
+            /* Sidebar - Light Mode */
+            --bg-sidebar: #FFFFFF;
+            --bg-sidebar-hover: rgba(255, 107, 0, 0.06);
+            --bg-sidebar-active: rgba(255, 107, 0, 0.1);
+            --sidebar-text: #1A1A2E;
+            --sidebar-text-hover: #0A0A1A;
+            --sidebar-text-active: #0A0A1A;
+            --sidebar-icon: #6A6A7A;
+            --sidebar-icon-hover: var(--brand-orange);
+            --sidebar-icon-active: var(--brand-orange);
+            --sidebar-border: rgba(0, 0, 0, 0.06);
+            --sidebar-section-title: #9A9AAA;
+            
+            /* Navbar - Light Mode */
+            --bg-navbar: #FFFFFF;
+            --bg-navbar-scrolled: rgba(255, 255, 255, 0.92);
+            --navbar-text: #1A1A2E;
+            --navbar-text-hover: #0A0A1A;
+            --navbar-border: rgba(0, 0, 0, 0.06);
+            
+            --text-primary: #0A0A1A;
+            --text-secondary: #3D3D4A;
+            --text-muted: #7A7A8A;
+            --text-inverse: #FFFFFF;
+            
+            --border-color: #E8ECF1;
+            --border-light: #F1F4F9;
+            
+            --shadow-sm: 0 2px 8px rgba(10, 10, 26, 0.04);
+            --shadow-md: 0 4px 20px rgba(10, 10, 26, 0.06);
+            --shadow-lg: 0 8px 40px rgba(10, 10, 26, 0.08);
+            --shadow-xl: 0 12px 60px rgba(10, 10, 26, 0.12);
+            
+            /* Status Colors */
+            --status-open: #22C55E;
+            --status-assigned: #3B82F6;
+            --status-hold: #F59E0B;
+            --status-escalated: #8B5CF6;
+            --status-closed: #94A3B8;
+            --status-critical: #EF4444;
+            
+            /* UI Colors */
+            --success: #22C55E;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --info: #3B82F6;
+            
+            /* Sizing */
+            --sidebar-width: 260px;
+            --sidebar-collapsed: 72px;
+            --navbar-height: 64px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+        }
+
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --bg-primary: #0A0A1A;
+            --bg-secondary: #12121F;
+            --bg-tertiary: #1A1A2E;
+            --bg-card: #12121F;
+            --bg-card-hover: #1A1A2E;
+            
+            --bg-sidebar: #0A0A1A;
+            --bg-sidebar-hover: rgba(255, 107, 0, 0.06);
+            --bg-sidebar-active: rgba(255, 107, 0, 0.1);
+            --sidebar-text: rgba(255, 255, 255, 0.55);
+            --sidebar-text-hover: rgba(255, 255, 255, 0.9);
+            --sidebar-text-active: #FFFFFF;
+            --sidebar-icon: rgba(255, 255, 255, 0.35);
+            --sidebar-icon-hover: var(--brand-orange);
+            --sidebar-icon-active: var(--brand-orange);
+            --sidebar-border: rgba(255, 255, 255, 0.04);
+            --sidebar-section-title: rgba(255, 255, 255, 0.2);
+            
+            --bg-navbar: #0A0A1A;
+            --bg-navbar-scrolled: rgba(10, 10, 26, 0.95);
+            --navbar-text: rgba(255, 255, 255, 0.85);
+            --navbar-text-hover: #FFFFFF;
+            --navbar-border: rgba(255, 255, 255, 0.04);
+            
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0C0;
+            --text-muted: #6A6A7A;
+            --text-inverse: #0A0A1A;
+            
+            --border-color: #2A2A3E;
+            --border-light: #1A1A2E;
+            
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+            --shadow-xl: 0 12px 60px rgba(0, 0, 0, 0.5);
+        }
+
         /* ============================================
            GLOBAL RESET & BASE
         ============================================ */
@@ -27,332 +141,411 @@
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-primary) !important;
             color: var(--text-primary) !important;
-            transition: background 0.5s ease, color 0.5s ease;
+            transition: background 0.4s ease, color 0.4s ease;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-top: 0;
+            padding-top: var(--navbar-height);
+            font-weight: 400;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
+
+        /* Professional Headings */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Fraunces', 'Georgia', serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            color: var(--text-primary);
+        }
+
+        h1 { font-size: 2.5rem; font-weight: 700; }
+        h2 { font-size: 2rem; font-weight: 600; }
+        h3 { font-size: 1.5rem; font-weight: 600; }
+        h4 { font-size: 1.25rem; font-weight: 600; }
+        h5 { font-size: 1.1rem; font-weight: 500; }
+        h6 { font-size: 0.95rem; font-weight: 500; }
 
         /* ============================================
-           CSS VARIABLES - Lighter & Cleaner
+           SIDEBAR - Fixed Left with Collapse
         ============================================ */
-        :root {
-            /* Light Mode (Default) */
-            --bg-primary: #F0F4FF;
-            --bg-secondary: #FFFFFF;
-            --bg-card: #FFFFFF;
-            --bg-card-hover: #F0F4FF;
-            --bg-navbar: #1A2A6C;
-            --bg-navbar-scrolled: rgba(26, 42, 108, 0.92);
-            --bg-sidebar: #1a2744;
-            --text-primary: #1A2A6C;
-            --text-secondary: #2D3A5E;
-            --text-muted: #6B7A9E;
-            --border-color: #DCE3F0;
-            --border-light: #E8EDF5;
-            --shadow-color: rgba(26, 42, 108, 0.08);
-            --accent: #3B82F6;
-            --accent-light: #60A5FA;
-            --accent-dark: #2563EB;
-            --accent-gradient: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
-            --input-bg: #F5F8FF;
-            --input-border: #DCE3F0;
-            --navbar-text: rgba(255, 255, 255, 0.9);
-            --navbar-text-hover: #FFFFFF;
-            --status-open: #22C55E;
-            --status-assigned: #3B82F6;
-            --status-hold: #F59E0B;
-            --status-escalated: #8B5CF6;
-            --status-closed: #94A3B8;
-            --status-critical: #EF4444;
-            --input-focus: rgba(59, 130, 246, 0.25);
-            --toast-success: #22C55E;
-            --toast-error: #EF4444;
-            --toast-warning: #F59E0B;
-            --toast-info: #3B82F6;
-            --shadow-soft: 0 8px 32px rgba(26, 42, 108, 0.08);
-            --shadow-medium: 0 12px 48px rgba(26, 42, 108, 0.12);
-            --radius-lg: 20px;
-            --radius-md: 14px;
-            --radius-sm: 10px;
+        .sidebar {
+            position: fixed;
+            top: var(--navbar-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--navbar-height));
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--sidebar-border);
+            padding: 16px 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1040;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                        background 0.4s ease,
+                        border-color 0.4s ease;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
         }
 
-        /* Dark Mode - Lighter & Cleaner */
-        [data-theme="dark"] {
-            --bg-primary: #0f1629;
-            --bg-secondary: #1a2440;
-            --bg-card: rgba(26, 36, 64, 0.95);
-            --bg-card-hover: rgba(26, 36, 64, 0.98);
-            --bg-navbar: #0f1629;
-            --bg-navbar-scrolled: rgba(15, 22, 41, 0.92);
-            --text-primary: #E8EDF5;
-            --text-secondary: rgba(232, 237, 245, 0.8);
-            --text-muted: rgba(232, 237, 245, 0.45);
-            --border-color: rgba(59, 130, 246, 0.12);
-            --border-light: rgba(255, 255, 255, 0.04);
-            --shadow-color: rgba(0, 0, 0, 0.5);
-            --accent: #60A5FA;
-            --accent-light: #93BBFC;
-            --accent-dark: #3B82F6;
-            --accent-gradient: linear-gradient(135deg, #60A5FA 0%, #93BBFC 100%);
-            --input-bg: rgba(255, 255, 255, 0.04);
-            --input-border: rgba(59, 130, 246, 0.15);
-            --navbar-text: rgba(232, 237, 245, 0.85);
-            --navbar-text-hover: #FFFFFF;
-            --status-open: #34D399;
-            --status-assigned: #60A5FA;
-            --status-hold: #FBBF24;
-            --status-escalated: #A78BFA;
-            --status-closed: #9CA3AF;
-            --status-critical: #F87171;
-            --input-focus: rgba(96, 165, 250, 0.25);
-            --toast-success: #34D399;
-            --toast-error: #F87171;
-            --toast-warning: #FBBF24;
-            --toast-info: #60A5FA;
-            --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
-            --shadow-medium: 0 12px 48px rgba(0, 0, 0, 0.5);
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
         }
 
-        /* ============================================
-           NAVBAR - Clean & Stylish
-        ============================================ */
-        .navbar-custom {
-            background: var(--bg-navbar);
-            padding: 0.5rem 0;
-            position: sticky;
-            top: 0;
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        /* Sidebar Collapsed State */
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+        }
+
+        .sidebar.collapsed .sidebar-brand {
+            display: none;
+        }
+
+        .sidebar.collapsed .link-text,
+        .sidebar.collapsed .badge-count,
+        .sidebar.collapsed .sidebar-section-title,
+        .sidebar.collapsed .sidebar-link .badge-count,
+        .sidebar.collapsed .theme-toggle-text {
+            display: none !important;
+        }
+
+        .sidebar.collapsed .sidebar-link {
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .sidebar.collapsed .sidebar-link i {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .sidebar.collapsed .sidebar-link::before {
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-link .tooltip-text {
+            display: inline-block;
+        }
+
+        /* Tooltip for collapsed sidebar */
+        .sidebar-link .tooltip-text {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+            margin-left: 8px;
             z-index: 1050;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 70px;
-            border-bottom: 2px solid transparent;
-            margin-bottom: 0;
         }
 
-        .navbar-custom::after {
+        .sidebar.collapsed .sidebar-link:hover .tooltip-text {
+            display: block;
+        }
+
+        /* Sidebar Section */
+        .sidebar-section {
+            padding: 0 12px;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--sidebar-section-title);
+            padding: 12px 12px 6px;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        /* Sidebar Links */
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.85rem;
+            font-weight: 500;
+            position: relative;
+            margin-bottom: 2px;
+            cursor: pointer;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            color: var(--sidebar-icon);
+        }
+
+        .sidebar-link .link-text {
+            flex: 1;
+            white-space: nowrap;
+        }
+
+        .sidebar-link .badge-count {
+            background: var(--brand-orange);
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 50px;
+            font-weight: 600;
+        }
+
+        .sidebar-link .theme-toggle-text {
+            flex: 1;
+            white-space: nowrap;
+            font-size: 0.85rem;
+        }
+
+        .sidebar-link:hover {
+            background: var(--bg-sidebar-hover);
+            color: var(--sidebar-text-hover);
+            transform: translateX(4px);
+        }
+
+        .sidebar-link:hover i {
+            color: var(--sidebar-icon-hover);
+            transform: scale(1.1);
+        }
+
+        .sidebar-link.active {
+            background: var(--bg-sidebar-active);
+            color: var(--sidebar-text-active);
+        }
+
+        .sidebar-link.active i {
+            color: var(--sidebar-icon-active);
+        }
+
+        .sidebar-link.active::before {
             content: '';
             position: absolute;
-            bottom: 0;
             left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--accent-gradient);
-            background-size: 200% 100%;
-            animation: borderGlow 4s ease-in-out infinite;
-            opacity: 0.5;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 24px;
+            background: var(--brand-gradient);
+            border-radius: 0 4px 4px 0;
         }
 
-        @keyframes borderGlow {
-            0%, 100% { background-position: 0% 50%; opacity: 0.5; }
-            50% { background-position: 100% 50%; opacity: 1; }
+        /* Theme toggle in sidebar - special styling */
+        .sidebar-link.theme-toggle-link {
+            margin-top: 4px;
+            border-top: 1px solid var(--sidebar-border);
+            padding-top: 12px;
+            border-radius: 0;
+        }
+
+        .sidebar-link.theme-toggle-link:hover {
+            transform: none;
+            background: var(--bg-sidebar-hover);
+        }
+
+        /* Sidebar Collapse Toggle Button */
+        .sidebar-collapse-toggle {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            z-index: 10;
+        }
+
+        .sidebar-collapse-toggle:hover {
+            background: var(--brand-gradient);
+            color: white;
+            border-color: transparent;
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .sidebar.collapsed .sidebar-collapse-toggle {
+            transform: translateX(-50%) rotate(180deg);
+        }
+
+        .sidebar.collapsed .sidebar-collapse-toggle:hover {
+            transform: translateX(-50%) rotate(180deg) scale(1.05);
+        }
+
+        /* ============================================
+           NAVBAR - Professional & Clean
+        ============================================ */
+        .navbar-custom {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--navbar-height);
+            background: var(--bg-navbar);
+            z-index: 1050;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--navbar-border);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .navbar-custom.scrolled {
-            min-height: 60px;
-            padding: 0.3rem 0;
             backdrop-filter: blur(16px) saturate(180%);
             background: var(--bg-navbar-scrolled);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .navbar-custom.scrolled::after {
-            height: 2px;
-            opacity: 0.7;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
         }
 
         .navbar-hidden {
             display: none !important;
         }
 
-        /* ============================================
-           NAVBAR CONTAINER - FLEX LAYOUT
-        ============================================ */
-        .navbar-custom .container {
+        /* Navbar Left - Logo & Sidebar Toggle */
+        .navbar-left {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
+            gap: 16px;
+            flex: 1;
         }
 
-        /* ============================================
-           NAVBAR BRAND - LOGO ONLY
-        ============================================ */
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            padding: 0;
-            margin: 0;
-            text-decoration: none;
-            flex-shrink: 0;
-        }
-
-        .company-logo-nav {
-            height: 42px;
-            width: auto;
-            object-fit: contain;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.12));
-        }
-
-        .company-logo-nav:hover {
-            transform: scale(1.04) rotate(-2deg);
-        }
-
-        /* ============================================
-           NAVBAR TOGGLER
-        ============================================ */
-        .navbar-toggler {
+        /* Sidebar Toggle Button (Desktop & Mobile) */
+        .sidebar-toggle {
+            background: none;
             border: none;
-            padding: 6px 8px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--navbar-text);
+            font-size: 1.2rem;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
             border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.04);
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .navbar-toggler:hover {
-            background: rgba(255, 255, 255, 0.08);
+        .sidebar-toggle:hover {
+            color: var(--navbar-text-hover);
+            background: var(--bg-sidebar-hover);
             transform: scale(1.05);
         }
 
-        .navbar-toggler:focus {
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        .sidebar-toggle:active {
+            transform: scale(0.95);
         }
 
-        .navbar-toggler-icon {
-            width: 22px;
-            height: 22px;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255,255,255,0.9)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        .company-logo-nav {
+            height: 36px;
+            width: auto;
+            object-fit: contain;
+            transition: all 0.4s ease;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.06));
         }
 
-        .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255,255,255,0.9)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M6 6L24 24M6 24L24 6'/%3e%3c/svg%3e");
+        .company-logo-nav:hover {
+            transform: scale(1.03);
         }
 
-        /* ============================================
-           NAVBAR COLLAPSE
-        ============================================ */
-        .navbar-collapse {
-            flex-basis: 100%;
-            flex-grow: 1;
-        }
-
-        /* ============================================
-           NAV LINKS
-        ============================================ */
-        .navbar-nav {
-            gap: 4px;
-            padding: 4px 0;
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .navbar-nav .nav-item {
-            position: relative;
-        }
-
-        .navbar-nav .nav-link {
-            color: var(--navbar-text) !important;
-            font-weight: 500;
-            padding: 8px 14px;
-            border-radius: var(--radius-sm);
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 0.82rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            position: relative;
-            font-family: 'Poppins', sans-serif;
-            letter-spacing: 0.2px;
-            white-space: nowrap;
-        }
-
-        .navbar-nav .nav-link::before {
-            content: '';
-            position: absolute;
-            bottom: 4px;
-            left: 50%;
-            width: 0;
-            height: 2.5px;
-            background: var(--accent-gradient);
-            border-radius: 10px;
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateX(-50%);
-            opacity: 0;
-        }
-
-        .navbar-nav .nav-link:hover::before,
-        .navbar-nav .nav-link.active::before {
-            width: 50%;
-            opacity: 1;
-        }
-
-        .navbar-nav .nav-link:hover {
-            color: var(--navbar-text-hover) !important;
-            transform: translateY(-1px);
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        .navbar-nav .nav-link.active {
-            color: var(--navbar-text-hover) !important;
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .navbar-nav .nav-link i {
-            font-size: 0.85rem;
-            transition: all 0.35s ease;
-            width: 16px;
-            text-align: center;
-            opacity: 0.7;
-        }
-
-        .navbar-nav .nav-link:hover i,
-        .navbar-nav .nav-link.active i {
-            opacity: 1;
-            transform: scale(1.1) translateX(-2px);
-        }
-
-        /* ============================================
-           USER INFO
-        ============================================ */
-        .user-info-wrapper {
+        /* Navbar Center - Page Title */
+        .navbar-center {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 4px 12px 4px 4px;
-            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .navbar-page-title {
+            font-family: 'Fraunces', serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: 0.3px;
+            opacity: 0.85;
+            display: none;
+        }
+
+        /* Navbar Right - User Info + Logout */
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            justify-content: flex-end;
+        }
+
+        .user-info-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 14px 4px 4px;
+            background: var(--bg-secondary);
             border-radius: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
             cursor: default;
-            margin: 0 2px;
         }
 
         .user-info-wrapper:hover {
-            background: rgba(255, 255, 255, 0.07);
-            border-color: rgba(255, 255, 255, 0.08);
-            transform: scale(1.02);
+            background: var(--bg-tertiary);
+            border-color: rgba(255, 107, 0, 0.15);
         }
 
         .user-avatar {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            background: var(--accent-gradient);
+            background: var(--brand-gradient);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 700;
             font-size: 0.8rem;
-            box-shadow: 0 3px 12px rgba(59, 130, 246, 0.2);
-            transition: all 0.4s ease;
+            box-shadow: 0 2px 12px rgba(255, 107, 0, 0.2);
             flex-shrink: 0;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .user-info-wrapper:hover .user-avatar {
+            transform: scale(1.05);
         }
 
         .user-details {
@@ -362,90 +555,160 @@
         }
 
         .user-name {
-            color: white;
+            color: var(--text-primary);
             font-weight: 600;
-            font-size: 0.78rem;
-            letter-spacing: 0.2px;
+            font-size: 0.8rem;
+            letter-spacing: 0.1px;
         }
 
         .user-role {
             font-size: 0.5rem;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: rgba(255, 255, 255, 0.4);
-            font-weight: 400;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            font-weight: 600;
         }
 
-        .user-badge {
+        /* Role Badge */
+        .role-badge {
             font-size: 0.45rem;
-            padding: 2px 8px;
+            padding: 2px 10px;
             border-radius: 50px;
             text-transform: uppercase;
             letter-spacing: 0.8px;
             font-weight: 700;
-            background: var(--accent-gradient);
+            background: var(--brand-gradient);
             color: white;
+            flex-shrink: 0;
+            border: none;
             margin-left: 2px;
         }
 
-        /* ============================================
-           LOGOUT BUTTON
-        ============================================ */
+        .role-badge.admin {
+            background: var(--brand-gradient);
+            color: white;
+        }
+
+        .role-badge.employee {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+            color: white;
+        }
+
+        /* Logout Button */
         .btn-logout {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            color: rgba(255, 255, 255, 0.8);
-            padding: 6px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 16px;
             border-radius: 50px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 500;
             font-size: 0.75rem;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            font-family: 'Poppins', sans-serif;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
             white-space: nowrap;
-            margin: 0 2px;
+            cursor: pointer;
         }
 
         .btn-logout:hover {
-            color: white !important;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.2);
-            border-color: rgba(255, 255, 255, 0.15);
-            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+            border-color: var(--brand-orange);
+            transform: translateY(-1px);
         }
 
-        .btn-login {
-            background: var(--accent-gradient);
+        .btn-logout i {
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+            font-size: 0.85rem;
+        }
+
+        .btn-logout:hover i {
+            color: var(--brand-orange);
+        }
+
+        .btn-login-nav {
+            background: var(--brand-gradient);
             color: white;
             padding: 8px 24px;
             border-radius: 50px;
             font-weight: 600;
-            font-size: 0.82rem;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
             border: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-family: 'Poppins', sans-serif;
-            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);
-            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
+            text-decoration: none;
         }
 
-        .btn-login:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 28px rgba(59, 130, 246, 0.35);
+        .btn-login-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(255, 107, 0, 0.3);
             color: white;
         }
 
         /* ============================================
-           MAIN CONTENT WRAPPER - ADDED SPACING
+           SIDEBAR OVERLAY (Mobile)
+        ============================================ */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: var(--navbar-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1039;
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* ============================================
+           MAIN CONTENT
         ============================================ */
         .main-content-wrapper {
-            padding-top: 1.5rem;
-            padding-bottom: 2rem;
+            margin-left: var(--sidebar-width);
+            padding: 24px 32px 40px;
             flex: 1;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: calc(100vh - var(--navbar-height));
+        }
+
+        /* When sidebar is collapsed */
+        .sidebar.collapsed ~ .main-content-wrapper {
+            margin-left: var(--sidebar-collapsed);
+        }
+
+        /* ============================================
+           FOOTER
+        ============================================ */
+        footer {
+            background: transparent;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+            padding: 14px 0;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.collapsed ~ footer {
+            margin-left: var(--sidebar-collapsed);
+        }
+
+        footer p { 
+            color: var(--text-muted); 
+            font-size: 0.75rem; 
+            font-weight: 400; 
+            margin: 0;
         }
 
         /* ============================================
@@ -453,7 +716,7 @@
         ============================================ */
         .toast-container-custom {
             position: fixed;
-            top: 85px;
+            top: calc(var(--navbar-height) + 16px);
             right: 20px;
             z-index: 99999;
             display: flex;
@@ -469,7 +732,7 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             padding: 14px 18px;
-            box-shadow: var(--shadow-medium);
+            box-shadow: var(--shadow-lg);
             display: flex;
             align-items: flex-start;
             gap: 12px;
@@ -490,10 +753,10 @@
             border-radius: 0 2px 2px 0;
         }
 
-        .toast-custom.toast-success::before { background: var(--toast-success); }
-        .toast-custom.toast-error::before { background: var(--toast-error); }
-        .toast-custom.toast-warning::before { background: var(--toast-warning); }
-        .toast-custom.toast-info::before { background: var(--toast-info); }
+        .toast-custom.toast-success::before { background: var(--success); }
+        .toast-custom.toast-error::before { background: var(--danger); }
+        .toast-custom.toast-warning::before { background: var(--warning); }
+        .toast-custom.toast-info::before { background: var(--info); }
 
         @keyframes toastSlideIn {
             from { opacity: 0; transform: translateX(40px) scale(0.95); }
@@ -520,10 +783,10 @@
             font-size: 0.9rem;
         }
 
-        .toast-success .toast-icon { background: rgba(34, 197, 94, 0.12); color: var(--toast-success); }
-        .toast-error .toast-icon { background: rgba(239, 68, 68, 0.12); color: var(--toast-error); }
-        .toast-warning .toast-icon { background: rgba(245, 158, 11, 0.12); color: var(--toast-warning); }
-        .toast-info .toast-icon { background: rgba(59, 130, 246, 0.12); color: var(--toast-info); }
+        .toast-success .toast-icon { background: rgba(34, 197, 94, 0.12); color: var(--success); }
+        .toast-error .toast-icon { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+        .toast-warning .toast-icon { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+        .toast-info .toast-icon { background: rgba(59, 130, 246, 0.12); color: var(--info); }
 
         .toast-content { flex: 1; min-width: 0; }
         .toast-title { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 2px; }
@@ -552,48 +815,14 @@
             animation: toastProgress 5s linear forwards;
         }
 
-        .toast-success .toast-progress { background: var(--toast-success); }
-        .toast-error .toast-progress { background: var(--toast-error); }
-        .toast-warning .toast-progress { background: var(--toast-warning); }
-        .toast-info .toast-progress { background: var(--toast-info); }
+        .toast-success .toast-progress { background: var(--success); }
+        .toast-error .toast-progress { background: var(--danger); }
+        .toast-warning .toast-progress { background: var(--warning); }
+        .toast-info .toast-progress { background: var(--info); }
 
         @keyframes toastProgress {
             from { width: 100%; }
             to { width: 0%; }
-        }
-
-        /* ============================================
-           FLOATING THEME TOGGLE
-        ============================================ */
-        .theme-toggle-floating {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 9998;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: none;
-            background: var(--accent-gradient);
-            color: white;
-            font-size: 1.2rem;
-            box-shadow: var(--shadow-medium);
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: floatToggle 3s ease-in-out infinite;
-        }
-
-        .theme-toggle-floating:hover {
-            transform: scale(1.1) rotate(20deg);
-            box-shadow: 0 12px 48px rgba(59, 130, 246, 0.3);
-        }
-
-        @keyframes floatToggle {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
         }
 
         /* ============================================
@@ -606,17 +835,24 @@
             border: 1px solid var(--border-color);
             color: var(--text-primary);
             border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-medium);
+            box-shadow: var(--shadow-xl);
         }
 
         #confirmModal .modal-header {
-            background: var(--accent-gradient);
+            background: var(--brand-gradient);
             color: white;
             border-bottom: none;
             padding: 16px 22px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
         }
 
-        #confirmModal .modal-title { font-weight: 700; font-size: 1rem; color: white !important; }
+        #confirmModal .modal-title { 
+            font-family: 'Fraunces', serif;
+            font-weight: 700; 
+            font-size: 1rem; 
+            color: white !important; 
+        }
+        
         #confirmModal .btn-close { filter: brightness(0) invert(1); opacity: 0.7; }
 
         #confirmModal .modal-body {
@@ -626,7 +862,7 @@
         }
 
         #confirmModal .modal-footer {
-            border-top: 1px solid var(--border-light);
+            border-top: 1px solid var(--border-color);
             padding: 14px 22px;
             gap: 8px;
         }
@@ -638,6 +874,7 @@
             font-size: 0.82rem;
             border: none;
             min-width: 90px;
+            font-family: 'Inter', sans-serif;
         }
 
         #confirmModal .btn-no {
@@ -647,113 +884,284 @@
         }
 
         #confirmModal .btn-yes {
-            background: var(--accent-gradient);
+            background: var(--brand-gradient);
             color: white;
         }
 
         /* ============================================
-           FOOTER
+           UTILITY CLASSES
         ============================================ */
-        footer {
-            background: transparent;
-            border-top: 1px solid var(--border-color);
-            margin-top: auto;
-            padding: 16px 0;
-        }
-
-        footer p { color: var(--text-muted); font-size: 0.78rem; }
+        .text-brand { color: var(--brand-orange); }
+        .bg-brand-gradient { background: var(--brand-gradient); }
+        .border-brand { border-color: var(--brand-orange) !important; }
+        .fw-600 { font-weight: 600; }
+        .fw-700 { font-weight: 700; }
 
         /* ============================================
            SCROLLBAR
         ============================================ */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg-primary); }
-        ::-webkit-scrollbar-thumb { background: var(--accent-gradient); border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 10px; }
 
-        ::selection { background: var(--accent); color: white; }
+        ::selection { background: var(--brand-orange); color: white; }
 
         /* ============================================
            RESPONSIVE
         ============================================ */
-        @media (min-width: 992px) {
-            .navbar-collapse { flex-basis: auto; flex-grow: 0; }
-            .navbar-nav { flex-direction: row; flex-wrap: nowrap; gap: 2px; }
-            .navbar-nav .nav-link { padding: 8px 12px; font-size: 0.8rem; }
-            .navbar-nav .nav-link i { font-size: 0.8rem; width: 16px; }
-            .company-logo-nav { height: 42px; }
-            .main-content-wrapper { padding-top: 2rem; }
+        @media (max-width: 1199px) {
+            .sidebar.collapsed {
+                width: var(--sidebar-collapsed);
+            }
+            
+            .sidebar.collapsed ~ .main-content-wrapper {
+                margin-left: var(--sidebar-collapsed);
+            }
+            
+            .sidebar.collapsed ~ footer {
+                margin-left: var(--sidebar-collapsed);
+            }
         }
 
         @media (max-width: 991px) {
-            .navbar-custom { min-height: 60px; padding: 0.3rem 0; }
-            .company-logo-nav { height: 34px; }
-            .navbar-collapse {
-                background: rgba(0, 0, 0, 0.25);
-                border-radius: var(--radius-md);
-                padding: 10px 12px;
-                margin-top: 8px;
-                backdrop-filter: blur(20px);
-                border: 1px solid rgba(255, 255, 255, 0.04);
-                max-height: calc(100vh - 90px);
-                overflow-y: auto;
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+                box-shadow: var(--shadow-xl);
             }
-            .navbar-nav { gap: 2px; padding: 0; flex-direction: column; }
-            .navbar-nav .nav-item { width: 100%; }
-            .navbar-nav .nav-link { padding: 8px 12px; width: 100%; justify-content: flex-start; }
-            .navbar-nav .nav-link::before { display: none; }
-            .user-info-wrapper { width: 100%; margin: 4px 0; border-radius: var(--radius-sm); }
-            .user-avatar { width: 28px; height: 28px; font-size: 0.7rem; }
-            .btn-logout { width: 100%; justify-content: center; margin: 4px 0; }
-            .btn-login { width: 100%; justify-content: center; }
-            .main-content-wrapper { padding-top: 1rem; }
-            .toast-container-custom { top: 75px; right: 12px; max-width: calc(100% - 24px); }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar.collapsed {
+                width: 280px;
+            }
+
+            .sidebar.collapsed .link-text,
+            .sidebar.collapsed .badge-count,
+            .sidebar.collapsed .sidebar-section-title,
+            .sidebar.collapsed .theme-toggle-text {
+                display: block !important;
+            }
+
+            .sidebar.collapsed .sidebar-link {
+                justify-content: flex-start;
+                padding: 10px 14px;
+            }
+
+            .sidebar.collapsed .sidebar-link i {
+                font-size: 1rem;
+                margin-right: 12px;
+            }
+
+            .sidebar.collapsed .sidebar-link .tooltip-text {
+                display: none !important;
+            }
+
+            .sidebar.collapsed .sidebar-collapse-toggle {
+                transform: translateX(-50%) rotate(0deg);
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .sidebar-toggle {
+                display: flex !important;
+            }
+
+            .main-content-wrapper {
+                margin-left: 0;
+                padding: 16px 20px 32px;
+            }
+
+            footer {
+                margin-left: 0;
+            }
+
+            .navbar-custom {
+                padding: 0 16px;
+            }
+
+            .company-logo-nav {
+                height: 30px;
+            }
+
+            .user-details {
+                display: none;
+            }
+
+            .role-badge {
+                display: none !important;
+            }
+
+            .user-info-wrapper {
+                padding: 4px 8px 4px 4px;
+                border: none;
+                background: transparent;
+            }
+
+            .user-info-wrapper:hover {
+                background: transparent;
+            }
+
+            .user-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 0.7rem;
+            }
+
+            .btn-logout span {
+                display: none;
+            }
+
+            .btn-logout {
+                padding: 6px 10px;
+                font-size: 0.9rem;
+                border: none;
+                background: transparent;
+            }
+
+            .btn-logout:hover {
+                background: transparent;
+                transform: none;
+            }
+
+            .navbar-page-title {
+                display: block;
+                font-size: 0.8rem;
+            }
+
+            .navbar-center {
+                flex: 1;
+                display: flex;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --navbar-height: 56px;
+            }
+
+            .main-content-wrapper {
+                padding: 12px 16px 24px;
+            }
+
+            .company-logo-nav {
+                height: 26px;
+            }
+
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.65rem;
+            }
+
+            .btn-logout {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+            }
+
+            .toast-container-custom {
+                top: calc(var(--navbar-height) + 8px);
+                right: 8px;
+                max-width: calc(100% - 16px);
+            }
+
+            .sidebar {
+                width: 280px;
+            }
+
+            .navbar-custom {
+                padding: 0 12px;
+            }
+
+            .navbar-page-title {
+                font-size: 0.7rem;
+            }
+
+            .sidebar-toggle {
+                font-size: 1rem;
+                padding: 4px 6px;
+            }
         }
 
         @media (max-width: 576px) {
-            .navbar-custom { min-height: 52px; padding: 0.2rem 0; }
-            .company-logo-nav { height: 28px; }
-            .navbar-toggler { padding: 4px 6px; }
-            .navbar-toggler-icon { width: 18px; height: 18px; }
-            .navbar-collapse { padding: 8px 10px; margin-top: 6px; }
-            .navbar-nav .nav-link { padding: 6px 10px; font-size: 0.78rem; }
-            .user-avatar { width: 24px; height: 24px; font-size: 0.6rem; }
-            .btn-logout { font-size: 0.72rem; padding: 6px; }
-            .main-content-wrapper { padding-top: 0.75rem; }
-            .toast-container-custom { top: 65px; right: 8px; max-width: calc(100% - 16px); gap: 6px; }
-            .theme-toggle-floating { width: 38px; height: 38px; bottom: 14px; right: 14px; }
+            .main-content-wrapper {
+                padding: 8px 12px 16px;
+            }
+
+            .company-logo-nav {
+                height: 22px;
+            }
+
+            .user-avatar {
+                width: 24px;
+                height: 24px;
+                font-size: 0.55rem;
+            }
+
+            .btn-logout {
+                padding: 3px 6px;
+                font-size: 0.7rem;
+            }
+
+            .btn-logout i {
+                font-size: 0.7rem;
+            }
+
+            .sidebar-toggle {
+                font-size: 0.9rem;
+                padding: 2px 4px;
+            }
+
+            .navbar-page-title {
+                font-size: 0.6rem;
+            }
+
+            .navbar-custom {
+                padding: 0 8px;
+                height: 50px;
+            }
+
+            :root {
+                --navbar-height: 50px;
+            }
         }
 
-        /* ============================================
-           LIGHT MODE - Input Fixes
-        ============================================ */
-        :root:not([data-theme="dark"]) .form-control,
-        :root:not([data-theme="dark"]) .form-select,
-        :root:not([data-theme="dark"]) input,
-        :root:not([data-theme="dark"]) textarea,
-        :root:not([data-theme="dark"]) select {
-            background-color: var(--input-bg) !important;
-            border: 2px solid var(--input-border) !important;
-            color: var(--text-primary) !important;
-            -webkit-text-fill-color: var(--text-primary) !important;
-        }
+        @media (max-width: 380px) {
+            .company-logo-nav {
+                height: 18px;
+            }
 
-        :root:not([data-theme="dark"]) .form-control:focus,
-        :root:not([data-theme="dark"]) .form-select:focus {
-            border-color: var(--accent) !important;
-            box-shadow: 0 0 0 4px var(--input-focus) !important;
-        }
+            .navbar-page-title {
+                display: none;
+            }
 
-        :root:not([data-theme="dark"]) input:-webkit-autofill {
-            -webkit-text-fill-color: var(--text-primary) !important;
-            -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-        }
+            .user-avatar {
+                width: 20px;
+                height: 20px;
+                font-size: 0.45rem;
+            }
 
-        /* Global Autofill Fix */
-        input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
-            -webkit-text-fill-color: var(--text-primary) !important;
-            -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-            caret-color: var(--text-primary) !important;
-            transition: background-color 5000s ease-in-out 0s;
+            .btn-logout {
+                padding: 2px 4px;
+                font-size: 0.6rem;
+            }
+
+            .btn-logout i {
+                font-size: 0.6rem;
+            }
+
+            .main-content-wrapper {
+                padding: 6px 8px 12px;
+            }
+
+            .sidebar {
+                width: 260px;
+            }
         }
     </style>
     
@@ -761,108 +1169,160 @@
 </head>
 <body>
 
-    <!-- NAVIGATION -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom {% if request.resolver_match.url_name == 'login' %}navbar-hidden{% endif %}" id="mainNav">
-        <div class="container">
-            <a class="navbar-brand" href="{% if user.is_authenticated %}{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'employee_dashboard' %}{% endif %}{% else %}/{% endif %}">
-                <img src="{% static 'images/logo.png' %}" alt="GPLAST Logo" class="company-logo-nav" onerror="this.style.display='none';">
-            </a>
+    <!-- SIDEBAR OVERLAY (Mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                        {% if user.is_staff %}
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">
-                                    <i class="fa-solid fa-chart-pie"></i> Dashboard
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'all_tickets' %}active{% endif %}" href="{% url 'all_tickets' %}">
-                                    <i class="fa-solid fa-list-check"></i> Tickets
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'create_ticket_admin' %}active{% endif %}" href="{% url 'create_ticket_admin' %}">
-                                    <i class="fa-solid fa-circle-plus"></i> Create
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" href="{% url 'reports' %}">
-                                    <i class="fa-solid fa-file-excel"></i> Reports
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'settings_page' %}active{% endif %}" href="{% url 'settings_page' %}">
-                                    <i class="fa-solid fa-sliders"></i> Settings
-                                </a>
-                            </li>
-                        {% else %}
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'employee_dashboard' %}active{% endif %}" href="{% url 'employee_dashboard' %}">
-                                    <i class="fa-solid fa-house"></i> Dashboard
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'my_tickets' %}active{% endif %}" href="{% url 'my_tickets' %}">
-                                    <i class="fa-solid fa-receipt"></i> My Tickets
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'create_ticket' %}active{% endif %}" href="{% url 'create_ticket' %}">
-                                    <i class="fa-solid fa-circle-plus"></i> New Ticket
-                                </a>
-                            </li>
-                        {% endif %}
-                        
-                        <li class="nav-item d-none d-lg-block">
-                            <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 8px;"></div>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <div class="user-info-wrapper">
-                                <div class="user-avatar">{{ user.username|first|upper }}</div>
-                                <div class="user-details d-none d-sm-block">
-                                    <span class="user-name">{{ user.username }}</span>
-                                    <span class="user-role">{% if user.is_staff %}Admin{% else %}Employee{% endif %}</span>
-                                </div>
-                                {% if user.is_staff %}
-                                    <span class="user-badge d-none d-sm-inline">Admin</span>
-                                {% endif %}
-                            </div>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <form action="{% url 'custom_logout' %}" method="POST">
-                                {% csrf_token %}
-                                <button type="submit" class="btn-logout">
-                                    <i class="fa-solid fa-right-from-bracket"></i>
-                                    <span>Logout</span>
-                                </button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="btn btn-login" href="{% url 'login' %}">
-                                <i class="fa-solid fa-right-to-bracket"></i>
-                                <span>Login</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
+    <!-- ==========================================
+    SIDEBAR - Fixed Left with Collapse
+    ========================================== -->
+    <nav class="sidebar" id="sidebar">
+        <!-- Navigation -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Main</div>
+            
+            {% if user.is_authenticated %}
+                {% if user.is_staff %}
+                    <a class="sidebar-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" 
+                       href="{% url 'admin_dashboard' %}">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span class="link-text">Dashboard</span>
+                        <span class="tooltip-text">Dashboard</span>
+                    </a>
+                    <a class="sidebar-link {% if request.resolver_match.url_name == 'all_tickets' %}active{% endif %}" 
+                       href="{% url 'all_tickets' %}">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span class="link-text">All Tickets</span>
+                        <span class="tooltip-text">All Tickets</span>
+                    </a>
+                    <a class="sidebar-link {% if request.resolver_match.url_name == 'create_ticket_admin' %}active{% endif %}" 
+                       href="{% url 'create_ticket_admin' %}">
+                        <i class="fa-solid fa-circle-plus"></i>
+                        <span class="link-text">Create Ticket</span>
+                        <span class="tooltip-text">Create Ticket</span>
+                    </a>
+                {% else %}
+                    <a class="sidebar-link {% if request.resolver_match.url_name == 'employee_dashboard' %}active{% endif %}" 
+                       href="{% url 'employee_dashboard' %}">
+                        <i class="fa-solid fa-house"></i>
+                        <span class="link-text">Dashboard</span>
+                        <span class="tooltip-text">Dashboard</span>
+                    </a>
+                    <a class="sidebar-link {% if request.resolver_match.url_name == 'my_tickets' %}active{% endif %}" 
+                       href="{% url 'my_tickets' %}">
+                        <i class="fa-solid fa-receipt"></i>
+                        <span class="link-text">My Tickets</span>
+                        <span class="tooltip-text">My Tickets</span>
+                    </a>
+                    <a class="sidebar-link {% if request.resolver_match.url_name == 'create_ticket' %}active{% endif %}" 
+                       href="{% url 'create_ticket' %}">
+                        <i class="fa-solid fa-circle-plus"></i>
+                        <span class="link-text">New Ticket</span>
+                        <span class="tooltip-text">New Ticket</span>
+                    </a>
+                {% endif %}
+            {% endif %}
         </div>
+
+        {% if user.is_authenticated and user.is_staff %}
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Management</div>
+            <a class="sidebar-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" 
+               href="{% url 'reports' %}">
+                <i class="fa-solid fa-file-excel"></i>
+                <span class="link-text">Reports</span>
+                <span class="tooltip-text">Reports</span>
+            </a>
+            <a class="sidebar-link {% if request.resolver_match.url_name == 'settings_page' %}active{% endif %}" 
+               href="{% url 'settings_page' %}">
+                <i class="fa-solid fa-sliders"></i>
+                <span class="link-text">Settings</span>
+                <span class="tooltip-text">Settings</span>
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Theme Toggle - Below Settings -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Preferences</div>
+            <a class="sidebar-link theme-toggle-link" id="sidebarThemeToggle" onclick="toggleThemeFromSidebar()">
+                <i class="fas fa-moon" id="sidebarThemeIcon"></i>
+                <span class="theme-toggle-text" id="sidebarThemeText">Dark Mode</span>
+                <span class="tooltip-text">Toggle Theme</span>
+            </a>
+        </div>
+
+        <!-- Collapse Toggle Button -->
+        <button class="sidebar-collapse-toggle" id="sidebarCollapseToggle" aria-label="Toggle sidebar collapse">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
     </nav>
 
-    <!-- FLOATING THEME TOGGLE -->
-    <button class="theme-toggle-floating" id="themeToggleFloating" aria-label="Toggle theme">
-        <i class="fas fa-moon" id="themeIconFloating"></i>
-    </button>
+    <!-- ==========================================
+    NAVBAR - Professional & Clean
+    ========================================== -->
+    <nav class="navbar-custom {% if request.resolver_match.url_name == 'login' %}navbar-hidden{% endif %}" id="mainNav">
+        <div class="navbar-left">
+            <!-- Sidebar Toggle (Mobile & Desktop) -->
+            <!-- <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                <i class="fa-solid fa-bars"></i>
+            </button> -->
+            
+            <!-- Logo -->
+            <a href="{% if user.is_authenticated %}{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'employee_dashboard' %}{% endif %}{% else %}/{% endif %}" class="d-flex align-items-center">
+                <img src="{% static 'images/logo.png' %}" alt="GPLAST Logo" class="company-logo-nav" onerror="this.style.display='none';">
+            </a>
+        </div>
+
+        <!-- Center - Page Title -->
+        <div class="navbar-center">
+            <span class="navbar-page-title">
+                {% if request.resolver_match.url_name == 'admin_dashboard' %}Dashboard
+                {% elif request.resolver_match.url_name == 'employee_dashboard' %}Dashboard
+                {% elif request.resolver_match.url_name == 'all_tickets' %}All Tickets
+                {% elif request.resolver_match.url_name == 'my_tickets' %}My Tickets
+                {% elif request.resolver_match.url_name == 'create_ticket_admin' %}Create Ticket
+                {% elif request.resolver_match.url_name == 'create_ticket' %}New Ticket
+                {% elif request.resolver_match.url_name == 'reports' %}Reports
+                {% elif request.resolver_match.url_name == 'settings_page' %}Settings
+                {% elif request.resolver_match.url_name == 'ticket_detail' %}Ticket Details
+                {% elif request.resolver_match.url_name == 'admin_ticket_detail' %}Ticket Details
+                {% else %}GPLAST
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="navbar-right">
+            {% if user.is_authenticated %}
+                <!-- User Info -->
+                <div class="user-info-wrapper">
+                    <div class="user-avatar">{{ user.username|first|upper }}</div>
+                    <div class="user-details">
+                        <span class="user-name">{{ user.username }}</span>
+                        <span class="user-role">{% if user.is_staff %}Administrator{% else %}Employee{% endif %}</span>
+                    </div>
+                    {% if user.is_staff %}
+                        <span class="role-badge admin">Admin</span>
+                    {% else %}
+                        <span class="role-badge employee">Employee</span>
+                    {% endif %}
+                </div>
+
+                <!-- Logout -->
+                <form action="{% url 'custom_logout' %}" method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            {% else %}
+                <a class="btn-login-nav" href="{% url 'login' %}">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>Login</span>
+                </a>
+            {% endif %}
+        </div>
+    </nav>
 
     <!-- TOAST CONTAINER -->
     <div class="toast-container-custom" id="toastContainer"></div>
@@ -880,12 +1340,10 @@
     {% endif %}
 
     <!-- ==========================================
-    MAIN CONTENT WITH SPACING
+    MAIN CONTENT
     ========================================== -->
     <div class="main-content-wrapper">
-        <div class="container">
-            {% block content %}{% endblock %}
-        </div>
+        {% block content %}{% endblock %}
     </div>
 
     <!-- CONFIRMATION MODAL -->
@@ -893,7 +1351,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-question me-2"></i>Confirmation Required</h5>
+                    <h5 class="modal-title"><i class="fa-solid fa-circle-question me-2"></i>Confirmation Required</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center" id="confirmModalBody">
@@ -912,7 +1370,7 @@
     </div>
 
     <!-- FOOTER -->
-    <footer class="py-3 text-center mt-auto">
+    <footer class="py-3 text-center">
         <div class="container">
             <p class="mb-0">
                 <i class="fa-regular fa-copyright me-1"></i> {% now "Y" %} GPLAST ERP Ticketing System.
@@ -926,35 +1384,114 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Theme Toggle
-            const themeToggleBtn = document.getElementById('themeToggleFloating');
-            const themeIcon = document.getElementById('themeIconFloating');
+            // ============================================
+            // SIDEBAR TOGGLE (Mobile & Desktop)
+            // ============================================
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const sidebarCollapseToggle = document.getElementById('sidebarCollapseToggle');
+
+            // Check saved sidebar state
+            const isSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+            if (isSidebarCollapsed && window.innerWidth >= 992) {
+                sidebar.classList.add('collapsed');
+                if (sidebarCollapseToggle) {
+                    sidebarCollapseToggle.querySelector('i').className = 'fa-solid fa-chevron-right';
+                }
+            }
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('show');
+                document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+            }
+
+            function toggleSidebarCollapse() {
+                if (window.innerWidth >= 992) {
+                    sidebar.classList.toggle('collapsed');
+                    const isCollapsed = sidebar.classList.contains('collapsed');
+                    localStorage.setItem('sidebarCollapsed', isCollapsed);
+                    
+                    if (sidebarCollapseToggle) {
+                        const icon = sidebarCollapseToggle.querySelector('i');
+                        icon.className = isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left';
+                    }
+                    
+                    // Trigger resize event for charts
+                    window.dispatchEvent(new Event('resize'));
+                }
+            }
+
+            // Sidebar toggle (hamburger menu)
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleSidebar();
+                });
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+            }
+
+            if (sidebarCollapseToggle) {
+                sidebarCollapseToggle.addEventListener('click', toggleSidebarCollapse);
+            }
+
+            // Close sidebar on link click (mobile)
+            document.querySelectorAll('.sidebar-link:not(.theme-toggle-link)').forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992 && sidebar.classList.contains('open')) {
+                        toggleSidebar();
+                    }
+                });
+            });
+
+            // ============================================
+            // THEME TOGGLE - Sidebar & Floating
+            // ============================================
+            const sidebarThemeToggle = document.getElementById('sidebarThemeToggle');
+            const sidebarThemeIcon = document.getElementById('sidebarThemeIcon');
+            const sidebarThemeText = document.getElementById('sidebarThemeText');
+            
             const savedTheme = localStorage.getItem('theme') || 'light';
             applyTheme(savedTheme);
 
             function applyTheme(theme) {
                 if (theme === 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
-                    if (themeIcon) themeIcon.className = 'fas fa-sun';
+                    if (sidebarThemeIcon) sidebarThemeIcon.className = 'fas fa-sun';
+                    if (sidebarThemeText) sidebarThemeText.textContent = 'Light Mode';
                 } else {
                     document.documentElement.removeAttribute('data-theme');
-                    if (themeIcon) themeIcon.className = 'fas fa-moon';
+                    if (sidebarThemeIcon) sidebarThemeIcon.className = 'fas fa-moon';
+                    if (sidebarThemeText) sidebarThemeText.textContent = 'Dark Mode';
                 }
                 localStorage.setItem('theme', theme);
             }
 
             function toggleTheme() {
                 const current = document.documentElement.getAttribute('data-theme');
-                applyTheme(current === 'dark' ? 'light' : 'dark');
-                if (themeToggleBtn) {
-                    themeToggleBtn.style.transform = 'scale(0.8) rotate(180deg)';
-                    setTimeout(() => { themeToggleBtn.style.transform = ''; }, 300);
-                }
+                const newTheme = current === 'dark' ? 'light' : 'dark';
+                applyTheme(newTheme);
+                
+                // Trigger resize for charts
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 300);
             }
 
-            if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+            // Sidebar theme toggle
+            if (sidebarThemeToggle) {
+                sidebarThemeToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleTheme();
+                });
+            }
 
-            // Toast Notifications
+            // ============================================
+            // TOAST NOTIFICATIONS
+            // ============================================
             const toastContainer = document.getElementById('toastContainer');
 
             window.showToast = function(message, type = 'info', title = null) {
@@ -993,7 +1530,9 @@
                 setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
             }
 
-            // Django Messages to Toasts
+            // ============================================
+            // DJANGO MESSAGES TO TOASTS
+            // ============================================
             const djangoMessagesContainer = document.getElementById('djangoMessages');
             if (djangoMessagesContainer) {
                 djangoMessagesContainer.querySelectorAll('.django-message').forEach(function(el) {
@@ -1004,35 +1543,19 @@
                 djangoMessagesContainer.remove();
             }
 
-            // Navbar Scroll Effect
+            // ============================================
+            // NAVBAR SCROLL EFFECT
+            // ============================================
             const navbar = document.getElementById('mainNav');
             if (navbar && !navbar.classList.contains('navbar-hidden')) {
                 window.addEventListener('scroll', function() {
-                    navbar.classList.toggle('scrolled', window.scrollY > 30);
+                    navbar.classList.toggle('scrolled', window.scrollY > 20);
                 });
             }
 
-            // Auto-close Mobile Menu
-            document.querySelectorAll('.navbar-nav .nav-link').forEach(function(link) {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth < 992) {
-                        const bsCollapse = bootstrap.Collapse.getInstance(document.getElementById('navbarNav'));
-                        if (bsCollapse) bsCollapse.hide();
-                    }
-                });
-            });
-
-            // Mobile scroll fix
-            if (window.innerWidth < 992) {
-                document.querySelector('.navbar-collapse')?.addEventListener('show.bs.collapse', function() {
-                    document.body.style.overflow = 'hidden';
-                });
-                document.querySelector('.navbar-collapse')?.addEventListener('hide.bs.collapse', function() {
-                    document.body.style.overflow = '';
-                });
-            }
-
-            // Confirmation Modal
+            // ============================================
+            // CONFIRMATION MODAL
+            // ============================================
             window.showConfirmation = function(message, onConfirm) {
                 const confirmModal = document.getElementById('confirmModal');
                 const confirmBody = document.getElementById('confirmModalBody');
@@ -1052,7 +1575,50 @@
                 });
             };
 
-            console.log('GPLAST Ticketing System - Ready');
+            // ============================================
+            // CLOSE SIDEBAR ON RESIZE
+            // ============================================
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 992 && sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+                
+                // Handle sidebar collapse state on resize
+                if (window.innerWidth < 992) {
+                    sidebar.classList.remove('collapsed');
+                    if (sidebarCollapseToggle) {
+                        sidebarCollapseToggle.querySelector('i').className = 'fa-solid fa-chevron-left';
+                    }
+                } else {
+                    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                    if (isCollapsed) {
+                        sidebar.classList.add('collapsed');
+                        if (sidebarCollapseToggle) {
+                            sidebarCollapseToggle.querySelector('i').className = 'fa-solid fa-chevron-right';
+                        }
+                    }
+                }
+            });
+
+            // ============================================
+            // CLOSE SIDEBAR ON CLICK OUTSIDE
+            // ============================================
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth < 992 && sidebar.classList.contains('open')) {
+                    const isClickInsideSidebar = sidebar.contains(e.target);
+                    const isClickOnToggle = sidebarToggle && sidebarToggle.contains(e.target);
+                    if (!isClickInsideSidebar && !isClickOnToggle) {
+                        toggleSidebar();
+                    }
+                }
+            });
+
+            console.log('🚀 GPLAST Ticketing System - Professional Edition');
+            console.log('📱 Sidebar: Collapsible & Responsive');
+            console.log('🌓 Theme Toggle: In Sidebar (below Settings)');
+            console.log('👤 User: ' + (document.querySelector('.user-name')?.textContent || 'Guest'));
         });
     </script>
 

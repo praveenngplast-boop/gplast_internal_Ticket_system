@@ -1,10 +1,12 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
     # =========================================================================
     # AUTH URLS
     # =========================================================================
+    # Use the custom login view
     path('login/', views.CustomLoginView.as_view(), name='login'),
     path('role-redirect/', views.role_redirect, name='role_redirect'),
     path('logout/', views.custom_logout, name='custom_logout'),

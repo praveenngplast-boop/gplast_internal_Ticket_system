@@ -5,15 +5,18 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
+# ============================================
+# SECURITY SETTINGS
+# ============================================
 
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-default-key-for-gplast-app-12345')
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
-# Application definition
+# ============================================
+# APPLICATION DEFINITION
+# ============================================
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -22,16 +25,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Third party
     'whitenoise.runserver_nostatic',
-    # Local apps
     'tickets',
 ]
 
 MIDDLEWARE = [
-    
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise Middleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -60,13 +60,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'gplast_ticket.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+# ============================================
+# DATABASE - PRODUCTION
+# ============================================
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
+        'NAME': config('DB_NAME', default='gplast_db'),
+        'USER': config('DB_USER', default='root'),
         'PASSWORD': config('DB_PASSWORD', default=''),
         'HOST': config('DB_HOST', default='127.0.0.1'),
         'PORT': config('DB_PORT', default='3306'),
@@ -77,94 +79,126 @@ DATABASES = {
     }
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
+# ============================================
+# PASSWORD VALIDATION
+# ============================================
+
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.0/topics/i18n/
+# ============================================
+# INTERNATIONALIZATION
+# ============================================
+
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Kolkata'  # Local company timezone
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
+# ============================================
+# STATIC & MEDIA FILES
+# ============================================
+
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media Files (for attachments)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Login / Logout redirects
-LOGIN_URL = 'login'
+# ============================================
+# LOGIN / LOGOUT
+# ============================================
+
 LOGIN_REDIRECT_URL = 'role_redirect'
+LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
 
-# Email Settings (reads from .env file)
-# Email Settings
-# settings.py - Email Configuration (Fixed)
-
-from decouple import config
-
 # ============================================
-# EMAIL CONFIGURATION
+# EMAIL CONFIGURATION - GMAIL SSL (PORT 465)
 # ============================================
 
-# Email Backend
-EMAIL_BACKEND = config(
-    'EMAIL_BACKEND',
-    default='django.core.mail.backends.smtp.EmailBackend'
-)
-
-# SMTP Host Configuration
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
-EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-
-# Authentication
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='praveenngplast@gmail.com')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-
-# Security Settings (Gmail uses TLS on port 587)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
-
-# From Email Address
-DEFAULT_FROM_EMAIL = config(
-    'DEFAULT_FROM_EMAIL',
-    default='ERP Support <praveenngplast@gmail.com>'
-)
-
-# Server Email (for error reports)
-SERVER_EMAIL = config(
-    'SERVER_EMAIL',
-    default=DEFAULT_FROM_EMAIL
-)
-
-# Optional: Email timeout
+EMAIL_PORT = config('EMAIL_PORT', default=465, cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='erpimd@gplast.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')  # App Password
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=True, cast=bool)
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='ERP Support <erpimd@gplast.com>')
+SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=30, cast=int)
 
-# Optional: For development, use console backend
-if config('DEBUG', default=False, cast=bool):
-    # Uncomment the line below to test emails without actually sending
-    # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    pass
+# ============================================
+# LOGGING - PRODUCTION
+# ============================================
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'django.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'tickets': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+# Create logs directory if it doesn't exist
+LOG_DIR = BASE_DIR / 'logs'
+if not LOG_DIR.exists():
+    LOG_DIR.mkdir(parents=True)
+
+# ============================================
+# SESSION & SECURITY (Production)
+# ============================================
+
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+if not DEBUG:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'

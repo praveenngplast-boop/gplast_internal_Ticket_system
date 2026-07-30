@@ -32,6 +32,18 @@
             'High': '#ed8936',
             'Medium': '#4299e1',
             'Low': '#48bb78'
+        },
+        errorType: {
+            'ERP Error': '#EF4444',
+            'Data Entry Error': '#F59E0B',
+            'DB Error': '#3B82F6',
+            'Server Error': '#8B5CF6',
+            'IT Error': '#EC4899',
+            'User Error': '#06B6D4',
+            'Other': '#94A3B8',
+            'Network Error': '#14B8A6',
+            'Security Error': '#6366F1',
+            'Hardware Error': '#F97316'
         }
     };
 
@@ -472,6 +484,90 @@
     }
 
     // ============================================
+    // ✅ NEW: CREATE ERROR TYPE CHART
+    // ============================================
+    function createErrorTypeChart(canvasId, data, drillDownFunction) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+
+        const chartData = parseDict(data || {});
+        
+        // If no data, show empty state
+        if (chartData.labels.length === 0) {
+            ctx.style.display = 'none';
+            const container = document.getElementById(canvasId + 'Container');
+            if (container) {
+                let emptyMsg = container.querySelector('.chart-empty-msg');
+                if (!emptyMsg) {
+                    emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'chart-empty-msg';
+                    emptyMsg.style.cssText = `
+                        text-align: center;
+                        padding: 2rem 1rem;
+                        color: var(--text-muted);
+                    `;
+                    emptyMsg.innerHTML = `
+                        <i class="fa-solid fa-bug" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+                        <p style="margin: 0; font-size: 0.85rem;">No error type data available</p>
+                        <p style="margin: 0; font-size: 0.7rem; opacity: 0.7;">Only closed tickets with error types are shown</p>
+                    `;
+                    container.appendChild(emptyMsg);
+                }
+            }
+            return null;
+        }
+
+        const theme = getThemeColors();
+        
+        // Use errorType colors from COLORS object
+        const colors = chartData.labels.map(label => 
+            COLORS.errorType[label] || COLORS.grey
+        );
+        
+        return new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    data: chartData.values,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: theme.borderColor,
+                    hoverOffset: 15,
+                }]
+            },
+            options: {
+                ...getCommonOptions(),
+                cutout: '65%',
+                plugins: {
+                    ...getCommonOptions().plugins,
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            font: { family: 'Poppins, Inter, sans-serif', size: 11 },
+                            padding: 12,
+                            color: theme.textColor,
+                            usePointStyle: true,
+                            pointStyleWidth: 10,
+                            boxWidth: 12,
+                        }
+                    }
+                },
+                onClick: function(event, elements) {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const label = this.data.labels[index];
+                        if (drillDownFunction) {
+                            drillDownFunction(label);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // ============================================
     // THEME UPDATE FUNCTION
     // ============================================
     function updateAllCharts() {
@@ -560,7 +656,8 @@
             monthly: null,
             department: null,
             deptStatus: null,
-            deptPriority: null
+            deptPriority: null,
+            errorType: null  // ✅ ADDED ERROR TYPE
         };
 
         // Admin Dashboard Charts
@@ -592,6 +689,17 @@
                     'priorityChart', data.priority,
                     function(priority) {
                         if (config.drillDown) config.drillDown.priority(priority);
+                    }
+                );
+            }
+
+            // ✅ ADDED: Error Type Chart
+            if (document.getElementById('errorTypeChart')) {
+                charts.errorType = createErrorTypeChart(
+                    'errorTypeChart',
+                    data.errorType || {},
+                    function(errorType) {
+                        if (config.drillDown) config.drillDown.errorType(errorType);
                     }
                 );
             }
@@ -653,6 +761,7 @@
         setTimeout(updateAllCharts, 500);
 
         console.log('✅ Charts initialized successfully!');
+        console.log('📊 Charts created:', Object.keys(charts).filter(k => charts[k] !== null));
         return charts;
     };
 
@@ -667,6 +776,7 @@
     window.createDepartmentChart = createDepartmentChart;
     window.createDeptStatusChart = createDeptStatusChart;
     window.createDeptPriorityChart = createDeptPriorityChart;
+    window.createErrorTypeChart = createErrorTypeChart;  // ✅ EXPOSED
     window.updateAllCharts = updateAllCharts;
 
 })();
