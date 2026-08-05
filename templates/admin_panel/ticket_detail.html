@@ -3,14 +3,45 @@
 
 {% block extra_head %}
 {{ block.super }}
-<style>    
-    /* ============================================
-       PROFESSIONAL & COMPACT STYLES
-    ============================================ */
-    .ticket-detail-container {
+<style>
+    :root {
+        --ticket-bg: #FFFFFF;
+        --ticket-border: #E8EDF5;
+        --ticket-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        --ticket-radius: 16px;
+        --input-bg: #F8FAFF;
+        --input-border: #DCE3F0;
+        --text-primary: #1A2A6C;
+        --text-secondary: #4A5A7A;
+        --text-muted: #8A9AB8;
+        --success-color: #22C55E;
+        --danger-color: #EF4444;
+        --warning-color: #F59E0B;
+        --brand-orange: #FF6B00;
+        --brand-orange-dark: #E55A00;
+        --brand-gradient: linear-gradient(135deg, #FF6B00 0%, #FF8C38 100%);
+        --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+        --shadow-md: 0 4px 24px rgba(0,0,0,0.10);
+    }
+
+    [data-theme="dark"] {
+        --ticket-bg: #1A1A2E;
+        --ticket-border: rgba(255, 255, 255, 0.08);
+        --ticket-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        --input-bg: rgba(255, 255, 255, 0.05);
+        --input-border: rgba(255, 255, 255, 0.08);
+        --text-primary: #E8EDF5;
+        --text-secondary: #A8B8D8;
+        --text-muted: #6A7A9A;
+        --shadow-sm: 0 2px 12px rgba(0,0,0,0.3);
+        --shadow-md: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    .ticket-container {
         animation: fadeInUp 0.6s ease;
         max-width: 1400px;
         margin: 0 auto;
+        padding: 0 0.5rem;
     }
 
     @keyframes fadeInUp {
@@ -18,53 +49,196 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    .detail-card {
-        animation: cardFadeIn 0.6s ease;
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
+    .ticket-header {
+        background: var(--ticket-bg);
+        border: 1px solid var(--ticket-border);
+        border-radius: var(--ticket-radius);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
         box-shadow: var(--shadow-sm);
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 1rem;
         transition: all 0.3s ease;
     }
 
-    .detail-card:hover {
+    .ticket-header:hover {
         box-shadow: var(--shadow-md);
-        border-color: var(--border-light);
     }
 
-    @keyframes cardFadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+    .header-title {
+        font-size: clamp(1rem, 2vw, 1.3rem);
+        font-weight: 700;
+        color: var(--text-primary);
+        font-family: 'Fraunces', serif;
+    }
+
+    .header-subtitle {
+        font-size: clamp(0.7rem, 1vw, 0.8rem);
+        color: var(--text-secondary);
+    }
+
+    .btn-back {
+        border: 2px solid var(--ticket-border) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 50px !important;
+        padding: 0.25rem 0.8rem !important;
+        font-size: 0.75rem !important;
+        transition: all 0.3s ease !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        background: transparent !important;
+    }
+
+    .btn-back:hover {
+        border-color: var(--brand-orange) !important;
+        color: var(--text-primary) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.1) !important;
+    }
+
+    .panel-card {
+        background: var(--ticket-bg);
+        border: 1px solid var(--ticket-border);
+        border-radius: var(--ticket-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .panel-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: rgba(255, 107, 0, 0.15);
     }
 
     .glass-header {
         background: rgba(255, 107, 0, 0.03);
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--ticket-border);
         padding: 0.6rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
-    .glass-header h5 {
+    .glass-header h6 {
         color: var(--text-primary) !important;
         font-weight: 700;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         margin: 0;
         font-family: 'Fraunces', serif;
     }
 
-    .glass-header h5 i {
+    .glass-header h6 i {
         color: var(--brand-orange) !important;
     }
 
+    .glass-header .badge-count {
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
+        font-size: 0.55rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 50px;
+        border: 1px solid rgba(255, 107, 0, 0.1);
+    }
+
+    .card-body {
+        padding: 0.75rem 1rem;
+    }
+
     /* ============================================
-       COMPACT DETAILS GRID
+       ACTION BANNER - PROMINENT POSITION
+    ============================================ */
+    .action-banner {
+        background: var(--ticket-bg);
+        border: 2px solid var(--brand-orange);
+        border-radius: var(--ticket-radius);
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    .action-banner:hover {
+        box-shadow: 0 4px 30px rgba(255, 107, 0, 0.15);
+        border-color: var(--brand-orange-dark);
+    }
+
+    .action-banner .banner-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .action-banner .banner-title i {
+        color: var(--brand-orange);
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: flex-start;
+    }
+
+    .action-btn {
+        padding: 0.4rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.78rem;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.3s ease;
+        color: white !important;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        min-height: 38px;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        color: white !important;
+    }
+
+    .action-btn:active {
+        transform: scale(0.95);
+    }
+
+    .action-btn i { font-size: 0.75rem; }
+
+    .action-btn-assign { background: var(--warning-color) !important; }
+    .action-btn-hold { background: #94A3B8 !important; }
+    .action-btn-escalate { background: #8B5CF6 !important; }
+    .action-btn-close { background: var(--success-color) !important; }
+    .action-btn-reopen { background: #3B82F6 !important; }
+
+    .action-btn .badge-reopen-time {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        font-size: 0.55rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        margin-left: 0.2rem;
+    }
+
+    /* ============================================
+       DETAILS GRID
     ============================================ */
     .details-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.6rem;
-        padding: 0.75rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
     }
 
     @media (max-width: 768px) {
@@ -74,10 +248,10 @@
     }
 
     .detail-item {
-        background: var(--bg-secondary);
+        background: var(--input-bg);
+        border: 1px solid var(--ticket-border);
         border-radius: 8px;
-        padding: 0.4rem 0.7rem;
-        border: 1px solid var(--border-color);
+        padding: 0.4rem 0.6rem;
         transition: all 0.3s ease;
     }
 
@@ -85,34 +259,34 @@
         border-color: rgba(255, 107, 0, 0.2);
     }
 
+    .detail-item.full-width {
+        grid-column: 1 / -1;
+    }
+
     .detail-label {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: var(--text-muted) !important;
-        margin-bottom: 0.1rem;
+        color: var(--text-muted);
         display: block;
+        margin-bottom: 0.05rem;
     }
 
     .detail-value {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         font-weight: 500;
-        color: var(--text-primary) !important;
+        color: var(--text-primary);
+        word-break: break-word;
     }
 
-    .detail-subject {
-        grid-column: 1 / -1;
-        background: rgba(255, 107, 0, 0.04);
-        border: 1px solid rgba(255, 107, 0, 0.12);
-        border-radius: 8px;
-        padding: 0.6rem 0.7rem;
+    .detail-value a {
+        color: var(--brand-orange);
+        text-decoration: none;
     }
 
-    .detail-subject .detail-value {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--brand-orange) !important;
+    .detail-value a:hover {
+        text-decoration: underline;
     }
 
     .detail-description {
@@ -120,168 +294,135 @@
     }
 
     .detail-description .detail-value {
-        background: var(--bg-secondary);
-        border-radius: 8px;
-        padding: 0.6rem 0.7rem;
+        background: var(--input-bg);
+        border-radius: 6px;
+        padding: 0.5rem 0.6rem;
         border-left: 3px solid var(--brand-orange);
-        font-weight: 400;
         line-height: 1.6;
-        font-size: 0.85rem;
+        font-weight: 400;
+        color: var(--text-secondary);
         white-space: pre-line;
-        color: var(--text-secondary) !important;
+        font-size: 0.8rem;
     }
 
-    /* ============================================
-       FIXED FORM CONTROLS - THEME AWARE
-    ============================================ */
-    .form-control, .form-select, textarea {
-        background-color: var(--input-bg) !important;
-        border: 2px solid var(--border-color) !important;
-        color: var(--text-primary) !important;
-        border-radius: 8px !important;
-        padding: 0.4rem 0.7rem !important;
-        font-size: 0.85rem !important;
-        transition: all 0.3s ease !important;
-        width: 100%;
-        -webkit-text-fill-color: var(--text-primary) !important;
-    }
-
-    .form-control:focus, .form-select:focus, textarea:focus {
-        border-color: var(--brand-orange) !important;
-        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.08) !important;
-        outline: none !important;
-        background-color: var(--input-bg) !important;
-        color: var(--text-primary) !important;
-        -webkit-text-fill-color: var(--text-primary) !important;
-    }
-
-    .form-control::placeholder, textarea::placeholder {
-        color: var(--text-muted) !important;
-        opacity: 0.7 !important;
-    }
-
-    .form-select option, select option {
-        background: var(--bg-secondary) !important;
-        color: var(--text-primary) !important;
-    }
-
-    .form-label {
-        font-weight: 600 !important;
-        font-size: 0.78rem !important;
-        color: var(--text-secondary) !important;
-        margin-bottom: 0.3rem !important;
-    }
-
-    .form-label i {
-        color: var(--brand-orange) !important;
-        width: 16px;
-    }
-
-    /* ============================================
-       COMPACT BADGES
-    ============================================ */
-    .badge-custom {
+    .badge-status {
         display: inline-block;
-        padding: 0.2rem 0.6rem;
+        padding: 0.15rem 0.5rem;
         border-radius: 50px;
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
 
-    .badge-status-open { background: #22C55E !important; color: white !important; }
-    .badge-status-assigned { background: #3B82F6 !important; color: white !important; }
-    .badge-status-hold { background: #F59E0B !important; color: white !important; }
-    .badge-status-escalated { background: #8B5CF6 !important; color: white !important; }
-    .badge-status-closed { background: #94A3B8 !important; color: white !important; }
-    
-    .badge-admin-created {
-        background: var(--brand-gradient) !important;
-        color: white !important;
+    .badge-status-open { background: var(--success-color); color: white; }
+    .badge-status-assigned { background: #3B82F6; color: white; }
+    .badge-status-hold { background: var(--warning-color); color: white; }
+    .badge-status-escalated { background: #8B5CF6; color: white; }
+    .badge-status-closed { background: #94A3B8; color: white; }
+
+    .badge-priority {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
     }
 
-    .priority-critical { background: #EF4444 !important; color: white !important; }
-    .priority-high { background: #F59E0B !important; color: #1A1A2E !important; }
-    .priority-medium { background: #3B82F6 !important; color: white !important; }
-    .priority-low { background: #94A3B8 !important; color: white !important; }
+    .badge-priority-critical { background: var(--danger-color); color: white; }
+    .badge-priority-high { background: var(--warning-color); color: #1A1A2E; }
+    .badge-priority-medium { background: #3B82F6; color: white; }
+    .badge-priority-low { background: #94A3B8; color: white; }
 
-    /* ============================================
-       STATUS BOXES
-    ============================================ */
+    .badge-origin {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.55rem;
+        font-weight: 600;
+    }
+
+    .badge-origin-admin {
+        background: var(--brand-gradient);
+        color: white;
+    }
+
+    .badge-origin-self {
+        background: var(--input-bg);
+        color: var(--text-secondary);
+        border: 1px solid var(--ticket-border);
+    }
+
     .status-box {
-        padding: 0.6rem 0.75rem;
+        padding: 0.5rem 0.75rem;
         border-radius: 8px;
         border-left: 3px solid;
-        background: var(--bg-card);
-        margin-bottom: 1rem;
+        margin-top: 0.5rem;
     }
 
     .status-box-hold {
-        border-left-color: #F59E0B !important;
-        background: rgba(245, 158, 11, 0.05) !important;
+        border-left-color: var(--warning-color);
+        background: rgba(245, 158, 11, 0.06);
     }
 
     .status-box-escalated {
-        border-left-color: #8B5CF6 !important;
-        background: rgba(139, 92, 246, 0.05) !important;
+        border-left-color: #8B5CF6;
+        background: rgba(139, 92, 246, 0.06);
     }
 
     .status-box-closed {
-        border-left-color: #22C55E !important;
-        background: rgba(34, 197, 94, 0.05) !important;
+        border-left-color: var(--success-color);
+        background: rgba(34, 197, 94, 0.06);
     }
 
-    /* ============================================
-       ACTION BUTTONS
-    ============================================ */
-    .action-buttons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        justify-content: center;
-    }
-
-    .action-btn {
-        padding: 0.4rem 1rem;
-        border-radius: 50px;
-        font-weight: 500;
+    .status-box strong {
         font-size: 0.8rem;
-        border: none;
+    }
+
+    .status-box p {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        margin: 0.2rem 0 0 0;
+    }
+
+    .btn-attachment {
+        border: 2px solid var(--brand-orange);
+        color: var(--brand-orange);
+        border-radius: 50px;
+        padding: 0.15rem 0.6rem;
+        font-size: 0.65rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
-        justify-content: center;
-        transition: all 0.3s ease;
+        gap: 4px;
+        background: transparent;
+    }
+
+    .btn-attachment:hover {
+        background: var(--brand-gradient);
         color: white !important;
-        cursor: pointer;
-        font-family: 'Inter', sans-serif;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-color: transparent;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.2);
     }
-
-    .action-btn:hover {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-        color: white !important;
-    }
-
-    .action-btn:active {
-        transform: scale(0.95);
-    }
-
-    .action-btn-assign { background: #F59E0B !important; }
-    .action-btn-hold { background: #94A3B8 !important; }
-    .action-btn-escalate { background: #8B5CF6 !important; }
-    .action-btn-close { background: #22C55E !important; }
-    .action-btn-reopen { background: #3B82F6 !important; }
 
     /* ============================================
        TIMELINE
     ============================================ */
+    .timeline-scroll {
+        max-height: 380px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
     .timeline {
         position: relative;
         padding: 0;
         list-style: none;
+        margin: 0;
     }
 
     .timeline::before {
@@ -292,13 +433,13 @@
         left: 14px;
         width: 2px;
         background: var(--brand-gradient);
-        opacity: 0.3;
+        opacity: 0.25;
     }
 
     .timeline-item {
         position: relative;
         padding-left: 34px;
-        margin-bottom: 0.6rem;
+        margin-bottom: 0.5rem;
     }
 
     .timeline-item:last-child {
@@ -313,15 +454,15 @@
         height: 10px;
         border-radius: 50%;
         background: var(--brand-gradient);
-        border: 2px solid var(--bg-card);
+        border: 2px solid var(--ticket-bg);
         z-index: 1;
     }
 
     .timeline-content {
-        background: var(--bg-secondary);
+        background: var(--input-bg);
         border-radius: 8px;
-        padding: 0.4rem 0.6rem;
-        border: 1px solid var(--border-color);
+        padding: 0.35rem 0.6rem;
+        border: 1px solid var(--ticket-border);
         transition: all 0.3s ease;
     }
 
@@ -330,52 +471,72 @@
     }
 
     .timeline-time {
-        font-size: 0.6rem;
-        color: var(--text-muted) !important;
+        font-size: 0.55rem;
+        color: var(--text-muted);
         font-weight: 500;
     }
 
     .timeline-title {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         font-weight: 600;
-        color: var(--brand-orange) !important;
+        color: var(--brand-orange);
     }
 
     .timeline-body {
-        font-size: 0.75rem;
-        color: var(--text-secondary) !important;
-        margin-top: 0.1rem;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-top: 0.05rem;
     }
 
     .timeline-by {
-        font-size: 0.6rem;
-        color: var(--text-muted) !important;
+        font-size: 0.55rem;
+        color: var(--text-muted);
         display: block;
-        margin-top: 0.1rem;
+        margin-top: 0.05rem;
+    }
+
+    .timeline-empty {
+        text-align: center;
+        padding: 2rem 0;
+        color: var(--text-muted);
+    }
+
+    .timeline-empty i {
+        font-size: 2rem;
+        opacity: 0.25;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline-empty p {
+        font-size: 0.8rem;
+        margin: 0;
     }
 
     /* ============================================
        MODALS
     ============================================ */
     .modal-content {
-        background: var(--bg-card) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 12px !important;
-        box-shadow: var(--shadow-lg) !important;
+        background: var(--ticket-bg) !important;
+        border: 1px solid var(--ticket-border) !important;
+        border-radius: var(--ticket-radius) !important;
+        box-shadow: var(--shadow-md) !important;
     }
 
     .modal-header {
-        border-bottom: 1px solid var(--border-color) !important;
+        border-bottom: 1px solid var(--ticket-border) !important;
         padding: 0.75rem 1rem !important;
-        border-radius: 12px 12px 0 0 !important;
+        border-radius: var(--ticket-radius) var(--ticket-radius) 0 0 !important;
     }
 
     .modal-header .modal-title {
         font-family: 'Fraunces', serif !important;
         font-weight: 700 !important;
-        font-size: 1rem !important;
+        font-size: 0.95rem !important;
         color: #FFFFFF !important;
     }
+
+    .modal-header .modal-title i { margin-right: 0.4rem; }
 
     .modal-body {
         padding: 1rem !important;
@@ -383,9 +544,9 @@
     }
 
     .modal-footer {
-        border-top: 1px solid var(--border-color) !important;
+        border-top: 1px solid var(--ticket-border) !important;
         padding: 0.75rem 1rem !important;
-        border-radius: 0 0 12px 12px !important;
+        border-radius: 0 0 var(--ticket-radius) var(--ticket-radius) !important;
     }
 
     .modal .btn-close {
@@ -397,19 +558,19 @@
         opacity: 1 !important;
     }
 
-    .btn-light-custom {
-        background: var(--bg-secondary) !important;
-        border: 2px solid var(--border-color) !important;
+    .btn-modal-close {
+        background: var(--input-bg) !important;
+        border: 2px solid var(--ticket-border) !important;
         color: var(--text-secondary) !important;
         border-radius: 50px !important;
-        padding: 0.3rem 1rem !important;
-        font-size: 0.8rem !important;
+        padding: 0.25rem 1rem !important;
+        font-size: 0.75rem !important;
         transition: all 0.3s ease !important;
         font-family: 'Inter', sans-serif !important;
     }
 
-    .btn-light-custom:hover {
-        background: var(--bg-card) !important;
+    .btn-modal-close:hover {
+        background: var(--ticket-bg) !important;
         border-color: var(--brand-orange) !important;
         color: var(--text-primary) !important;
         transform: translateY(-1px) !important;
@@ -417,13 +578,14 @@
 
     .btn-modal-submit {
         border-radius: 50px !important;
-        padding: 0.3rem 1rem !important;
-        font-size: 0.8rem !important;
+        padding: 0.25rem 1rem !important;
+        font-size: 0.75rem !important;
         font-weight: 600 !important;
         color: #FFFFFF !important;
         border: none !important;
         transition: all 0.3s ease !important;
         font-family: 'Inter', sans-serif !important;
+        min-height: 34px;
     }
 
     .btn-modal-submit:hover {
@@ -432,32 +594,141 @@
         color: #FFFFFF !important;
     }
 
+    .btn-modal-submit.bg-assign { background: var(--warning-color) !important; }
+    .btn-modal-submit.bg-hold { background: #94A3B8 !important; }
+    .btn-modal-submit.bg-escalate { background: #8B5CF6 !important; }
+    .btn-modal-submit.bg-close { background: var(--success-color) !important; }
+    .btn-modal-submit.bg-reopen { background: #3B82F6 !important; }
+
+    .modal-header.bg-assign { background: var(--warning-color) !important; }
+    .modal-header.bg-hold { background: #94A3B8 !important; }
+    .modal-header.bg-escalate { background: #8B5CF6 !important; }
+    .modal-header.bg-close { background: var(--success-color) !important; }
+    .modal-header.bg-reopen { background: #3B82F6 !important; }
+
+    /* ============================================
+       FORM CONTROLS
+    ============================================ */
+    .form-control, .form-select, textarea {
+        background-color: var(--input-bg) !important;
+        border: 2px solid var(--ticket-border) !important;
+        color: var(--text-primary) !important;
+        border-radius: 8px !important;
+        padding: 0.35rem 0.6rem !important;
+        font-size: 0.78rem !important;
+        transition: all 0.3s ease !important;
+        width: 100%;
+        -webkit-text-fill-color: var(--text-primary) !important;
+    }
+
+    .form-control:focus, .form-select:focus, textarea:focus {
+        border-color: var(--brand-orange) !important;
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.08) !important;
+        outline: none !important;
+    }
+
+    .form-control::placeholder, textarea::placeholder {
+        color: var(--text-muted) !important;
+        opacity: 0.6 !important;
+        font-size: 0.7rem !important;
+    }
+
+    .form-select option, select option {
+        background: var(--ticket-bg) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .form-label {
+        font-weight: 600 !important;
+        font-size: 0.7rem !important;
+        color: var(--text-secondary) !important;
+        margin-bottom: 0.2rem !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+
+    .form-label i {
+        color: var(--brand-orange) !important;
+        width: 14px;
+        font-size: 0.6rem;
+    }
+
+    .form-label .required {
+        color: var(--danger-color);
+        font-size: 0.8rem;
+    }
+
     /* ============================================
        SCROLLBAR
     ============================================ */
-    .timeline-scroll {
-        max-height: 380px;
-        overflow-y: auto;
-        padding-right: 4px;
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--input-bg); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--brand-orange-dark); }
+
+    ::selection { background: var(--brand-orange); color: white; }
+
+    /* ============================================
+       RESPONSIVE
+    ============================================ */
+    @media (max-width: 992px) {
+        .ticket-header { padding: 0.75rem 1rem; }
+        .panel-card { margin-bottom: 0.75rem; }
+        .detail-value { font-size: 0.78rem; }
+        .action-btn { font-size: 0.7rem; padding: 0.3rem 0.8rem; min-height: 34px; }
+        .action-banner { padding: 0.6rem 1rem; }
     }
 
-    ::-webkit-scrollbar {
-        width: 5px;
-        height: 5px;
+    @media (max-width: 768px) {
+        .ticket-container { padding: 0 0.25rem; }
+        .ticket-header { padding: 0.6rem 0.75rem; }
+        .header-title { font-size: 0.95rem; }
+        .action-banner { padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; }
+        .action-banner .banner-title { font-size: 0.6rem; }
+        .action-btn { font-size: 0.65rem; padding: 0.25rem 0.6rem; min-height: 30px; }
+        .action-buttons { gap: 0.3rem; }
+        .glass-header { padding: 0.4rem 0.6rem; }
+        .glass-header h6 { font-size: 0.7rem; }
+        .card-body { padding: 0.5rem; }
+        .details-grid { gap: 0.3rem; }
+        .detail-item { padding: 0.3rem 0.4rem; }
+        .detail-value { font-size: 0.72rem; }
+        .detail-label { font-size: 0.5rem; }
+        .detail-description .detail-value { font-size: 0.72rem; padding: 0.3rem 0.4rem; }
+        .btn-back { font-size: 0.65rem !important; padding: 0.15rem 0.6rem !important; }
+        .timeline-scroll { max-height: 280px; }
+        .timeline-item { padding-left: 28px; margin-bottom: 0.4rem; }
+        .timeline::before { left: 10px; }
+        .timeline-marker { left: 6px; width: 8px; height: 8px; }
+        .timeline-title { font-size: 0.7rem; }
+        .timeline-body { font-size: 0.65rem; }
+        .status-box p { font-size: 0.72rem; }
+        .status-box strong { font-size: 0.75rem; }
     }
 
-    ::-webkit-scrollbar-track {
-        background: var(--bg-secondary);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: var(--brand-orange);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--brand-orange-dark);
+    @media (max-width: 576px) {
+        .ticket-header { padding: 0.5rem 0.6rem; }
+        .header-title { font-size: 0.85rem; }
+        .header-subtitle { font-size: 0.6rem; }
+        .action-banner { padding: 0.4rem 0.5rem; }
+        .action-banner .banner-title { font-size: 0.55rem; }
+        .action-btn { font-size: 0.6rem; padding: 0.2rem 0.5rem; min-height: 26px; }
+        .action-btn i { font-size: 0.6rem; }
+        .glass-header h6 { font-size: 0.65rem; }
+        .detail-value { font-size: 0.68rem; }
+        .detail-description .detail-value { font-size: 0.68rem; }
+        .detail-item { padding: 0.2rem 0.3rem; }
+        .badge-status, .badge-priority, .badge-origin { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
+        .btn-attachment { font-size: 0.55rem; padding: 0.1rem 0.4rem; }
+        .timeline-scroll { max-height: 220px; }
+        .modal-body { padding: 0.75rem !important; }
+        .modal-header .modal-title { font-size: 0.85rem !important; }
+        .form-control, .form-select, textarea { font-size: 0.7rem !important; padding: 0.25rem 0.4rem !important; }
+        .form-label { font-size: 0.65rem !important; }
+        .btn-modal-submit, .btn-modal-close { font-size: 0.7rem !important; padding: 0.2rem 0.7rem !important; min-height: 28px; }
+        .action-buttons { flex-direction: row; flex-wrap: wrap; }
+        .action-btn { flex: 1 1 auto; min-width: 80px; justify-content: center; }
     }
 
     /* ============================================
@@ -477,9 +748,10 @@
         border-color: rgba(255, 255, 255, 0.06);
     }
 
-    [data-theme="dark"] .detail-subject {
-        background: rgba(255, 107, 0, 0.06);
-        border-color: rgba(255, 107, 0, 0.15);
+    [data-theme="dark"] .badge-origin-self {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-secondary);
+        border-color: rgba(255, 255, 255, 0.1);
     }
 
     [data-theme="dark"] .status-box-hold {
@@ -494,408 +766,285 @@
         background: rgba(34, 197, 94, 0.08);
     }
 
-    [data-theme="dark"] .btn-light-custom {
+    [data-theme="dark"] .btn-modal-close {
         background: rgba(255, 255, 255, 0.06) !important;
         border-color: rgba(255, 255, 255, 0.1) !important;
         color: rgba(255, 255, 255, 0.7) !important;
     }
 
-    [data-theme="dark"] .btn-light-custom:hover {
+    [data-theme="dark"] .btn-modal-close:hover {
         background: rgba(255, 255, 255, 0.1) !important;
         border-color: var(--brand-orange) !important;
         color: #FFFFFF !important;
     }
 
-    /* ============================================
-       RESPONSIVE
-    ============================================ */
-    @media (max-width: 991px) {
-        .action-btn {
-            font-size: 0.75rem;
-            padding: 0.35rem 0.8rem;
-        }
-        
-        .detail-value {
-            font-size: 0.8rem;
-        }
+    [data-theme="dark"] .panel-card {
+        border-color: rgba(255, 255, 255, 0.06);
     }
 
-    @media (max-width: 768px) {
-        .details-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .action-buttons {
-            flex-direction: column;
-        }
-        
-        .action-btn {
-            width: 100%;
-            justify-content: center;
-        }
-        
-        .timeline-item {
-            padding-left: 30px;
-        }
-        
-        .timeline::before {
-            left: 10px;
-        }
-        
-        .timeline-marker {
-            left: 6px;
-            width: 8px;
-            height: 8px;
-        }
-
-        .detail-card {
-            margin-bottom: 0.75rem;
-        }
-
-        .glass-header h5 {
-            font-size: 0.8rem;
-        }
-
-        .detail-subject .detail-value {
-            font-size: 0.9rem;
-        }
-
-        .modal-dialog {
-            margin: 0.5rem;
-        }
-
-        .modal-body {
-            padding: 0.75rem !important;
-        }
-
-        .timeline-scroll {
-            max-height: 300px;
-        }
+    [data-theme="dark"] .panel-card:hover {
+        border-color: rgba(255, 107, 0, 0.2);
     }
 
-    @media (max-width: 576px) {
-        .details-grid {
-            gap: 0.4rem;
-            padding: 0.5rem;
-        }
-
-        .detail-item {
-            padding: 0.3rem 0.5rem;
-        }
-
-        .detail-value {
-            font-size: 0.75rem;
-        }
-
-        .detail-label {
-            font-size: 0.55rem;
-        }
-
-        .glass-header {
-            padding: 0.4rem 0.6rem;
-        }
-
-        .glass-header h5 {
-            font-size: 0.75rem;
-        }
-
-        .action-btn {
-            font-size: 0.7rem;
-            padding: 0.3rem 0.6rem;
-        }
-
-        .status-box {
-            padding: 0.4rem 0.6rem;
-        }
-
-        .timeline-content {
-            padding: 0.3rem 0.5rem;
-        }
-
-        .timeline-title {
-            font-size: 0.7rem;
-        }
-
-        .timeline-body {
-            font-size: 0.65rem;
-        }
-
-        .timeline-item {
-            padding-left: 26px;
-            margin-bottom: 0.4rem;
-        }
-
-        .timeline::before {
-            left: 8px;
-        }
-
-        .timeline-marker {
-            left: 4px;
-            width: 7px;
-            height: 7px;
-        }
-
-        .timeline-scroll {
-            max-height: 250px;
-        }
-
-        .modal-header .modal-title {
-            font-size: 0.85rem !important;
-        }
-
-        .btn-light-custom,
-        .btn-modal-submit {
-            font-size: 0.7rem !important;
-            padding: 0.25rem 0.7rem !important;
-        }
-
-        .form-control, .form-select, textarea {
-            font-size: 0.75rem !important;
-            padding: 0.3rem 0.5rem !important;
-        }
-
-        .form-label {
-            font-size: 0.7rem !important;
-        }
+    [data-theme="dark"] .glass-header {
+        background: rgba(255, 107, 0, 0.04);
     }
 
-    /* ============================================
-       SELECTION
-    ============================================ */
-    ::selection {
-        background: var(--brand-orange);
-        color: #FFFFFF;
+    [data-theme="dark"] .btn-back {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    [data-theme="dark"] .btn-back:hover {
+        border-color: var(--brand-orange) !important;
+        color: #FFFFFF !important;
+    }
+
+    [data-theme="dark"] .action-banner {
+        border-color: rgba(255, 107, 0, 0.3);
+        background: rgba(255, 107, 0, 0.03);
+    }
+
+    [data-theme="dark"] .action-banner:hover {
+        border-color: rgba(255, 107, 0, 0.5);
+        box-shadow: 0 4px 30px rgba(255, 107, 0, 0.1);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="ticket-detail-container">
-    <!-- Compact Header -->
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <div>
-            <h2 class="fw-bold mb-0" style="font-size: clamp(1rem, 2vw, 1.2rem); color: var(--text-primary);">
-                <i class="fa-solid fa-screwdriver-wrench me-2" style="color: var(--brand-orange);"></i>
-                Ticket #{{ ticket.ticket_number }}
-            </h2>
-            <small style="color: var(--text-secondary); font-size: 0.75rem;">
-                <i class="fa-regular fa-calendar me-1"></i>
-                {{ ticket.created_at|date:"d-b-Y h:i A" }}
-                <span class="badge rounded-pill ms-2" style="background: rgba(255, 107, 0, 0.1); color: var(--brand-orange); font-size: 0.6rem; border: 1px solid rgba(255, 107, 0, 0.1);">
-                    {{ ticket.created_at|timesince }} ago
-                </span>
-            </small>
+<div class="ticket-container">
+
+    <!-- Header -->
+    <div class="ticket-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h1 class="header-title">
+                    <i class="fa-solid fa-screwdriver-wrench me-2" style="color: var(--brand-orange);"></i>
+                    Ticket #{{ ticket.ticket_number }}
+                </h1>
+                <div class="header-subtitle">
+                    <i class="fa-regular fa-calendar me-1"></i>
+                    {{ ticket.created_at|date:"d M Y h:i A" }}
+                    <span class="badge rounded-pill ms-2" style="background: rgba(255, 107, 0, 0.08); color: var(--brand-orange); font-size: 0.55rem; border: 1px solid rgba(255, 107, 0, 0.1);">
+                        {{ ticket.created_at|timesince }} ago
+                    </span>
+                </div>
+            </div>
+            <a href="{% url 'all_tickets' %}" class="btn-back">
+                <i class="fa-solid fa-arrow-left me-1"></i>Back
+            </a>
         </div>
-        <a href="{% url 'all_tickets' %}" class="btn btn-sm rounded-pill" style="border: 2px solid var(--border-color); color: var(--text-secondary); padding: 0.25rem 0.8rem; font-size: 0.75rem; transition: all 0.3s ease;">
-            <i class="fa-solid fa-arrow-left me-1"></i>Back
-        </a>
+    </div>
+
+    <!-- ============================================
+         ACTION BANNER - PROMINENT POSITION AT TOP
+    ============================================ -->
+    <div class="action-banner">
+        <div class="banner-title">
+            <i class="fa-solid fa-gears"></i>
+            Lifecycle Actions
+            {% if ticket.status == 'Closed' and can_reopen %}
+                <span class="badge rounded-pill" style="background: rgba(59, 130, 246, 0.15); color: #3B82F6; font-size: 0.5rem; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <i class="fa-regular fa-clock me-1"></i>Reopen Available
+                </span>
+            {% endif %}
+        </div>
+        <div class="action-buttons">
+            {% if ticket.status != 'Closed' %}
+                {% if ticket.status == 'Open' %}
+                    <button type="button" class="action-btn action-btn-assign" data-bs-toggle="modal" data-bs-target="#assignModal">
+                        <i class="fa-solid fa-user-plus"></i>Assign
+                    </button>
+                {% else %}
+                    <button type="button" class="action-btn action-btn-assign" data-bs-toggle="modal" data-bs-target="#assignModal">
+                        <i class="fa-solid fa-user-plus"></i>Re-Assign
+                    </button>
+                    <button type="button" class="action-btn action-btn-hold" data-bs-toggle="modal" data-bs-target="#holdModal">
+                        <i class="fa-solid fa-pause"></i>Hold
+                    </button>
+                    <button type="button" class="action-btn action-btn-escalate" data-bs-toggle="modal" data-bs-target="#escalateModal">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>Escalate
+                    </button>
+                    <button type="button" class="action-btn action-btn-close" data-bs-toggle="modal" data-bs-target="#closeModal">
+                        <i class="fa-solid fa-circle-check"></i>Close
+                    </button>
+                {% endif %}
+            {% else %}
+                {% if can_reopen %}
+                    <button type="button" class="action-btn action-btn-reopen" data-bs-toggle="modal" data-bs-target="#reopenModal">
+                        <i class="fa-solid fa-envelope-open"></i>Reopen
+                        <span class="badge-reopen-time" id="reopen-timer-badge">Loading...</span>
+                    </button>
+                    <span style="color: var(--text-muted); font-size: 0.65rem; display: flex; align-items: center; gap: 0.3rem;">
+                        <i class="fa-regular fa-clock"></i>
+                        <span id="reopen-timer-text">Time left to reopen</span>
+                    </span>
+                {% else %}
+                    <span style="color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 0.3rem;">
+                        <i class="fa-regular fa-clock"></i>
+                        Cannot reopen (48+ hours elapsed)
+                    </span>
+                {% endif %}
+            {% endif %}
+        </div>
     </div>
 
     <div class="row g-3">
         <!-- Left Column -->
         <div class="col-lg-8">
             <!-- Ticket Details -->
-            <div class="detail-card">
+            <div class="panel-card">
                 <div class="glass-header">
-                    <h5><i class="fa-solid fa-circle-info me-2"></i>Ticket Details</h5>
+                    <h6><i class="fa-solid fa-circle-info me-2"></i>Ticket Details</h6>
                 </div>
-                <div class="details-grid">
-                    <!-- Subject -->
-                    <div class="detail-subject">
-                        <span class="detail-label">Subject</span>
-                        <div class="detail-value">{{ ticket.subject }}</div>
-                    </div>
+                <div class="card-body">
+                    <div class="details-grid">
+                        <!-- Subject -->
+                        <div class="detail-item full-width" style="background: rgba(255, 107, 0, 0.04); border-color: rgba(255, 107, 0, 0.12);">
+                            <span class="detail-label">Subject</span>
+                            <div class="detail-value" style="color: var(--brand-orange); font-weight: 700;">{{ ticket.subject }}</div>
+                        </div>
 
-                    <!-- Employee Info -->
-                    <div class="detail-item">
-                        <span class="detail-label">Employee</span>
-                        <div class="detail-value">{{ ticket.employee_name }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Employee ID</span>
-                        <div class="detail-value">{{ ticket.employee_id }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Email</span>
-                        <div class="detail-value"><a href="mailto:{{ ticket.email }}" style="color: var(--brand-orange); text-decoration: none;">{{ ticket.email }}</a></div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Mobile</span>
-                        <div class="detail-value">{{ ticket.mobile }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Unit</span>
-                        <div class="detail-value">{{ ticket.unit.full_name }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Department</span>
-                        <div class="detail-value">{{ ticket.department.name }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Screen No.</span>
-                        <div class="detail-value">{{ ticket.screen_number }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Error Type</span>
-                        <div class="detail-value">{{ ticket.error_type|default:"Not Set" }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Priority</span>
-                        <div class="detail-value">
-                            <span class="badge-custom priority-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
+                        <!-- Employee Info -->
+                        <div class="detail-item">
+                            <span class="detail-label">Employee</span>
+                            <div class="detail-value">{{ ticket.employee_name }}</div>
                         </div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Status</span>
-                        <div class="detail-value">
-                            <span class="badge-custom badge-status-{{ ticket.status|lower }}">{{ ticket.status }}</span>
+                        <div class="detail-item">
+                            <span class="detail-label">Employee ID</span>
+                            <div class="detail-value">{{ ticket.employee_id }}</div>
                         </div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Origin</span>
-                        <div class="detail-value">
-                            {% if ticket.created_by_role == 'Admin' %}
-                                <span class="badge-admin-created badge-custom">Admin Created</span>
-                            {% else %}
-                                <span class="badge-custom" style="background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border-color);">Self-Created</span>
-                            {% endif %}
+                        <div class="detail-item">
+                            <span class="detail-label">Email</span>
+                            <div class="detail-value"><a href="mailto:{{ ticket.email }}">{{ ticket.email }}</a></div>
                         </div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Assigned To</span>
-                        <div class="detail-value">
-                            {{ ticket.assigned_person|default:"<span style='color: var(--text-muted);'>Not Assigned</span>" }}
+                        <div class="detail-item">
+                            <span class="detail-label">Mobile</span>
+                            <div class="detail-value">{{ ticket.mobile }}</div>
                         </div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Created</span>
-                        <div class="detail-value">{{ ticket.created_at|date:"d M Y h:i A" }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Updated</span>
-                        <div class="detail-value">{{ ticket.updated_at|date:"d M Y h:i A" }}</div>
-                    </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Unit</span>
+                            <div class="detail-value">{{ ticket.unit.full_name }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Department</span>
+                            <div class="detail-value">{{ ticket.department.name }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Screen / Module</span>
+                            <div class="detail-value">{{ ticket.screen_number }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Error Type</span>
+                            <div class="detail-value">{{ ticket.error_type|default:"Not Set" }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Priority</span>
+                            <div class="detail-value">
+                                <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status</span>
+                            <div class="detail-value">
+                                <span class="badge-status badge-status-{{ ticket.status|lower }}">{{ ticket.status }}</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Origin</span>
+                            <div class="detail-value">
+                                {% if ticket.created_by_role == 'Admin' %}
+                                    <span class="badge-origin badge-origin-admin">Admin Created</span>
+                                {% else %}
+                                    <span class="badge-origin badge-origin-self">Self-Created</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Assigned To</span>
+                            <div class="detail-value">
+                                {{ ticket.assigned_person|default:"<span style='color: var(--text-muted);'>Not Assigned</span>" }}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Created</span>
+                            <div class="detail-value">{{ ticket.created_at|date:"d M Y h:i A" }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Updated</span>
+                            <div class="detail-value">{{ ticket.updated_at|date:"d M Y h:i A" }}</div>
+                        </div>
 
-                    <!-- Description -->
-                    <div class="detail-description">
-                        <span class="detail-label">Description</span>
-                        <div class="detail-value">{{ ticket.description|default:"No description provided." }}</div>
-                    </div>
-
-                    <!-- Attachment -->
-                    {% if ticket.attachment %}
-                    <div class="detail-item" style="grid-column: 1 / -1;">
-                        <span class="detail-label">Attachment</span>
-                        <div class="detail-value">
-                            <a href="{{ ticket.attachment.url }}" target="_blank" class="btn btn-sm rounded-pill" style="border: 2px solid var(--brand-orange); color: var(--brand-orange); padding: 0.2rem 0.8rem; font-size: 0.7rem; transition: all 0.3s ease;">
-                                <i class="fa-solid fa-paperclip me-1"></i>View Attachment
-                            </a>
+                        <!-- Description -->
+                        <div class="detail-item detail-description">
+                            <span class="detail-label">Description</span>
+                            <div class="detail-value">{{ ticket.description|default:"No description provided." }}</div>
                         </div>
+
+                        <!-- Attachment -->
+                        {% if ticket.attachment %}
+                        <div class="detail-item full-width">
+                            <span class="detail-label">Attachment</span>
+                            <div class="detail-value">
+                                <a href="{{ ticket.attachment.url }}" target="_blank" class="btn-attachment">
+                                    <i class="fa-solid fa-paperclip me-1"></i>View Attachment
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
                 </div>
             </div>
 
-            <!-- Hold Reason -->
+            <!-- Status Boxes -->
             {% if ticket.status == 'Hold' and ticket.hold_reason %}
             <div class="status-box status-box-hold">
-                <strong style="color: #F59E0B;"><i class="fa-solid fa-pause me-1"></i>Hold Reason:</strong>
-                <p class="mb-0 mt-1" style="font-size: 0.85rem; color: var(--text-secondary);">{{ ticket.hold_reason }}</p>
+                <strong style="color: var(--warning-color);"><i class="fa-solid fa-pause me-1"></i>Hold Reason</strong>
+                <p>{{ ticket.hold_reason }}</p>
             </div>
             {% endif %}
 
-            <!-- Vendor Details -->
             {% if ticket.vendor_ticket_number %}
             <div class="status-box status-box-escalated">
-                <strong style="color: #8B5CF6;"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Vendor Tracking:</strong>
-                <p class="mb-0 mt-1" style="font-size: 0.85rem; color: var(--text-secondary);">
+                <strong style="color: #8B5CF6;"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Vendor Tracking</strong>
+                <p>
                     Vendor Ticket: <strong style="color: var(--text-primary);">{{ ticket.vendor_ticket_number }}</strong>
                     {% if ticket.escalated_at %}
-                    <br><small style="color: var(--text-muted);">Escalated: {{ ticket.escalated_at|date:"d-b-Y h:i A" }}</small>
+                    <br><small style="color: var(--text-muted);">Escalated: {{ ticket.escalated_at|date:"d M Y h:i A" }}</small>
                     {% endif %}
                 </p>
             </div>
             {% endif %}
 
-            <!-- Closing Details -->
             {% if ticket.status == 'Closed' %}
             <div class="status-box status-box-closed">
-                <strong style="color: #22C55E;"><i class="fa-solid fa-circle-check me-1"></i>Closing Details:</strong>
-                <p class="mb-0 mt-1" style="font-size: 0.85rem; color: var(--text-secondary);">
+                <strong style="color: var(--success-color);"><i class="fa-solid fa-circle-check me-1"></i>Closing Details</strong>
+                <p>
                     Closed by: <strong style="color: var(--text-primary);">{{ ticket.closed_by }}</strong><br>
-                    Date: <strong style="color: var(--text-primary);">{{ ticket.closed_at|date:"d-b-Y h:i A" }}</strong><br>
+                    Date: <strong style="color: var(--text-primary);">{{ ticket.closed_at|date:"d M Y h:i A" }}</strong><br>
                     Time to close: <strong style="color: var(--text-primary);">{{ time_to_close }}</strong><br>
                     Remarks: <span style="color: var(--text-primary);">{{ ticket.closing_remarks }}</span>
                 </p>
             </div>
             {% endif %}
-
-            <!-- Lifecycle Actions -->
-            <div class="detail-card">
-                <div class="glass-header">
-                    <h5><i class="fa-solid fa-gears me-2"></i>Lifecycle Actions</h5>
-                </div>
-                <div class="card-body p-3 text-center">
-                    {% if ticket.status != 'Closed' %}
-                        <div class="action-buttons">
-                            {% if ticket.status == 'Open' %}
-                                <button type="button" class="action-btn action-btn-assign" data-bs-toggle="modal" data-bs-target="#assignModal">
-                                    <i class="fa-solid fa-user-plus"></i>Assign
-                                </button>
-                            {% else %}
-                                <button type="button" class="action-btn action-btn-assign" data-bs-toggle="modal" data-bs-target="#assignModal">
-                                    <i class="fa-solid fa-user-plus"></i>Re-Assign
-                                </button>
-                                <button type="button" class="action-btn action-btn-hold" data-bs-toggle="modal" data-bs-target="#holdModal">
-                                    <i class="fa-solid fa-pause"></i>Hold
-                                </button>
-                                <button type="button" class="action-btn action-btn-escalate" data-bs-toggle="modal" data-bs-target="#escalateModal">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>Escalate
-                                </button>
-                                <button type="button" class="action-btn action-btn-close" data-bs-toggle="modal" data-bs-target="#closeModal">
-                                    <i class="fa-solid fa-circle-check"></i>Close
-                                </button>
-                            {% endif %}
-                        </div>
-                    {% else %}
-                        {% if can_reopen %}
-                            <div class="action-buttons">
-                                <button type="button" class="action-btn action-btn-reopen" data-bs-toggle="modal" data-bs-target="#reopenModal">
-                                    <i class="fa-solid fa-envelope-open"></i>Reopen
-                                </button>
-                            </div>
-                            <small class="mt-2 d-block" style="color: var(--text-muted); font-size: 0.75rem;">
-                                Time left to reopen: <strong id="reopen-timer" style="color: var(--brand-orange);"></strong>
-                            </small>
-                        {% else %}
-                            <p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem;">
-                                <i class="fa-regular fa-clock me-1"></i>Cannot reopen (48+ hours elapsed)
-                            </p>
-                        {% endif %}
-                    {% endif %}
-                </div>
-            </div>
         </div>
 
         <!-- Right Column - Timeline -->
         <div class="col-lg-4">
-            <div class="detail-card h-100">
+            <div class="panel-card">
                 <div class="glass-header">
-                    <h5>
-                        <i class="fa-solid fa-timeline me-2"></i>Audit History
-                        <span class="badge rounded-pill ms-2" style="background: rgba(255, 107, 0, 0.1); color: var(--brand-orange); font-size: 0.6rem; border: 1px solid rgba(255, 107, 0, 0.1);">
-                            {{ history|length }}
-                        </span>
-                    </h5>
+                    <h6><i class="fa-solid fa-timeline me-2"></i>Audit History</h6>
+                    <span class="badge-count">{{ history|length }}</span>
                 </div>
-                <div class="card-body p-3">
+                <div class="card-body">
                     <div class="timeline-scroll">
-                        <ul class="timeline mb-0">
+                        <ul class="timeline">
                             {% for log in history %}
                             <li class="timeline-item">
                                 <div class="timeline-marker"></div>
                                 <div class="timeline-content">
-                                    <div class="timeline-time">{{ log.timestamp|date:"d-b-Y h:i A" }}</div>
+                                    <div class="timeline-time">{{ log.timestamp|date:"d M Y h:i A" }}</div>
                                     <div class="timeline-title">
                                         {% if 'Created' in log.action %}
                                             <i class="fa-regular fa-plus-circle me-1"></i>
@@ -921,9 +1070,9 @@
                                 </div>
                             </li>
                             {% empty %}
-                            <li class="text-center py-4" style="color: var(--text-muted);">
-                                <i class="fa-regular fa-clock fa-2x mb-2 d-block opacity-25"></i>
-                                <span style="font-size: 0.85rem;">No audit logs found.</span>
+                            <li class="timeline-empty">
+                                <i class="fa-regular fa-clock"></i>
+                                <p>No audit logs found.</p>
                             </li>
                             {% endfor %}
                         </ul>
@@ -936,7 +1085,7 @@
 
 <!-- ============================================
      MODALS
-     ============================================ -->
+============================================ -->
 
 {% if ticket.status != 'Closed' %}
 <!-- Assign Modal -->
@@ -946,23 +1095,23 @@
             <form method="POST" id="assignForm" onsubmit="return validateAssign()">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Assign">
-                <div class="modal-header" style="background: #F59E0B;">
-                    <h5 class="modal-title"><i class="fa-solid fa-user-gear me-2"></i>Assign Ticket</h5>
+                <div class="modal-header bg-assign">
+                    <h5 class="modal-title"><i class="fa-solid fa-user-gear"></i>Assign Ticket</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label"><i class="fa-regular fa-user me-1"></i>Assigned Person <span class="text-danger">*</span></label>
+                        <label class="form-label"><i class="fa-regular fa-user"></i>Assigned Person <span class="required">*</span></label>
                         <input type="text" name="assigned_person" id="assignPerson" class="form-control" placeholder="Enter name" required>
                     </div>
                     <div class="mb-0">
-                        <label class="form-label"><i class="fa-regular fa-message me-1"></i>Remarks</label>
+                        <label class="form-label"><i class="fa-regular fa-message"></i>Remarks</label>
                         <textarea name="remarks" class="form-control" rows="2" placeholder="Optional"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-light-custom" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-modal-submit" style="background: #F59E0B;">Assign Now</button>
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-modal-submit bg-assign">Assign Now</button>
                 </div>
             </form>
         </div>
@@ -976,19 +1125,19 @@
             <form method="POST" id="holdForm" onsubmit="return validateHold()">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Hold">
-                <div class="modal-header" style="background: #94A3B8;">
-                    <h5 class="modal-title"><i class="fa-solid fa-pause me-2"></i>Put on Hold</h5>
+                <div class="modal-header bg-hold">
+                    <h5 class="modal-title"><i class="fa-solid fa-pause"></i>Put on Hold</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-0">
-                        <label class="form-label"><i class="fa-regular fa-message me-1"></i>Reason <span class="text-danger">*</span></label>
+                        <label class="form-label"><i class="fa-regular fa-message"></i>Reason <span class="required">*</span></label>
                         <textarea name="hold_reason" id="holdReason" class="form-control" rows="3" placeholder="Reason for hold" required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-light-custom" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-modal-submit" style="background: #94A3B8;">Hold Now</button>
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-modal-submit bg-hold">Hold Now</button>
                 </div>
             </form>
         </div>
@@ -1002,23 +1151,23 @@
             <form method="POST" id="escalateForm">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Escalate">
-                <div class="modal-header" style="background: #8B5CF6;">
-                    <h5 class="modal-title"><i class="fa-solid fa-cloud-arrow-up me-2"></i>Escalate</h5>
+                <div class="modal-header bg-escalate">
+                    <h5 class="modal-title"><i class="fa-solid fa-cloud-arrow-up"></i>Escalate</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label"><i class="fa-regular fa-ticket me-1"></i>Vendor Ticket #</label>
+                        <label class="form-label"><i class="fa-regular fa-ticket"></i>Vendor Ticket #</label>
                         <input type="text" name="vendor_ticket_number" class="form-control" placeholder="Optional">
                     </div>
                     <div class="mb-0">
-                        <label class="form-label"><i class="fa-regular fa-message me-1"></i>Remarks</label>
+                        <label class="form-label"><i class="fa-regular fa-message"></i>Remarks</label>
                         <textarea name="remarks" class="form-control" rows="2" placeholder="Optional"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-light-custom" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-modal-submit" style="background: #8B5CF6;">Escalate Now</button>
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-modal-submit bg-escalate">Escalate Now</button>
                 </div>
             </form>
         </div>
@@ -1032,13 +1181,13 @@
             <form method="POST" id="closeForm" onsubmit="return validateClose()">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Close">
-                <div class="modal-header" style="background: #22C55E;">
-                    <h5 class="modal-title"><i class="fa-solid fa-circle-check me-2"></i>Close Ticket</h5>
+                <div class="modal-header bg-close">
+                    <h5 class="modal-title"><i class="fa-solid fa-circle-check"></i>Close Ticket</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label"><i class="fa-regular fa-circle-exclamation me-1"></i>Error Classification <span class="text-danger">*</span></label>
+                        <label class="form-label"><i class="fa-regular fa-circle-exclamation"></i>Error Classification <span class="required">*</span></label>
                         <select name="error_type" id="errorType" class="form-select" required>
                             <option value="">-- Select --</option>
                             <option value="ERP Error">ERP Error</option>
@@ -1051,13 +1200,13 @@
                         </select>
                     </div>
                     <div class="mb-0">
-                        <label class="form-label"><i class="fa-regular fa-message me-1"></i>Closing Remarks <span class="text-danger">*</span></label>
+                        <label class="form-label"><i class="fa-regular fa-message"></i>Closing Remarks <span class="required">*</span></label>
                         <textarea name="closing_remarks" id="closingRemarks" class="form-control" rows="3" placeholder="Resolution details" required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-light-custom" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-modal-submit" style="background: #22C55E;">Close Now</button>
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-modal-submit bg-close">Close Now</button>
                 </div>
             </form>
         </div>
@@ -1071,20 +1220,22 @@
             <form method="POST" id="reopenForm" onsubmit="return validateReopen()">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Reopen">
-                <div class="modal-header" style="background: #3B82F6;">
-                    <h5 class="modal-title"><i class="fa-solid fa-envelope-open me-2"></i>Reopen Ticket</h5>
+                <div class="modal-header bg-reopen">
+                    <h5 class="modal-title"><i class="fa-solid fa-envelope-open"></i>Reopen Ticket</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-0">
-                        <label class="form-label"><i class="fa-regular fa-message me-1"></i>Reason <span class="text-danger">*</span></label>
+                        <label class="form-label"><i class="fa-regular fa-message"></i>Reason <span class="required">*</span></label>
                         <textarea name="remarks" id="reopenRemarks" class="form-control" rows="3" placeholder="Reason for reopening" required></textarea>
                     </div>
-                    <small class="text-muted" style="font-size: 0.7rem;"><i class="fa-regular fa-clock me-1"></i>You can only reopen within <strong>48 hours</strong> of closing.</small>
+                    <small class="text-muted d-block mt-2" style="font-size: 0.65rem;">
+                        <i class="fa-regular fa-clock me-1"></i>You can only reopen within <strong>48 hours</strong> of closing.
+                    </small>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-light-custom" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-modal-submit" style="background: #3B82F6;">Reopen Now</button>
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-modal-submit bg-reopen">Reopen Now</button>
                 </div>
             </form>
         </div>
@@ -1096,179 +1247,187 @@
 
 {% block extra_js %}
 <script>
-    // ✅ Countdown Timer for Reopen (48 hours)
-    function startCountdown(deadlineISO) {
-        const timerEl = document.getElementById('reopen-timer');
-        if (!timerEl || !deadlineISO || deadlineISO === '') {
-            return;
-        }
+    document.addEventListener('DOMContentLoaded', function() {
 
-        const deadline = new Date(deadlineISO).getTime();
-        const interval = setInterval(function() {
-            const now = new Date().getTime();
-            const distance = deadline - now;
+        // ============================================
+        // COUNTDOWN TIMER FOR REOPEN
+        // ============================================
+        function startCountdown(deadlineISO) {
+            var timerBadge = document.getElementById('reopen-timer-badge');
+            var timerText = document.getElementById('reopen-timer-text');
+            
+            if (!deadlineISO || deadlineISO === '') return;
 
-            if (distance < 0) {
-                clearInterval(interval);
-                timerEl.innerHTML = "⏰ Expired";
-                timerEl.style.color = '#EF4444';
-                const reopenBtn = document.querySelector('[data-bs-target="#reopenModal"]');
-                if (reopenBtn) {
-                    reopenBtn.style.display = 'none';
-                    // Show expired message
-                    const parent = reopenBtn.closest('.action-buttons');
-                    if (parent) {
-                        parent.innerHTML = '<p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem;"><i class="fa-regular fa-clock me-1"></i>Cannot reopen (48+ hours elapsed)</p>';
+            var deadline = new Date(deadlineISO).getTime();
+            var interval = setInterval(function() {
+                var now = new Date().getTime();
+                var distance = deadline - now;
+
+                if (distance < 0) {
+                    clearInterval(interval);
+                    if (timerBadge) {
+                        timerBadge.innerHTML = 'Expired';
+                        timerBadge.style.background = 'rgba(239, 68, 68, 0.3)';
+                    }
+                    if (timerText) {
+                        timerText.textContent = 'Reopen window closed';
+                        timerText.style.color = '#EF4444';
+                    }
+                    var reopenBtn = document.querySelector('.action-btn-reopen');
+                    if (reopenBtn) {
+                        var parent = reopenBtn.closest('.action-buttons');
+                        if (parent) {
+                            parent.innerHTML = '<span style="color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 0.3rem;"><i class="fa-regular fa-clock"></i> Cannot reopen (48+ hours elapsed)</span>';
+                        }
+                    }
+                    return;
+                }
+
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                var h = String(hours).padStart(2, '0');
+                var m = String(minutes).padStart(2, '0');
+                var s = String(seconds).padStart(2, '0');
+
+                if (timerBadge) {
+                    timerBadge.innerHTML = h + ':' + m + ':' + s;
+                }
+                if (timerText) {
+                    timerText.textContent = 'Time left to reopen';
+                }
+
+                // Update badge color based on time remaining
+                if (timerBadge) {
+                    if (hours < 1) {
+                        timerBadge.style.background = 'rgba(239, 68, 68, 0.3)';
+                    } else if (hours < 6) {
+                        timerBadge.style.background = 'rgba(245, 158, 11, 0.3)';
+                    } else {
+                        timerBadge.style.background = 'rgba(59, 130, 246, 0.2)';
                     }
                 }
-                return;
-            }
-
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            
-            // Format with leading zeros for minutes and seconds
-            const h = String(hours).padStart(2, '0');
-            const m = String(minutes).padStart(2, '0');
-            const s = String(seconds).padStart(2, '0');
-            
-            timerEl.innerHTML = `${h}h ${m}m ${s}s`;
-            
-            // Change color when less than 1 hour remains
-            if (hours < 1) {
-                timerEl.style.color = '#EF4444';
-                timerEl.style.animation = 'pulse 1s ease-in-out infinite';
-            } else if (hours < 6) {
-                timerEl.style.color = '#F59E0B';
-            } else {
-                timerEl.style.color = 'var(--brand-orange)';
-            }
-        }, 1000);
-    }
-
-    // Validation functions
-    function validateAssign() {
-        const person = document.getElementById('assignPerson');
-        if (!person.value.trim()) {
-            alert('Please enter the assigned person name.');
-            person.focus();
-            return false;
+            }, 1000);
         }
-        return true;
-    }
 
-    function validateHold() {
-        const reason = document.getElementById('holdReason');
-        if (!reason.value.trim()) {
-            alert('Please enter the reason for hold.');
-            reason.focus();
-            return false;
-        }
-        return true;
-    }
-
-    function validateClose() {
-        const errorType = document.getElementById('errorType');
-        const remarks = document.getElementById('closingRemarks');
-        
-        if (!errorType.value.trim()) {
-            alert('Please select error classification.');
-            errorType.focus();
-            return false;
-        }
-        if (!remarks.value.trim()) {
-            alert('Please provide closing remarks.');
-            remarks.focus();
-            return false;
-        }
-        return true;
-    }
-
-    function validateReopen() {
-        const remarks = document.getElementById('reopenRemarks');
-        if (!remarks.value.trim()) {
-            alert('Please provide a reason for reopening.');
-            remarks.focus();
-            return false;
-        }
-        return true;
-    }
-
-    // Add pulse animation for countdown
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-    `;
-    document.head.appendChild(style);
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // ✅ Start countdown with 48-hour deadline from backend
-        const deadlineISO = "{{ reopen_deadline_iso|default:'' }}";
+        var deadlineISO = "{{ reopen_deadline_iso|default:'' }}";
         if (deadlineISO && deadlineISO !== '') {
-            console.log('⏰ Starting 48-hour countdown timer');
             startCountdown(deadlineISO);
-        } else {
-            console.log('ℹ️ No reopen deadline set');
         }
 
-        // Prevent double submission
-        document.querySelectorAll('form').forEach(form => {
+        // ============================================
+        // VALIDATION FUNCTIONS
+        // ============================================
+        function validateAssign() {
+            var person = document.getElementById('assignPerson');
+            if (!person.value.trim()) {
+                alert('Please enter the assigned person name.');
+                person.focus();
+                return false;
+            }
+            return true;
+        }
+
+        function validateHold() {
+            var reason = document.getElementById('holdReason');
+            if (!reason.value.trim()) {
+                alert('Please enter the reason for hold.');
+                reason.focus();
+                return false;
+            }
+            return true;
+        }
+
+        function validateClose() {
+            var errorType = document.getElementById('errorType');
+            var remarks = document.getElementById('closingRemarks');
+
+            if (!errorType.value.trim()) {
+                alert('Please select error classification.');
+                errorType.focus();
+                return false;
+            }
+            if (!remarks.value.trim()) {
+                alert('Please provide closing remarks.');
+                remarks.focus();
+                return false;
+            }
+            return true;
+        }
+
+        function validateReopen() {
+            var remarks = document.getElementById('reopenRemarks');
+            if (!remarks.value.trim()) {
+                alert('Please provide a reason for reopening.');
+                remarks.focus();
+                return false;
+            }
+            return true;
+        }
+
+        window.validateAssign = validateAssign;
+        window.validateHold = validateHold;
+        window.validateClose = validateClose;
+        window.validateReopen = validateReopen;
+
+        // ============================================
+        // PREVENT DOUBLE SUBMISSION
+        // ============================================
+        document.querySelectorAll('form').forEach(function(form) {
             form.addEventListener('submit', function(e) {
                 if (this.dataset.submitted === 'true') {
                     e.preventDefault();
                     return false;
                 }
                 this.dataset.submitted = 'true';
-                setTimeout(() => { this.dataset.submitted = 'false'; }, 3000);
+                setTimeout(function() {
+                    form.dataset.submitted = 'false';
+                }, 3000);
             });
         });
 
-        // Theme-aware form controls
+        // ============================================
+        // THEME SYNC
+        // ============================================
         function updateFormTheme() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const inputs = document.querySelectorAll('.form-control, .form-select, textarea');
-            
-            inputs.forEach(input => {
+            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            var inputs = document.querySelectorAll('.form-control, .form-select, textarea');
+
+            inputs.forEach(function(input) {
                 if (isDark) {
-                    input.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
-                    input.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    input.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    input.style.borderColor = 'rgba(255, 255, 255, 0.08)';
                     input.style.color = '#E8EDF5';
                 } else {
-                    input.style.backgroundColor = '#F5F8FF';
+                    input.style.backgroundColor = '#F8FAFF';
                     input.style.borderColor = '#DCE3F0';
                     input.style.color = '#1A2A6C';
                 }
             });
         }
 
-        const themeToggleBtn = document.getElementById('themeToggleFloating');
+        var themeToggleBtn = document.getElementById('themeToggleFloating');
         if (themeToggleBtn) {
             themeToggleBtn.addEventListener('click', function() {
                 setTimeout(updateFormTheme, 100);
             });
         }
 
-        const observer = new MutationObserver(function(mutations) {
+        var observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.attributeName === 'data-theme') {
                     updateFormTheme();
                 }
             });
         });
-        
+
         observer.observe(document.documentElement, {
             attributes: true,
             attributeFilter: ['data-theme']
         });
 
         setTimeout(updateFormTheme, 200);
-
-        console.log('✅ Admin Ticket Detail - Ready');
-        console.log('📋 Ticket #{{ ticket.ticket_number }} loaded');
     });
 </script>
 {% endblock %}

@@ -12,6 +12,7 @@
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes tabFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes modalSlideIn { from { opacity: 0; transform: scale(0.9) translateY(-30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes toastSlideIn { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
 
     /* ============================================
        CSS VARIABLES - Theme Support
@@ -26,6 +27,86 @@
     .text-primary { color: var(--brand-orange) !important; }
     .text-muted { color: var(--text-muted) !important; }
     .text-secondary { color: var(--text-secondary) !important; }
+
+    /* ============================================
+       TOAST NOTIFICATIONS
+    ============================================ */
+    .toast-container-custom {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 450px;
+        width: 100%;
+        pointer-events: none;
+    }
+    .toast-container-custom .toast {
+        pointer-events: auto;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        margin-bottom: 10px;
+        animation: toastSlideIn 0.4s ease;
+        overflow: hidden;
+    }
+    .toast-container-custom .toast-header {
+        background: transparent;
+        border-bottom: 1px solid var(--border-color);
+        padding: 0.75rem 1rem;
+    }
+    .toast-container-custom .toast-header .toast-title {
+        font-weight: 700;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+    }
+    .toast-container-custom .toast-header .btn-close {
+        font-size: 0.7rem;
+        padding: 0.5rem;
+    }
+    .toast-container-custom .toast-body {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .toast-container-custom .toast-body ul {
+        margin: 0.5rem 0 0 0;
+        padding-left: 1.2rem;
+    }
+    .toast-container-custom .toast-body ul li {
+        font-size: 0.8rem;
+        padding: 0.15rem 0;
+        border-bottom: 1px solid rgba(0,0,0,0.03);
+    }
+    .toast-container-custom .toast-body ul li:last-child {
+        border-bottom: none;
+    }
+    .toast-container-custom .toast-success .toast-header {
+        border-left: 4px solid #22C55E;
+    }
+    .toast-container-custom .toast-success .toast-title {
+        color: #22C55E;
+    }
+    .toast-container-custom .toast-error .toast-header {
+        border-left: 4px solid #EF4444;
+    }
+    .toast-container-custom .toast-error .toast-title {
+        color: #EF4444;
+    }
+    .toast-container-custom .toast-warning .toast-header {
+        border-left: 4px solid #F59E0B;
+    }
+    .toast-container-custom .toast-warning .toast-title {
+        color: #F59E0B;
+    }
+    .toast-container-custom .toast-info .toast-header {
+        border-left: 4px solid #3B82F6;
+    }
+    .toast-container-custom .toast-info .toast-title {
+        color: #3B82F6;
+    }
 
     /* ============================================
        HEADER
@@ -204,7 +285,7 @@
     .section-divider .section-title i { color: var(--brand-orange); }
 
     /* ============================================
-       FORM CONTROLS - Theme Aware
+       FORM CONTROLS
     ============================================ */
     .form-control, 
     .form-select,
@@ -802,6 +883,7 @@
     @media (max-width: 992px) {
         .settings-tab-btn { font-size: 0.7rem !important; padding: 0.5rem 0.8rem !important; }
         .settings-tab-btn .tab-icon { font-size: 0.8rem; }
+        .toast-container-custom { max-width: 90%; right: 10px; }
     }
 
     @media (max-width: 768px) {
@@ -831,6 +913,8 @@
             padding: 0.2rem 0.3rem;
         }
         .table td, .table th { font-size: 0.65rem !important; padding: 0.3rem 0.25rem !important; }
+        .toast-container-custom { max-width: 95%; right: 5px; top: 70px; }
+        .toast-container-custom .toast-body { max-height: 150px; }
     }
 
     @media (max-width: 576px) {
@@ -874,6 +958,8 @@
         .unit-credentials-section .unit-header h6 { font-size: 0.8rem; }
         .cred-username, .cred-password { font-size: 0.65rem; }
         .tab-pane { padding: 1rem 0.25rem; }
+        .toast-container-custom { max-width: 98%; right: 5px; top: 65px; }
+        .toast-container-custom .toast-body { max-height: 120px; font-size: 0.75rem; }
     }
 
     /* ============================================
@@ -885,10 +971,64 @@
     ::-webkit-scrollbar-thumb:hover { background: var(--brand-orange-dark); }
 
     ::selection { background: var(--brand-orange); color: #FFFFFF; }
+
+    /* ============================================
+       BULK UPLOAD ERROR STYLES
+    ============================================ */
+    .upload-error-container {
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        border-radius: 8px;
+        background: rgba(239, 68, 68, 0.05);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        display: none;
+    }
+    .upload-error-container.show {
+        display: block;
+        animation: tabFadeIn 0.3s ease;
+    }
+    .upload-error-container .error-title {
+        color: #EF4444;
+        font-weight: 700;
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+    .upload-error-container .error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 150px;
+        overflow-y: auto;
+    }
+    .upload-error-container .error-list li {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        padding: 0.2rem 0;
+        border-bottom: 1px solid rgba(239, 68, 68, 0.05);
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .upload-error-container .error-list li:last-child {
+        border-bottom: none;
+    }
+    .upload-error-container .error-list li i {
+        color: #EF4444;
+        margin-top: 0.15rem;
+        font-size: 0.6rem;
+    }
+    .upload-error-container .error-list li .row-info {
+        font-weight: 600;
+        color: var(--brand-orange);
+        font-size: 0.65rem;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Toast Container for Notifications -->
+<div class="toast-container-custom" id="toastContainer"></div>
+
 <div class="settings-container">
     <!-- ==========================================
     HEADER
@@ -896,7 +1036,7 @@
     <div class="settings-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
-                <h2><i class="fa-solid fa-sliders me-2"></i>Settings & Master Data</h2>
+                <h2><i class="fa-solid fa-sliders me-2"></i>Settings and Master Data</h2>
                 <p><i class="fa-regular fa-gear me-1"></i>Manage system parameters, users, contacts, and master data</p>
             </div>
             <span class="header-badge">
@@ -915,12 +1055,12 @@
                 <button class="settings-tab-btn active" id="master-tab" data-bs-toggle="tab" data-bs-target="#master-content" type="button">
                     <i class="fa-solid fa-database tab-icon"></i>
                     <span>Master Data</span>
-                    <span class="tab-badge">Units & Depts</span>
+                    <span class="tab-badge">Units and Depts</span>
                 </button>
                 <button class="settings-tab-btn" id="communication-tab" data-bs-toggle="tab" data-bs-target="#communication-content" type="button">
                     <i class="fa-solid fa-comments tab-icon"></i>
                     <span>Communication</span>
-                    <span class="tab-badge">Contact & Emails</span>
+                    <span class="tab-badge">Contact and Emails</span>
                 </button>
                 <button class="settings-tab-btn" id="employees-tab" data-bs-toggle="tab" data-bs-target="#employees-content" type="button">
                     <i class="fa-solid fa-users tab-icon"></i>
@@ -1046,13 +1186,13 @@
                 </div>
 
                 <!-- ==========================================
-                TAB 2: COMMUNICATION - FIXED
+                TAB 2: COMMUNICATION
                 ========================================== -->
                 <div class="tab-pane fade" id="communication-content">
                     <!-- Helpdesk Contact Section -->
                     <div class="section-divider"><span class="section-title"><i class="fa-solid fa-headset"></i>Helpdesk Contact</span></div>
                     
-                    <!-- Display Cards - Using correct field names -->
+                    <!-- Display Cards -->
                     <div class="row g-3 mb-4">
                         <div class="col-lg-6">
                             <div class="helpdesk-card">
@@ -1074,7 +1214,7 @@
                         </div>
                     </div>
 
-                    <!-- Edit Form - Using correct field names -->
+                    <!-- Edit Form -->
                     <div class="card panel-card mb-4">
                         <div class="card-header glass-header py-2">
                             <h5 class="fw-bold mb-0"><i class="fa-solid fa-pen-to-square me-2"></i>Update Helpdesk Contact</h5>
@@ -1183,9 +1323,9 @@
                                         <input type="hidden" name="action" value="bulk_upload">
                                         <div class="d-flex flex-column align-items-center gap-2">
                                             <label class="btn btn-primary-custom btn-sm rounded-pill px-3 mb-0" for="bulkExcelFile" style="cursor: pointer; font-size: 0.75rem; color: white !important;">
-                                                <i class="fa-solid fa-file-excel me-1"></i>Choose & Upload
+                                                <i class="fa-solid fa-file-excel me-1"></i>Choose and Upload
                                             </label>
-                                            <input type="file" name="excel_file" id="bulkExcelFile" accept=".xlsx,.xls" style="display: none;" onchange="document.getElementById('bulkUploadForm').submit()">
+                                            <input type="file" name="excel_file" id="bulkExcelFile" accept=".xlsx,.xls" style="display: none;">
                                             <small class="action-subtitle" style="font-size: 0.6rem;">.xlsx, .xls files only</small>
                                         </div>
                                     </form>
@@ -1195,6 +1335,17 @@
                                         <a href="{% url 'download_employee_template' %}" class="text-primary" style="font-size: 0.6rem;">
                                             <i class="fa-solid fa-download me-1"></i>Download Template
                                         </a>
+                                    </div>
+                                    
+                                    <!-- Error Container for Bulk Upload -->
+                                    <div class="upload-error-container" id="uploadErrorContainer">
+                                        <div class="error-title">
+                                            <i class="fa-solid fa-circle-exclamation me-1"></i>
+                                            <span id="uploadErrorTitle">Upload Failed</span>
+                                        </div>
+                                        <ul class="error-list" id="uploadErrorList">
+                                            <!-- Errors will be injected here -->
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
@@ -1445,7 +1596,7 @@
 </div>
 
 <!-- ==========================================
-MODALS (Same as before - keep all modals)
+MODALS
 ========================================== -->
 <!-- Confirm Modal -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
@@ -1459,7 +1610,7 @@ MODALS (Same as before - keep all modals)
                 <p id="confirmModalBody" class="mb-0">Are you sure?</p>
             </div>
             <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
-                <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal" id="confirmModalCancelBtn">Cancel</button>
                 <button type="button" class="btn btn-danger-custom rounded-pill px-4 fw-bold" id="confirmModalYesBtn">Yes</button>
             </div>
         </div>
@@ -1671,101 +1822,285 @@ MODALS (Same as before - keep all modals)
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // ============================================
-        // CONFIRMATION MODAL
+        // TAB PERSISTENCE - Restore active tab from URL hash
+        // ============================================
+        function restoreActiveTab() {
+            var hash = window.location.hash;
+            if (hash) {
+                var targetTab = document.querySelector('[data-bs-target="' + hash + '"]');
+                if (targetTab) {
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.settings-tab-btn').forEach(function(btn) {
+                        btn.classList.remove('active');
+                    });
+                    // Add active class to target tab
+                    targetTab.classList.add('active');
+                    
+                    // Hide all tab panes
+                    document.querySelectorAll('.tab-pane').forEach(function(pane) {
+                        pane.classList.remove('show', 'active');
+                    });
+                    
+                    // Show target tab pane
+                    var targetPane = document.querySelector(hash);
+                    if (targetPane) {
+                        targetPane.classList.add('show', 'active');
+                    }
+                }
+            }
+        }
+        
+        // Restore tab on load
+        restoreActiveTab();
+        
+        // Update URL hash when tab changes
+        document.querySelectorAll('.settings-tab-btn').forEach(function(btn) {
+            btn.addEventListener('shown.bs.tab', function(e) {
+                var target = this.getAttribute('data-bs-target');
+                if (target) {
+                    // Update URL hash without scrolling
+                    history.pushState(null, null, target);
+                }
+            });
+        });
+
+        // ============================================
+        // TOAST NOTIFICATION SYSTEM
+        // ============================================
+        window.showToast = function(message, type, details) {
+            type = type || 'info';
+            var container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            var toastId = 'toast-' + Date.now();
+            var iconMap = {
+                'success': 'fa-solid fa-check-circle',
+                'error': 'fa-solid fa-circle-exclamation',
+                'warning': 'fa-solid fa-triangle-exclamation',
+                'info': 'fa-solid fa-circle-info'
+            };
+            var titleMap = {
+                'success': 'Success',
+                'error': 'Error',
+                'warning': 'Warning',
+                'info': 'Information'
+            };
+            
+            var detailsHtml = '';
+            if (details && details.length > 0) {
+                detailsHtml = '<ul>';
+                details.forEach(function(d) {
+                    if (typeof d === 'string') {
+                        detailsHtml += '<li>' + d + '</li>';
+                    } else if (d.row && d.message) {
+                        detailsHtml += '<li><strong>Row ' + d.row + ':</strong> ' + d.message + '</li>';
+                    } else {
+                        detailsHtml += '<li>' + JSON.stringify(d) + '</li>';
+                    }
+                });
+                detailsHtml += '</ul>';
+            }
+            
+            var toastHtml = `
+                <div class="toast toast-${type}" id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header">
+                        <i class="${iconMap[type] || iconMap.info} me-2" style="font-size: 1rem;"></i>
+                        <strong class="toast-title">${titleMap[type] || 'Information'}</strong>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                        ${detailsHtml}
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', toastHtml);
+            
+            var toastElement = document.getElementById(toastId);
+            if (toastElement) {
+                setTimeout(function() {
+                    toastElement.classList.add('show');
+                }, 10);
+                
+                setTimeout(function() {
+                    if (toastElement) {
+                        toastElement.classList.remove('show');
+                        setTimeout(function() {
+                            if (toastElement) toastElement.remove();
+                        }, 300);
+                    }
+                }, 8000);
+            }
+        };
+
+        // ============================================
+        // CHECK FOR MESSAGES FROM DJANGO
+        // ============================================
+        var messages = document.querySelectorAll('.django-message');
+        if (messages.length > 0) {
+            messages.forEach(function(msg) {
+                var type = msg.dataset.type || 'info';
+                var text = msg.textContent.trim();
+                if (text) {
+                    window.showToast(text, type);
+                }
+                msg.remove();
+            });
+        }
+
+        // ============================================
+        // CONFIRMATION MODAL - FIXED
         // ============================================
         let currentFormToSubmit = null, isProcessing = false;
         const modalEl = document.getElementById('confirmModal');
         if (modalEl) {
             const confirmBody = document.getElementById('confirmModalBody');
             const confirmYes = document.getElementById('confirmModalYesBtn');
+            const confirmCancel = document.getElementById('confirmModalCancelBtn');
+            
             function forceCleanup() {
-                document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
                 document.body.classList.remove('modal-open');
                 document.body.style.overflow = '';
                 document.body.style.paddingRight = '';
-                if(modalEl){modalEl.style.display='none';modalEl.classList.remove('show');modalEl.setAttribute('aria-hidden','true');modalEl.removeAttribute('aria-modal');}
+                if(modalEl) {
+                    modalEl.style.display = 'none';
+                    modalEl.classList.remove('show');
+                    modalEl.setAttribute('aria-hidden', 'true');
+                    modalEl.removeAttribute('aria-modal');
+                }
             }
+            
             let bsModal = null;
             function initModal() {
                 if(window.bootstrap?.Modal){
-                    if(bsModal)try{bsModal.dispose()}catch(e){}
-                    bsModal=new bootstrap.Modal(modalEl,{backdrop:'static',keyboard:true,focus:true});
+                    if(bsModal) {
+                        try { bsModal.dispose(); } catch(e) {}
+                    }
+                    bsModal = new bootstrap.Modal(modalEl, {
+                        backdrop: 'static',
+                        keyboard: true,
+                        focus: true
+                    });
                     return true;
                 }
                 return false;
             }
             initModal();
+            
+            // Handle form submit events
             document.addEventListener('submit', function(e) {
                 const form = e.target;
-                if(form.classList.contains('confirmed')){setTimeout(()=>form.classList.remove('confirmed'),100);return;}
-                let msg = form.getAttribute('data-confirm');
-                if(msg){
+                if (form.classList.contains('confirmed')) {
+                    setTimeout(function() { form.classList.remove('confirmed'); }, 100);
+                    return;
+                }
+                var msg = form.getAttribute('data-confirm');
+                if (msg) {
                     e.preventDefault();
                     e.stopPropagation();
-                    currentFormToSubmit=form;
-                    confirmBody.textContent=msg;
-                    document.querySelectorAll('.modal.show').forEach(m=>{
-                        if(m!==modalEl){
-                            const inst=bootstrap.Modal.getInstance(m);
-                            if(inst)inst.hide();
+                    currentFormToSubmit = form;
+                    confirmBody.textContent = msg;
+                    
+                    // Close any other open modals
+                    document.querySelectorAll('.modal.show').forEach(function(m) {
+                        if (m !== modalEl) {
+                            var inst = bootstrap.Modal.getInstance(m);
+                            if (inst) inst.hide();
                         }
                     });
-                    setTimeout(()=>{
+                    
+                    setTimeout(function() {
                         forceCleanup();
-                        if(bsModal)bsModal.show();
-                        else if(initModal())bsModal.show();
-                    },150);
+                        if (bsModal) bsModal.show();
+                        else if (initModal()) bsModal.show();
+                    }, 150);
                 }
             });
+            
+            // Yes button - submit form
             confirmYes.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                if(isProcessing||!currentFormToSubmit)return;
-                isProcessing=true;
-                const f=currentFormToSubmit;
-                currentFormToSubmit=null;
-                if(bsModal)bsModal.hide();
-                setTimeout(forceCleanup,50);
-                setTimeout(()=>{
-                    if(f&&f.tagName==='FORM'){
+                if (isProcessing || !currentFormToSubmit) return;
+                isProcessing = true;
+                var f = currentFormToSubmit;
+                currentFormToSubmit = null;
+                
+                // Get current tab hash before submitting
+                var currentTab = window.location.hash;
+                
+                if (bsModal) bsModal.hide();
+                setTimeout(forceCleanup, 50);
+                
+                setTimeout(function() {
+                    if (f && f.tagName === 'FORM') {
                         f.classList.add('confirmed');
+                        // Add hidden input to preserve tab
+                        var tabInput = document.createElement('input');
+                        tabInput.type = 'hidden';
+                        tabInput.name = 'tab_hash';
+                        tabInput.value = currentTab;
+                        f.appendChild(tabInput);
                         f.submit();
                     }
-                    isProcessing=false;
+                    isProcessing = false;
                     forceCleanup();
-                },200);
+                }, 200);
             });
-            function handleCancel(){
-                currentFormToSubmit=null;
-                isProcessing=false;
-                if(bsModal)bsModal.hide();
-                setTimeout(forceCleanup,150);
+            
+            // Cancel button - JUST CLOSE MODAL, NO REFRESH
+            function handleCancel() {
+                currentFormToSubmit = null;
+                isProcessing = false;
+                if (bsModal) bsModal.hide();
+                setTimeout(forceCleanup, 150);
             }
-            modalEl.querySelectorAll('.btn-outline-secondary-custom, [data-bs-dismiss="modal"], .btn-close').forEach(b=>{
-                b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();handleCancel();});
+            
+            if (confirmCancel) {
+                confirmCancel.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCancel();
+                });
+            }
+            
+            modalEl.querySelectorAll('[data-bs-dismiss="modal"], .btn-close').forEach(function(b) {
+                b.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCancel();
+                });
             });
-            modalEl.addEventListener('hidden.bs.modal',()=>{
+            
+            modalEl.addEventListener('hidden.bs.modal', function() {
                 forceCleanup();
-                currentFormToSubmit=null;
-                isProcessing=false;
+                currentFormToSubmit = null;
+                isProcessing = false;
             });
-            document.addEventListener('keydown',function(e){
-                if(e.key==='Escape'&&modalEl.classList.contains('show'))handleCancel();
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modalEl.classList.contains('show')) {
+                    handleCancel();
+                }
             });
         }
 
         // ============================================
         // PASSWORD TOGGLE
         // ============================================
-        document.querySelectorAll('.password-toggle-icon').forEach(btn=>{
-            btn.addEventListener('click',function(e){
+        document.querySelectorAll('.password-toggle-icon').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const input=document.getElementById(this.getAttribute('data-target'));
-                if(input){
-                    const t=input.getAttribute('type')==='password'?'text':'password';
-                    input.setAttribute('type',t);
-                    const icon=this.querySelector('i');
-                    if(icon)icon.className=t==='password'?'fa-regular fa-eye':'fa-regular fa-eye-slash';
+                var input = document.getElementById(this.getAttribute('data-target'));
+                if (input) {
+                    var t = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', t);
+                    var icon = this.querySelector('i');
+                    if (icon) {
+                        icon.className = t === 'password' ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+                    }
                     input.focus();
                 }
             });
@@ -1774,78 +2109,78 @@ MODALS (Same as before - keep all modals)
         // ============================================
         // PREFILL EDIT MODALS
         // ============================================
-        document.getElementById('editUnitModal')?.addEventListener('show.bs.modal',function(e){
-            const b=e.relatedTarget;
-            document.getElementById('edit_unit_id').value=b.getAttribute('data-id');
-            document.getElementById('edit_unit_code').value=b.getAttribute('data-code');
-            document.getElementById('edit_unit_fullname').value=b.getAttribute('data-fullname');
+        document.getElementById('editUnitModal')?.addEventListener('show.bs.modal', function(e) {
+            var b = e.relatedTarget;
+            document.getElementById('edit_unit_id').value = b.getAttribute('data-id');
+            document.getElementById('edit_unit_code').value = b.getAttribute('data-code');
+            document.getElementById('edit_unit_fullname').value = b.getAttribute('data-fullname');
         });
-        document.getElementById('editDeptModal')?.addEventListener('show.bs.modal',function(e){
-            const b=e.relatedTarget;
-            document.getElementById('edit_dept_id').value=b.getAttribute('data-id');
-            document.getElementById('edit_dept_name').value=b.getAttribute('data-name');
+        document.getElementById('editDeptModal')?.addEventListener('show.bs.modal', function(e) {
+            var b = e.relatedTarget;
+            document.getElementById('edit_dept_id').value = b.getAttribute('data-id');
+            document.getElementById('edit_dept_name').value = b.getAttribute('data-name');
         });
-        document.getElementById('editEmployeeModal')?.addEventListener('show.bs.modal',function(e){
-            const b=e.relatedTarget;
-            document.getElementById('edit_emp_id').value=b.getAttribute('data-id');
-            document.getElementById('edit_emp_empid').value=b.getAttribute('data-empid');
-            document.getElementById('edit_emp_name').value=b.getAttribute('data-name');
-            document.getElementById('edit_emp_mobile').value=b.getAttribute('data-mobile');
-            document.getElementById('edit_emp_email').value=b.getAttribute('data-email');
-            document.getElementById('edit_emp_unit').value=b.getAttribute('data-unit')||'';
-            document.getElementById('edit_emp_dept').value=b.getAttribute('data-dept')||'';
+        document.getElementById('editEmployeeModal')?.addEventListener('show.bs.modal', function(e) {
+            var b = e.relatedTarget;
+            document.getElementById('edit_emp_id').value = b.getAttribute('data-id');
+            document.getElementById('edit_emp_empid').value = b.getAttribute('data-empid');
+            document.getElementById('edit_emp_name').value = b.getAttribute('data-name');
+            document.getElementById('edit_emp_mobile').value = b.getAttribute('data-mobile');
+            document.getElementById('edit_emp_email').value = b.getAttribute('data-email');
+            document.getElementById('edit_emp_unit').value = b.getAttribute('data-unit') || '';
+            document.getElementById('edit_emp_dept').value = b.getAttribute('data-dept') || '';
         });
-        document.getElementById('editCredentialModal')?.addEventListener('show.bs.modal',function(e){
-            const b=e.relatedTarget;
-            document.getElementById('edit_cred_id').value=b.getAttribute('data-id');
-            document.getElementById('edit_cred_username').value=b.getAttribute('data-username');
-            document.getElementById('edit_cred_password').value=b.getAttribute('data-password');
+        document.getElementById('editCredentialModal')?.addEventListener('show.bs.modal', function(e) {
+            var b = e.relatedTarget;
+            document.getElementById('edit_cred_id').value = b.getAttribute('data-id');
+            document.getElementById('edit_cred_username').value = b.getAttribute('data-username');
+            document.getElementById('edit_cred_password').value = b.getAttribute('data-password');
         });
 
         // ============================================
         // SORT TABLE FUNCTION
         // ============================================
         window.sortTable = function(tableName, colIndex) {
-            const table = document.getElementById(tableName + 'Table');
+            var table = document.getElementById(tableName + 'Table');
             if (!table) return;
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            const th = table.querySelectorAll('thead th')[colIndex];
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+            var th = table.querySelectorAll('thead th')[colIndex];
             if (!th) return;
             
-            const isAsc = th.classList.contains('sorted-asc');
+            var isAsc = th.classList.contains('sorted-asc');
             th.classList.remove('sorted-asc', 'sorted-desc');
             th.classList.add(isAsc ? 'sorted-desc' : 'sorted-asc');
             
-            const allTh = table.querySelectorAll('thead th');
-            allTh.forEach((h, i) => {
+            var allTh = table.querySelectorAll('thead th');
+            allTh.forEach(function(h, i) {
                 if (i !== colIndex) {
                     h.classList.remove('sorted-asc', 'sorted-desc');
-                    const icon = h.querySelector('.sort-icon');
+                    var icon = h.querySelector('.sort-icon');
                     if (icon) icon.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
                 }
             });
             
-            const icon = th.querySelector('.sort-icon');
+            var icon = th.querySelector('.sort-icon');
             if (icon) {
                 icon.innerHTML = isAsc ? '<i class="fa-solid fa-chevron-down"></i>' : '<i class="fa-solid fa-chevron-up"></i>';
             }
             
-            rows.sort((a, b) => {
-                const aVal = a.querySelectorAll('td')[colIndex]?.textContent?.trim()?.toLowerCase() || '';
-                const bVal = b.querySelectorAll('td')[colIndex]?.textContent?.trim()?.toLowerCase() || '';
+            rows.sort(function(a, b) {
+                var aVal = a.querySelectorAll('td')[colIndex]?.textContent?.trim()?.toLowerCase() || '';
+                var bVal = b.querySelectorAll('td')[colIndex]?.textContent?.trim()?.toLowerCase() || '';
                 if (aVal < bVal) return isAsc ? 1 : -1;
                 if (aVal > bVal) return isAsc ? -1 : 1;
                 return 0;
             });
             
-            rows.forEach(row => tbody.appendChild(row));
+            rows.forEach(function(row) { tbody.appendChild(row); });
         };
 
         // ============================================
         // EXPANDABLE DEPARTMENT ROWS WITH AJAX
         // ============================================
-        const loadedDepartments = new Set();
+        var loadedDepartments = new Set();
 
         document.querySelectorAll('.dept-main-row').forEach(function(row) {
             row.addEventListener('click', function(e) {
@@ -1853,16 +2188,16 @@ MODALS (Same as before - keep all modals)
                     return;
                 }
                 
-                const deptId = this.getAttribute('data-dept-id');
-                const employeeRow = document.getElementById('employee-row-' + deptId);
-                const toggleIcon = document.getElementById('toggle-icon-' + deptId);
-                const loadingDiv = document.getElementById('loading-' + deptId);
-                const employeeListDiv = document.getElementById('employee-list-' + deptId);
-                const spinner = document.getElementById('spinner-' + deptId);
-                const empCount = document.getElementById('emp-count-' + deptId);
+                var deptId = this.getAttribute('data-dept-id');
+                var employeeRow = document.getElementById('employee-row-' + deptId);
+                var toggleIcon = document.getElementById('toggle-icon-' + deptId);
+                var loadingDiv = document.getElementById('loading-' + deptId);
+                var employeeListDiv = document.getElementById('employee-list-' + deptId);
+                var spinner = document.getElementById('spinner-' + deptId);
+                var empCount = document.getElementById('emp-count-' + deptId);
                 
                 if (employeeRow) {
-                    const isExpanded = employeeRow.classList.contains('expanded');
+                    var isExpanded = employeeRow.classList.contains('expanded');
                     if (isExpanded) {
                         employeeRow.classList.remove('expanded');
                         if (toggleIcon) toggleIcon.classList.remove('expanded');
@@ -1876,18 +2211,18 @@ MODALS (Same as before - keep all modals)
                             if (employeeListDiv) employeeListDiv.style.display = 'none';
                             
                             fetch('/ajax/get-employees-by-department/?department_id=' + deptId)
-                                .then(response => {
+                                .then(function(response) {
                                     if (!response.ok) throw new Error('Network response was not ok');
                                     return response.json();
                                 })
-                                .then(data => {
+                                .then(function(data) {
                                     if (spinner) spinner.style.display = 'none';
                                     if (loadingDiv) loadingDiv.style.display = 'none';
                                     
                                     if (data.success) {
                                         if (empCount) empCount.textContent = '(' + data.count + ' employees)';
                                         
-                                        let html = '';
+                                        var html = '';
                                         if (data.employees && data.employees.length > 0) {
                                             html = `
                                             <table class="table table-sm table-hover">
@@ -1903,7 +2238,7 @@ MODALS (Same as before - keep all modals)
                                                 <tbody>
                                             `;
                                             data.employees.forEach(function(emp) {
-                                                const statusBadge = emp.is_active 
+                                                var statusBadge = emp.is_active 
                                                     ? '<span class="badge bg-success" style="font-size: 0.5rem;">Active</span>' 
                                                     : '<span class="badge bg-danger" style="font-size: 0.5rem;">Inactive</span>';
                                                 html += `
@@ -1956,7 +2291,7 @@ MODALS (Same as before - keep all modals)
                                         `;
                                         employeeListDiv.style.display = 'block';
                                     }
-                                    console.error('Error:', error);
+                                    console.error('Error loading employees:', error);
                                 });
                         }
                     }
@@ -1967,11 +2302,11 @@ MODALS (Same as before - keep all modals)
         // ============================================
         // DEPARTMENT FETCH FOR ADD EMPLOYEE MODAL
         // ============================================
-        const addEmpUnitSelect = document.querySelector('#addEmployeeModal select[name="unit"]');
-        const addEmpDeptSelect = document.querySelector('#addEmployeeModal select[name="department"]');
+        var addEmpUnitSelect = document.querySelector('#addEmployeeModal select[name="unit"]');
+        var addEmpDeptSelect = document.querySelector('#addEmployeeModal select[name="department"]');
         if (addEmpUnitSelect && addEmpDeptSelect) {
             addEmpUnitSelect.addEventListener('change', function() {
-                const unitId = this.value;
+                var unitId = this.value;
                 if (!unitId) {
                     addEmpDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>';
                     addEmpDeptSelect.disabled = true;
@@ -1979,13 +2314,13 @@ MODALS (Same as before - keep all modals)
                 }
                 addEmpDeptSelect.disabled = true;
                 addEmpDeptSelect.innerHTML = '<option value="">Loading...</option>';
-                fetch(`/ajax/get-departments/?unit_id=${unitId}`)
-                    .then(res => res.json())
-                    .then(data => {
+                fetch('/ajax/get-departments/?unit_id=' + unitId)
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
                         addEmpDeptSelect.innerHTML = '<option value="">-- Optional --</option>';
-                        if (data.departments?.length) {
-                            data.departments.forEach(d => {
-                                const opt = document.createElement('option');
+                        if (data.departments && data.departments.length > 0) {
+                            data.departments.forEach(function(d) {
+                                var opt = document.createElement('option');
                                 opt.value = d.id;
                                 opt.textContent = d.name;
                                 addEmpDeptSelect.appendChild(opt);
@@ -1995,7 +2330,7 @@ MODALS (Same as before - keep all modals)
                             addEmpDeptSelect.innerHTML += '<option value="">None</option>';
                         }
                     })
-                    .catch(() => {
+                    .catch(function() {
                         addEmpDeptSelect.innerHTML = '<option value="">Error</option>';
                     });
             });
@@ -2004,11 +2339,11 @@ MODALS (Same as before - keep all modals)
         // ============================================
         // DEPARTMENT FETCH FOR ADD CREDENTIAL MODAL
         // ============================================
-        const credUnitSelect = document.getElementById('credUnit');
-        const credDeptSelect = document.getElementById('credDept');
+        var credUnitSelect = document.getElementById('credUnit');
+        var credDeptSelect = document.getElementById('credDept');
         if (credUnitSelect && credDeptSelect) {
             credUnitSelect.addEventListener('change', function() {
-                const unitId = this.value;
+                var unitId = this.value;
                 if (!unitId) {
                     credDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>';
                     credDeptSelect.disabled = true;
@@ -2016,13 +2351,13 @@ MODALS (Same as before - keep all modals)
                 }
                 credDeptSelect.disabled = true;
                 credDeptSelect.innerHTML = '<option value="">Loading...</option>';
-                fetch(`/ajax/get-departments/?unit_id=${unitId}`)
-                    .then(res => res.json())
-                    .then(data => {
+                fetch('/ajax/get-departments/?unit_id=' + unitId)
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
                         credDeptSelect.innerHTML = '<option value="">-- Select --</option>';
-                        if (data.departments?.length) {
-                            data.departments.forEach(d => {
-                                const opt = document.createElement('option');
+                        if (data.departments && data.departments.length > 0) {
+                            data.departments.forEach(function(d) {
+                                var opt = document.createElement('option');
                                 opt.value = d.id;
                                 opt.textContent = d.name;
                                 credDeptSelect.appendChild(opt);
@@ -2032,21 +2367,113 @@ MODALS (Same as before - keep all modals)
                             credDeptSelect.innerHTML += '<option value="">None</option>';
                         }
                     })
-                    .catch(() => {
+                    .catch(function() {
                         credDeptSelect.innerHTML = '<option value="">Error</option>';
                     });
             });
         }
 
         // ============================================
+        // BULK UPLOAD WITH ENHANCED VALIDATION
+        // ============================================
+        var fileInput = document.getElementById('bulkExcelFile');
+        var uploadForm = document.getElementById('bulkUploadForm');
+        var errorContainer = document.getElementById('uploadErrorContainer');
+        var errorList = document.getElementById('uploadErrorList');
+        var errorTitle = document.getElementById('uploadErrorTitle');
+
+        if (fileInput && uploadForm) {
+            fileInput.removeAttribute('onchange');
+            
+            fileInput.addEventListener('change', function(e) {
+                var file = this.files[0];
+                if (!file) return;
+
+                var actionUrl = uploadForm.getAttribute('action') || uploadForm.action;
+                
+                var validExtensions = ['.xlsx', '.xls'];
+                var fileExt = '.' + file.name.split('.').pop().toLowerCase();
+                if (!validExtensions.includes(fileExt)) {
+                    window.showToast('Invalid file format. Only .xlsx and .xls files are supported.', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                var formData = new FormData();
+                formData.append('excel_file', file);
+                formData.append('action', 'bulk_upload');
+                
+                var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (csrfToken) {
+                    formData.append('csrfmiddlewaretoken', csrfToken.value);
+                }
+
+                this.disabled = true;
+                errorContainer.classList.remove('show');
+
+                fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        window.showToast(data.message || 'Employees uploaded successfully!', 'success');
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        errorContainer.classList.add('show');
+                        errorTitle.textContent = data.message || 'Upload failed';
+                        errorList.innerHTML = '';
+                        
+                        if (data.errors && data.errors.length > 0) {
+                            data.errors.forEach(function(err) {
+                                var li = document.createElement('li');
+                                li.innerHTML = `
+                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                    <span>
+                                        <span class="row-info">Row ${err.row}:</span>
+                                        ${err.message}
+                                    </span>
+                                `;
+                                errorList.appendChild(li);
+                            });
+                        } else {
+                            var li = document.createElement('li');
+                            li.innerHTML = `
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                <span>${data.message || 'Unknown error occurred'}</span>
+                            `;
+                            errorList.appendChild(li);
+                        }
+
+                        errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Upload error:', error);
+                    window.showToast('Network error. Please try again.', 'error');
+                })
+                .finally(function() {
+                    fileInput.disabled = false;
+                    fileInput.value = '';
+                });
+            });
+        }
+
+        // ============================================
         // TAB ANIMATION
         // ============================================
-        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(t => {
+        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(t) {
             t.addEventListener('shown.bs.tab', function(e) {
-                const p = document.querySelector(this.getAttribute('data-bs-target'));
+                var p = document.querySelector(this.getAttribute('data-bs-target'));
                 if (p) {
                     p.style.animation = 'none';
-                    requestAnimationFrame(() => {
+                    requestAnimationFrame(function() {
                         p.style.animation = 'tabFadeIn 0.5s ease';
                     });
                 }
@@ -2057,10 +2484,10 @@ MODALS (Same as before - keep all modals)
         // THEME CHANGE HANDLER
         // ============================================
         function updateInputTheme() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const inputs = document.querySelectorAll('.form-control, .form-select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], textarea, select');
+            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            var inputs = document.querySelectorAll('.form-control, .form-select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], textarea, select');
             
-            inputs.forEach(input => {
+            inputs.forEach(function(input) {
                 input.style.display = 'none';
                 void input.offsetHeight;
                 input.style.display = '';
@@ -2077,14 +2504,14 @@ MODALS (Same as before - keep all modals)
             });
         }
 
-        const themeToggleBtn = document.getElementById('themeToggleFloating');
+        var themeToggleBtn = document.getElementById('themeToggleFloating');
         if (themeToggleBtn) {
             themeToggleBtn.addEventListener('click', function() {
                 setTimeout(updateInputTheme, 100);
             });
         }
 
-        const observer = new MutationObserver(function(mutations) {
+        var observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.attributeName === 'data-theme') {
                     updateInputTheme();
@@ -2098,11 +2525,6 @@ MODALS (Same as before - keep all modals)
         });
 
         setTimeout(updateInputTheme, 200);
-
-        console.log('✅ Settings page loaded successfully with all features working.');
-        console.log('📊 Sorting functionality enabled on all tables.');
-        console.log('📧 Helpdesk contact and notification emails section improved.');
-        console.log('👥 Department employee expandable rows working with AJAX.');
     });
 </script>
 {% endblock %}

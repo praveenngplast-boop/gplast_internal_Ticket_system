@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sites',
     'django.contrib.staticfiles',
     'whitenoise.runserver_nostatic',
     'tickets',
@@ -99,6 +100,8 @@ TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
+# Site ID for Sites framework
+SITE_ID = 1
 # ============================================
 # STATIC & MEDIA FILES
 # ============================================

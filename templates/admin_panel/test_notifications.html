@@ -4,109 +4,103 @@
 {% block title %}Test Notifications - GPLAST{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-3 py-md-4">
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm" style="border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-card);">
-                <div class="card-header" style="background: var(--accent-gradient); border-radius: 16px 16px 0 0; padding: 1rem 1.5rem;">
-                    <h4 class="mb-0 text-white">
+                <div class="card-header" style="background: var(--brand-gradient); border-radius: 16px 16px 0 0; padding: 0.75rem 1.25rem;">
+                    <h4 class="mb-0 text-white" style="font-size: clamp(1rem, 2vw, 1.25rem);">
                         <i class="fa-solid fa-bell me-2"></i>Notification Tester
                     </h4>
                 </div>
-                <div class="card-body p-4">
-                    <h5 class="mb-3" style="color: var(--text-primary);">
-                        <i class="fa-solid fa-flask me-2" style="color: var(--accent);"></i>Toast Notification Tests
+                <div class="card-body p-3 p-md-4">
+                    
+                    <!-- Toast Tests -->
+                    <h5 class="mb-3" style="color: var(--text-primary); font-size: clamp(0.9rem, 1.2vw, 1rem);">
+                        <i class="fa-solid fa-flask me-2" style="color: var(--brand-orange);"></i>Toast Notification Tests
                     </h5>
-                    <div class="row g-3">
-                        <!-- Success -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-success w-100 py-3 fw-semibold" onclick="testSuccess()" style="border-radius: 12px;">
-                                <i class="fa-solid fa-check-circle me-2"></i>Success Toast
+                    
+                    <div class="row g-2 g-md-3">
+                        <div class="col-6 col-md-3">
+                            <button class="btn btn-success w-100 py-2 py-md-3 fw-semibold" onclick="testSuccess()" style="border-radius: 12px; font-size: clamp(0.7rem, 0.9vw, 0.85rem);">
+                                <i class="fa-solid fa-check-circle me-1 me-md-2"></i>Success
                             </button>
                         </div>
-                        <!-- Error -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-danger w-100 py-3 fw-semibold" onclick="testError()" style="border-radius: 12px;">
-                                <i class="fa-solid fa-circle-xmark me-2"></i>Error Toast
+                        <div class="col-6 col-md-3">
+                            <button class="btn btn-danger w-100 py-2 py-md-3 fw-semibold" onclick="testError()" style="border-radius: 12px; font-size: clamp(0.7rem, 0.9vw, 0.85rem);">
+                                <i class="fa-solid fa-circle-xmark me-1 me-md-2"></i>Error
                             </button>
                         </div>
-                        <!-- Warning -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-warning w-100 py-3 fw-semibold" onclick="testWarning()" style="border-radius: 12px;">
-                                <i class="fa-solid fa-triangle-exclamation me-2"></i>Warning Toast
+                        <div class="col-6 col-md-3">
+                            <button class="btn btn-warning w-100 py-2 py-md-3 fw-semibold" onclick="testWarning()" style="border-radius: 12px; font-size: clamp(0.7rem, 0.9vw, 0.85rem);">
+                                <i class="fa-solid fa-triangle-exclamation me-1 me-md-2"></i>Warning
                             </button>
                         </div>
-                        <!-- Info -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-info text-white w-100 py-3 fw-semibold" onclick="testInfo()" style="border-radius: 12px;">
-                                <i class="fa-solid fa-circle-info me-2"></i>Info Toast
+                        <div class="col-6 col-md-3">
+                            <button class="btn btn-info text-white w-100 py-2 py-md-3 fw-semibold" onclick="testInfo()" style="border-radius: 12px; font-size: clamp(0.7rem, 0.9vw, 0.85rem);">
+                                <i class="fa-solid fa-circle-info me-1 me-md-2"></i>Info
                             </button>
                         </div>
-                        <!-- Long Message -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-primary w-100 py-3 fw-semibold" onclick="testLongMessage()" style="border-radius: 12px; background: var(--accent-gradient); border: none;">
-                                <i class="fa-solid fa-align-left me-2"></i>Long Message
+                        <div class="col-6 col-md-3">
+                            <button class="btn btn-primary w-100 py-2 py-md-3 fw-semibold" onclick="testLongMessage()" style="border-radius: 12px; background: var(--brand-gradient); border: none; font-size: clamp(0.7rem, 0.9vw, 0.85rem);">
+                                <i class="fa-solid fa-align-left me-1 me-md-2"></i>Long
                             </button>
                         </div>
-                        <!-- With Link -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn w-100 py-3 fw-semibold text-white" onclick="testWithLink()" style="border-radius: 12px; background: linear-gradient(135deg, #8B5CF6, #7C3AED); border: none;">
-                                <i class="fa-solid fa-link me-2"></i>With Link
+                        <div class="col-6 col-md-3">
+                            <button class="btn w-100 py-2 py-md-3 fw-semibold text-white" onclick="testMultiple()" style="border-radius: 12px; background: linear-gradient(135deg, #F59E0B, #D97706); border: none; font-size: clamp(0.7rem, 0.9vw, 0.85rem);">
+                                <i class="fa-solid fa-layer-group me-1 me-md-2"></i>Multiple (5)
                             </button>
                         </div>
-                        <!-- Multiple Toasts -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn w-100 py-3 fw-semibold text-white" onclick="testMultiple()" style="border-radius: 12px; background: linear-gradient(135deg, #F59E0B, #D97706); border: none;">
-                                <i class="fa-solid fa-layer-group me-2"></i>Multiple (5)
-                            </button>
-                        </div>
-                        <!-- Clear All -->
-                        <div class="col-md-3 col-sm-6">
-                            <button class="btn btn-secondary w-100 py-3 fw-semibold" onclick="clearAllNotifications()" style="border-radius: 12px;">
-                                <i class="fa-solid fa-broom me-2"></i>Clear All
+                        <div class="col-6 col-md-3">
+                            <button class="btn btn-secondary w-100 py-2 py-md-3 fw-semibold" onclick="clearAllNotifications()" style="border-radius: 12px; font-size: clamp(0.7rem, 0.9vw, 0.85rem);">
+                                <i class="fa-solid fa-broom me-1 me-md-2"></i>Clear All
                             </button>
                         </div>
                     </div>
 
-                    <hr style="border-color: var(--border-color); margin: 2rem 0;">
+                    <hr style="border-color: var(--border-color); margin: 1.5rem 0;">
 
-                    <h5 class="mb-3" style="color: var(--text-primary);">
-                        <i class="fa-solid fa-server me-2" style="color: var(--accent);"></i>Django Messages Test (Page Reload)
+                    <!-- Django Messages -->
+                    <h5 class="mb-3" style="color: var(--text-primary); font-size: clamp(0.9rem, 1.2vw, 1rem);">
+                        <i class="fa-solid fa-server me-2" style="color: var(--brand-orange);"></i>Django Messages (Page Reload)
                     </h5>
+                    
                     <div class="d-flex flex-wrap gap-2">
-                        <a href="{% url 'test_success' %}" class="btn btn-success" style="border-radius: 12px;">
-                            <i class="fa-solid fa-check me-2"></i>Success Message
+                        <a href="{% url 'test_success' %}" class="btn btn-success" style="border-radius: 12px; font-size: clamp(0.7rem, 0.85vw, 0.85rem); padding: 0.4rem 1rem;">
+                            <i class="fa-solid fa-check me-1"></i>Success
                         </a>
-                        <a href="{% url 'test_error' %}" class="btn btn-danger" style="border-radius: 12px;">
-                            <i class="fa-solid fa-xmark me-2"></i>Error Message
+                        <a href="{% url 'test_error' %}" class="btn btn-danger" style="border-radius: 12px; font-size: clamp(0.7rem, 0.85vw, 0.85rem); padding: 0.4rem 1rem;">
+                            <i class="fa-solid fa-xmark me-1"></i>Error
                         </a>
-                        <a href="{% url 'test_warning' %}" class="btn btn-warning" style="border-radius: 12px;">
-                            <i class="fa-solid fa-exclamation me-2"></i>Warning Message
+                        <a href="{% url 'test_warning' %}" class="btn btn-warning" style="border-radius: 12px; font-size: clamp(0.7rem, 0.85vw, 0.85rem); padding: 0.4rem 1rem;">
+                            <i class="fa-solid fa-exclamation me-1"></i>Warning
                         </a>
-                        <a href="{% url 'test_info' %}" class="btn btn-info text-white" style="border-radius: 12px;">
-                            <i class="fa-solid fa-info me-2"></i>Info Message
+                        <a href="{% url 'test_info' %}" class="btn btn-info text-white" style="border-radius: 12px; font-size: clamp(0.7rem, 0.85vw, 0.85rem); padding: 0.4rem 1rem;">
+                            <i class="fa-solid fa-info me-1"></i>Info
                         </a>
                     </div>
 
-                    <hr style="border-color: var(--border-color); margin: 2rem 0;">
+                    <hr style="border-color: var(--border-color); margin: 1.5rem 0;">
 
-                    <h5 class="mb-3" style="color: var(--text-primary);">
-                        <i class="fa-solid fa-code me-2" style="color: var(--accent);"></i>Quick Test Buttons
+                    <!-- Quick Tests -->
+                    <h5 class="mb-3" style="color: var(--text-primary); font-size: clamp(0.9rem, 1.2vw, 1rem);">
+                        <i class="fa-solid fa-code me-2" style="color: var(--brand-orange);"></i>Quick Test Buttons
                     </h5>
+                    
                     <div class="d-flex flex-wrap gap-2">
-                        <button class="btn btn-sm btn-outline-success" onclick="showToast('Ticket #1234 has been created successfully!', 'success')">
+                        <button class="btn btn-sm btn-outline-success" onclick="showToast('Ticket #1234 created successfully!', 'success')" style="border-radius: 50px; font-size: clamp(0.6rem, 0.75vw, 0.75rem);">
                             Ticket Created
                         </button>
-                        <button class="btn btn-sm btn-outline-info" onclick="showToast('Ticket #1234 assigned to John Doe', 'info')">
+                        <button class="btn btn-sm btn-outline-info" onclick="showToast('Ticket #1234 assigned to John Doe', 'info')" style="border-radius: 50px; font-size: clamp(0.6rem, 0.75vw, 0.75rem);">
                             Ticket Assigned
                         </button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="showToast('Ticket #1234 put on hold - Waiting for vendor response', 'warning')">
+                        <button class="btn btn-sm btn-outline-warning" onclick="showToast('Ticket #1234 put on hold - Waiting for vendor response', 'warning')" style="border-radius: 50px; font-size: clamp(0.6rem, 0.75vw, 0.75rem);">
                             Ticket On Hold
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="showToast('Failed to update ticket. Please try again.', 'error')">
+                        <button class="btn btn-sm btn-outline-danger" onclick="showToast('Failed to update ticket. Please try again.', 'error')" style="border-radius: 50px; font-size: clamp(0.6rem, 0.75vw, 0.75rem);">
                             Update Failed
                         </button>
-                        <button class="btn btn-sm btn-outline-primary" onclick="showToast('Settings saved successfully!', 'success', 'Settings Updated')">
+                        <button class="btn btn-sm btn-outline-primary" onclick="showToast('Settings saved successfully!', 'success', 'Settings Updated')" style="border-radius: 50px; font-size: clamp(0.6rem, 0.75vw, 0.75rem);">
                             Custom Title
                         </button>
                     </div>
@@ -117,26 +111,37 @@
 </div>
 
 <style>
+    /* ============================================
+       BUTTON STYLES - RESPONSIVE
+    ============================================ */
     .btn-success {
         background: linear-gradient(135deg, #22C55E, #16A34A) !important;
         border: none !important;
         color: white !important;
+        transition: all 0.3s ease !important;
     }
     .btn-success:hover {
         background: linear-gradient(135deg, #16A34A, #15803D) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3) !important;
+    }
+    .btn-success:active {
+        transform: scale(0.95) !important;
     }
     
     .btn-danger {
         background: linear-gradient(135deg, #EF4444, #DC2626) !important;
         border: none !important;
         color: white !important;
+        transition: all 0.3s ease !important;
     }
     .btn-danger:hover {
         background: linear-gradient(135deg, #DC2626, #B91C1C) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important;
+    }
+    .btn-danger:active {
+        transform: scale(0.95) !important;
     }
     
     .btn-warning {
@@ -144,44 +149,234 @@
         border: none !important;
         color: #1A2A6C !important;
         font-weight: 600 !important;
+        transition: all 0.3s ease !important;
     }
     .btn-warning:hover {
         background: linear-gradient(135deg, #D97706, #B45309) !important;
         color: #1A2A6C !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3) !important;
+    }
+    .btn-warning:active {
+        transform: scale(0.95) !important;
     }
     
     .btn-info {
         background: linear-gradient(135deg, #3B82F6, #2563EB) !important;
         border: none !important;
+        color: white !important;
+        transition: all 0.3s ease !important;
     }
     .btn-info:hover {
         background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+    }
+    .btn-info:active {
+        transform: scale(0.95) !important;
     }
     
     .btn-secondary {
         background: linear-gradient(135deg, #6B7280, #4B5563) !important;
         border: none !important;
-    }
-    
-    .btn-outline-success, .btn-outline-info, .btn-outline-warning, 
-    .btn-outline-danger, .btn-outline-primary {
-        border-radius: 50px !important;
+        color: white !important;
         transition: all 0.3s ease !important;
     }
-    
-    .btn-outline-success:hover, .btn-outline-info:hover, .btn-outline-warning:hover,
-    .btn-outline-danger:hover, .btn-outline-primary:hover {
+    .btn-secondary:hover {
+        background: linear-gradient(135deg, #4B5563, #374151) !important;
         transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3) !important;
+    }
+    .btn-secondary:active {
+        transform: scale(0.95) !important;
+    }
+    
+    .btn-primary {
+        background: var(--brand-gradient) !important;
+        border: none !important;
+        color: white !important;
+        transition: all 0.3s ease !important;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3) !important;
+    }
+    .btn-primary:active {
+        transform: scale(0.95) !important;
+    }
+    
+    /* Outline Buttons */
+    .btn-outline-success {
+        border-color: #22C55E !important;
+        color: #22C55E !important;
+        transition: all 0.3s ease !important;
+    }
+    .btn-outline-success:hover {
+        background: #22C55E !important;
+        color: white !important;
+    }
+    
+    .btn-outline-info {
+        border-color: #3B82F6 !important;
+        color: #3B82F6 !important;
+        transition: all 0.3s ease !important;
+    }
+    .btn-outline-info:hover {
+        background: #3B82F6 !important;
+        color: white !important;
+    }
+    
+    .btn-outline-warning {
+        border-color: #F59E0B !important;
+        color: #F59E0B !important;
+        transition: all 0.3s ease !important;
+    }
+    .btn-outline-warning:hover {
+        background: #F59E0B !important;
+        color: #1A2A6C !important;
+    }
+    
+    .btn-outline-danger {
+        border-color: #EF4444 !important;
+        color: #EF4444 !important;
+        transition: all 0.3s ease !important;
+    }
+    .btn-outline-danger:hover {
+        background: #EF4444 !important;
+        color: white !important;
+    }
+    
+    .btn-outline-primary {
+        border-color: var(--brand-orange) !important;
+        color: var(--brand-orange) !important;
+        transition: all 0.3s ease !important;
+    }
+    .btn-outline-primary:hover {
+        background: var(--brand-gradient) !important;
+        color: white !important;
+        border-color: transparent !important;
+    }
+    
+    /* ============================================
+       RESPONSIVE FIXES
+    ============================================ */
+    @media (max-width: 576px) {
+        .card-header {
+            padding: 0.6rem 1rem !important;
+        }
+        .card-body {
+            padding: 0.75rem !important;
+        }
+        .btn {
+            font-size: 0.7rem !important;
+            padding: 0.3rem 0.6rem !important;
+        }
+        .btn-sm {
+            font-size: 0.6rem !important;
+            padding: 0.2rem 0.5rem !important;
+        }
+        .btn-success, .btn-danger, .btn-warning, .btn-info, .btn-secondary, .btn-primary {
+            font-size: 0.7rem !important;
+            padding: 0.3rem 0.6rem !important;
+        }
+        hr {
+            margin: 1rem 0 !important;
+        }
+        h5 {
+            font-size: 0.85rem !important;
+        }
+        .d-flex.flex-wrap.gap-2 {
+            gap: 0.3rem !important;
+        }
+        .gap-2 {
+            gap: 0.3rem !important;
+        }
+        .row.g-2.g-md-3 {
+            --bs-gutter-y: 0.3rem;
+        }
+        .col-6 {
+            padding-left: 0.3rem;
+            padding-right: 0.3rem;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .card-body {
+            padding: 0.5rem !important;
+        }
+        .btn {
+            font-size: 0.6rem !important;
+            padding: 0.2rem 0.4rem !important;
+        }
+        .btn-success, .btn-danger, .btn-warning, .btn-info, .btn-secondary, .btn-primary {
+            font-size: 0.6rem !important;
+            padding: 0.2rem 0.4rem !important;
+        }
+        .btn-sm {
+            font-size: 0.55rem !important;
+            padding: 0.15rem 0.4rem !important;
+        }
+        h5 {
+            font-size: 0.75rem !important;
+        }
+        .col-6 {
+            padding-left: 0.2rem;
+            padding-right: 0.2rem;
+        }
+    }
+
+    /* ============================================
+       DARK MODE SUPPORT
+    ============================================ */
+    [data-theme="dark"] .btn-outline-success {
+        color: #34D399 !important;
+        border-color: #34D399 !important;
+    }
+    [data-theme="dark"] .btn-outline-success:hover {
+        background: #34D399 !important;
+        color: #1A1A2E !important;
+    }
+    
+    [data-theme="dark"] .btn-outline-info {
+        color: #60A5FA !important;
+        border-color: #60A5FA !important;
+    }
+    [data-theme="dark"] .btn-outline-info:hover {
+        background: #60A5FA !important;
+        color: #1A1A2E !important;
+    }
+    
+    [data-theme="dark"] .btn-outline-warning {
+        color: #FBBF24 !important;
+        border-color: #FBBF24 !important;
+    }
+    [data-theme="dark"] .btn-outline-warning:hover {
+        background: #FBBF24 !important;
+        color: #1A1A2E !important;
+    }
+    
+    [data-theme="dark"] .btn-outline-danger {
+        color: #F87171 !important;
+        border-color: #F87171 !important;
+    }
+    [data-theme="dark"] .btn-outline-danger:hover {
+        background: #F87171 !important;
+        color: #1A1A2E !important;
+    }
+    
+    [data-theme="dark"] .btn-outline-primary {
+        color: var(--brand-orange) !important;
+        border-color: var(--brand-orange) !important;
+    }
+    [data-theme="dark"] .btn-outline-primary:hover {
+        background: var(--brand-gradient) !important;
+        color: white !important;
     }
 </style>
 
 <script>
     // ============================================
-    // TEST FUNCTIONS
+    // TEST FUNCTIONS - PRODUCTION READY
     // ============================================
     
     function testSuccess() {
@@ -189,7 +384,7 @@
     }
     
     function testError() {
-        window.showToast('An error occurred while processing your request. Please try again later or contact support.', 'error', 'Error');
+        window.showToast('An error occurred while processing your request. Please try again later.', 'error', 'Error');
     }
     
     function testWarning() {
@@ -208,14 +403,8 @@
         );
     }
     
-    function testWithLink() {
-        window.showToast('Click this toast to view the ticket details.', 'success', 'Ticket #5678 Updated');
-        // Note: The current toast implementation doesn't support clickable links in this version
-        // You can add URL parameter support if needed
-    }
-    
     function testMultiple() {
-        const messages = [
+        var messages = [
             { msg: 'Ticket #1001 created successfully!', type: 'success', title: 'Created' },
             { msg: 'Ticket #1001 assigned to John Doe', type: 'info', title: 'Assigned' },
             { msg: 'Ticket #1002 requires attention', type: 'warning', title: 'Attention' },
@@ -223,38 +412,33 @@
             { msg: 'Report generated successfully!', type: 'success', title: 'Report Ready' }
         ];
         
-        messages.forEach((item, index) => {
-            setTimeout(() => {
+        messages.forEach(function(item, index) {
+            setTimeout(function() {
                 window.showToast(item.msg, item.type, item.title);
             }, index * 600);
         });
     }
     
     function clearAllNotifications() {
-        const container = document.getElementById('toastContainer');
+        var container = document.getElementById('toastContainer');
         if (!container) return;
         
-        const toasts = container.querySelectorAll('.toast-custom');
-        toasts.forEach(toast => {
+        var toasts = container.querySelectorAll('.toast-custom');
+        toasts.forEach(function(toast) {
             if (toast._timeout) {
                 clearTimeout(toast._timeout);
             }
             toast.classList.add('removing');
-            setTimeout(() => {
+            setTimeout(function() {
                 if (toast.parentNode) {
                     toast.parentNode.removeChild(toast);
                 }
             }, 400);
         });
         
-        setTimeout(() => {
+        setTimeout(function() {
             window.showToast('All notifications cleared! 🧹', 'success', 'Cleared');
         }, 500);
     }
-    
-    // Log that the page loaded successfully
-    console.log('✅ Notification Test Page Loaded');
-    console.log('Click any button to test toast notifications!');
 </script>
-{% endblock %}
 {% endblock %}

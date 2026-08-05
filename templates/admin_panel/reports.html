@@ -4,1346 +4,1356 @@
 
 {% block extra_head %}
 {{ block.super }}
-<style>    
+<style>
+    :root {
+        --reports-primary: #FF6B00;
+        --reports-primary-dark: #E55A00;
+        --reports-primary-light: #FF8C38;
+        --reports-success: #22C55E;
+        --reports-danger: #EF4444;
+        --reports-warning: #F59E0B;
+        --reports-info: #3B82F6;
+        --reports-purple: #8B5CF6;
+        --reports-radius: 16px;
+        --reports-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        --reports-shadow-hover: 0 8px 40px rgba(0,0,0,0.10);
+        --reports-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .reports-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 0.5rem;
+        animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
     /* ============================================
-       FIX: Form Controls with Proper Theme Support
+       HEADER
     ============================================ */
-    .form-control, 
-    .form-select,
-    input[type="text"],
-    input[type="date"],
-    input[type="number"],
-    input[type="email"],
-    textarea,
-    select {
-        background-color: var(--input-bg) !important;
-        border: 2px solid var(--border-color) !important;
-        color: var(--text-primary) !important;
-        border-radius: 10px !important;
-        padding: 0.5rem 0.9rem !important;
-        font-size: 0.85rem !important;
-        transition: all 0.3s ease !important;
-        -webkit-text-fill-color: var(--text-primary) !important;
-        caret-color: var(--text-primary) !important;
-        width: 100%;
+    .reports-header {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--reports-radius);
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--reports-shadow);
+        transition: var(--reports-transition);
+        position: relative;
+        overflow: hidden;
     }
 
-    .form-control:focus, 
-    .form-select:focus,
-    input[type="text"]:focus,
-    input[type="date"]:focus,
-    input[type="number"]:focus,
-    input[type="email"]:focus,
-    textarea:focus,
-    select:focus {
-        border-color: var(--brand-orange) !important;
-        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1) !important;
-        outline: none !important;
-        background-color: var(--input-bg) !important;
-        color: var(--text-primary) !important;
-        -webkit-text-fill-color: var(--text-primary) !important;
+    .reports-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--reports-primary), var(--reports-primary-light), var(--reports-primary));
+        background-size: 200% 100%;
+        animation: shimmerMove 3s ease infinite;
     }
 
-    .form-control::placeholder,
-    input::placeholder,
-    textarea::placeholder {
-        color: var(--text-muted) !important;
-        -webkit-text-fill-color: var(--text-muted) !important;
-        opacity: 0.7 !important;
+    @keyframes shimmerMove {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
     }
 
-    /* Select dropdown options */
-    .form-select option,
-    select option {
-        background: var(--bg-secondary) !important;
-        color: var(--text-primary) !important;
-        padding: 8px 12px;
-        background-color: var(--bg-secondary) !important;
+    .reports-header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        position: relative;
+        z-index: 1;
     }
 
-    .form-select option:hover,
-    select option:hover {
-        background: rgba(255, 107, 0, 0.1) !important;
+    .reports-header-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
     }
 
-    /* Select arrow */
-    .form-select {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236B7A9E' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
-        background-repeat: no-repeat !important;
-        background-position: right 0.9rem center !important;
-        background-size: 14px 10px !important;
-        -webkit-appearance: none !important;
-        -moz-appearance: none !important;
-        appearance: none !important;
-        padding-right: 2.5rem !important;
+    .reports-header-title .icon-box {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 107, 0, 0.10);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--reports-primary);
+        font-size: 1.4rem;
+        flex-shrink: 0;
     }
 
-    /* Date input picker */
-    input[type="date"]::-webkit-calendar-picker-indicator {
-        filter: var(--date-picker-filter, invert(1));
-        cursor: pointer;
-        opacity: 0.6;
-        transition: opacity 0.3s ease;
+    .reports-header-title h1 {
+        font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        font-family: 'Fraunces', serif;
     }
 
-    input[type="date"]::-webkit-calendar-picker-indicator:hover {
-        opacity: 1;
+    .reports-header-title .subtitle {
+        font-size: clamp(0.7rem, 1vw, 0.8rem);
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
-    input[type="date"]::-webkit-datetime-edit {
-        color: var(--text-primary) !important;
+    .reports-header-title .subtitle .count-badge {
+        background: rgba(255, 107, 0, 0.08);
+        border: 1px solid rgba(255, 107, 0, 0.12);
+        padding: 0.1rem 0.6rem;
+        border-radius: 50px;
+        color: var(--reports-primary);
+        font-weight: 600;
+        font-size: clamp(0.5rem, 0.7vw, 0.6rem);
     }
 
-    input[type="date"]::-webkit-datetime-edit-fields-wrapper {
-        color: var(--text-primary) !important;
+    /* ============================================
+       STATS ROW
+    ============================================ */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
     }
 
-    /* Input group text */
-    .input-group-text {
-        background: transparent !important;
-        border: none !important;
-        color: var(--text-muted) !important;
-        padding: 0.5rem 0.5rem !important;
-        font-size: 0.8rem !important;
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 0.6rem 0.8rem;
+        text-align: center;
+        transition: var(--reports-transition);
+        box-shadow: var(--reports-shadow);
     }
 
-    .input-group {
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--reports-shadow-hover);
+        border-color: rgba(255, 107, 0, 0.15);
+    }
+
+    .stat-number {
+        font-size: clamp(1.2rem, 2vw, 1.6rem);
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: clamp(0.5rem, 0.6vw, 0.6rem);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 500;
+        margin-top: 0.1rem;
+    }
+
+    .stat-card .stat-icon {
+        font-size: 0.8rem;
+        opacity: 0.3;
+    }
+
+    /* ============================================
+       FILTER CARD
+    ============================================ */
+    .filter-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--reports-radius);
+        margin-bottom: 1.25rem;
+        box-shadow: var(--reports-shadow);
+        transition: var(--reports-transition);
+        overflow: hidden;
+    }
+
+    .filter-card:hover {
+        border-color: rgba(255, 107, 0, 0.10);
+        box-shadow: var(--reports-shadow-hover);
+    }
+
+    .filter-card-header {
+        padding: 0.75rem 1.25rem;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .filter-card-header h3 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Fraunces', serif;
+    }
+
+    .filter-card-header h3 i {
+        color: var(--reports-primary);
+    }
+
+    .filter-card-header .result-count {
+        font-size: 0.65rem;
+        color: var(--text-muted);
         display: flex;
         align-items: center;
         gap: 0.3rem;
     }
 
-    .input-group .form-control {
+    .filter-card-header .result-count strong {
+        color: var(--reports-primary);
+        font-weight: 700;
+    }
+
+    .filter-card-body {
+        padding: 1rem 1.25rem;
+    }
+
+    /* Quick Filters */
+    .quick-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .quick-filter-btn {
+        padding: 0.25rem 0.7rem;
+        border-radius: 50px;
+        font-size: 0.65rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        background: transparent;
+        border: 2px solid var(--border-color);
+        transition: var(--reports-transition);
+        text-decoration: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .quick-filter-btn:hover {
+        border-color: var(--reports-primary);
+        color: var(--reports-primary);
+        transform: translateY(-1px);
+    }
+
+    .quick-filter-btn.active {
+        background: var(--brand-gradient);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 2px 12px rgba(255, 107, 0, 0.2);
+    }
+
+    .quick-filter-btn i {
+        font-size: 0.5rem;
+    }
+
+    /* Filter Grid */
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .filter-group label {
+        font-size: 0.6rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .filter-group label i {
+        color: var(--reports-primary);
+        font-size: 0.55rem;
+    }
+
+    .filter-input,
+    .filter-select {
+        width: 100%;
+        padding: 0.35rem 0.6rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.75rem;
+        transition: var(--reports-transition);
+        font-family: 'Inter', sans-serif;
+        min-height: 34px;
+    }
+
+    .filter-input:focus,
+    .filter-select:focus {
+        border-color: var(--reports-primary);
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.08);
+        outline: none;
+    }
+
+    .filter-input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.6;
+    }
+
+    .filter-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236B7A9E' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.6rem center;
+        background-size: 12px 8px;
+        padding-right: 2rem;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .filter-select option {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    /* Date Range */
+    .date-range {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .date-range .filter-input {
         flex: 1;
+        min-width: 0;
+        font-size: 0.7rem;
+        padding: 0.3rem 0.4rem;
     }
 
-    /* ============================================
-       FIX: Autofill Styles
-    ============================================ */
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    input:-webkit-autofill:active,
-    textarea:-webkit-autofill,
-    textarea:-webkit-autofill:hover,
-    textarea:-webkit-autofill:focus,
-    textarea:-webkit-autofill:active,
-    select:-webkit-autofill,
-    select:-webkit-autofill:hover,
-    select:-webkit-autofill:focus,
-    select:-webkit-autofill:active {
-        -webkit-text-fill-color: var(--text-primary) !important;
-        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-        background-color: var(--input-bg) !important;
-        color: var(--text-primary) !important;
-        transition: background-color 5000s ease-in-out 0s !important;
-        caret-color: var(--text-primary) !important;
-        border-color: var(--border-color) !important;
+    .date-range .date-sep {
+        color: var(--text-muted);
+        font-size: 0.6rem;
+        font-weight: 600;
+        flex-shrink: 0;
     }
 
-    input:-webkit-autofill:focus,
-    textarea:-webkit-autofill:focus,
-    select:-webkit-autofill:focus {
-        border-color: var(--brand-orange) !important;
-        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset, 0 0 0 4px rgba(255, 107, 0, 0.1) !important;
+    /* Filter Actions */
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
     }
 
-    /* ============================================
-       BUTTONS
-    ============================================ */
-    .btn-primary-custom {
-        background: var(--brand-gradient) !important;
-        border: none !important;
-        color: #FFFFFF !important;
-        border-radius: 50px !important;
-        padding: 0.5rem 1.5rem !important;
-        font-weight: 600 !important;
-        font-size: 0.85rem !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        position: relative;
-        overflow: hidden;
-        font-family: 'Inter', sans-serif !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        text-decoration: none !important;
-        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2) !important;
-    }
-
-    .btn-primary-custom::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: all 0.6s ease;
-    }
-
-    .btn-primary-custom:hover::before {
-        width: 300px;
-        height: 300px;
-    }
-
-    .btn-primary-custom:hover {
-        transform: translateY(-3px) scale(1.03) !important;
-        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.35) !important;
-        color: #FFFFFF !important;
-    }
-
-    .btn-primary-custom:active {
-        transform: scale(0.95) !important;
-    }
-
-    .btn-primary-custom i {
-        color: #FFFFFF !important;
-    }
-
-    .btn-outline-secondary-custom {
-        border: 2px solid var(--border-color) !important;
-        color: var(--text-secondary) !important;
-        border-radius: 50px !important;
-        padding: 0.5rem 1.5rem !important;
-        font-weight: 600 !important;
-        font-size: 0.85rem !important;
-        transition: all 0.4s ease !important;
-        background: transparent !important;
-        font-family: 'Inter', sans-serif !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        text-decoration: none !important;
-    }
-
-    .btn-outline-secondary-custom:hover {
-        background: var(--bg-secondary) !important;
-        border-color: var(--brand-orange) !important;
-        color: var(--text-primary) !important;
-        transform: translateY(-2px) !important;
-    }
-
-    .btn-outline-secondary-custom i {
-        color: var(--text-muted) !important;
-        transition: color 0.3s ease;
-    }
-
-    .btn-outline-secondary-custom:hover i {
-        color: var(--brand-orange) !important;
-    }
-
-    .btn-success-custom {
-        background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%) !important;
-        border: none !important;
-        color: #FFFFFF !important;
-        border-radius: 50px !important;
-        padding: 0.5rem 1.5rem !important;
-        font-weight: 600 !important;
-        font-size: 0.85rem !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        position: relative;
-        overflow: hidden;
-        font-family: 'Inter', sans-serif !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        text-decoration: none !important;
-        box-shadow: 0 4px 16px rgba(34, 197, 94, 0.25) !important;
-    }
-
-    .btn-success-custom::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: all 0.6s ease;
-    }
-
-    .btn-success-custom:hover::before {
-        width: 300px;
-        height: 300px;
-    }
-
-    .btn-success-custom:hover {
-        transform: translateY(-3px) scale(1.03) !important;
-        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.35) !important;
-        color: #FFFFFF !important;
-    }
-
-    .btn-success-custom:active {
-        transform: scale(0.95) !important;
-    }
-
-    .btn-success-custom i {
-        color: #FFFFFF !important;
-    }
-
-    /* ============================================
-       TABLE STYLES
-    ============================================ */
-    .table {
-        color: var(--text-primary) !important;
-        margin-bottom: 0 !important;
-    }
-
-    .table > :not(caption) > * > * {
-        background: transparent !important;
-        color: var(--text-primary) !important;
-        border-color: var(--border-color) !important;
-        padding: 0.6rem 0.5rem !important;
-    }
-
-    .table thead th {
-        color: var(--text-secondary) !important;
-        font-weight: 700 !important;
-        text-transform: uppercase !important;
-        font-size: 0.6rem !important;
-        letter-spacing: 0.5px !important;
-        border-bottom: 2px solid rgba(255, 107, 0, 0.15) !important;
-        background: transparent !important;
-        position: sticky;
-        top: 0;
-        z-index: 10;
+    .btn-reports {
+        padding: 0.3rem 1.2rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        transition: var(--reports-transition);
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        text-decoration: none;
+        font-family: 'Inter', sans-serif;
+        min-height: 34px;
+        justify-content: center;
         white-space: nowrap;
     }
 
-    .table-hover tbody tr {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
+    .btn-reports-primary {
+        background: var(--brand-gradient);
+        color: white;
+        box-shadow: 0 2px 12px rgba(255, 107, 0, 0.2);
     }
 
-    .table-hover tbody tr:hover {
-        background: rgba(255, 107, 0, 0.04) !important;
+    .btn-reports-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3);
+        color: white;
     }
 
-    .table-hover tbody tr:hover td {
-        color: var(--text-primary) !important;
+    .btn-reports-secondary {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid var(--border-color);
     }
 
-    .table td {
-        vertical-align: middle;
-        font-size: clamp(0.7rem, 1vw, 0.8rem);
+    .btn-reports-secondary:hover {
+        background: var(--bg-secondary);
+        border-color: var(--reports-primary);
+        color: var(--text-primary);
+        transform: translateY(-2px);
+    }
+
+    .btn-reports-success {
+        background: linear-gradient(135deg, #22C55E, #16A34A);
+        color: white;
+        box-shadow: 0 2px 12px rgba(34, 197, 94, 0.2);
+    }
+
+    .btn-reports-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+        color: white;
+    }
+
+    /* ============================================
+       TABLE CARD
+    ============================================ */
+    .table-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--reports-radius);
+        overflow: hidden;
+        box-shadow: var(--reports-shadow);
+        transition: var(--reports-transition);
+    }
+
+    .table-card:hover {
+        border-color: rgba(255, 107, 0, 0.10);
+        box-shadow: var(--reports-shadow-hover);
+    }
+
+    .table-card-header {
+        padding: 0.75rem 1.25rem;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .table-card-header h3 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Fraunces', serif;
+    }
+
+    .table-card-header h3 i {
+        color: var(--reports-primary);
+    }
+
+    .table-card-header .timestamp {
+        font-size: 0.55rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
     }
 
     .table-responsive {
-        max-height: 550px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-height: 520px;
         overflow-y: auto;
-        border-radius: 0 0 12px 12px;
+    }
+
+    .reports-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: clamp(0.65rem, 0.8vw, 0.75rem);
+    }
+
+    .reports-table thead {
+        background: var(--bg-secondary);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .reports-table th {
+        padding: 0.5rem 0.75rem;
+        text-align: left;
+        font-size: 0.55rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border-color);
+        white-space: nowrap;
+        background: var(--bg-secondary);
+    }
+
+    .reports-table td {
+        padding: 0.4rem 0.75rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        transition: var(--reports-transition);
+    }
+
+    .reports-table tbody tr {
+        transition: var(--reports-transition);
+    }
+
+    .reports-table tbody tr:hover {
+        background: rgba(255, 107, 0, 0.03);
+    }
+
+    .reports-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .ticket-number-cell {
+        font-weight: 700;
+        color: var(--reports-primary);
+        font-size: clamp(0.65rem, 0.8vw, 0.75rem);
+        white-space: nowrap;
+    }
+
+    .ticket-number-cell i {
+        font-size: 0.4rem;
+        opacity: 0.5;
+        margin-right: 0.15rem;
+    }
+
+    .ticket-subject-cell {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: block;
+    }
+
+    .badge-reopened {
+        background: var(--reports-purple);
+        color: white;
+        font-size: 0.45rem;
+        padding: 0.05rem 0.3rem;
+        border-radius: 50px;
+        font-weight: 600;
+        margin-left: 0.2rem;
+        display: inline-block;
+    }
+
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        font-size: clamp(0.45rem, 0.55vw, 0.5rem);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+
+    .badge-status i { font-size: 0.25rem; }
+    .badge-status-open { background: #22C55E; color: white; }
+    .badge-status-assigned { background: #3B82F6; color: white; }
+    .badge-status-hold { background: #F59E0B; color: #1A1A2E; }
+    .badge-status-escalated { background: #8B5CF6; color: white; }
+    .badge-status-closed { background: #94A3B8; color: white; }
+
+    .badge-priority {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.15rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        font-size: clamp(0.4rem, 0.5vw, 0.45rem);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+
+    .badge-priority i { font-size: 0.25rem; }
+    .badge-priority-critical { background: #EF4444; color: white; }
+    .badge-priority-high { background: #F59E0B; color: #1A1A2E; }
+    .badge-priority-medium { background: #3B82F6; color: white; }
+    .badge-priority-low { background: #94A3B8; color: white; }
+
+    .btn-view-details {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        font-size: clamp(0.45rem, 0.55vw, 0.55rem);
+        font-weight: 500;
+        background: var(--brand-gradient);
+        color: white;
+        border: none;
+        transition: var(--reports-transition);
+        text-decoration: none;
+        white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.15);
+        min-height: 28px;
+    }
+
+    .btn-view-details:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.3);
+        color: white;
+    }
+
+    /* ============================================
+       EMPTY STATE - FIXED
+    ============================================ */
+    .empty-state {
+        padding: 2.5rem 1rem;
+        text-align: center;
+        animation: bounceIn 0.6s ease;
+    }
+
+    @keyframes bounceIn {
+        0% { transform: scale(0.9); opacity: 0; }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .empty-state .empty-icon {
+        font-size: 2.5rem;
+        color: var(--reports-primary);
+        opacity: 0.2;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+
+    .empty-state h4 {
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        margin-bottom: 0.3rem;
+        font-family: 'Fraunces', serif;
+    }
+
+    .empty-state p {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .empty-state .btn-reports {
+        font-size: 0.75rem;
+        padding: 0.3rem 1.2rem;
+        min-height: 34px;
     }
 
     /* ============================================
        PAGINATION
     ============================================ */
-    .pagination {
-        margin-bottom: 0;
+    .pagination-wrapper {
+        padding: 0.75rem 1.25rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         flex-wrap: wrap;
-        gap: 0.25rem;
+        gap: 0.5rem;
     }
 
-    .page-link {
-        background: transparent !important;
-        border: 2px solid var(--border-color) !important;
-        color: var(--text-secondary) !important;
-        transition: all 0.3s ease !important;
-        padding: 0.4rem 0.75rem !important;
-        border-radius: 8px !important;
-        font-weight: 500 !important;
-        font-size: 0.8rem !important;
-        font-family: 'Inter', sans-serif !important;
-    }
-
-    .page-link:hover {
-        background: rgba(255, 107, 0, 0.08) !important;
-        color: var(--brand-orange) !important;
-        border-color: var(--brand-orange) !important;
-        transform: translateY(-2px) !important;
-    }
-
-    .page-item.active .page-link {
-        background: var(--brand-gradient) !important;
-        border-color: var(--brand-orange) !important;
-        color: #FFFFFF !important;
-        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3) !important;
-    }
-
-    .page-item.disabled .page-link {
-        color: var(--text-muted) !important;
-        opacity: 0.4 !important;
-        cursor: not-allowed !important;
-    }
-
-    .page-item:first-child .page-link,
-    .page-item:last-child .page-link {
-        border-radius: 8px !important;
-    }
-
-    /* ============================================
-       CARD & FILTER STYLES
-    ============================================ */
-    .filter-card {
-        background: var(--bg-card) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 12px !important;
-        box-shadow: var(--shadow-sm) !important;
-        transition: all 0.4s ease !important;
-        overflow: hidden;
-    }
-
-    .filter-card:hover {
-        box-shadow: var(--shadow-md) !important;
-        border-color: var(--border-light) !important;
-    }
-
-    .filter-card .card-header {
-        background: rgba(255, 107, 0, 0.03) !important;
-        border-bottom: 1px solid var(--border-color) !important;
-        padding: 0.75rem 1.25rem !important;
-        border-radius: 12px 12px 0 0 !important;
-    }
-
-    .filter-card .card-header h5 {
-        color: var(--text-primary) !important;
-        font-family: 'Fraunces', serif !important;
-        font-weight: 700 !important;
-        font-size: 0.95rem !important;
-        letter-spacing: 0.3px;
-    }
-
-    .filter-card .card-header h5 i {
-        color: var(--brand-orange) !important;
-    }
-
-    .filter-card .card-body {
-        background: transparent !important;
-        color: var(--text-primary) !important;
-    }
-
-    .filter-card .card-footer {
-        background: transparent !important;
-        border-top: 1px solid var(--border-color) !important;
-        padding: 0.75rem 1.25rem !important;
-    }
-
-    /* ============================================
-       NAV PILLS
-    ============================================ */
-    .nav-pills {
-        gap: 0.25rem;
+    .pagination-controls {
+        display: flex;
+        gap: 0.2rem;
         flex-wrap: wrap;
+        align-items: center;
     }
 
-    .nav-pills .nav-link {
-        color: var(--text-secondary) !important;
-        border-radius: 50px !important;
-        transition: all 0.4s ease !important;
-        padding: 0.35rem 0.9rem !important;
-        font-weight: 500 !important;
-        font-size: 0.78rem !important;
-        border: 2px solid transparent !important;
-        font-family: 'Inter', sans-serif !important;
-        background: transparent !important;
+    .pagination-btn {
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.65rem;
+        font-weight: 500;
+        border: 1px solid var(--border-color);
+        background: transparent;
+        color: var(--text-secondary);
+        transition: var(--reports-transition);
+        cursor: pointer;
+        min-width: 28px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        min-height: 28px;
     }
 
-    .nav-pills .nav-link:hover {
-        color: var(--brand-orange) !important;
-        background: rgba(255, 107, 0, 0.06) !important;
-        transform: translateY(-2px) !important;
+    .pagination-btn:hover {
+        background: var(--bg-secondary);
+        border-color: var(--reports-primary);
+        color: var(--text-primary);
     }
 
-    .nav-pills .nav-link.active {
-        background: var(--brand-gradient) !important;
-        color: #FFFFFF !important;
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.25) !important;
-        border-color: transparent !important;
+    .pagination-btn.active {
+        background: var(--brand-gradient);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.2);
     }
 
-    .nav-pills .nav-link.active:hover {
-        color: #FFFFFF !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 30px rgba(255, 107, 0, 0.35) !important;
-    }
-
-    .nav-pills .nav-link i {
-        margin-right: 0.3rem;
-        font-size: 0.7rem;
-    }
-
-    /* ============================================
-       BADGE STYLES
-    ============================================ */
-    .badge {
-        font-weight: 600 !important;
-        padding: 0.25rem 0.6rem !important;
-        font-size: 0.65rem !important;
-        letter-spacing: 0.3px !important;
-        border-radius: 50px !important;
-    }
-
-    .badge.bg-primary {
-        background: var(--brand-gradient) !important;
-        color: #FFFFFF !important;
-    }
-
-    .badge.bg-info {
-        background: #3B82F6 !important;
-        color: #FFFFFF !important;
-    }
-
-    .badge.bg-warning {
-        background: #F59E0B !important;
-        color: #1A1A2E !important;
-    }
-
-    .badge.bg-purple {
-        background: #8B5CF6 !important;
-        color: #FFFFFF !important;
-    }
-
-    .badge.bg-secondary {
-        background: #94A3B8 !important;
-        color: #FFFFFF !important;
-    }
-
-    .badge.bg-danger {
-        background: #EF4444 !important;
-        color: #FFFFFF !important;
-    }
-
-    .badge.bg-success {
-        background: #22C55E !important;
-        color: #FFFFFF !important;
-    }
-
-    /* ============================================
-       FORM LABEL
-    ============================================ */
-    .form-label {
-        color: var(--text-secondary) !important;
-        font-weight: 600 !important;
-        font-size: 0.78rem !important;
-        letter-spacing: 0.3px !important;
-        margin-bottom: 0.3rem !important;
-        font-family: 'Inter', sans-serif !important;
-    }
-
-    .form-label i {
-        color: var(--brand-orange) !important;
-        width: 18px;
-    }
-
-    /* ============================================
-       HR
-    ============================================ */
-    hr {
-        border-color: var(--border-color) !important;
-        opacity: 1 !important;
-        margin: 1.5rem 0 !important;
-        background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.2), transparent) !important;
-        height: 1px !important;
-        border: none !important;
-    }
-
-    /* ============================================
-       EMPTY STATE
-    ============================================ */
-    .empty-state-icon {
-        color: var(--text-muted) !important;
+    .pagination-btn.disabled {
         opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
     }
 
-    /* ============================================
-       DARK MODE OVERRIDES
-    ============================================ */
-    [data-theme="dark"] .form-control,
-    [data-theme="dark"] .form-select,
-    [data-theme="dark"] input[type="text"],
-    [data-theme="dark"] input[type="date"],
-    [data-theme="dark"] input[type="number"],
-    [data-theme="dark"] input[type="email"],
-    [data-theme="dark"] textarea,
-    [data-theme="dark"] select {
-        background-color: rgba(255, 255, 255, 0.06) !important;
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        color: #E8EDF5 !important;
-        -webkit-text-fill-color: #E8EDF5 !important;
-    }
-
-    [data-theme="dark"] .form-control:focus,
-    [data-theme="dark"] .form-select:focus {
-        border-color: var(--brand-orange) !important;
-        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.15) !important;
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        color: #E8EDF5 !important;
-        -webkit-text-fill-color: #E8EDF5 !important;
-    }
-
-    [data-theme="dark"] .form-select option,
-    [data-theme="dark"] select option {
-        background: #1A1A2E !important;
-        color: #E8EDF5 !important;
-        background-color: #1A1A2E !important;
-    }
-
-    [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
-        filter: invert(1);
-    }
-
-    [data-theme="dark"] input:-webkit-autofill,
-    [data-theme="dark"] input:-webkit-autofill:hover,
-    [data-theme="dark"] input:-webkit-autofill:focus {
-        -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.06) inset !important;
-        background-color: rgba(255, 255, 255, 0.06) !important;
-        -webkit-text-fill-color: #E8EDF5 !important;
-        border-color: rgba(255, 255, 255, 0.1) !important;
-    }
-
-    [data-theme="dark"] .nav-pills .nav-link {
-        color: rgba(255, 255, 255, 0.6);
-    }
-
-    [data-theme="dark"] .nav-pills .nav-link:hover {
-        color: var(--brand-orange);
-        background: rgba(255, 107, 0, 0.08);
-    }
-
-    [data-theme="dark"] .page-link {
-        border-color: rgba(255, 255, 255, 0.08) !important;
-        color: rgba(255, 255, 255, 0.6) !important;
-    }
-
-    [data-theme="dark"] .page-link:hover {
-        background: rgba(255, 107, 0, 0.1) !important;
-        color: var(--brand-orange) !important;
-        border-color: var(--brand-orange) !important;
-    }
-
-    [data-theme="dark"] .badge.bg-light {
-        background: rgba(255, 255, 255, 0.08) !important;
-        color: var(--text-secondary) !important;
-    }
-
-    /* ============================================
-       LIGHT MODE OVERRIDES
-    ============================================ */
-    :root:not([data-theme="dark"]) .form-control,
-    :root:not([data-theme="dark"]) .form-select,
-    :root:not([data-theme="dark"]) input[type="text"],
-    :root:not([data-theme="dark"]) input[type="date"],
-    :root:not([data-theme="dark"]) input[type="number"],
-    :root:not([data-theme="dark"]) input[type="email"],
-    :root:not([data-theme="dark"]) textarea,
-    :root:not([data-theme="dark"]) select {
-        background-color: #F5F8FF !important;
-        border-color: #DCE3F0 !important;
-        color: #1A2A6C !important;
-        -webkit-text-fill-color: #1A2A6C !important;
-    }
-
-    :root:not([data-theme="dark"]) .form-control:focus,
-    :root:not([data-theme="dark"]) .form-select:focus {
-        border-color: var(--brand-orange) !important;
-        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.08) !important;
-        background-color: #EEF2FF !important;
-        color: #1A2A6C !important;
-        -webkit-text-fill-color: #1A2A6C !important;
-    }
-
-    :root:not([data-theme="dark"]) .form-select option,
-    :root:not([data-theme="dark"]) select option {
-        background: #FFFFFF !important;
-        color: #1A2A6C !important;
-        background-color: #FFFFFF !important;
-    }
-
-    :root:not([data-theme="dark"]) input[type="date"]::-webkit-calendar-picker-indicator {
-        filter: invert(0);
-    }
-
-    :root:not([data-theme="dark"]) input:-webkit-autofill,
-    :root:not([data-theme="dark"]) input:-webkit-autofill:hover,
-    :root:not([data-theme="dark"]) input:-webkit-autofill:focus {
-        -webkit-box-shadow: 0 0 0px 1000px #F5F8FF inset !important;
-        background-color: #F5F8FF !important;
-        -webkit-text-fill-color: #1A2A6C !important;
-        border-color: #DCE3F0 !important;
-    }
-
-    :root:not([data-theme="dark"]) .nav-pills .nav-link {
-        color: #3D3D4A;
-    }
-
-    :root:not([data-theme="dark"]) .nav-pills .nav-link:hover {
-        color: var(--brand-orange);
-        background: rgba(255, 107, 0, 0.06);
+    .pagination-info {
+        color: var(--text-muted);
+        font-size: 0.6rem;
     }
 
     /* ============================================
        RESPONSIVE
     ============================================ */
     @media (max-width: 992px) {
-        .nav-pills .nav-link {
-            font-size: 0.7rem !important;
-            padding: 0.25rem 0.6rem !important;
-        }
-
-        .form-control,
-        .form-select {
-            font-size: 0.8rem !important;
-            padding: 0.4rem 0.7rem !important;
-        }
+        .reports-header { padding: 1rem 1.25rem; }
+        .filter-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+        .stats-row { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
     }
 
     @media (max-width: 768px) {
-        .filter-card .card-body {
-            padding: 1rem !important;
-        }
-
-        .nav-pills {
-            justify-content: center;
-            gap: 0.2rem;
-        }
-
-        .nav-pills .nav-link {
-            font-size: 0.65rem !important;
-            padding: 0.2rem 0.5rem !important;
-        }
-
-        .btn-primary-custom,
-        .btn-outline-secondary-custom,
-        .btn-success-custom {
-            width: 100% !important;
-            justify-content: center !important;
-            margin-bottom: 0.3rem !important;
-        }
-
-        .d-flex.justify-content-end {
-            flex-direction: column !important;
-        }
-
-        .d-flex.justify-content-end .gap-2 {
-            flex-direction: column !important;
-            width: 100% !important;
-        }
-
-        .d-flex.justify-content-end .gap-2 .btn {
-            width: 100% !important;
-        }
-
-        .input-group {
-            flex-direction: column !important;
-            gap: 0.3rem !important;
-        }
-
-        .input-group input {
-            border-radius: 10px !important;
-        }
-
-        .input-group-text {
-            display: none !important;
-        }
-
-        .table td,
-        .table th {
-            font-size: 0.65rem !important;
-            padding: 0.25rem 0.2rem !important;
-        }
-
-        .filter-card .card-header h5 {
-            font-size: 0.85rem !important;
-        }
-
-        .badge {
-            font-size: 0.5rem !important;
-            padding: 0.15rem 0.35rem !important;
-        }
-
-        .table-responsive {
-            max-height: 350px !important;
-        }
-
-        .pagination .page-link {
-            padding: 0.25rem 0.5rem !important;
-            font-size: 0.65rem !important;
-        }
-
-        .form-label {
-            font-size: 0.7rem !important;
-        }
-
-        hr {
-            margin: 1rem 0 !important;
-        }
+        .reports-wrapper { padding: 0 0.25rem; }
+        .reports-header { padding: 0.75rem 1rem; }
+        .reports-header-content { flex-direction: column; align-items: stretch; }
+        .reports-header-title .icon-box { width: 40px; height: 40px; font-size: 1.1rem; }
+        .filter-card-body { padding: 0.75rem; }
+        .filter-grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+        .filter-actions { flex-direction: row; flex-wrap: wrap; }
+        .filter-actions .btn-reports { flex: 1; min-width: 80px; padding: 0.25rem 0.6rem; font-size: 0.65rem; min-height: 30px; }
+        .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+        .stat-card { padding: 0.4rem 0.5rem; }
+        .stat-number { font-size: 1rem; }
+        .quick-filter-btn { font-size: 0.55rem; padding: 0.15rem 0.5rem; }
+        .table-responsive { max-height: 350px; }
+        .reports-table th, .reports-table td { padding: 0.3rem 0.4rem; font-size: 0.6rem; }
+        .ticket-subject-cell { max-width: 80px; }
+        .pagination-wrapper { flex-direction: column; align-items: center; }
+        .pagination-controls { justify-content: center; }
+        .pagination-info { text-align: center; font-size: 0.55rem; }
+        .btn-view-details span { display: none; }
+        .btn-view-details { min-width: 30px; padding: 0.15rem 0.4rem; }
+        .badge-reopened { font-size: 0.4rem; padding: 0.05rem 0.2rem; }
+        .empty-state { padding: 1.5rem 0.5rem; }
+        .empty-state .empty-icon { font-size: 2rem; }
+        .empty-state h4 { font-size: 0.95rem; }
+        .empty-state p { font-size: 0.7rem; }
     }
 
     @media (max-width: 576px) {
-        .filter-card .card-body {
-            padding: 0.75rem !important;
-        }
+        .filter-grid { grid-template-columns: 1fr; }
+        .filter-card-header { flex-direction: column; align-items: stretch; }
+        .filter-card-header .result-count { justify-content: center; }
+        .filter-actions { flex-direction: column; }
+        .filter-actions .btn-reports { width: 100%; justify-content: center; min-height: 32px; }
+        .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.3rem; }
+        .stat-number { font-size: 0.85rem; }
+        .stat-label { font-size: 0.45rem; }
+        .date-range { flex-wrap: wrap; }
+        .date-range .filter-input { min-width: 80px; }
+        .quick-filters { gap: 0.2rem; }
+        .quick-filter-btn { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
+        .reports-table th, .reports-table td { padding: 0.2rem 0.25rem; font-size: 0.5rem; }
+        .ticket-subject-cell { max-width: 60px; }
+        .badge-status { font-size: 0.4rem !important; padding: 0.05rem 0.25rem; }
+        .badge-status i { display: none; }
+        .badge-priority { font-size: 0.35rem !important; padding: 0.05rem 0.2rem; }
+        .badge-priority i { display: none; }
+        .pagination-btn { font-size: 0.5rem; padding: 0.1rem 0.3rem; min-width: 22px; min-height: 22px; }
+        .empty-state h4 { font-size: 0.85rem; }
+        .empty-state p { font-size: 0.65rem; }
+        .empty-state .btn-reports { font-size: 0.65rem; padding: 0.2rem 0.8rem; min-height: 28px; }
+    }
 
-        .nav-pills .nav-link {
-            font-size: 0.55rem !important;
-            padding: 0.15rem 0.4rem !important;
-        }
+    @media (max-width: 400px) {
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+        .filter-grid { grid-template-columns: 1fr; }
+        .reports-header { padding: 0.5rem 0.6rem; }
+        .reports-header-title .icon-box { width: 32px; height: 32px; font-size: 0.9rem; }
+        .filter-card-body { padding: 0.5rem; }
+        .table-card-header { flex-direction: column; align-items: stretch; }
+        .table-card-header .timestamp { justify-content: center; }
+    }
 
-        .form-control,
-        .form-select {
-            font-size: 0.75rem !important;
-            padding: 0.3rem 0.6rem !important;
-            border-radius: 8px !important;
-        }
+    /* ============================================
+       DARK MODE
+    ============================================ */
+    [data-theme="dark"] .reports-table thead {
+        background: rgba(255, 255, 255, 0.03);
+    }
 
-        .btn-primary-custom,
-        .btn-outline-secondary-custom,
-        .btn-success-custom {
-            font-size: 0.75rem !important;
-            padding: 0.35rem 0.8rem !important;
-        }
+    [data-theme="dark"] .filter-input,
+    [data-theme="dark"] .filter-select {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #E8EDF5;
+    }
 
-        .table td,
-        .table th {
-            font-size: 0.55rem !important;
-            padding: 0.15rem 0.1rem !important;
-        }
+    [data-theme="dark"] .filter-input:focus,
+    [data-theme="dark"] .filter-select:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--reports-primary);
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
+    }
 
-        .table-responsive {
-            max-height: 250px !important;
-        }
+    [data-theme="dark"] .filter-select option {
+        background: #1A1A2E;
+        color: #E8EDF5;
+    }
 
-        .badge {
-            font-size: 0.45rem !important;
-            padding: 0.1rem 0.25rem !important;
-        }
+    [data-theme="dark"] .stat-card {
+        border-color: rgba(255, 255, 255, 0.06);
+    }
 
-        .pagination .page-link {
-            padding: 0.15rem 0.35rem !important;
-            font-size: 0.55rem !important;
-        }
+    [data-theme="dark"] .stat-card:hover {
+        border-color: rgba(255, 107, 0, 0.2);
+    }
 
-        .page-item .page-link {
-            padding: 0.15rem 0.35rem !important;
-            font-size: 0.55rem !important;
-        }
+    [data-theme="dark"] .reports-table tbody tr:hover {
+        background: rgba(255, 107, 0, 0.05);
+    }
 
-        .filter-card .card-header {
-            padding: 0.5rem 0.75rem !important;
-        }
+    [data-theme="dark"] .quick-filter-btn {
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+    }
 
-        .filter-card .card-header h5 {
-            font-size: 0.75rem !important;
-        }
+    [data-theme="dark"] .quick-filter-btn:hover {
+        border-color: var(--reports-primary);
+        color: var(--reports-primary);
+    }
+
+    [data-theme="dark"] .btn-reports-secondary {
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+    }
+
+    [data-theme="dark"] .btn-reports-secondary:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--reports-primary);
+        color: #FFFFFF;
     }
 
     /* ============================================
        SCROLLBAR
     ============================================ */
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--reports-primary); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--reports-primary-dark); }
 
-    ::-webkit-scrollbar-track {
-        background: var(--bg-secondary);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: var(--brand-orange);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--brand-orange-dark);
-    }
-
-    /* ============================================
-       SELECTION
-    ============================================ */
-    ::selection {
-        background: var(--brand-orange);
-        color: #FFFFFF;
-    }
-
-    /* ============================================
-       ANIMATIONS
-    ============================================ */
-    .table tbody tr {
-        animation: fadeInRow 0.3s ease;
-    }
-
-    @keyframes fadeInRow {
-        from {
-            opacity: 0;
-            transform: translateY(8px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .filter-count {
-        background: var(--brand-orange);
-        color: #FFFFFF;
-        border-radius: 50px;
-        padding: 0.1rem 0.5rem;
-        font-size: 0.65rem;
-        font-weight: 600;
-        margin-left: 0.3rem;
-    }
-
-    /* View button in table */
-    .btn-view-sm {
-        padding: 0.15rem 0.6rem !important;
-        border-radius: 50px !important;
-        font-size: 0.6rem !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-        background: var(--brand-gradient) !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-        text-decoration: none !important;
-        font-family: 'Inter', sans-serif !important;
-    }
-
-    .btn-view-sm:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3) !important;
-        color: #FFFFFF !important;
-    }
-
-    .btn-view-sm i {
-        font-size: 0.5rem !important;
-        color: #FFFFFF !important;
-    }
+    ::selection { background: var(--reports-primary); color: white; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2 class="fw-bold mb-1" style="color: var(--text-primary);">
-            <i class="fa-solid fa-file-excel me-2" style="color: var(--brand-orange);"></i>Reports & Export Center
-        </h2>
-        <p style="color: var(--text-secondary);">
-            <i class="fa-regular fa-clock me-1"></i>
-            Filter and export ticket data to an Excel spreadsheet.
-        </p>
-    </div>
-</div>
+<div class="reports-wrapper">
 
-<!-- Filter Form -->
-<div class="card filter-card shadow-sm mb-4">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5 class="fw-bold mb-0"><i class="fa-solid fa-filter me-2"></i>Filter Tickets</h5>
-        <span class="badge bg-primary rounded-pill">
-            <i class="fa-solid fa-list me-1"></i>{{ tickets.paginator.count }} ticket(s) found
-        </span>
-    </div>
-    <div class="card-body p-4">
-        <form method="GET" action="{% url 'reports' %}" id="filterForm">
-            <!-- Category Pills -->
-            <div class="mb-4">
-                <ul class="nav nav-pills flex-wrap">
-                    <li class="nav-item"><a href="?category=all" class="nav-link {% if category == 'all' %}active{% endif %}"><i class="fa-solid fa-list"></i>All</a></li>
-                    <li class="nav-item"><a href="?category=open" class="nav-link {% if category == 'open' %}active{% endif %}"><i class="fa-solid fa-circle"></i>Open</a></li>
-                    <li class="nav-item"><a href="?category=assigned" class="nav-link {% if category == 'assigned' %}active{% endif %}"><i class="fa-solid fa-user-check"></i>Assigned</a></li>
-                    <li class="nav-item"><a href="?category=hold" class="nav-link {% if category == 'hold' %}active{% endif %}"><i class="fa-solid fa-pause"></i>Hold</a></li>
-                    <li class="nav-item"><a href="?category=escalated" class="nav-link {% if category == 'escalated' %}active{% endif %}"><i class="fa-solid fa-arrow-up"></i>Escalated</a></li>
-                    <li class="nav-item"><a href="?category=closed" class="nav-link {% if category == 'closed' %}active{% endif %}"><i class="fa-solid fa-check-circle"></i>Closed</a></li>
-                    <li class="nav-item"><a href="?category=escalated_closed" class="nav-link {% if category == 'escalated_closed' %}active{% endif %}"><i class="fa-solid fa-arrow-up-right-dots"></i>Esc &amp; Closed</a></li>
-                    <li class="nav-item"><a href="?category=reopened" class="nav-link {% if category == 'reopened' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i>Reopened</a></li>
-                </ul>
-                <input type="hidden" name="category" value="{{ request.GET.category|default:'all' }}">
-            </div>
-
-            <!-- Main Filter Rows -->
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-regular fa-building me-1"></i>Unit</label>
-                    <select name="unit" id="id_unit" class="form-select">
-                        <option value="">All Units</option>
-                        {% for unit in units %}
-                        <option value="{{ unit.id }}" {% if request.GET.unit == unit.id|stringformat:"s" %}selected{% endif %}>{{ unit.code }} - {{ unit.full_name }}</option>
-                        {% endfor %}
-                    </select>
+    <!-- Header -->
+    <div class="reports-header">
+        <div class="reports-header-content">
+            <div class="reports-header-title">
+                <div class="icon-box">
+                    <i class="fa-solid fa-file-excel"></i>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-regular fa-layer-group me-1"></i>Department</label>
-                    <select name="department" id="id_department" class="form-select" data-show-all="true">
-                        <option value="">All Departments</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-solid fa-flag me-1"></i>Priority</label>
-                    <select name="priority" class="form-select">
-                        <option value="">All Priorities</option>
-                        {% for p in priority_choices %}
-                        <option value="{{ p.0 }}" {% if request.GET.priority == p.0 %}selected{% endif %}>{{ p.1 }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-solid fa-circle me-1"></i>Status</label>
-                    <select name="status" class="form-select">
-                        <option value="">All Statuses</option>
-                        {% for s in status_choices %}
-                        <option value="{{ s.0 }}" {% if request.GET.status == s.0 %}selected{% endif %}>{{ s.1 }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-solid fa-user me-1"></i>Assigned Person</label>
-                    <input type="text" name="assigned_person" class="form-control" value="{{ request.GET.assigned_person|default:'' }}" placeholder="Enter name...">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-solid fa-ticket me-1"></i>Vendor Ticket No.</label>
-                    <input type="text" name="vendor_ticket_number" class="form-control" value="{{ request.GET.vendor_ticket_number|default:'' }}" placeholder="Enter vendor ticket...">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-solid fa-rotate-left me-1"></i>Reopened Status</label>
-                    <select name="is_reopened" class="form-select">
-                        <option value="" {% if not is_reopened %}selected{% endif %}>All (Reopened &amp; Not)</option>
-                        <option value="yes" {% if is_reopened == 'yes' %}selected{% endif %}>Reopened Only</option>
-                        <option value="no" {% if is_reopened == 'no' %}selected{% endif %}>Never Reopened</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-solid fa-user-tag me-1"></i>Created By</label>
-                    <select name="created_by_role" class="form-select">
-                        <option value="">All</option>
-                        {% for c in created_by_choices %}
-                        <option value="{{ c.0 }}" {% if request.GET.created_by_role == c.0 %}selected{% endif %}>{{ c.1 }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-solid fa-bug me-1"></i>Error Type</label>
-                    <select name="error_type" class="form-select">
-                        <option value="">All Error Types</option>
-                        {% for e in error_type_choices %}
-                        <option value="{{ e.0 }}" {% if request.GET.error_type == e.0 %}selected{% endif %}>{{ e.1 }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-
-            <!-- Date Filter Rows -->
-            <div class="row g-3 mt-3">
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-regular fa-calendar-plus me-1"></i>Created Date Range</label>
-                    <div class="input-group">
-                        <input type="date" name="created_start" class="form-control" value="{{ request.GET.created_start|default:'' }}" placeholder="From">
-                        <span class="input-group-text">to</span>
-                        <input type="date" name="created_end" class="form-control" value="{{ request.GET.created_end|default:'' }}" placeholder="To">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-regular fa-calendar-check me-1"></i>Closed Date Range</label>
-                    <div class="input-group">
-                        <input type="date" name="closed_start" class="form-control" value="{{ request.GET.closed_start|default:'' }}" placeholder="From">
-                        <span class="input-group-text">to</span>
-                        <input type="date" name="closed_end" class="form-control" value="{{ request.GET.closed_end|default:'' }}" placeholder="To">
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label"><i class="fa-regular fa-calendar-arrow-up me-1"></i>Escalated Date Range</label>
-                    <div class="input-group">
-                        <input type="date" name="escalated_start" class="form-control" value="{{ request.GET.escalated_start|default:'' }}" placeholder="From">
-                        <span class="input-group-text">to</span>
-                        <input type="date" name="escalated_end" class="form-control" value="{{ request.GET.escalated_end|default:'' }}" placeholder="To">
+                <div>
+                    <h1>Reports & Export Center</h1>
+                    <div class="subtitle">
+                        <i class="fa-regular fa-clock"></i>
+                        <span>Filter and export ticket data</span>
+                        <span class="count-badge">
+                            <i class="fa-regular fa-circle-check"></i>
+                            {{ tickets.paginator.count }} Tickets
+                        </span>
                     </div>
                 </div>
             </div>
-
-            <!-- Form Actions -->
-            <hr>
-            <div class="d-flex justify-content-end gap-2 flex-wrap">
-                <a href="{% url 'reports' %}" class="btn btn-outline-secondary-custom px-4">
-                    <i class="fa-solid fa-times me-1"></i> Clear Filters
-                </a>
-                <button type="submit" class="btn btn-primary-custom px-4">
-                    <i class="fa-solid fa-filter me-1"></i> Apply Filters
-                </button>
-                <button type="submit" name="export" value="true" class="btn btn-success-custom px-4">
-                    <i class="fa-solid fa-file-export me-1"></i> Export to Excel
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Results Table -->
-<div class="card filter-card shadow-sm">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h5 class="fw-bold mb-0"><i class="fa-solid fa-list-check me-2"></i>Filtered Results</h5>
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="badge bg-primary rounded-pill">
-                <i class="fa-solid fa-list me-1"></i> {{ tickets.paginator.count }} ticket(s)
-            </span>
-            {% if tickets.has_other_pages %}
-            <span class="badge bg-secondary rounded-pill">
-                <i class="fa-solid fa-page me-1"></i> Page {{ tickets.number }} of {{ tickets.paginator.num_pages }}
-            </span>
-            {% endif %}
         </div>
     </div>
-    <div class="card-body p-0">
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-number">{{ tickets.paginator.count }}</div>
+            <div class="stat-label">Total Tickets</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ open_count|default:0 }}</div>
+            <div class="stat-label"><i class="fa-solid fa-circle" style="color: #22C55E; font-size: 0.4rem;"></i> Open</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ assigned_count|default:0 }}</div>
+            <div class="stat-label"><i class="fa-solid fa-circle" style="color: #3B82F6; font-size: 0.4rem;"></i> Assigned</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ hold_count|default:0 }}</div>
+            <div class="stat-label"><i class="fa-solid fa-circle" style="color: #F59E0B; font-size: 0.4rem;"></i> Hold</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ escalated_count|default:0 }}</div>
+            <div class="stat-label"><i class="fa-solid fa-circle" style="color: #8B5CF6; font-size: 0.4rem;"></i> Escalated</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ closed_count|default:0 }}</div>
+            <div class="stat-label"><i class="fa-solid fa-circle" style="color: #94A3B8; font-size: 0.4rem;"></i> Closed</div>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="filter-card">
+        <div class="filter-card-header">
+            <h3>
+                <i class="fa-solid fa-filter"></i>
+                Filter Tickets
+            </h3>
+            <span class="result-count">
+                <i class="fa-solid fa-list"></i>
+                <strong>{{ tickets.paginator.count }}</strong> ticket(s) found
+            </span>
+        </div>
+        <div class="filter-card-body">
+            <form method="GET" action="{% url 'reports' %}" id="filterForm">
+                <input type="hidden" name="category" value="{{ category|default:'all' }}" id="categoryInput">
+
+                <!-- Quick Filters -->
+                <div class="quick-filters">
+                    <a href="?category=all" class="quick-filter-btn {% if category == 'all' %}active{% endif %}">
+                        <i class="fa-solid fa-list"></i> All
+                    </a>
+                    <a href="?category=open" class="quick-filter-btn {% if category == 'open' %}active{% endif %}">
+                        <i class="fa-solid fa-circle"></i> Open
+                    </a>
+                    <a href="?category=assigned" class="quick-filter-btn {% if category == 'assigned' %}active{% endif %}">
+                        <i class="fa-solid fa-user-check"></i> Assigned
+                    </a>
+                    <a href="?category=hold" class="quick-filter-btn {% if category == 'hold' %}active{% endif %}">
+                        <i class="fa-solid fa-pause"></i> Hold
+                    </a>
+                    <a href="?category=escalated" class="quick-filter-btn {% if category == 'escalated' %}active{% endif %}">
+                        <i class="fa-solid fa-arrow-up"></i> Escalated
+                    </a>
+                    <a href="?category=closed" class="quick-filter-btn {% if category == 'closed' %}active{% endif %}">
+                        <i class="fa-solid fa-check-circle"></i> Closed
+                    </a>
+                    <a href="?category=escalated_closed" class="quick-filter-btn {% if category == 'escalated_closed' %}active{% endif %}">
+                        <i class="fa-solid fa-arrow-up-right-dots"></i> Esc &amp; Closed
+                    </a>
+                    <a href="?category=reopened" class="quick-filter-btn {% if category == 'reopened' %}active{% endif %}">
+                        <i class="fa-solid fa-rotate-left"></i> Reopened
+                    </a>
+                </div>
+
+                <!-- Filter Grid -->
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label for="id_unit"><i class="fa-regular fa-building"></i> Unit</label>
+                        <select name="unit" id="id_unit" class="filter-select">
+                            <option value="">All Units</option>
+                            {% for unit in units %}
+                            <option value="{{ unit.id }}" {% if selected_unit == unit.id|stringformat:"s" %}selected{% endif %}>
+                                {{ unit.code }} - {{ unit.full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="id_department"><i class="fa-regular fa-layer-group"></i> Department</label>
+                        <select name="department" id="id_department" class="filter-select" data-show-all="true">
+                            <option value="">All Departments</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="id_priority"><i class="fa-solid fa-flag"></i> Priority</label>
+                        <select name="priority" id="id_priority" class="filter-select">
+                            <option value="">All Priorities</option>
+                            {% for p in priority_choices %}
+                            <option value="{{ p.0 }}" {% if selected_priority == p.0 %}selected{% endif %}>{{ p.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="id_status"><i class="fa-solid fa-circle"></i> Status</label>
+                        <select name="status" id="id_status" class="filter-select">
+                            <option value="">All Statuses</option>
+                            {% for s in status_choices %}
+                            <option value="{{ s.0 }}" {% if selected_status == s.0 %}selected{% endif %}>{{ s.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="id_assigned_person"><i class="fa-solid fa-user"></i> Assigned</label>
+                        <input type="text" name="assigned_person" id="id_assigned_person" class="filter-input" 
+                               value="{{ selected_assigned_person|default:'' }}" placeholder="Enter name...">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="id_vendor_ticket"><i class="fa-solid fa-ticket"></i> Vendor Ticket</label>
+                        <input type="text" name="vendor_ticket_number" id="id_vendor_ticket" class="filter-input" 
+                               value="{{ selected_vendor_ticket|default:'' }}" placeholder="Enter vendor ticket...">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="id_reopened"><i class="fa-solid fa-rotate-left"></i> Reopened</label>
+                        <select name="is_reopened" id="id_reopened" class="filter-select">
+                            <option value="" {% if not is_reopened %}selected{% endif %}>All</option>
+                            <option value="yes" {% if is_reopened == 'yes' %}selected{% endif %}>Reopened Only</option>
+                            <option value="no" {% if is_reopened == 'no' %}selected{% endif %}>Never Reopened</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="id_created_by"><i class="fa-solid fa-user-tag"></i> Created By</label>
+                        <select name="created_by_role" id="id_created_by" class="filter-select">
+                            <option value="">All</option>
+                            {% for c in created_by_choices %}
+                            <option value="{{ c.0 }}" {% if selected_created_by_role == c.0 %}selected{% endif %}>{{ c.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="id_error_type"><i class="fa-solid fa-bug"></i> Error Type</label>
+                        <select name="error_type" id="id_error_type" class="filter-select">
+                            <option value="">All Error Types</option>
+                            {% for e in error_type_choices %}
+                            <option value="{{ e.0 }}" {% if selected_error_type == e.0 %}selected{% endif %}>{{ e.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="id_created_start"><i class="fa-regular fa-calendar-plus"></i> Created Date</label>
+                        <div class="date-range">
+                            <input type="date" name="created_start" id="id_created_start" class="filter-input" 
+                                   value="{{ created_start|default:'' }}" placeholder="From">
+                            <span class="date-sep">to</span>
+                            <input type="date" name="created_end" id="id_created_end" class="filter-input" 
+                                   value="{{ created_end|default:'' }}" placeholder="To">
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="id_closed_start"><i class="fa-regular fa-calendar-check"></i> Closed Date</label>
+                        <div class="date-range">
+                            <input type="date" name="closed_start" id="id_closed_start" class="filter-input" 
+                                   value="{{ closed_start|default:'' }}" placeholder="From">
+                            <span class="date-sep">to</span>
+                            <input type="date" name="closed_end" id="id_closed_end" class="filter-input" 
+                                   value="{{ closed_end|default:'' }}" placeholder="To">
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="id_escalated_start"><i class="fa-regular fa-calendar-arrow-up"></i> Escalated Date</label>
+                        <div class="date-range">
+                            <input type="date" name="escalated_start" id="id_escalated_start" class="filter-input" 
+                                   value="{{ escalated_start|default:'' }}" placeholder="From">
+                            <span class="date-sep">to</span>
+                            <input type="date" name="escalated_end" id="id_escalated_end" class="filter-input" 
+                                   value="{{ escalated_end|default:'' }}" placeholder="To">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="filter-actions">
+                    <a href="{% url 'reports' %}" class="btn-reports btn-reports-secondary">
+                        <i class="fa-solid fa-times"></i> Clear Filters
+                    </a>
+                    <button type="submit" class="btn-reports btn-reports-primary">
+                        <i class="fa-solid fa-filter"></i> Apply Filters
+                    </button>
+                    <button type="submit" name="export" value="true" class="btn-reports btn-reports-success">
+                        <i class="fa-solid fa-file-export"></i> Export to Excel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <h3>
+                <i class="fa-solid fa-list-check"></i>
+                Filtered Results
+            </h3>
+            <span class="timestamp">
+                <i class="fa-regular fa-clock"></i>
+                Updated: {% now "d-m-Y H:i" %}
+            </span>
+        </div>
+
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="reports-table" id="reportsTable">
                 <thead>
                     <tr>
-                        <th class="ps-3" style="min-width: 90px;">Ticket #</th>
-                        <th style="min-width: 150px;">Subject</th>
-                        <th style="min-width: 70px;">Unit</th>
-                        <th style="min-width: 100px;">Department</th>
-                        <th style="min-width: 90px;">Status</th>
-                        <th style="min-width: 80px;">Priority</th>
-                        <th style="min-width: 110px;">Created At</th>
-                        <th style="min-width: 100px;">Assigned To</th>
-                        <th class="text-center" style="min-width: 60px;">Action</th>
+                        <th style="min-width: 85px;">Ticket #</th>
+                        <th style="min-width: 130px;">Subject</th>
+                        <th style="min-width: 60px;">Unit</th>
+                        <th style="min-width: 80px;">Department</th>
+                        <th style="min-width: 75px;">Status</th>
+                        <th style="min-width: 70px;">Priority</th>
+                        <th style="min-width: 100px;">Created</th>
+                        <th style="min-width: 80px;">Assigned To</th>
+                        <th style="text-align: center; min-width: 55px;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for ticket in tickets %}
                     <tr>
-                        <td class="ps-3 fw-bold" style="color: var(--brand-orange); font-size: clamp(0.7rem, 1vw, 0.85rem);">
-                            {{ ticket.ticket_number }}
+                        <td>
+                            <span class="ticket-number-cell">
+                                <i class="fa-regular fa-hashtag"></i>
+                                {{ ticket.ticket_number }}
+                            </span>
                         </td>
-                        <td style="font-size: clamp(0.7rem, 1vw, 0.85rem);">
-                            {{ ticket.subject|truncatechars:40 }}
+                        <td>
+                            <span class="ticket-subject-cell" title="{{ ticket.subject }}">
+                                {{ ticket.subject|truncatechars:35 }}
+                            </span>
                             {% if ticket.is_reopened %}
-                            <span class="badge bg-info rounded-pill ms-1" style="font-size: 0.5rem;">
+                            <span class="badge-reopened">
                                 <i class="fa-solid fa-rotate-left"></i> Reopened
                             </span>
                             {% endif %}
                         </td>
-                        <td style="font-size: clamp(0.7rem, 1vw, 0.85rem);">{{ ticket.unit.code }}</td>
-                        <td style="font-size: clamp(0.7rem, 1vw, 0.85rem);">{{ ticket.department.name }}</td>
+                        <td>{{ ticket.unit.code|default:"-" }}</td>
+                        <td>{{ ticket.department.name|default:"-" }}</td>
                         <td>
-                            <span class="badge rounded-pill 
-                                {% if ticket.status == 'Open' %}bg-primary
-                                {% elif ticket.status == 'Assigned' %}bg-info
-                                {% elif ticket.status == 'Hold' %}bg-warning
-                                {% elif ticket.status == 'Escalated' %}bg-purple
-                                {% elif ticket.status == 'Closed' %}bg-secondary
-                                {% endif %}">
+                            <span class="badge-status badge-status-{{ ticket.status|lower }}">
+                                <i class="fa-solid fa-circle"></i>
                                 {{ ticket.status }}
                             </span>
                         </td>
                         <td>
-                            <span class="badge rounded-pill 
-                                {% if ticket.priority == 'Critical' %}bg-danger
-                                {% elif ticket.priority == 'High' %}bg-warning
-                                {% elif ticket.priority == 'Medium' %}bg-info
-                                {% elif ticket.priority == 'Low' %}bg-success
-                                {% endif %}">
+                            <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
+                                <i class="fa-solid fa-flag"></i>
                                 {{ ticket.priority }}
                             </span>
                         </td>
-                        <td style="font-size: clamp(0.65rem, 0.9vw, 0.75rem); white-space: nowrap;">
-                            {{ ticket.created_at|date:"d M Y, H:i" }}
+                        <td style="font-size: clamp(0.5rem, 0.65vw, 0.6rem); white-space: nowrap;">
+                            {{ ticket.created_at|date:"d M Y" }}
+                            <span style="display: block; font-size: 0.45rem; color: var(--text-muted);">
+                                {{ ticket.created_at|date:"H:i" }}
+                            </span>
                         </td>
-                        <td style="font-size: clamp(0.7rem, 0.9vw, 0.8rem);">
-                            {{ ticket.assigned_person|default:"<span class='text-muted'>-</span>" }}
+                        <td style="font-size: clamp(0.5rem, 0.65vw, 0.6rem);">
+                            {{ ticket.assigned_person|default:"<span style='color: var(--text-muted);'>—</span>" }}
                         </td>
-                        <td class="text-center">
-                            <a href="{% url 'admin_ticket_detail' ticket.pk %}" class="btn-view-sm">
-                                <i class="fa-solid fa-eye"></i>View
+                        <td style="text-align: center;">
+                            <a href="{% url 'admin_ticket_detail' ticket.pk %}" class="btn-view-details">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>View</span>
                             </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="9" class="text-center py-5" style="color: var(--text-muted);">
-                            <i class="fa-solid fa-search fa-2x mb-2 d-block empty-state-icon"></i>
-                            <span style="font-size: 1.1rem; color: var(--text-secondary);">No tickets found matching your criteria.</span>
-                            <br>
-                            <small class="text-muted">Try adjusting your filters or clear them to see all tickets.</small>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <i class="fa-regular fa-folder-open empty-icon"></i>
+                                <h4>No Tickets Found</h4>
+                                <p>No tickets match your filter criteria. Try adjusting your filters.</p>
+                                <a href="{% url 'reports' %}" class="btn-reports btn-reports-primary">
+                                    <i class="fa-solid fa-undo"></i> Reset Filters
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
-    {% if tickets.has_other_pages %}
-    <div class="card-footer bg-transparent border-top py-3">
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
+
+        {% if tickets.has_other_pages %}
+        <div class="pagination-wrapper">
+            <div class="pagination-controls">
                 {% if tickets.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ tickets.previous_page_number }}" aria-label="Previous">
-                        <i class="fa-solid fa-chevron-left"></i>
+                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ tickets.previous_page_number }}" class="pagination-btn">
+                        <i class="fa-solid fa-chevron-left"></i> Prev
                     </a>
-                </li>
                 {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link"><i class="fa-solid fa-chevron-left"></i></span>
-                </li>
+                    <span class="pagination-btn disabled"><i class="fa-solid fa-chevron-left"></i> Prev</span>
                 {% endif %}
 
                 {% for num in tickets.paginator.page_range %}
                     {% if tickets.number == num %}
-                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        <span class="pagination-btn active">{{ num }}</span>
                     {% elif num > tickets.number|add:'-3' and num < tickets.number|add:'3' %}
-                    <li class="page-item"><a class="page-link" href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+                        <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}" class="pagination-btn">{{ num }}</a>
                     {% endif %}
                 {% endfor %}
 
                 {% if tickets.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ tickets.next_page_number }}" aria-label="Next">
-                        <i class="fa-solid fa-chevron-right"></i>
+                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ tickets.next_page_number }}" class="pagination-btn">
+                        Next <i class="fa-solid fa-chevron-right"></i>
                     </a>
-                </li>
                 {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link"><i class="fa-solid fa-chevron-right"></i></span>
-                </li>
+                    <span class="pagination-btn disabled">Next <i class="fa-solid fa-chevron-right"></i></span>
                 {% endif %}
-            </ul>
-        </nav>
+            </div>
+            <span class="pagination-info">
+                Page {{ tickets.number }} of {{ tickets.paginator.num_pages }}
+                ({{ tickets.paginator.count }} total)
+            </span>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // ============================================
-    // DEPARTMENT LOADING BASED ON UNIT
-    // ============================================
-    const unitSelect = document.getElementById('id_unit');
-    const deptSelect = document.getElementById('id_department');
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.getElementById('filterForm');
+        const unitSelect = document.getElementById('id_unit');
+        const deptSelect = document.getElementById('id_department');
+        const categoryInput = document.getElementById('categoryInput');
+        const quickFilterBtns = document.querySelectorAll('.quick-filter-btn');
 
-    function updateDepartments() {
-        const unitId = unitSelect.value;
-        const currentDeptId = '{{ request.GET.department }}';
+        // Department loading
+        function loadDepartments(unitId, selectedDeptId) {
+            if (!unitId) {
+                deptSelect.innerHTML = '<option value="">All Departments</option>';
+                deptSelect.disabled = true;
+                return;
+            }
 
-        deptSelect.innerHTML = '<option value="">All Departments</option>';
-
-        if (!unitId) {
             deptSelect.disabled = true;
-            return;
-        }
+            deptSelect.innerHTML = '<option value="">Loading...</option>';
 
-        deptSelect.disabled = false;
-        const url = `/ajax/get-departments/?unit_id=${unitId}`;
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.departments && data.departments.length > 0) {
-                    data.departments.forEach(dept => {
-                        const option = document.createElement('option');
-                        option.value = dept.id;
-                        option.textContent = dept.name;
-                        if (dept.id == currentDeptId) {
-                            option.selected = true;
-                        }
-                        deptSelect.appendChild(option);
-                    });
+            fetch('/ajax/get-departments/?unit_id=' + unitId, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
-                deptSelect.disabled = false;
             })
-            .catch(err => {
-                console.error("Error fetching departments:", err);
+            .then(res => res.json())
+            .then(data => {
+                deptSelect.innerHTML = '<option value="">All Departments</option>';
+                if (data.departments && data.departments.length) {
+                    data.departments.forEach(dept => {
+                        const opt = document.createElement('option');
+                        opt.value = dept.id;
+                        opt.textContent = dept.name;
+                        if (selectedDeptId && dept.id == selectedDeptId) {
+                            opt.selected = true;
+                        }
+                        deptSelect.appendChild(opt);
+                    });
+                    deptSelect.disabled = false;
+                } else {
+                    deptSelect.innerHTML += '<option value="">No departments available</option>';
+                }
+            })
+            .catch(() => {
+                deptSelect.innerHTML = '<option value="">Error loading departments</option>';
                 deptSelect.disabled = true;
             });
-    }
+        }
 
-    // Initial load
-    if (unitSelect.value) {
-        updateDepartments();
-    } else {
-        deptSelect.disabled = true;
-    }
+        const initialUnitId = unitSelect.value;
+        const initialDeptId = '{{ selected_department|default:"" }}';
 
-    unitSelect.addEventListener('change', function() {
-        updateDepartments();
-    });
+        if (initialUnitId) {
+            loadDepartments(initialUnitId, initialDeptId);
+        } else {
+            deptSelect.disabled = true;
+        }
 
-    // ============================================
-    // CATEGORY PILLS - Submit form with filters
-    // ============================================
-    const categoryLinks = document.querySelectorAll('.nav-pills .nav-link');
-    const categoryInput = document.querySelector('input[name="category"]');
-    const filterForm = document.getElementById('filterForm');
-
-    categoryLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const url = new URL(this.href);
-            const category = url.searchParams.get('category');
-            if (categoryInput) {
-                categoryInput.value = category;
-            }
-            filterForm.submit();
+        unitSelect.addEventListener('change', function() {
+            loadDepartments(this.value, '');
         });
-    });
 
-    // ============================================
-    // THEME CHANGE HANDLER FOR INPUTS
-    // ============================================
-    function updateInputTheme() {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const inputs = document.querySelectorAll('.form-control, .form-select, input[type="text"], input[type="date"], input[type="number"], input[type="email"], textarea, select');
-        
-        inputs.forEach(input => {
-            // Force reflow to apply theme styles
-            input.style.display = 'none';
-            void input.offsetHeight;
-            input.style.display = '';
-            
-            if (isDark) {
-                input.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
-                input.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                input.style.color = '#E8EDF5';
-            } else {
-                input.style.backgroundColor = '#F5F8FF';
-                input.style.borderColor = '#DCE3F0';
-                input.style.color = '#1A2A6C';
-            }
+        // Quick filter clicks
+        quickFilterBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = new URL(this.href);
+                const category = url.searchParams.get('category');
+                if (categoryInput) {
+                    categoryInput.value = category;
+                }
+                filterForm.submit();
+            });
         });
-    }
 
-    // Listen for theme changes
-    const themeToggleBtn = document.getElementById('themeToggleFloating');
-    if (themeToggleBtn) {
-        themeToggleBtn.addEventListener('click', function() {
-            setTimeout(updateInputTheme, 100);
+        // Row animation
+        const rows = document.querySelectorAll('#reportsTable tbody tr');
+        rows.forEach((row, index) => {
+            if (row.querySelector('.empty-state')) return;
+            row.style.opacity = '0';
+            row.style.animation = `fadeIn 0.3s ease forwards`;
+            row.style.animationDelay = `${index * 0.04}s`;
         });
-    }
 
-    // Also update when theme is applied via localStorage
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.attributeName === 'data-theme') {
-                updateInputTheme();
-            }
+        // Theme styles
+        function updateThemeStyles() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const inputs = document.querySelectorAll('.filter-input, .filter-select');
+            inputs.forEach(input => {
+                if (isDark) {
+                    input.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                    input.style.borderColor = 'rgba(255,255,255,0.08)';
+                    input.style.color = '#E8EDF5';
+                } else {
+                    input.style.backgroundColor = '';
+                    input.style.borderColor = '';
+                    input.style.color = '';
+                }
+            });
+        }
+
+        const themeToggle = document.getElementById('themeToggleFloating');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => setTimeout(updateThemeStyles, 100));
+        }
+
+        const observer = new MutationObserver(() => updateThemeStyles());
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
         });
-    });
-    
-    observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-theme']
-    });
 
-    // Initial theme application
-    setTimeout(updateInputTheme, 200);
-
-    console.log('Reports page loaded successfully.');
-});
+        setTimeout(updateThemeStyles, 200);
+    });
 </script>
 {% endblock %}

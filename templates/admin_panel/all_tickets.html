@@ -3,1740 +3,1594 @@
 
 {% block extra_head %}
 {{ block.super }}
-<style>    
-    .tickets-container {
-        animation: fadeInUp 0.6s ease;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes cardSlideIn {
-        from {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
+<style>
+    /* ============================================
+       CUSTOM PROPERTIES
+    ============================================ */
+    :root {
+        --ticket-primary: #FF6B00;
+        --ticket-primary-dark: #E55A00;
+        --ticket-primary-light: #FF8C38;
+        --ticket-success: #10B981;
+        --ticket-danger: #EF4444;
+        --ticket-warning: #F59E0B;
+        --ticket-info: #3B82F6;
+        --ticket-purple: #8B5CF6;
+        --ticket-radius: 12px;
+        --ticket-shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+        --ticket-shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+        --ticket-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ============================================
-       Header Styles
+       LAYOUT & CONTAINERS
     ============================================ */
-    .header-actions {
+    .tickets-container {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+        animation: fadeSlideIn 0.5s ease;
+    }
+
+    @keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateY(24px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================
+       HEADER SECTION
+    ============================================ */
+    .page-header {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--ticket-radius);
+        padding: 1.5rem 2rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--ticket-shadow-sm);
+    }
+
+    .page-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--ticket-primary), var(--ticket-primary-light), var(--ticket-primary));
+        background-size: 200% 100%;
+        animation: shimmerMove 4s ease-in-out infinite;
+    }
+
+    @keyframes shimmerMove {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    .header-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .header-left {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.75rem;
+    }
+
+    .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(255, 107, 0, 0.10);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ticket-primary);
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+
+    .header-title h1 {
+        font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        font-family: 'Fraunces', serif;
+        letter-spacing: -0.02em;
+    }
+
+    .header-title .subtitle {
+        color: var(--text-secondary);
+        font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 0.1rem;
+    }
+
+    .ticket-count-badge {
+        background: rgba(255, 107, 0, 0.08);
+        border: 1px solid rgba(255, 107, 0, 0.12);
+        padding: 0.15rem 0.7rem;
+        border-radius: 50px;
+        color: var(--ticket-primary);
+        font-weight: 600;
+        font-size: clamp(0.5rem, 0.7vw, 0.6rem);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
         flex-wrap: wrap;
     }
 
-    .header-actions .btn {
-        white-space: nowrap;
-    }
-
-    .text-primary {
-        color: var(--accent) !important;
-    }
-
-    .btn-primary-custom {
-        background: var(--brand-gradient) !important;
-        border: none !important;
-        color: #FFFFFF !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 50px !important;
-        padding: 0.4rem 1.2rem !important;
-        font-size: clamp(0.75rem, 1.2vw, 0.9rem) !important;
-        position: relative;
-        overflow: hidden;
-        font-family: 'Inter', sans-serif;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        text-decoration: none !important;
-        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2) !important;
-    }
-
-    .btn-primary-custom::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: all 0.6s ease;
-    }
-
-    .btn-primary-custom:hover::before {
-        width: 300px;
-        height: 300px;
-    }
-
-    .btn-primary-custom:hover {
-        transform: translateY(-3px) scale(1.05) !important;
-        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.35) !important;
-        color: #FFFFFF !important;
-    }
-
-    .btn-primary-custom:active {
-        transform: scale(0.95) !important;
-    }
-
-    .btn-primary-custom i {
-        color: #FFFFFF !important;
-    }
-
-    .btn-outline-secondary {
-        background: transparent !important;
-        border: 2px solid var(--border-color) !important;
-        color: var(--text-secondary) !important;
-        border-radius: 50px !important;
-        padding: 0.4rem 1.2rem !important;
-        font-size: clamp(0.75rem, 1.2vw, 0.85rem) !important;
-        transition: all 0.3s ease !important;
-        font-family: 'Inter', sans-serif;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        text-decoration: none !important;
-    }
-
-    .btn-outline-secondary:hover {
-        background: var(--bg-secondary) !important;
-        border-color: var(--brand-orange) !important;
-        color: var(--text-primary) !important;
-        transform: translateY(-2px) !important;
-    }
-
-    .btn-outline-secondary i {
-        color: var(--text-muted) !important;
-        transition: color 0.3s ease;
-    }
-
-    .btn-outline-secondary:hover i {
-        color: var(--brand-orange) !important;
-    }
-
-    .filter-clear-btn {
-        color: var(--text-secondary) !important;
-        border-color: var(--border-color) !important;
-        background: transparent !important;
-    }
-
-    .filter-clear-btn:hover {
-        background: rgba(255, 107, 0, 0.08) !important;
-        border-color: var(--brand-orange) !important;
-        color: var(--text-primary) !important;
-    }
-
     /* ============================================
-       Form Controls - Theme Aware
+       SEARCH BAR
     ============================================ */
-    .form-control,
-    .form-select {
-        background-color: var(--input-bg) !important;
-        background: var(--input-bg) !important;
-        color: var(--text-primary) !important;
-        border: 2px solid var(--border-color) !important;
-        border-radius: 8px !important;
-        padding: 0.4rem 0.75rem !important;
-        font-size: 0.82rem !important;
-        transition: all 0.3s ease !important;
-        -webkit-text-fill-color: var(--text-primary) !important;
-        caret-color: var(--text-primary) !important;
-        width: 100%;
+    .search-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        max-width: 420px;
+        min-width: 180px;
     }
 
-    .form-control:focus,
-    .form-select:focus {
-        border-color: var(--brand-orange) !important;
-        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1) !important;
-        outline: none !important;
-        background-color: var(--input-bg) !important;
-        background: var(--input-bg) !important;
-        color: var(--text-primary) !important;
-        -webkit-text-fill-color: var(--text-primary) !important;
-    }
-
-    .form-control::placeholder {
-        color: var(--text-muted) !important;
-        -webkit-text-fill-color: var(--text-muted) !important;
-        opacity: 0.7 !important;
-    }
-
-    .form-select option {
-        background: var(--bg-secondary) !important;
-        color: var(--text-primary) !important;
-        background-color: var(--bg-secondary) !important;
-    }
-
-    .form-label {
-        color: var(--text-secondary) !important;
-        font-weight: 600;
-        font-size: 0.75rem;
-        margin-bottom: 0.25rem;
-        font-family: 'Inter', sans-serif;
-    }
-
-    /* ============================================
-       Search Bar - Theme Aware
-    ============================================ */
-    .search-bar {
+    .search-box {
         background: var(--input-bg);
         border-radius: 50px;
-        padding: 0.25rem 0.25rem 0.25rem 1rem;
+        padding: 0.2rem 0.2rem 0.2rem 1rem;
         border: 2px solid var(--border-color);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: var(--ticket-transition);
         display: flex;
         align-items: center;
         gap: 0.25rem;
-        min-width: 200px;
         flex: 1;
-        max-width: 400px;
         position: relative;
     }
 
-    .search-bar:focus-within {
-        border-color: var(--brand-orange);
-        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.08);
-        transform: scale(1.02);
+    .search-box:focus-within {
+        border-color: var(--ticket-primary);
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.06);
     }
 
-    .search-bar input,
-    .search-bar input[type="text"] {
+    .search-box .search-icon {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        flex-shrink: 0;
+        opacity: 0.5;
+    }
+
+    .search-box input {
         border: none;
         background: transparent !important;
-        padding: 0.4rem 0;
+        padding: 0.35rem 0;
         flex: 1;
         outline: none;
-        font-size: 0.85rem;
-        min-width: 80px;
+        font-size: 0.8rem;
+        min-width: 50px;
         color: var(--text-primary) !important;
         -webkit-text-fill-color: var(--text-primary) !important;
         caret-color: var(--text-primary) !important;
     }
 
-    .search-bar input:focus,
-    .search-bar input:active {
-        color: var(--text-primary) !important;
-        -webkit-text-fill-color: var(--text-primary) !important;
-        background: transparent !important;
-        outline: none !important;
-        box-shadow: none !important;
-    }
-
-    .search-bar input::placeholder {
+    .search-box input::placeholder {
         color: var(--text-muted) !important;
         -webkit-text-fill-color: var(--text-muted) !important;
-        opacity: 1 !important;
-        font-size: 0.8rem;
+        opacity: 0.6;
+        font-size: 0.75rem;
     }
 
-    .search-bar input:-webkit-autofill,
-    .search-bar input:-webkit-autofill:hover,
-    .search-bar input:-webkit-autofill:focus,
-    .search-bar input:-webkit-autofill:active {
-        -webkit-text-fill-color: var(--text-primary) !important;
-        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-        background-color: var(--input-bg) !important;
-        color: var(--text-primary) !important;
-        caret-color: var(--text-primary) !important;
-        transition: background-color 5000s ease-in-out 0s;
-    }
-
-    .search-bar .fa-magnifying-glass {
-        color: var(--text-muted);
-        font-size: 0.8rem;
-    }
-
-    .search-bar .btn-search {
-        background: var(--brand-gradient) !important;
-        color: white !important;
-        border: none !important;
-        padding: 0.35rem 1.2rem !important;
-        border-radius: 50px !important;
-        font-weight: 600 !important;
-        font-size: 0.78rem !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        white-space: nowrap !important;
-        position: relative !important;
-        overflow: hidden !important;
-        cursor: pointer !important;
-        font-family: 'Inter', sans-serif !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-    }
-
-    .search-bar .btn-search::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: all 0.6s ease;
-    }
-
-    .search-bar .btn-search:hover::before {
-        width: 200px;
-        height: 200px;
-    }
-
-    .search-bar .btn-search:hover {
-        transform: scale(1.05) !important;
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3) !important;
-    }
-
-    .search-bar .btn-clear {
+    .search-box .clear-btn {
         background: transparent;
         border: none;
         color: var(--text-muted);
-        padding: 0.2rem 0.4rem;
+        padding: 0.15rem 0.35rem;
         cursor: pointer;
         display: none;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
+        font-size: 0.8rem;
+        transition: var(--ticket-transition);
+        flex-shrink: 0;
     }
 
-    .search-bar .btn-clear:hover {
-        color: var(--brand-orange);
-        transform: scale(1.2) rotate(90deg);
+    .search-box .clear-btn:hover {
+        color: var(--ticket-danger);
+        transform: rotate(90deg) scale(1.1);
     }
 
-    .search-bar .btn-clear.visible {
+    .search-box .clear-btn.visible {
         display: block;
     }
 
-    /* ============================================
-       Card & Panel Styles
-    ============================================ */
-    .panel-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-sm);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 12px;
-        overflow: hidden;
-    }
-
-    .panel-card:hover {
-        box-shadow: var(--shadow-md);
-        border-color: var(--border-light);
-    }
-
-    .glass-header {
-        background: rgba(255, 107, 0, 0.03);
-        border-bottom: 1px solid var(--border-color);
-        padding: 0.75rem 1.25rem;
-    }
-
-    .glass-header h5 {
-        color: var(--text-primary) !important;
-        font-family: 'Fraunces', serif;
-        font-weight: 600;
-    }
-
-    .glass-header h5 i {
-        color: var(--brand-orange) !important;
-    }
-
-    /* ============================================
-       Table Styles
-    ============================================ */
-    .table {
-        color: var(--text-primary);
-        background: transparent;
-        margin-bottom: 0;
-    }
-
-    .table > :not(caption) > * > * {
-        background: transparent;
-        color: var(--text-primary);
-        border-color: var(--border-color);
-    }
-
-    .table-hover-zoom tbody tr {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-        background: transparent;
-    }
-
-    .table-hover-zoom tbody tr:hover {
-        transform: scale(1.01) translateY(-2px);
-        background: rgba(255, 107, 0, 0.04);
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.06);
-    }
-
-    .table-hover-zoom tbody tr:active {
-        transform: scale(0.98);
-    }
-
-    .table td {
-        vertical-align: middle;
-        padding: 0.6rem 0.4rem;
-        font-size: 0.8rem;
-        border-color: var(--border-color);
-        color: var(--text-primary);
-        background: transparent;
-    }
-
-    .table th {
-        padding: 0.6rem 0.4rem;
-        font-size: 0.6rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 700;
-        border-bottom: 2px solid rgba(255, 107, 0, 0.15);
-        white-space: nowrap;
-        color: var(--text-secondary);
-        background: transparent;
-        border-top: none;
-        cursor: pointer;
-        user-select: none;
-        position: relative;
-        transition: all 0.3s ease;
-    }
-
-    .table th:hover {
-        color: var(--brand-orange);
-        background: rgba(255, 107, 0, 0.03);
-    }
-
-    .table th .sort-icon {
-        margin-left: 4px;
-        font-size: 0.5rem;
-        opacity: 0.3;
-        transition: all 0.3s ease;
-        display: inline-block;
-    }
-
-    .table th:hover .sort-icon {
-        opacity: 1;
-        color: var(--brand-orange);
-    }
-
-    .table th.sorted-asc .sort-icon {
-        opacity: 1;
-        color: var(--brand-orange);
-        transform: rotate(0deg);
-    }
-
-    .table th.sorted-desc .sort-icon {
-        opacity: 1;
-        color: var(--brand-orange);
-        transform: rotate(180deg);
-    }
-
-    /* ============================================
-       Badge Styles
-    ============================================ */
-    .badge-custom {
-        display: inline-block;
-        padding: 0.2rem 0.6rem;
-        border-radius: 50px;
-        font-size: 0.6rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-    }
-
-    .badge-custom:hover {
-        transform: scale(1.05);
-    }
-
-    .badge-status-open {
-        background: #22C55E;
-        color: white;
-    }
-
-    .badge-status-assigned {
-        background: #3B82F6;
-        color: white;
-    }
-
-    .badge-status-in-progress {
-        background: #3B82F6;
-        color: white;
-    }
-
-    .badge-status-hold {
-        background: #F59E0B;
-        color: white;
-    }
-
-    .badge-status-escalated {
-        background: #8B5CF6;
-        color: white;
-    }
-
-    .badge-status-resolved {
-        background: #8B5CF6;
-        color: white;
-    }
-
-    .badge-status-closed {
-        background: #94A3B8;
-        color: white;
-    }
-
-    .badge-admin-created {
-        background: var(--brand-gradient);
+    .search-box .search-btn {
+        background: linear-gradient(135deg, var(--ticket-primary), var(--ticket-primary-dark));
         color: white;
         border: none;
-        padding: 0.15rem 0.5rem;
+        padding: 0.25rem 0.9rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.65rem;
+        transition: var(--ticket-transition);
+        cursor: pointer;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+        min-height: 28px;
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.15);
+    }
+
+    .search-box .search-btn:hover {
+        transform: scale(1.04);
+        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.25);
+    }
+
+    /* ============================================
+       BUTTONS - UNIFIED RESPONSIVE
+    ============================================ */
+    .btn-primary-solid {
+        background: linear-gradient(135deg, var(--ticket-primary), var(--ticket-primary-dark));
+        border: none;
+        color: white;
+        padding: 0.35rem 1rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: var(--ticket-transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+        white-space: nowrap;
+        min-height: 34px;
+        cursor: pointer;
+        line-height: 1.2;
+        box-shadow: 0 2px 12px rgba(255, 107, 0, 0.2);
+    }
+
+    .btn-primary-solid:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
+        color: white;
+    }
+
+    .btn-primary-solid:active {
+        transform: scale(0.96);
+    }
+
+    .btn-primary-solid i {
+        font-size: 0.75rem;
+    }
+
+    .btn-outline-secondary {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid var(--border-color);
+        padding: 0.35rem 1rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: var(--ticket-transition);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+        min-height: 34px;
+        line-height: 1.2;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-outline-secondary:hover {
+        background: var(--bg-secondary);
+        border-color: var(--ticket-primary);
+        color: var(--text-primary);
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-danger {
+        background: transparent;
+        color: var(--ticket-danger);
+        border: 2px solid var(--ticket-danger);
+        padding: 0.35rem 1rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: var(--ticket-transition);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+        min-height: 34px;
+        line-height: 1.2;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-outline-danger:hover {
+        background: var(--ticket-danger);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-filter-primary {
+        background: linear-gradient(135deg, var(--ticket-primary), var(--ticket-primary-dark));
+        color: white;
+        border: none;
+        padding: 0.4rem 1.2rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: var(--ticket-transition);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 34px;
+        box-shadow: 0 2px 12px rgba(255, 107, 0, 0.15);
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-filter-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.25);
+    }
+
+    /* ============================================
+       FILTER CARD
+    ============================================ */
+    .filter-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--ticket-radius);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        box-shadow: var(--ticket-shadow-sm);
+        transition: var(--ticket-transition);
+    }
+
+    .filter-section:hover {
+        border-color: rgba(255, 107, 0, 0.12);
+        box-shadow: var(--ticket-shadow-md);
+    }
+
+    .filter-header {
+        padding: 0.85rem 1.5rem;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .filter-header h3 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Fraunces', serif;
+    }
+
+    .filter-header h3 i {
+        color: var(--ticket-primary);
+    }
+
+    .filter-body {
+        padding: 1.25rem 1.5rem;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .filter-item label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .filter-item label i {
+        color: var(--ticket-primary);
         font-size: 0.55rem;
-        animation: adminGlow 3s ease-in-out infinite;
     }
 
-    @keyframes adminGlow {
-        0%, 100% { box-shadow: 0 0 10px rgba(255, 107, 0, 0.2); }
-        50% { box-shadow: 0 0 25px rgba(255, 107, 0, 0.4); }
+    .filter-item .input-field,
+    .filter-item .select-field {
+        width: 100%;
+        padding: 0.4rem 0.7rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.75rem;
+        transition: var(--ticket-transition);
+        font-family: 'Inter', sans-serif;
     }
 
-    .badge-priority {
-        padding: 0.15rem 0.5rem;
+    .filter-item .input-field:focus,
+    .filter-item .select-field:focus {
+        border-color: var(--ticket-primary);
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.06);
+        outline: none;
+    }
+
+    .filter-item .input-field::placeholder {
+        color: var(--text-muted);
+        opacity: 0.5;
+        font-size: 0.7rem;
+    }
+
+    .filter-item .select-field {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236B7A9E' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.7rem center;
+        background-size: 12px 10px;
+        padding-right: 2.2rem;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .filter-item .select-field option {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .filter-actions-row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* ============================================
+       TABLE SECTION
+    ============================================ */
+    .table-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--ticket-radius);
+        overflow: hidden;
+        box-shadow: var(--ticket-shadow-sm);
+        transition: var(--ticket-transition);
+    }
+
+    .table-section:hover {
+        border-color: rgba(255, 107, 0, 0.10);
+        box-shadow: var(--ticket-shadow-md);
+    }
+
+    .table-header-bar {
+        padding: 0.85rem 1.5rem;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .table-header-bar h3 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Fraunces', serif;
+    }
+
+    .table-header-bar h3 i {
+        color: var(--ticket-primary);
+    }
+
+    .table-header-bar .time-stamp {
+        font-size: 0.55rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .table-scroll-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-height: 520px;
+        overflow-y: auto;
+    }
+
+    /* ============================================
+       TABLE STYLES
+    ============================================ */
+    .ticket-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: clamp(0.65rem, 0.8vw, 0.75rem);
+    }
+
+    .ticket-table thead {
+        background: var(--bg-secondary);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .ticket-table th {
+        padding: 0.65rem 0.9rem;
+        text-align: left;
+        font-size: 0.55rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border-color);
+        white-space: nowrap;
+        background: var(--bg-secondary);
+        cursor: pointer;
+        user-select: none;
+        transition: var(--ticket-transition);
+    }
+
+    .ticket-table th:hover {
+        color: var(--ticket-primary);
+    }
+
+    .ticket-table th .sort-indicator {
+        margin-left: 4px;
+        font-size: 0.45rem;
+        opacity: 0.25;
+        transition: var(--ticket-transition);
+        display: inline-block;
+    }
+
+    .ticket-table th:hover .sort-indicator {
+        opacity: 1;
+        color: var(--ticket-primary);
+    }
+
+    .ticket-table td {
+        padding: 0.55rem 0.9rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        transition: var(--ticket-transition);
+    }
+
+    .ticket-table tbody tr {
+        transition: var(--ticket-transition);
+        cursor: pointer;
+    }
+
+    .ticket-table tbody tr:hover {
+        background: rgba(255, 107, 0, 0.02);
+    }
+
+    .ticket-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .cell-ticket {
+        font-weight: 700;
+        color: var(--ticket-primary);
+        font-size: clamp(0.65rem, 0.8vw, 0.75rem);
+        white-space: nowrap;
+    }
+
+    .cell-ticket i {
+        font-size: 0.45rem;
+        opacity: 0.4;
+        margin-right: 0.2rem;
+    }
+
+    .cell-date {
+        color: var(--text-secondary);
+        font-size: clamp(0.5rem, 0.65vw, 0.6rem);
+        white-space: nowrap;
+    }
+
+    .cell-date .time {
+        color: var(--text-muted);
+        font-size: clamp(0.45rem, 0.55vw, 0.5rem);
+        display: block;
+    }
+
+    .cell-subject {
+        max-width: 140px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 500;
+    }
+
+    .cell-subject i {
+        color: var(--text-muted);
+        font-size: 0.45rem;
+        margin-right: 0.25rem;
+    }
+
+    .badge-unit {
+        display: inline-block;
+        background: rgba(255, 107, 0, 0.06);
+        color: var(--ticket-primary);
+        border: 1px solid rgba(255, 107, 0, 0.10);
+        padding: 0.05rem 0.5rem;
         border-radius: 50px;
         font-size: 0.55rem;
         font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-size: clamp(0.45rem, 0.55vw, 0.5rem);
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.3px;
-        transition: all 0.3s ease;
         white-space: nowrap;
+    }
+
+    .badge-status i {
+        font-size: 0.3rem;
+    }
+
+    .badge-status-open { background: #10B981; color: white; }
+    .badge-status-assigned { background: #3B82F6; color: white; }
+    .badge-status-hold { background: #F59E0B; color: #1A1A2E; }
+    .badge-status-escalated { background: #8B5CF6; color: white; }
+    .badge-status-closed { background: #94A3B8; color: white; }
+
+    .badge-priority {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.1rem 0.45rem;
+        border-radius: 50px;
+        font-size: clamp(0.4rem, 0.5vw, 0.45rem);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+
+    .badge-priority i {
+        font-size: 0.3rem;
+    }
+
+    .badge-priority-critical { background: #EF4444; color: white; animation: pulseCritical 2s ease-in-out infinite; }
+    .badge-priority-high { background: #F59E0B; color: #1A1A2E; }
+    .badge-priority-medium { background: #3B82F6; color: white; }
+    .badge-priority-low { background: #94A3B8; color: white; }
+
+    @keyframes pulseCritical {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
+        50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    }
+
+    .badge-role-admin {
+        background: linear-gradient(135deg, var(--ticket-primary), var(--ticket-primary-dark));
+        color: white;
+        border: none;
+        padding: 0.1rem 0.45rem;
+        border-radius: 50px;
+        font-size: 0.5rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        animation: glowPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+        0%, 100% { box-shadow: 0 0 8px rgba(255, 107, 0, 0.15); }
+        50% { box-shadow: 0 0 20px rgba(255, 107, 0, 0.3); }
+    }
+
+    .badge-role-employee {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        padding: 0.1rem 0.45rem;
+        border-radius: 50px;
+        font-size: 0.5rem;
+        font-weight: 600;
         display: inline-flex;
         align-items: center;
         gap: 0.2rem;
     }
 
-    .badge-priority:hover {
-        transform: scale(1.05);
-    }
-
-    .badge-priority-critical {
-        background: #EF4444;
-        color: white;
-        animation: pulseCritical 2s ease-in-out infinite;
-    }
-
-    @keyframes pulseCritical {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-        50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.1); }
-    }
-
-    .badge-priority-high {
-        background: #F59E0B;
-        color: #1A1A2E;
-    }
-
-    .badge-priority-medium {
-        background: #3B82F6;
-        color: white;
-    }
-
-    .badge-priority-low {
-        background: #94A3B8;
-        color: white;
-    }
-
-    .badge-priority i {
-        font-size: 0.35rem;
-    }
-
-    /* ============================================
-       Unit Badge
-    ============================================ */
-    .unit-badge {
-        background: rgba(255, 107, 0, 0.08);
-        color: var(--brand-orange);
-        border: 1px solid rgba(255, 107, 0, 0.12);
-        padding: 0.1rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.6rem;
-        font-weight: 600;
-        white-space: nowrap;
-        transition: all 0.3s ease;
-        display: inline-block;
-    }
-
-    .unit-badge:hover {
-        background: rgba(255, 107, 0, 0.15);
-        transform: scale(1.05);
-    }
-
-    /* ============================================
-       Button Actions
-    ============================================ */
-    .btn-attachment {
-        width: 28px;
-        height: 28px;
+    .btn-icon-attach {
+        width: 26px;
+        height: 26px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        background: rgba(255, 107, 0, 0.08);
+        transition: var(--ticket-transition);
+        background: rgba(255, 107, 0, 0.06);
         border: none;
-        color: var(--brand-orange);
-        font-size: 0.8rem;
-        text-decoration: none;
-    }
-
-    .btn-attachment:hover {
-        background: var(--brand-gradient);
-        color: white;
-        transform: scale(1.2) rotate(-15deg);
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3);
-        text-decoration: none;
-    }
-
-    .btn-attachment:active {
-        transform: scale(0.9);
-    }
-
-    .btn-view {
-        padding: 0.15rem 0.8rem;
-        border-radius: 50px;
+        color: var(--ticket-primary);
         font-size: 0.7rem;
-        font-weight: 500;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        background: var(--brand-gradient);
+        text-decoration: none;
+    }
+
+    .btn-icon-attach:hover {
+        background: linear-gradient(135deg, var(--ticket-primary), var(--ticket-primary-dark));
         color: white;
-        border: none;
-        white-space: nowrap;
+        transform: scale(1.15) rotate(-12deg);
+        text-decoration: none;
+        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.25);
+    }
+
+    .btn-action-view {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        text-decoration: none;
-        cursor: pointer;
-        font-family: 'Inter', sans-serif;
-        box-shadow: 0 2px 12px rgba(255, 107, 0, 0.15);
-    }
-
-    .btn-view:hover {
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3);
+        gap: 0.25rem;
+        padding: 0.15rem 0.65rem;
+        border-radius: 50px;
+        font-size: clamp(0.45rem, 0.55vw, 0.55rem);
+        font-weight: 500;
+        background: linear-gradient(135deg, var(--ticket-primary), var(--ticket-primary-dark));
         color: white;
+        border: none;
+        transition: var(--ticket-transition);
         text-decoration: none;
+        white-space: nowrap;
+        box-shadow: 0 2px 6px rgba(255, 107, 0, 0.12);
     }
 
-    .btn-view:active {
-        transform: scale(0.95);
+    .btn-action-view:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 14px rgba(255, 107, 0, 0.25);
+        color: white;
     }
 
-    .btn-view i {
+    .btn-action-view i {
+        font-size: 0.45rem;
+    }
+
+    /* ============================================
+       EMPTY STATE
+    ============================================ */
+    .empty-state {
+        padding: 3rem 1.5rem;
+        text-align: center;
+    }
+
+    .empty-state .empty-icon {
+        font-size: 2.8rem;
+        color: var(--ticket-primary);
+        opacity: 0.15;
+        display: block;
+        margin-bottom: 0.75rem;
+        animation: floatIcon 3s ease-in-out infinite;
+    }
+
+    @keyframes floatIcon {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+
+    .empty-state h4 {
+        color: var(--text-primary);
+        margin-bottom: 0.3rem;
+        font-family: 'Fraunces', serif;
+        font-size: 1.1rem;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin-bottom: 1.25rem;
+    }
+
+    /* ============================================
+       PAGINATION
+    ============================================ */
+    .pagination-bar {
+        padding: 0.85rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .pagination-group {
+        display: flex;
+        gap: 0.2rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .pagination-btn {
+        padding: 0.2rem 0.65rem;
+        border-radius: 50px;
+        font-size: 0.65rem;
+        font-weight: 500;
+        border: 1px solid var(--border-color);
+        background: transparent;
+        color: var(--text-secondary);
+        transition: var(--ticket-transition);
+        cursor: pointer;
+        min-width: 30px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+    }
+
+    .pagination-btn:hover {
+        background: var(--bg-secondary);
+        border-color: var(--ticket-primary);
+        color: var(--text-primary);
+    }
+
+    .pagination-btn.active {
+        background: linear-gradient(135deg, var(--ticket-primary), var(--ticket-primary-dark));
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.15);
+    }
+
+    .pagination-btn.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .pagination-info {
+        color: var(--text-muted);
         font-size: 0.6rem;
     }
 
     /* ============================================
-       Ticket Counter
+       RESPONSIVE BREAKPOINTS
     ============================================ */
-    .ticket-counter {
-        background: var(--brand-gradient);
-        color: white;
-        padding: 0.15rem 0.6rem;
-        border-radius: 50px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        animation: pulseCounter 2s ease-in-out infinite;
-        display: inline-block;
+    @media (max-width: 768px) {
+        .tickets-container { padding: 0 0.75rem; }
+        .page-header { padding: 1rem 1.25rem; }
+        .header-inner { flex-direction: column; align-items: stretch; }
+        .header-right { flex-direction: column; width: 100%; }
+        .search-wrapper { max-width: 100%; width: 100%; }
+        .search-box { padding: 0.15rem 0.15rem 0.15rem 0.75rem; }
+        .search-box input { font-size: 0.75rem; }
+        .search-box .search-btn { padding: 0.2rem 0.7rem; font-size: 0.6rem; min-height: 26px; }
+        .header-right .btn-primary-solid { width: auto; justify-content: center; padding: 0.25rem 0.8rem; font-size: 0.65rem; min-height: 28px; }
+        .filter-body { padding: 0.75rem 1rem; }
+        .filter-grid { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+        .filter-actions-row { flex-direction: column; }
+        .filter-actions-row .btn-filter-primary,
+        .filter-actions-row .btn-outline-secondary,
+        .filter-actions-row .btn-outline-danger { width: 100%; justify-content: center; }
+        .table-scroll-wrap { max-height: 320px; }
+        .ticket-table th, .ticket-table td { padding: 0.35rem 0.5rem; font-size: 0.6rem; }
+        .cell-subject { max-width: 70px; }
+        .pagination-bar { flex-direction: column; align-items: stretch; }
+        .pagination-group { justify-content: center; }
+        .pagination-info { text-align: center; }
+        .table-header-bar { flex-direction: column; align-items: stretch; }
+        .table-header-bar .time-stamp { font-size: 0.45rem; }
+        .empty-state { padding: 2rem 1rem; }
+        .empty-state .empty-icon { font-size: 2.2rem; }
+        .empty-state h4 { font-size: 1rem; }
+        .empty-state p { font-size: 0.75rem; }
+        .empty-state .btn-primary-solid { padding: 0.25rem 0.8rem; font-size: 0.65rem; min-height: 28px; width: auto; }
     }
 
-    @keyframes pulseCounter {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
+    @media (max-width: 480px) {
+        .tickets-container { padding: 0 0.5rem; }
+        .page-header { padding: 0.75rem 1rem; }
+        .filter-grid { grid-template-columns: 1fr; gap: 0.5rem; }
+        .filter-item .input-field,
+        .filter-item .select-field { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+        .btn-filter-primary,
+        .btn-outline-secondary,
+        .btn-outline-danger { font-size: 0.65rem; padding: 0.3rem 0.8rem; min-height: 28px; }
+        .ticket-table th, .ticket-table td { padding: 0.25rem 0.35rem; font-size: 0.5rem; }
+        .cell-ticket { font-size: 0.6rem; }
+        .cell-date { font-size: 0.45rem; }
+        .cell-subject { max-width: 50px; }
+        .badge-status, .badge-priority { font-size: 0.35rem !important; padding: 0.05rem 0.25rem !important; }
+        .badge-status i, .badge-priority i { display: none; }
+        .btn-action-view { font-size: 0.4rem; padding: 0.1rem 0.35rem; }
+        .btn-action-view i { display: none; }
+        .btn-icon-attach { width: 20px; height: 20px; font-size: 0.55rem; }
+        .pagination-btn { font-size: 0.55rem; padding: 0.15rem 0.4rem; min-width: 22px; }
+        .search-box { padding: 0.1rem; flex-wrap: wrap; }
+        .search-box input { width: 100%; padding: 0.25rem 0.4rem; font-size: 0.7rem; border-bottom: 1px solid var(--border-color); }
+        .search-box .search-btn { width: 100%; padding: 0.25rem; font-size: 0.6rem; justify-content: center; min-height: 24px; }
+        .search-box .clear-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
+        .header-right .btn-primary-solid { padding: 0.2rem 0.6rem; font-size: 0.6rem; min-height: 24px; }
+        .empty-state .btn-primary-solid { padding: 0.2rem 0.6rem; font-size: 0.6rem; min-height: 24px; width: auto; }
+    }
+
+    @media (max-width: 360px) {
+        .ticket-table th, .ticket-table td { padding: 0.15rem 0.2rem; font-size: 0.45rem; }
+        .cell-subject { max-width: 35px; }
+        .badge-unit { font-size: 0.4rem; padding: 0.02rem 0.3rem; }
+        .badge-role-admin, .badge-role-employee { font-size: 0.4rem; padding: 0.05rem 0.3rem; }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .filter-grid { grid-template-columns: repeat(3, 1fr); }
+        .cell-subject { max-width: 110px; }
+    }
+
+    @media (min-width: 1025px) {
+        .filter-grid { grid-template-columns: repeat(4, 1fr); }
     }
 
     /* ============================================
-       Empty State
+       SCROLLBAR STYLING
     ============================================ */
-    .empty-state {
-        animation: bounceIn 0.8s ease;
-    }
-
-    @keyframes bounceIn {
-        0% { transform: scale(0.8); opacity: 0; }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); opacity: 1; }
-    }
-
-    .empty-state i {
-        animation: floatIcon 3s ease-in-out infinite;
-        color: var(--brand-orange);
-    }
-
-    @keyframes floatIcon {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-10px) rotate(-5deg); }
-    }
-
-    .no-results {
-        display: none;
-        text-align: center;
-        padding: 3rem 1rem;
-        animation: fadeInUp 0.5s ease;
-    }
-
-    .no-results i {
-        font-size: 3rem;
-        color: rgba(255, 107, 0, 0.2);
-        margin-bottom: 1rem;
-        display: block;
-    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--ticket-primary); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--ticket-primary-dark); }
 
     /* ============================================
-       Loading Spinner
+       DARK THEME OVERRIDES
     ============================================ */
-    .dept-loading {
-        display: inline-block;
-        width: 0.8rem;
-        height: 0.8rem;
-        border: 2px solid var(--border-color);
-        border-top: 2px solid var(--brand-orange);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin-right: 0.3rem;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+    [data-theme="dark"] .ticket-table thead { background: rgba(255,255,255,0.02); }
+    [data-theme="dark"] .search-box { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); }
+    [data-theme="dark"] .search-box input { color: #E8EDF5 !important; -webkit-text-fill-color: #E8EDF5 !important; }
+    [data-theme="dark"] .search-box input::placeholder { color: rgba(255,255,255,0.3) !important; -webkit-text-fill-color: rgba(255,255,255,0.3) !important; }
+    [data-theme="dark"] .search-box:focus-within { border-color: var(--ticket-primary); box-shadow: 0 0 0 4px rgba(255,107,0,0.08); }
+    [data-theme="dark"] .filter-item .input-field,
+    [data-theme="dark"] .filter-item .select-field { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); color: #E8EDF5; }
+    [data-theme="dark"] .filter-item .input-field:focus,
+    [data-theme="dark"] .filter-item .select-field:focus { background: rgba(255,255,255,0.06); border-color: var(--ticket-primary); box-shadow: 0 0 0 3px rgba(255,107,0,0.08); }
+    [data-theme="dark"] .filter-item .select-field option { background: #1A1A2E; color: #E8EDF5; }
+    [data-theme="dark"] .badge-role-employee { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.06); }
 
     /* ============================================
-       Pagination
+       UTILITY
     ============================================ */
-    .pagination .btn {
-        font-size: 0.75rem;
-        padding: 0.3rem 0.8rem;
-        border-radius: 50px;
-        transition: all 0.3s ease;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .pagination .btn:hover {
-        transform: translateY(-1px);
-    }
-
-    .pagination .btn-active {
-        background: var(--brand-gradient) !important;
-        color: white !important;
-        border: none !important;
-    }
-
-    /* ============================================
-       Responsive
-    ============================================ */
-    @media (max-width: 991px) {
-        .table-responsive thead {
-            display: none;
-        }
-
-        .table-responsive tbody tr {
-            display: block !important;
-            margin-bottom: 0.75rem;
-            padding: 0.75rem;
-            border-radius: 12px;
-            background: var(--bg-card);
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border-color);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: cardSlideIn 0.5s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .table-responsive tbody tr::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--brand-gradient);
-            opacity: 0;
-            transition: all 0.4s ease;
-        }
-
-        .table-responsive tbody tr:hover::before {
-            opacity: 1;
-        }
-
-        .table-responsive tbody tr:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-md);
-            border-color: rgba(255, 107, 0, 0.2);
-        }
-
-        .table-responsive tbody td {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.3rem 0;
-            border: none;
-            border-bottom: 1px solid var(--border-color);
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            font-size: 0.75rem;
-            color: var(--text-primary);
-            background: transparent;
-        }
-
-        .table-responsive tbody td:last-child {
-            border-bottom: none;
-            padding-top: 0.5rem;
-            margin-top: 0.25rem;
-            border-top: 2px solid rgba(255, 107, 0, 0.15);
-            justify-content: center;
-        }
-
-        .table-responsive tbody td::before {
-            content: attr(data-label);
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            min-width: 70px;
-            flex-shrink: 0;
-        }
-
-        .table-responsive tbody td[data-label="Action"]::before {
-            display: none;
-        }
-
-        .table-responsive tbody td:first-child {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--brand-orange);
-            padding-bottom: 0.4rem;
-            border-bottom: 2px solid rgba(255, 107, 0, 0.15);
-        }
-
-        .table-responsive tbody td:first-child::before {
-            content: 'Ticket';
-            font-weight: 700;
-            color: var(--brand-orange);
-            font-size: 0.65rem;
-        }
-
-        .table-responsive tbody td:last-child {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .table-responsive tbody td:last-child .btn-view {
-            min-width: 80px;
-            text-align: center;
-            font-size: 0.65rem;
-            padding: 0.2rem 0.6rem;
-            justify-content: center;
-        }
-
-        .search-bar {
-            min-width: 150px;
-            max-width: 100%;
-            padding: 0.2rem 0.2rem 0.2rem 0.8rem;
-        }
-
-        .search-bar input {
-            font-size: 0.8rem;
-            padding: 0.3rem 0;
-        }
-
-        .search-bar .btn-search {
-            padding: 0.25rem 0.8rem;
-            font-size: 0.7rem;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .header-actions {
-            flex-direction: column;
-            width: 100%;
-        }
-
-        .header-actions .search-bar {
-            max-width: 100%;
-            width: 100%;
-        }
-
-        .header-actions .btn {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .table-responsive tbody tr {
-            padding: 0.6rem;
-            margin-bottom: 0.6rem;
-            border-radius: 10px;
-        }
-
-        .table-responsive tbody td {
-            padding: 0.25rem 0;
-            font-size: 0.7rem;
-            flex-wrap: wrap;
-        }
-
-        .table-responsive tbody td::before {
-            font-size: 0.55rem;
-            min-width: 60px;
-        }
-
-        .table-responsive tbody td:first-child {
-            font-size: 0.75rem;
-            padding-bottom: 0.3rem;
-        }
-
-        .table-responsive tbody td:last-child {
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .table-responsive tbody td:last-child .btn-view {
-            width: 100%;
-            min-width: unset;
-            font-size: 0.65rem;
-            padding: 0.2rem;
-            justify-content: center;
-        }
-
-        .badge-priority,
-        .badge-custom {
-            font-size: 0.5rem !important;
-            padding: 0.1rem 0.35rem !important;
-        }
-
-        .badge-priority i {
-            font-size: 0.3rem;
-        }
-
-        .unit-badge {
-            font-size: 0.5rem;
-            padding: 0.05rem 0.3rem;
-        }
-
-        .btn-attachment {
-            width: 24px;
-            height: 24px;
-            font-size: 0.7rem;
-        }
-
-        .search-bar {
-            padding: 0.3rem;
-            border-radius: 12px;
-            flex-wrap: wrap;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 0.3rem 0.5rem;
-            font-size: 0.75rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .search-bar .btn-search {
-            width: 100%;
-            padding: 0.3rem;
-            font-size: 0.7rem;
-            justify-content: center;
-        }
-
-        .search-bar .btn-clear {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .ticket-counter {
-            font-size: 0.6rem;
-            padding: 0.1rem 0.4rem;
-        }
-    }
-
-    @media (max-width: 400px) {
-        .table-responsive tbody tr {
-            padding: 0.4rem;
-            margin-bottom: 0.4rem;
-            border-radius: 8px;
-        }
-
-        .table-responsive tbody td {
-            font-size: 0.65rem;
-            padding: 0.2rem 0;
-        }
-
-        .table-responsive tbody td::before {
-            font-size: 0.5rem;
-            min-width: 50px;
-        }
-
-        .table-responsive tbody td:first-child {
-            font-size: 0.7rem;
-        }
-
-        .badge-priority,
-        .badge-custom {
-            font-size: 0.45rem !important;
-            padding: 0.05rem 0.25rem !important;
-        }
-
-        .badge-priority i {
-            display: none;
-        }
-
-        .btn-view {
-            font-size: 0.6rem;
-            padding: 0.15rem 0.5rem;
-        }
-
-        .btn-view i {
-            display: none;
-        }
-    }
-
-    /* ============================================
-       Scrollbar
-    ============================================ */
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: var(--bg-secondary);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: var(--brand-orange);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--brand-orange-dark);
-    }
-
-    /* ============================================
-       Selection
-    ============================================ */
-    ::selection {
-        background: var(--brand-orange);
-        color: white;
-    }
-
-    /* ============================================
-       Dark Mode Specific Overrides
-    ============================================ */
-    [data-theme="dark"] .search-bar {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    [data-theme="dark"] .search-bar:focus-within {
-        border-color: var(--brand-orange);
-        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.15);
-    }
-
-    [data-theme="dark"] .search-bar input {
-        color: #E8EDF5 !important;
-        -webkit-text-fill-color: #E8EDF5 !important;
-    }
-
-    [data-theme="dark"] .search-bar input::placeholder {
-        color: rgba(255, 255, 255, 0.35) !important;
-        -webkit-text-fill-color: rgba(255, 255, 255, 0.35) !important;
-    }
-
-    [data-theme="dark"] .table-responsive tbody tr {
-        background: var(--bg-card);
-        border-color: rgba(255, 255, 255, 0.05);
-    }
-
-    [data-theme="dark"] .table-responsive tbody tr:hover {
-        border-color: rgba(255, 107, 0, 0.3);
-    }
-
-    [data-theme="dark"] .badge.bg-light {
-        background: rgba(255, 255, 255, 0.08) !important;
-        color: var(--text-secondary) !important;
-        border-color: rgba(255, 255, 255, 0.05) !important;
-    }
-
-    /* ============================================
-       Light Mode Specific Overrides
-    ============================================ */
-    :root:not([data-theme="dark"]) .search-bar {
-        background: #F5F8FF;
-        border-color: #DCE3F0;
-    }
-
-    :root:not([data-theme="dark"]) .search-bar:focus-within {
-        border-color: var(--brand-orange);
-        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.08);
-    }
-
-    :root:not([data-theme="dark"]) .search-bar input {
-        color: #1A2A6C !important;
-        -webkit-text-fill-color: #1A2A6C !important;
-    }
-
-    :root:not([data-theme="dark"]) .search-bar input::placeholder {
-        color: #94A3B8 !important;
-        -webkit-text-fill-color: #94A3B8 !important;
-    }
-
-    :root:not([data-theme="dark"]) .table-responsive tbody tr {
-        background: #FFFFFF;
-        border-color: #E8ECF1;
-    }
-
-    :root:not([data-theme="dark"]) .table-responsive tbody tr:hover {
-        border-color: rgba(255, 107, 0, 0.3);
-    }
-
-    :root:not([data-theme="dark"]) .badge.bg-light {
-        background: #F1F4F9 !important;
-        color: #3D3D4A !important;
-        border-color: #E8ECF1 !important;
-    }
+    .text-muted-extra { color: var(--text-muted); }
+    .fw-600 { font-weight: 600; }
+    .gap-1 { gap: 0.25rem; }
+    .gap-2 { gap: 0.5rem; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="tickets-container">
-    <!-- Header Section -->
-    <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div>
-                <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--text-primary);">
-                    <i class="fa-solid fa-list-check me-2" style="color: var(--brand-orange);"></i>All Tickets Log
-                </h2>
-                <p class="mb-0" style="font-size: clamp(0.75rem, 1.5vw, 0.9rem); color: var(--text-secondary);">
-                    <i class="fa-regular fa-file-lines me-1"></i>
-                    Operational log of all support requests raised in the system
-                    <span class="ticket-counter ms-2" id="ticketCounter">
-                        <i class="fa-regular fa-circle-check me-1"></i>
-                        {{ tickets.paginator.count }} Tickets
-                    </span>
-                </p>
-            </div>
-            <div class="header-actions">
-                <!-- Search Bar -->
-                <div class="search-bar">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Search tickets..." id="searchInput" value="{{ search_query|default:'' }}" aria-label="Search tickets">
-                    <button class="btn-clear" id="clearSearch" aria-label="Clear search">
-                        <i class="fa-solid fa-times-circle"></i>
-                    </button>
-                    <button class="btn-search" onclick="filterTickets()">
-                        <i class="fa-solid fa-search"></i>Search
-                    </button>
+
+    <!-- ==========================================
+    PAGE HEADER
+    ========================================== -->
+    <header class="page-header">
+        <div class="header-inner">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fa-solid fa-ticket"></i>
                 </div>
-                <a href="{% url 'create_ticket_admin' %}" class="btn btn-primary-custom">
-                    <i class="fa-solid fa-circle-plus"></i>Create Ticket
+                <div class="header-title">
+                    <h1>All Tickets</h1>
+                    <div class="subtitle">
+                        <span><i class="fa-regular fa-clock"></i> System-wide support log</span>
+                        <span class="ticket-count-badge">
+                            <i class="fa-regular fa-circle-check"></i>
+                            {{ tickets.paginator.count }} Total
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="search-wrapper">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" placeholder="Search tickets..." id="searchInput" value="{{ search_query|default:'' }}" aria-label="Search">
+                        <button class="clear-btn" id="clearSearch" aria-label="Clear search">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                        <button class="search-btn" id="mainSearchSubmit">
+                            <i class="fa-solid fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+                <a href="{% url 'create_ticket_admin' %}" class="btn-primary-solid">
+                    <i class="fa-solid fa-plus"></i> Create Ticket
                 </a>
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- Advanced Filters -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <form method="get" class="card panel-card p-3" id="filterForm">
-                <input type="hidden" name="category" value="{{ category }}">
-                <div class="row g-3 align-items-end">
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Status</label>
-                        <select class="form-select" name="status">
-                            <option value="">All</option>
+    <!-- ==========================================
+    FILTER SECTION
+    ========================================== -->
+    <section class="filter-section">
+        <div class="filter-header">
+            <h3><i class="fa-solid fa-sliders"></i> Filter Tickets</h3>
+        </div>
+        <div class="filter-body">
+            <form method="get" id="filterForm" action="{% url 'all_tickets' %}">
+                <div class="filter-grid">
+                    <!-- Status -->
+                    <div class="filter-item">
+                        <label for="id_status"><i class="fa-regular fa-circle"></i> Status</label>
+                        <select class="select-field" name="status" id="id_status">
+                            <option value="">All Statuses</option>
                             {% for value, label in status_choices %}
                                 <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Priority</label>
-                        <select class="form-select" name="priority">
-                            <option value="">All</option>
+
+                    <!-- Priority -->
+                    <div class="filter-item">
+                        <label for="id_priority"><i class="fa-solid fa-flag"></i> Priority</label>
+                        <select class="select-field" name="priority" id="id_priority">
+                            <option value="">All Priorities</option>
                             {% for value, label in priority_choices %}
                                 <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Unit <span class="text-muted" style="font-size:0.55rem;">(Filters Dept)</span></label>
-                        <select class="form-select" name="unit" id="unitSelect">
+
+                    <!-- Unit -->
+                    <div class="filter-item">
+                        <label for="id_unit"><i class="fa-regular fa-building"></i> Unit</label>
+                        <select class="select-field" name="unit" id="id_unit">
                             <option value="">All Units</option>
                             {% for unit in units %}
-                                <option value="{{ unit.id }}" {% if selected_unit|default:'' == unit.id|stringformat:'s' %}selected{% endif %}>{{ unit.code }}</option>
+                                <option value="{{ unit.id }}" {% if selected_unit == unit.id|stringformat:"s" %}selected{% endif %}>{{ unit.code }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Department <span id="deptCount"></span></label>
-                        <select class="form-select" name="department" id="departmentSelect">
+
+                    <!-- Department -->
+                    <div class="filter-item">
+                        <label for="id_department"><i class="fa-regular fa-layer-group"></i> Dept <span id="deptCount"></span></label>
+                        <select class="select-field" name="department" id="id_department">
                             <option value="">All Departments</option>
                             {% for department in departments %}
-                                <option value="{{ department.id }}" data-unit="{{ department.unit_id }}" {% if selected_department|default:'' == department.id|stringformat:'s' %}selected{% endif %}>
+                                <option value="{{ department.id }}" data-unit="{{ department.unit_id }}" {% if selected_department == department.id|stringformat:"s" %}selected{% endif %}>
                                     {{ department.name }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Assigned To</label>
-                        <input class="form-control" type="text" name="assigned_person" value="{{ selected_assigned_person|default:'' }}" placeholder="Assigned person">
+
+                    <!-- Assigned To -->
+                    <div class="filter-item">
+                        <label for="id_assigned_person"><i class="fa-solid fa-user"></i> Assigned To</label>
+                        <input class="input-field" type="text" name="assigned_person" id="id_assigned_person" value="{{ selected_assigned_person|default:'' }}" placeholder="Person name">
                     </div>
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Created By</label>
-                        <select class="form-select" name="created_by_role">
+
+                    <!-- Created By -->
+                    <div class="filter-item">
+                        <label for="id_created_by"><i class="fa-solid fa-user-tag"></i> Created By</label>
+                        <select class="select-field" name="created_by_role" id="id_created_by">
                             <option value="">All</option>
                             {% for value, label in created_by_choices %}
                                 <option value="{{ value }}" {% if selected_created_by_role == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Keyword</label>
-                        <input class="form-control" type="text" name="search" value="{{ search_query|default:'' }}" placeholder="Ticket, subject, unit, dept">
+
+                    <!-- Keyword -->
+                    <div class="filter-item">
+                        <label for="id_search"><i class="fa-solid fa-search"></i> Keyword</label>
+                        <input class="input-field" type="text" name="search" id="id_search" value="{{ search_query|default:'' }}" placeholder="Ticket, subject, unit...">
                     </div>
-                    <div class="col-sm-6 col-md-3 d-grid">
-                        <button type="submit" class="btn btn-primary-custom w-100">
-                            <i class="fa-solid fa-filter me-1"></i>Apply Filters
-                        </button>
+
+                    <!-- Advanced: Ticket Number -->
+                    <div class="filter-item" id="ticketNumberGroup" style="display: none;">
+                        <label for="id_ticket_number"><i class="fa-solid fa-hashtag"></i> Ticket #</label>
+                        <input class="input-field" type="text" name="ticket_number" id="id_ticket_number" value="{{ selected_ticket_number|default:'' }}" placeholder="TKT-####">
                     </div>
-                    <div class="col-sm-6 col-md-3 d-grid">
-                        <button type="button" class="btn btn-outline-secondary w-100" id="toggleAdvancedAdmin">
-                            <i class="fa-solid fa-sliders-horizontal me-1"></i>Advanced Filters
-                        </button>
+
+                    <!-- Advanced: Date From -->
+                    <div class="filter-item" id="dateFromGroup" style="display: none;">
+                        <label for="id_date_from"><i class="fa-regular fa-calendar-plus"></i> From Date</label>
+                        <input class="input-field" type="date" name="date_from" id="id_date_from" value="{{ date_from|default:'' }}">
                     </div>
-                    <div class="col-sm-6 col-md-3 d-grid">
-                        <button type="button" class="btn btn-outline-secondary filter-clear-btn w-100" id="clearAdminFilters">
-                            <i class="fa-solid fa-eraser me-1"></i>Clear Filters
-                        </button>
+
+                    <!-- Advanced: Date To -->
+                    <div class="filter-item" id="dateToGroup" style="display: none;">
+                        <label for="id_date_to"><i class="fa-regular fa-calendar-check"></i> To Date</label>
+                        <input class="input-field" type="date" name="date_to" id="id_date_to" value="{{ date_to|default:'' }}">
                     </div>
                 </div>
 
-                <div class="row g-3 mt-3" id="advancedFilterPanel" style="display: none;">
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Ticket Number</label>
-                        <input class="form-control" type="text" name="ticket_number" value="{{ selected_ticket_number|default:'' }}" placeholder="Ticket #">
-                    </div>
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Created From</label>
-                        <input class="form-control" type="date" name="date_from" value="{{ date_from|default:'' }}">
-                    </div>
-                    <div class="col-sm-6 col-md-3">
-                        <label class="form-label">Created To</label>
-                        <input class="form-control" type="date" name="date_to" value="{{ date_to|default:'' }}">
-                    </div>
+                <div class="filter-actions-row">
+                    <button type="submit" class="btn-filter-primary">
+                        <i class="fa-solid fa-filter"></i> Apply Filters
+                    </button>
+                    <button type="button" class="btn-outline-secondary" id="toggleAdvanced">
+                        <i class="fa-solid fa-gear"></i> Advanced
+                    </button>
+                    <button type="button" class="btn-outline-danger" id="clearFilters">
+                        <i class="fa-solid fa-rotate-right"></i> Reset
+                    </button>
                 </div>
             </form>
         </div>
-    </div>
+    </section>
 
-    <!-- Table Section -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card panel-card">
-                <div class="card-header glass-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="fw-bold mb-0" style="font-size: clamp(0.9rem, 1.5vw, 1.1rem);">
-                        <i class="fa-solid fa-table me-2"></i>All System Tickets
-                    </h5>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <span class="badge rounded-pill px-2 py-1" id="visibleCount" style="font-size: clamp(0.6rem, 1vw, 0.75rem); background: rgba(255, 107, 0, 0.08); color: var(--text-secondary); border: 1px solid rgba(255, 107, 0, 0.1);">
-                            <i class="fa-regular fa-circle-check me-1"></i>
-                            Showing: <span id="showCount">{{ tickets.paginator.count }}</span>
-                        </span>
-                        <span class="badge rounded-pill px-2 py-1" style="font-size: clamp(0.55rem, 0.9vw, 0.7rem); background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--border-color);">
-                            <i class="fa-regular fa-clock me-1"></i>
-                            Updated: {% now "d-m-Y H:i" %}
-                        </span>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-hover-zoom align-middle mb-0" id="ticketsTable">
-                            <thead>
-                                <tr>
-                                    <th class="ps-3">Ticket</th>
-                                    <th>Date</th>
-                                    <th>Subject</th>
-                                    <th onclick="sortTable('unit')" class="sortable" id="sort-unit">
-                                        Unit <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span>
-                                    </th>
-                                    <th>Dept</th>
-                                    <th>Priority</th>
-                                    <th onclick="sortTable('status')" class="sortable" id="sort-status">
-                                        Status <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span>
-                                    </th>
-                                    <th>Assigned</th>
-                                    <th>Origin</th>
-                                    <th>Attach</th>
-                                    <th class="pe-3 text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ticketsBody">
-                                {% for ticket in tickets %}
-                                    <tr data-search="{{ ticket.ticket_number }} {{ ticket.subject }} {{ ticket.unit.code }} {{ ticket.department.name }}"
-                                        data-unit="{{ ticket.unit.code }}"
-                                        data-status="{{ ticket.status }}">
-                                        <td class="ps-3 fw-bold" data-label="Ticket" style="font-size: clamp(0.7rem, 1vw, 0.85rem); color: var(--brand-orange);">
-                                            <i class="fa-regular fa-hashtag me-1" style="font-size: clamp(0.5rem, 0.7vw, 0.6rem);"></i>
-                                            {{ ticket.ticket_number }}
-                                        </td>
-                                        <td data-label="Date" style="font-size: clamp(0.6rem, 0.8vw, 0.7rem); color: var(--text-secondary);">
-                                            <i class="fa-regular fa-calendar me-1" style="font-size: clamp(0.4rem, 0.6vw, 0.5rem);"></i>
-                                            {{ ticket.created_at|date:"d-m-Y" }}
-                                            <span class="d-block" style="font-size: clamp(0.5rem, 0.6vw, 0.6rem); color: var(--text-muted);">{{ ticket.created_at|date:"h:i A" }}</span>
-                                        </td>
-                                        <td class="fw-medium text-truncate" style="max-width: 150px; font-size: clamp(0.65rem, 0.9vw, 0.75rem);" title="{{ ticket.subject }}" data-label="Subject">
-                                            <i class="fa-regular fa-message me-1" style="font-size: clamp(0.4rem, 0.6vw, 0.5rem); color: var(--brand-orange);"></i>
-                                            {{ ticket.subject }}
-                                        </td>
-                                        <td data-label="Unit">
-                                            <span class="unit-badge">{{ ticket.unit.code }}</span>
-                                        </td>
-                                        <td class="text-truncate" style="max-width: 80px; font-size: clamp(0.55rem, 0.7vw, 0.65rem); color: var(--text-secondary);" data-label="Dept">{{ ticket.department.name }}</td>
-                                        <td data-label="Priority">
-                                            <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
-                                                <i class="fa-solid fa-flag"></i>
-                                                {{ ticket.priority }}
-                                            </span>
-                                        </td>
-                                        <td data-label="Status">
-                                            <span class="badge-custom badge-status-{{ ticket.status|lower }}">
-                                                <i class="fa-solid fa-circle me-1" style="font-size: 0.3rem;"></i>
-                                                {{ ticket.status }}
-                                            </span>
-                                        </td>
-                                        <td class="fw-medium" data-label="Assigned" style="font-size: clamp(0.55rem, 0.7vw, 0.65rem); color: var(--text-secondary);">
-                                            {% if ticket.assigned_person %}
-                                                <i class="fa-solid fa-user-gear me-1" style="font-size: clamp(0.4rem, 0.6vw, 0.5rem); color: var(--brand-orange);"></i>
-                                                {{ ticket.assigned_person }}
-                                            {% else %}
-                                                <span class="fst-italic" style="font-size: clamp(0.5rem, 0.6vw, 0.55rem); color: var(--text-muted);">
-                                                    <i class="fa-regular fa-user me-1"></i>Unassigned
-                                                </span>
-                                            {% endif %}
-                                        </td>
-                                        <td data-label="Origin">
-                                            {% if ticket.created_by_role == 'Admin' %}
-                                                <span class="badge-admin-created badge-custom">
-                                                    <i class="fa-solid fa-user-shield me-1"></i>Admin
-                                                </span>
-                                            {% else %}
-                                                <span class="badge bg-light rounded-pill px-2 py-1" style="font-size: 0.55rem;">
-                                                    <i class="fa-regular fa-user me-1"></i>Emp
-                                                </span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="text-center" data-label="Attach">
-                                            {% if ticket.attachment %}
-                                                <a href="{{ ticket.attachment.url }}" target="_blank" class="btn-attachment" title="View Attachment">
-                                                    <i class="fa-solid fa-paperclip"></i>
-                                                </a>
-                                            {% else %}
-                                                <span style="font-size: clamp(0.5rem, 0.6vw, 0.55rem); color: var(--text-muted);">—</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="pe-3 text-center" data-label="Action">
-                                            <a href="{% url 'admin_ticket_detail' ticket.id %}" class="btn-view">
-                                                <i class="fa-solid fa-eye"></i>View
-                                            </a>
-                                        </td>
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="11" class="text-center py-5">
-                                            <div class="empty-state">
-                                                <i class="fa-solid fa-folder-open fa-4x mb-3 d-block opacity-25"></i>
-                                                <h5 class="fw-bold" style="color: var(--text-secondary);">No Tickets Found</h5>
-                                                <p style="color: var(--text-muted);">There are no tickets present in the database.</p>
-                                                <a href="{% url 'create_ticket_admin' %}" class="btn btn-primary-custom mt-2">
-                                                    <i class="fa-solid fa-circle-plus me-2"></i>Create First Ticket
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- No Results Message -->
-                    <div class="no-results" id="noResults">
-                        <i class="fa-solid fa-search"></i>
-                        <h5>No tickets match your search</h5>
-                        <p>Try adjusting your search terms or clear the search to see all tickets.</p>
-                    </div>
-
-                    <!-- Pagination -->
-                    {% if tickets.has_other_pages %}
-                    <div class="d-flex justify-content-center align-items-center py-3 px-3 border-top flex-wrap gap-1" style="border-color: var(--border-color) !important;">
-                        {% if tickets.has_previous %}
-                        <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ tickets.previous_page_number }}" class="btn btn-sm rounded-pill px-3" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.75rem; transition: all 0.3s;">
-                            <i class="fa-solid fa-chevron-left me-1"></i>Prev
-                        </a>
-                        {% else %}
-                        <span class="btn btn-sm rounded-pill px-3" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; opacity: 0.4; cursor: not-allowed;">
-                            <i class="fa-solid fa-chevron-left me-1"></i>Prev
-                        </span>
-                        {% endif %}
-                        
-                        {% for num in tickets.paginator.page_range %}
-                            {% if tickets.number == num %}
-                            <span class="btn btn-sm rounded-pill px-3 fw-bold" style="background: var(--brand-gradient); border: none; color: white; font-size: 0.75rem;">{{ num }}</span>
-                            {% elif num > tickets.number|add:'-3' and num < tickets.number|add:'3' %}
-                            <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}" class="btn btn-sm rounded-pill px-3" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.75rem; transition: all 0.3s;">
-                                {{ num }}
-                            </a>
-                            {% endif %}
-                        {% endfor %}
-                        
-                        {% if tickets.has_next %}
-                        <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ tickets.next_page_number }}" class="btn btn-sm rounded-pill px-3" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.75rem; transition: all 0.3s;">
-                            Next<i class="fa-solid fa-chevron-right ms-1"></i>
-                        </a>
-                        {% else %}
-                        <span class="btn btn-sm rounded-pill px-3" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; opacity: 0.4; cursor: not-allowed;">
-                            Next<i class="fa-solid fa-chevron-right ms-1"></i>
-                        </span>
-                        {% endif %}
-                        
-                        <span class="ms-2" style="color: var(--text-muted); font-size: 0.7rem;">Page {{ tickets.number }} of {{ tickets.paginator.num_pages }}</span>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+    <!-- ==========================================
+    TABLE SECTION
+    ========================================== -->
+    <section class="table-section">
+        <div class="table-header-bar">
+            <h3><i class="fa-solid fa-table-cells"></i> Ticket Log</h3>
+            <span class="time-stamp">
+                <i class="fa-regular fa-clock"></i>
+                Updated: {% now "d-m-Y H:i" %}
+            </span>
         </div>
-    </div>
+
+        <div class="table-scroll-wrap">
+            <table class="ticket-table" id="ticketsTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('ticket')" class="sortable" id="sort-ticket">
+                            Ticket <span class="sort-indicator"><i class="fa-solid fa-chevron-up"></i></span>
+                        </th>
+                        <th>Created</th>
+                        <th>Subject</th>
+                        <th onclick="sortTable('unit')" class="sortable" id="sort-unit">
+                            Unit <span class="sort-indicator"><i class="fa-solid fa-chevron-up"></i></span>
+                        </th>
+                        <th>Dept</th>
+                        <th onclick="sortTable('priority')" class="sortable" id="sort-priority">
+                            Priority <span class="sort-indicator"><i class="fa-solid fa-chevron-up"></i></span>
+                        </th>
+                        <th onclick="sortTable('status')" class="sortable" id="sort-status">
+                            Status <span class="sort-indicator"><i class="fa-solid fa-chevron-up"></i></span>
+                        </th>
+                        <th>Assigned</th>
+                        <th>Origin</th>
+                        <th>File</th>
+                        <th style="text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="ticketsBody">
+                    {% for ticket in tickets %}
+                        <tr data-search="{{ ticket.ticket_number }} {{ ticket.subject }} {{ ticket.unit.code }} {{ ticket.department.name }}"
+                            data-unit="{{ ticket.unit.code }}"
+                            data-status="{{ ticket.status }}"
+                            data-priority="{{ ticket.priority }}"
+                            data-ticket="{{ ticket.ticket_number }}">
+                            <td>
+                                <span class="cell-ticket">
+                                    <i class="fa-regular fa-hashtag"></i>
+                                    {{ ticket.ticket_number }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="cell-date">
+                                    {{ ticket.created_at|date:"d-m-Y" }}
+                                    <span class="time">{{ ticket.created_at|date:"h:i A" }}</span>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="cell-subject" title="{{ ticket.subject }}">
+                                    <i class="fa-regular fa-message"></i>
+                                    {{ ticket.subject }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge-unit">{{ ticket.unit.code }}</span>
+                            </td>
+                            <td>{{ ticket.department.name|default:"—" }}</td>
+                            <td>
+                                <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
+                                    <i class="fa-solid fa-flag"></i>
+                                    {{ ticket.priority }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge-status badge-status-{{ ticket.status|lower }}">
+                                    <i class="fa-solid fa-circle"></i>
+                                    {{ ticket.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if ticket.assigned_person %}
+                                    <span style="font-size: clamp(0.5rem, 0.6vw, 0.6rem); color: var(--text-secondary);">
+                                        <i class="fa-solid fa-user-gear" style="color: var(--ticket-primary); font-size: 0.45rem;"></i>
+                                        {{ ticket.assigned_person }}
+                                    </span>
+                                {% else %}
+                                    <span style="font-size: clamp(0.45rem, 0.55vw, 0.5rem); color: var(--text-muted);">
+                                        <i class="fa-regular fa-user"></i> Unassigned
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ticket.created_by_role == 'Admin' %}
+                                    <span class="badge-role-admin">
+                                        <i class="fa-solid fa-user-shield"></i> Admin
+                                    </span>
+                                {% else %}
+                                    <span class="badge-role-employee">
+                                        <i class="fa-regular fa-user"></i> Employee
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: center;">
+                                {% if ticket.attachment %}
+                                    <a href="{{ ticket.attachment.url }}" target="_blank" class="btn-icon-attach" title="View Attachment">
+                                        <i class="fa-solid fa-paperclip"></i>
+                                    </a>
+                                {% else %}
+                                    <span style="font-size: clamp(0.45rem, 0.55vw, 0.5rem); color: var(--text-muted);">—</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: center;">
+                                <a href="{% url 'admin_ticket_detail' ticket.id %}" class="btn-action-view">
+                                    <i class="fa-solid fa-eye"></i>
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="11">
+                                <div class="empty-state">
+                                    <span class="empty-icon"><i class="fa-regular fa-folder-open"></i></span>
+                                    <h4>No Tickets Found</h4>
+                                    <p>There are no tickets matching your criteria, or none have been created yet.</p>
+                                    <a href="{% url 'create_ticket_admin' %}" class="btn-primary-solid">
+                                        <i class="fa-solid fa-plus"></i> Create First Ticket
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="no-results" id="noResults" style="display: none; text-align: center; padding: 2rem 1rem;">
+            <i class="fa-solid fa-search" style="font-size: 2.5rem; color: var(--ticket-primary); opacity: 0.15; display: block; margin-bottom: 0.5rem;"></i>
+            <h4 style="color: var(--text-primary); margin-bottom: 0.25rem; font-family: 'Fraunces', serif; font-size: 1rem;">No Matches Found</h4>
+            <p style="color: var(--text-muted); font-size: 0.8rem;">Try adjusting your search terms or filters.</p>
+        </div>
+
+        {% if tickets.has_other_pages %}
+        <div class="pagination-bar">
+            <div class="pagination-group">
+                {% if tickets.has_previous %}
+                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ tickets.previous_page_number }}" class="pagination-btn">
+                        <i class="fa-solid fa-chevron-left"></i> Prev
+                    </a>
+                {% else %}
+                    <span class="pagination-btn disabled"><i class="fa-solid fa-chevron-left"></i> Prev</span>
+                {% endif %}
+
+                {% for num in tickets.paginator.page_range %}
+                    {% if tickets.number == num %}
+                        <span class="pagination-btn active">{{ num }}</span>
+                    {% elif num > tickets.number|add:'-3' and num < tickets.number|add:'3' %}
+                        <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}" class="pagination-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if tickets.has_next %}
+                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ tickets.next_page_number }}" class="pagination-btn">
+                        Next <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                {% else %}
+                    <span class="pagination-btn disabled">Next <i class="fa-solid fa-chevron-right"></i></span>
+                {% endif %}
+            </div>
+            <span class="pagination-info">
+                Page {{ tickets.number }} of {{ tickets.paginator.num_pages }}
+                ({{ tickets.paginator.count }} total)
+            </span>
+        </div>
+        {% endif %}
+    </section>
 </div>
 
+<!-- ==========================================
+JAVASCRIPT
+========================================== -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ============================================
-        // CASCADING UNIT -> DEPARTMENT FILTER (AJAX)
-        // ============================================
-        const unitSelect = document.getElementById('unitSelect');
-        const departmentSelect = document.getElementById('departmentSelect');
+        // Cache DOM references
+        const filterForm = document.getElementById('filterForm');
+        const clearFiltersBtn = document.getElementById('clearFilters');
+        const toggleAdvancedBtn = document.getElementById('toggleAdvanced');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const unitSelect = document.getElementById('id_unit');
+        const deptSelect = document.getElementById('id_department');
         const deptCount = document.getElementById('deptCount');
-        const selectedDepartment = '{{ selected_department|default:"" }}';
-        
-        function fetchDepartments(unitId) {
-            if (deptCount) {
-                deptCount.innerHTML = '<span class="dept-loading"></span> Loading...';
+
+        const ticketNumberGroup = document.getElementById('ticketNumberGroup');
+        const dateFromGroup = document.getElementById('dateFromGroup');
+        const dateToGroup = document.getElementById('dateToGroup');
+        const filterTicketNumber = document.getElementById('id_ticket_number');
+        const filterDateFrom = document.getElementById('id_date_from');
+        const filterDateTo = document.getElementById('id_date_to');
+        const formSearchInput = document.getElementById('id_search');
+
+        let advancedVisible = false;
+
+        // ---- Advanced Toggle ----
+        function toggleAdvanced(show) {
+            advancedVisible = (show !== undefined) ? show : !advancedVisible;
+            [ticketNumberGroup, dateFromGroup, dateToGroup].forEach(el => {
+                if (el) el.style.display = advancedVisible ? 'flex' : 'none';
+            });
+            if (toggleAdvancedBtn) {
+                toggleAdvancedBtn.innerHTML = advancedVisible
+                    ? '<i class="fa-solid fa-gear"></i> Hide Advanced'
+                    : '<i class="fa-solid fa-gear"></i> Advanced';
             }
-            departmentSelect.disabled = true;
-            
-            let url = "{% url 'get_departments_by_unit' %}?unit_id=" + unitId;
-            if (selectedDepartment) {
-                url += "&selected_department=" + selectedDepartment;
-            }
-            
-            fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                departmentSelect.innerHTML = '';
-                const allOption = document.createElement('option');
-                allOption.value = '';
-                allOption.textContent = 'All Departments';
-                departmentSelect.appendChild(allOption);
-                
-                if (data.success && data.departments) {
-                    data.departments.forEach(dept => {
-                        const option = document.createElement('option');
-                        option.value = dept.id;
-                        option.textContent = dept.name;
-                        if (dept.selected) {
-                            option.selected = true;
-                        }
-                        departmentSelect.appendChild(option);
-                    });
-                    
-                    if (deptCount) {
-                        const count = data.count || 0;
-                        if (unitId) {
-                            deptCount.textContent = `(${count} dept${count !== 1 ? 's' : ''})`;
-                        } else {
-                            deptCount.textContent = `(All ${count} dept${count !== 1 ? 's' : ''})`;
-                        }
-                    }
-                } else {
-                    if (deptCount) {
-                        deptCount.textContent = '(0 departments)';
-                    }
-                }
-                departmentSelect.disabled = false;
-            })
-            .catch(error => {
-                console.error('Error fetching departments:', error);
-                if (deptCount) {
-                    deptCount.textContent = '(Error loading)';
-                }
-                departmentSelect.disabled = false;
+        }
+
+        const hasAdvanced = (filterTicketNumber && filterTicketNumber.value) ||
+                           (filterDateFrom && filterDateFrom.value) ||
+                           (filterDateTo && filterDateTo.value);
+        toggleAdvanced(hasAdvanced);
+
+        if (toggleAdvancedBtn) {
+            toggleAdvancedBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                toggleAdvanced();
             });
         }
-        
+
+        // ---- Reset Filters ----
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                filterForm.querySelectorAll('input, select').forEach(field => {
+                    if (field.name && field.name !== 'category') {
+                        field.tagName.toLowerCase() === 'select' ? field.selectedIndex = 0 : field.value = '';
+                    }
+                });
+                if (searchInput) searchInput.value = '';
+                if (formSearchInput) formSearchInput.value = '';
+                filterForm.submit();
+            });
+        }
+
+        // ---- Department Loading ----
+        function loadDepartments(unitId, selectedDeptId) {
+            if (!deptSelect) return;
+            if (!unitId) {
+                deptSelect.innerHTML = '<option value="">All Departments</option>';
+                deptSelect.disabled = true;
+                if (deptCount) deptCount.textContent = '';
+                return;
+            }
+
+            deptSelect.disabled = true;
+            if (deptCount) deptCount.innerHTML = '<span class="dept-loading"></span>';
+            deptSelect.innerHTML = '<option value="">Loading...</option>';
+
+            const url = '/ajax/get-departments/?unit_id=' + unitId + '&selected_department=' + (selectedDeptId || '');
+
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                deptSelect.innerHTML = '<option value="">All Departments</option>';
+                if (data.departments && data.departments.length) {
+                    data.departments.forEach(dept => {
+                        const opt = document.createElement('option');
+                        opt.value = dept.id;
+                        opt.textContent = dept.name;
+                        if (selectedDeptId && dept.id == selectedDeptId) opt.selected = true;
+                        deptSelect.appendChild(opt);
+                    });
+                    deptSelect.disabled = false;
+                    if (deptCount) {
+                        deptCount.textContent = '(' + data.departments.length + ' dept' + (data.departments.length !== 1 ? 's' : '') + ')';
+                    }
+                } else {
+                    deptSelect.innerHTML += '<option value="">No departments available</option>';
+                    if (deptCount) deptCount.textContent = '(0 depts)';
+                }
+            })
+            .catch(() => {
+                deptSelect.innerHTML = '<option value="">Error loading departments</option>';
+                deptSelect.disabled = true;
+                if (deptCount) deptCount.textContent = '(Error)';
+            });
+        }
+
+        const initialUnitId = unitSelect ? unitSelect.value : '';
+        const initialDeptId = '{{ selected_department|default:"" }}';
+
+        if (initialUnitId) {
+            loadDepartments(initialUnitId, initialDeptId);
+        } else if (deptSelect) {
+            deptSelect.disabled = true;
+            if (deptCount) deptCount.textContent = '';
+        }
+
         if (unitSelect) {
             unitSelect.addEventListener('change', function() {
-                fetchDepartments(this.value);
+                loadDepartments(this.value, '');
             });
-            
-            const initialUnit = unitSelect.value;
-            if (initialUnit) {
-                fetchDepartments(initialUnit);
-            } else {
-                fetchDepartments('');
-            }
         }
 
-        // ============================================
-        // SEARCH/FILTER FUNCTIONALITY
-        // ============================================
-        function filterTickets() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase().trim();
-            const rows = document.querySelectorAll('#ticketsBody tr');
-            let visibleCount = 0;
-            
-            const clearBtn = document.getElementById('clearSearch');
-            if (filter.length > 0) {
-                clearBtn.classList.add('visible');
-            } else {
-                clearBtn.classList.remove('visible');
-            }
-            
-            rows.forEach(row => {
-                if (row.querySelector('.empty-state')) {
-                    row.style.display = '';
-                    return;
-                }
-                
-                const searchData = row.getAttribute('data-search') || '';
-                const text = searchData.toLowerCase();
-                
-                if (filter === '' || text.indexOf(filter) > -1) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            
-            const totalRows = document.querySelectorAll('#ticketsBody tr:not(:has(.empty-state))').length;
-            document.getElementById('showCount').textContent = visibleCount;
-            document.getElementById('ticketCounter').innerHTML = `<i class="fa-regular fa-circle-check me-1"></i> ${visibleCount} Tickets`;
-            
-            const noResults = document.getElementById('noResults');
-            if (visibleCount === 0 && totalRows > 0) {
-                noResults.style.display = 'block';
-            } else {
-                noResults.style.display = 'none';
-            }
-        }
-
-        window.filterTickets = filterTickets;
-
-        const searchInput = document.getElementById('searchInput');
-        const clearBtn = document.getElementById('clearSearch');
-        
+        // ---- Search Sync ----
         if (searchInput) {
             searchInput.addEventListener('input', function() {
-                clearTimeout(this.timer);
-                this.timer = setTimeout(function() {
-                    filterTickets();
-                }, 250);
+                if (formSearchInput) formSearchInput.value = this.value;
+                if (clearSearchBtn) clearSearchBtn.classList.toggle('visible', this.value.length > 0);
             });
-            
+
             searchInput.addEventListener('keyup', function(e) {
                 if (e.key === 'Enter') {
-                    filterTickets();
-                }
-            });
-        }
-        
-        if (clearBtn) {
-            clearBtn.addEventListener('click', function() {
-                searchInput.value = '';
-                filterTickets();
-                searchInput.focus();
-            });
-        }
-
-        // ============================================
-        // ADVANCED FILTER TOGGLE
-        // ============================================
-        const toggleAdvancedAdmin = document.getElementById('toggleAdvancedAdmin');
-        const advancedFilterPanel = document.getElementById('advancedFilterPanel');
-        if (toggleAdvancedAdmin && advancedFilterPanel) {
-            const updateAdminToggleText = () => {
-                const isVisible = advancedFilterPanel.style.display !== 'none';
-                toggleAdvancedAdmin.innerHTML = isVisible
-                    ? '<i class="fa-solid fa-sliders-horizontal me-1"></i>Hide Advanced Filters'
-                    : '<i class="fa-solid fa-sliders-horizontal me-1"></i>Advanced Filters';
-            };
-
-            toggleAdvancedAdmin.addEventListener('click', function() {
-                const isHidden = advancedFilterPanel.style.display === 'none';
-                advancedFilterPanel.style.display = isHidden ? 'flex' : 'none';
-                updateAdminToggleText();
-            });
-
-            const adminFields = advancedFilterPanel.querySelectorAll('input');
-            adminFields.forEach(field => {
-                if (field.value) {
-                    advancedFilterPanel.style.display = 'flex';
-                    updateAdminToggleText();
+                    if (formSearchInput) formSearchInput.value = this.value;
+                    filterForm.submit();
                 }
             });
         }
 
-        // ============================================
-        // CLEAR FILTERS
-        // ============================================
-        const clearAdminFilters = document.getElementById('clearAdminFilters');
-        if (clearAdminFilters) {
-            clearAdminFilters.addEventListener('click', function() {
-                const adminForm = document.getElementById('filterForm');
-                if (adminForm) {
-                    adminForm.querySelectorAll('input, select').forEach(field => {
-                        if (field.name !== 'category') {
-                            if (field.tagName.toLowerCase() === 'select') {
-                                field.selectedIndex = 0;
-                            } else {
-                                field.value = '';
-                            }
-                        }
-                    });
-                    if (departmentSelect) {
-                        departmentSelect.value = '';
-                        if (unitSelect) {
-                            fetchDepartments(unitSelect.value);
-                        }
-                    }
-                    adminForm.submit();
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', function() {
+                if (searchInput) {
+                    searchInput.value = '';
+                    if (formSearchInput) formSearchInput.value = '';
+                    filterForm.submit();
+                }
+            });
+            clearSearchBtn.classList.toggle('visible', searchInput && searchInput.value.length > 0);
+        }
+
+        // ---- Date Validation ----
+        if (filterForm) {
+            filterForm.addEventListener('submit', function(e) {
+                const from = filterDateFrom ? filterDateFrom.value : '';
+                const to = filterDateTo ? filterDateTo.value : '';
+                if (from && to && new Date(from) > new Date(to)) {
+                    e.preventDefault();
+                    alert('"From Date" cannot be later than "To Date".');
+                    if (filterDateFrom) filterDateFrom.focus();
                 }
             });
         }
 
-        // ============================================
-        // SORT TABLE
-        // ============================================
+        // ---- Sort Table ----
         let sortColumn = '';
         let sortDirection = 'asc';
 
         window.sortTable = function(column) {
             const tbody = document.getElementById('ticketsBody');
             const rows = Array.from(tbody.querySelectorAll('tr:not(:has(.empty-state))'));
-            
-            if (sortColumn === column) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortColumn = column;
-                sortDirection = 'asc';
-            }
-            
-            document.querySelectorAll('.sortable .sort-icon').forEach(function(icon) {
-                icon.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
-                icon.parentElement.classList.remove('sorted-asc', 'sorted-desc');
+            if (!rows.length) return;
+
+            sortColumn = (sortColumn === column) ? column : column;
+            sortDirection = (sortColumn === column && sortDirection === 'asc') ? 'desc' : 'asc';
+
+            document.querySelectorAll('.sortable .sort-indicator').forEach(el => {
+                el.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
+                el.parentElement.classList.remove('sorted-asc', 'sorted-desc');
             });
-            
-            const currentHeader = document.getElementById('sort-' + column);
-            if (currentHeader) {
-                const icon = currentHeader.querySelector('.sort-icon');
-                if (sortDirection === 'asc') {
-                    icon.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
-                    currentHeader.classList.add('sorted-asc');
-                } else {
-                    icon.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
-                    currentHeader.classList.add('sorted-desc');
-                }
+
+            const header = document.getElementById('sort-' + column);
+            if (header) {
+                const icon = header.querySelector('.sort-indicator');
+                icon.innerHTML = sortDirection === 'asc'
+                    ? '<i class="fa-solid fa-chevron-up"></i>'
+                    : '<i class="fa-solid fa-chevron-down"></i>';
+                header.classList.add('sorted-' + sortDirection);
             }
-            
-            rows.sort(function(a, b) {
-                let aVal = a.getAttribute('data-' + column) || '';
-                let bVal = b.getAttribute('data-' + column) || '';
-                
-                if (column === 'status') {
-                    const aBadge = a.querySelector('.badge-custom');
-                    const bBadge = b.querySelector('.badge-custom');
-                    if (aBadge) aVal = aBadge.textContent.trim();
-                    if (bBadge) bVal = bBadge.textContent.trim();
+
+            const getVal = (row, col) => {
+                let val = row.getAttribute('data-' + col) || '';
+                if (col === 'status') {
+                    const badge = row.querySelector('.badge-status');
+                    if (badge) val = badge.textContent.trim();
+                } else if (col === 'unit') {
+                    const badge = row.querySelector('.badge-unit');
+                    if (badge) val = badge.textContent.trim();
+                } else if (col === 'priority') {
+                    const badge = row.querySelector('.badge-priority');
+                    if (badge) val = badge.textContent.trim();
+                } else if (col === 'ticket') {
+                    const span = row.querySelector('.cell-ticket');
+                    if (span) val = span.textContent.trim();
                 }
-                
-                if (column === 'unit') {
-                    const aBadge = a.querySelector('.unit-badge');
-                    const bBadge = b.querySelector('.unit-badge');
-                    if (aBadge) aVal = aBadge.textContent.trim();
-                    if (bBadge) bVal = bBadge.textContent.trim();
-                }
-                
-                aVal = aVal.toLowerCase();
-                bVal = bVal.toLowerCase();
-                
+                return val.toLowerCase();
+            };
+
+            rows.sort((a, b) => {
+                const aVal = getVal(a, column);
+                const bVal = getVal(b, column);
                 if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
                 if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
                 return 0;
             });
-            
-            rows.forEach(function(row) {
-                tbody.appendChild(row);
-            });
+
+            rows.forEach(row => tbody.appendChild(row));
         };
 
-        // ============================================
-        // ROW CLICK TO VIEW TICKET
-        // ============================================
-        const tableRows = document.querySelectorAll('#ticketsBody tr');
-        tableRows.forEach(row => {
-            const viewBtn = row.querySelector('.btn-view');
+        // ---- Row Click Navigation ----
+        document.querySelectorAll('#ticketsBody tr').forEach(row => {
+            const viewBtn = row.querySelector('.btn-action-view');
             if (viewBtn) {
                 row.addEventListener('click', function(e) {
-                    if (!e.target.closest('.btn-view') && !e.target.closest('.btn-attachment')) {
-                        const link = this.querySelector('.btn-view');
-                        if (link) {
-                            window.location.href = link.href;
-                        }
+                    if (!e.target.closest('.btn-action-view') &&
+                        !e.target.closest('.btn-icon-attach') &&
+                        !e.target.closest('a')) {
+                        const link = this.querySelector('.btn-action-view');
+                        if (link) window.location.href = link.href;
                     }
                 });
                 row.style.cursor = 'pointer';
             }
         });
 
-        console.log('✅ All Tickets page loaded successfully');
-        console.log('📊 AJAX cascading Unit → Department filter active');
-        console.log('🔍 Real-time search and sorting enabled');
+        // ---- Theme Sync ----
+        function syncThemeStyles() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            document.querySelectorAll('.filter-item .input-field, .filter-item .select-field').forEach(el => {
+                if (isDark) {
+                    el.style.backgroundColor = 'rgba(255,255,255,0.04)';
+                    el.style.borderColor = 'rgba(255,255,255,0.06)';
+                    el.style.color = '#E8EDF5';
+                } else {
+                    el.style.backgroundColor = '';
+                    el.style.borderColor = '';
+                    el.style.color = '';
+                }
+            });
+        }
+
+        const themeToggle = document.getElementById('themeToggleFloating');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => setTimeout(syncThemeStyles, 100));
+        }
+
+        const observer = new MutationObserver(syncThemeStyles);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+        setTimeout(syncThemeStyles, 200);
     });
 </script>
 {% endblock %}

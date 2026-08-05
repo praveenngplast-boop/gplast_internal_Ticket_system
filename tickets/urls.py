@@ -57,6 +57,7 @@ urlpatterns = [
     # =========================================================================
     # AJAX ENDPOINTS
     # =========================================================================
+    path('ajax/get-units/', views.get_units, name='get_units'),
     path('ajax/get-departments/', views.get_departments_by_unit, name='get_departments_by_unit'),
     path('ajax/get-employee/', views.get_employee_details, name='get_employee_details'),
     path('ajax/get-employees-by-department/', views.get_employees_by_department, name='get_employees_by_department'),

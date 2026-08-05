@@ -3,69 +3,116 @@
 {% block title %}Employee Dashboard - GPLAST{% endblock %}
 
 {% block extra_head %}
-<!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Centralized Charts -->
-<script src="{% static 'js/charts.js' %}"></script>
 <style>
-    /* ============================================
-       Dashboard Container Animation
-    ============================================ */
+    :root {
+        --chart-text-color: #1A2A6C;
+        --chart-grid-color: rgba(0, 0, 0, 0.06);
+        --chart-border-color: #E8EDF5;
+        --card-bg: #FFFFFF;
+        --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+        --shadow-md: 0 4px 24px rgba(0,0,0,0.10);
+        --brand-orange: #FF6B00;
+        --brand-gradient: linear-gradient(135deg, #FF6B00, #FF8C38);
+        --status-open: #22C55E;
+        --status-assigned: #3B82F6;
+        --status-hold: #F59E0B;
+        --status-escalated: #8B5CF6;
+        --status-closed: #94A3B8;
+        --status-critical: #EF4444;
+        --text-primary: #1A2A6C;
+        --text-secondary: #4A5A7A;
+        --text-muted: #8A9AB8;
+        --bg-card: #FFFFFF;
+        --bg-secondary: #F8FAFF;
+        --border-color: #E8EDF5;
+        --border-light: #F0F4FF;
+    }
+
+    [data-theme="dark"] {
+        --chart-text-color: #E8EDF5;
+        --chart-grid-color: rgba(255, 255, 255, 0.06);
+        --chart-border-color: rgba(255, 255, 255, 0.08);
+        --card-bg: #1A1A2E;
+        --shadow-sm: 0 2px 12px rgba(0,0,0,0.3);
+        --shadow-md: 0 4px 24px rgba(0,0,0,0.4);
+        --text-primary: #E8EDF5;
+        --text-secondary: #A8B8D8;
+        --text-muted: #6A7A9A;
+        --bg-card: #1A1A2E;
+        --bg-secondary: rgba(255, 255, 255, 0.03);
+        --border-color: rgba(255, 255, 255, 0.08);
+        --border-light: rgba(255, 255, 255, 0.04);
+    }
+
     .dashboard-container {
-        animation-name: fadeInUp;
-        animation-duration: 0.6s;
-        animation-timing-function: ease;
+        animation: fadeInUp 0.6s ease;
         padding: 0 0.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
     @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ============================================
-       Header Styles
-    ============================================ */
-    .text-primary {
-        color: var(--brand-orange) !important;
+    .text-primary { color: var(--brand-orange) !important; }
+    .text-muted { color: var(--text-muted) !important; }
+    .text-success { color: var(--status-open) !important; }
+    .text-danger { color: var(--status-critical) !important; }
+
+    /* Header */
+    .dashboard-header {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
     }
 
-    .text-muted {
-        color: var(--text-muted) !important;
+    .dashboard-header:hover {
+        box-shadow: var(--shadow-md);
     }
 
-    .text-success {
-        color: var(--status-open) !important;
+    .header-title {
+        font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+        font-weight: 700;
+        color: var(--text-primary);
+        font-family: 'Fraunces', serif;
     }
 
-    .text-danger {
-        color: var(--status-critical) !important;
+    .header-subtitle {
+        font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+        color: var(--text-secondary);
     }
 
-    .text-secondary {
-        color: var(--text-secondary) !important;
+    .dept-badge {
+        display: inline-block;
+        background: rgba(255, 107, 0, 0.08);
+        border: 1px solid rgba(255, 107, 0, 0.12);
+        border-radius: 50px;
+        padding: 0.2rem 0.8rem;
+        font-size: 0.7rem;
+        color: var(--brand-orange);
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
     }
 
-    /* ============================================
-       BUTTONS - FIXED FOR LIGHT/DARK MODE
-    ============================================ */
+    .dept-badge i { margin-right: 0.4rem; color: var(--brand-orange); }
+
+    /* Buttons */
     .btn-primary-custom {
         background: var(--brand-gradient) !important;
         border: none !important;
         color: #FFFFFF !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.4s ease;
         border-radius: 50px !important;
         padding: 0.5rem 1.5rem !important;
         font-size: 0.9rem !important;
         font-weight: 500 !important;
-        position: relative;
-        overflow: hidden;
         font-family: 'Inter', sans-serif;
         display: inline-flex;
         align-items: center;
@@ -74,35 +121,9 @@
         box-shadow: 0 4px 16px rgba(255, 107, 0, 0.25) !important;
     }
 
-    .btn-primary-custom::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: all 0.6s ease;
-    }
-
-    .btn-primary-custom:hover::before {
-        width: 300px;
-        height: 300px;
-    }
-
     .btn-primary-custom:hover {
-        transform: translateY(-3px) scale(1.03) !important;
+        transform: translateY(-3px) !important;
         box-shadow: 0 8px 30px rgba(255, 107, 0, 0.35) !important;
-        color: #FFFFFF !important;
-    }
-
-    .btn-primary-custom:active {
-        transform: scale(0.95) !important;
-    }
-
-    .btn-primary-custom i {
         color: #FFFFFF !important;
     }
 
@@ -111,10 +132,10 @@
         border: 2px solid var(--brand-orange) !important;
         color: var(--brand-orange) !important;
         border-radius: 50px !important;
-        padding: 0.4rem 1.2rem !important;
-        font-size: 0.8rem !important;
+        padding: 0.3rem 1rem !important;
+        font-size: 0.75rem !important;
         font-weight: 500 !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.4s ease;
         font-family: 'Inter', sans-serif;
         display: inline-flex;
         align-items: center;
@@ -126,36 +147,429 @@
         background: var(--brand-gradient) !important;
         color: #FFFFFF !important;
         border-color: transparent !important;
-        transform: translateY(-3px) scale(1.03) !important;
-        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.25) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.25) !important;
     }
 
-    .btn-outline-custom:hover i {
+    .btn-outline-custom:hover i { color: #FFFFFF !important; }
+    .btn-outline-custom i { color: var(--brand-orange) !important; transition: color 0.3s ease; }
+
+    .btn-view {
+        padding: 0.2rem 0.8rem !important;
+        border-radius: 50px !important;
+        font-size: 0.65rem !important;
+        font-weight: 600 !important;
+        transition: all 0.4s ease !important;
+        background: var(--brand-gradient) !important;
+        color: #FFFFFF !important;
+        border: 2px solid transparent !important;
+        white-space: nowrap !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        text-decoration: none !important;
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.2) !important;
+        min-width: 55px !important;
+        justify-content: center !important;
+    }
+
+    .btn-view:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.35) !important;
         color: #FFFFFF !important;
     }
 
-    .btn-outline-custom:active {
-        transform: scale(0.95) !important;
+    /* KPI Cards */
+    .kpi-card {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 14px !important;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        padding: 0.75rem 1rem !important;
+        color: var(--text-primary) !important;
+        box-shadow: var(--shadow-sm);
+        height: 100%;
+        min-height: 80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
-    .btn-outline-custom i {
-        color: var(--brand-orange) !important;
-        transition: color 0.3s ease;
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--brand-gradient);
+        opacity: 0;
+        transition: all 0.4s ease;
     }
 
-    .btn-outline-custom:hover i {
+    .kpi-card:hover::before { opacity: 1; }
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+        border-color: rgba(255, 107, 0, 0.2) !important;
+    }
+    .kpi-card:active { transform: scale(0.95) !important; }
+
+    .kpi-value {
+        font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+        font-weight: 700;
+        line-height: 1.2;
+        transition: all 0.3s ease;
+        color: var(--text-primary) !important;
+    }
+
+    .kpi-card:hover .kpi-value { transform: scale(1.05); }
+
+    .kpi-label {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin-top: 0.15rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .kpi-label i { color: var(--text-muted) !important; }
+
+    .kpi-open .kpi-value { color: var(--status-open) !important; }
+    .kpi-assigned .kpi-value { color: var(--status-assigned) !important; }
+    .kpi-hold .kpi-value { color: var(--status-hold) !important; }
+    .kpi-escalated .kpi-value { color: var(--status-escalated) !important; }
+    .kpi-closed .kpi-value { color: var(--status-closed) !important; }
+    .kpi-critical .kpi-value { color: var(--status-critical) !important; }
+    .kpi-total .kpi-value { color: var(--text-primary) !important; }
+
+    .kpi-critical {
+        border-color: rgba(239, 68, 68, 0.2) !important;
+        animation: criticalPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes criticalPulse {
+        0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
+        50% { border-color: rgba(239, 68, 68, 0.4); }
+    }
+
+    .click-hint {
+        position: absolute;
+        bottom: 6px;
+        right: 10px;
+        font-size: 0.45rem;
+        color: var(--text-muted);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .kpi-card:hover .click-hint { opacity: 0.6; }
+
+    .kpi-filter-badge {
+        position: absolute;
+        top: 6px;
+        right: 10px;
+        font-size: 0.45rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 50px;
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
+        border: 1px solid rgba(255, 107, 0, 0.1);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .kpi-card:hover .kpi-filter-badge { opacity: 1; }
+
+    /* Chart Cards */
+    .panel-card {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-color) !important;
+        box-shadow: var(--shadow-sm) !important;
+        transition: all 0.4s ease;
+        border-radius: 16px !important;
+        overflow: hidden;
+        height: 100%;
+        min-height: 350px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .panel-card:hover {
+        box-shadow: var(--shadow-md) !important;
+        transform: translateY(-4px);
+        border-color: rgba(255, 107, 0, 0.15) !important;
+    }
+
+    .glass-header {
+        background: rgba(255, 107, 0, 0.03) !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        padding: 0.6rem 1.25rem;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .glass-header h6 {
+        color: var(--text-primary) !important;
+        font-weight: 700 !important;
+        font-family: 'Fraunces', serif;
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    .glass-header h6 i { color: var(--brand-orange) !important; }
+
+    .card-body {
+        padding: 0.75rem 1rem;
+        background: transparent;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        width: 100%;
+        flex: 1;
+        min-height: 220px;
+        max-height: 280px;
+        padding: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .chart-wrapper canvas {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        cursor: pointer;
+    }
+
+    .chart-wrapper::after {
+        content: 'Click segments →';
+        position: absolute;
+        bottom: 4px;
+        right: 8px;
+        font-size: 0.45rem;
+        color: var(--text-muted);
+        opacity: 0.2;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .chart-wrapper:hover::after { opacity: 0.5; }
+
+    .chart-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 180px;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .chart-empty i { font-size: 2rem; color: var(--brand-orange); opacity: 0.3; margin-bottom: 0.5rem; }
+    .chart-empty p { font-size: 0.8rem; margin: 0; font-family: 'Inter', sans-serif; }
+
+    /* Table */
+    .table {
+        color: var(--text-primary) !important;
+        background: transparent !important;
+        margin-bottom: 0;
+    }
+
+    .table > :not(caption) > * > * {
+        background: transparent !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    .table-hover-zoom tbody tr {
+        transition: all 0.4s ease;
+        cursor: pointer;
+        background: transparent !important;
+    }
+
+    .table-hover-zoom tbody tr:hover {
+        transform: scale(1.01) translateY(-2px);
+        background: rgba(255, 107, 0, 0.04) !important;
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.05);
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 0.5rem 0.4rem;
+        font-size: 0.75rem;
+        border-color: var(--border-color) !important;
+        color: var(--text-primary) !important;
+        background: transparent !important;
+    }
+
+    .table th {
+        padding: 0.5rem 0.4rem;
+        font-size: 0.55rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+        border-bottom: 2px solid rgba(255, 107, 0, 0.12) !important;
+        white-space: nowrap;
+        color: var(--text-secondary) !important;
+        background: transparent !important;
+        border-top: none !important;
+    }
+
+    /* Badges */
+    .badge-custom {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .badge-custom:hover { transform: scale(1.05); }
+
+    .badge-status-open { background: var(--status-open); color: white; }
+    .badge-status-assigned { background: var(--status-assigned); color: white; }
+    .badge-status-hold { background: var(--status-hold); color: white; }
+    .badge-status-escalated { background: var(--status-escalated); color: white; }
+    .badge-status-closed { background: var(--status-closed); color: white; }
+
+    /* Contact Card */
+    .contact-card {
+        background: var(--brand-gradient) !important;
+        border: none !important;
+        border-radius: 16px !important;
+        overflow: hidden;
+        position: relative;
         color: #FFFFFF !important;
+        height: 100%;
+        min-height: 200px;
     }
 
-    /* View All Button in Modal */
+    .contact-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -30%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        animation: shimmerFloat 8s ease-in-out infinite;
+    }
+
+    @keyframes shimmerFloat {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(-30px, 20px) scale(1.2); }
+    }
+
+    .contact-card .card-body {
+        position: relative;
+        z-index: 1;
+        padding: 1.5rem !important;
+    }
+
+    .contact-card hr { border-color: rgba(255, 255, 255, 0.15) !important; }
+    .contact-card a { color: #FFFFFF !important; text-decoration: none; transition: all 0.3s ease; }
+    .contact-card a:hover { text-decoration: underline; opacity: 0.8; }
+    .contact-card .text-white-50 { color: rgba(255, 255, 255, 0.6) !important; }
+    .contact-card .fs-5 { font-size: 1rem !important; color: #FFFFFF !important; }
+
+    /* Modal */
+    .modal-content {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 16px !important;
+        box-shadow: var(--shadow-md) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--border-color) !important;
+        background: rgba(255, 107, 0, 0.03) !important;
+        border-radius: 16px 16px 0 0 !important;
+        padding: 1rem 1.5rem !important;
+    }
+
+    .modal-header .modal-title {
+        color: var(--text-primary) !important;
+        font-weight: 700 !important;
+        font-family: 'Fraunces', serif !important;
+        font-size: 1.1rem !important;
+    }
+
+    .modal-header .modal-title i { color: var(--brand-orange) !important; }
+    .modal-header .modal-title #drillDownStatusLabel { color: var(--brand-orange) !important; }
+
+    .modal-body {
+        padding: 1.25rem !important;
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--border-color) !important;
+        background: rgba(255, 107, 0, 0.02) !important;
+        border-radius: 0 0 16px 16px !important;
+        padding: 0.75rem 1.5rem !important;
+    }
+
+    .btn-close-custom {
+        background: var(--bg-secondary) !important;
+        border: 2px solid var(--border-color) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 50px !important;
+        padding: 0.3rem 1.2rem !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    .btn-close-custom:hover {
+        background: var(--bg-card) !important;
+        border-color: var(--brand-orange) !important;
+        color: var(--text-primary) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    .btn-close-custom i { color: var(--text-muted) !important; transition: color 0.3s ease; }
+    .btn-close-custom:hover i { color: var(--brand-orange) !important; }
+
     .btn-view-all {
         background: var(--brand-gradient) !important;
         border: none !important;
         color: #FFFFFF !important;
-        padding: 0.5rem 1.5rem !important;
+        padding: 0.3rem 1.2rem !important;
         border-radius: 50px !important;
         font-weight: 600 !important;
-        font-size: 0.85rem !important;
+        font-size: 0.8rem !important;
         transition: all 0.3s ease !important;
         font-family: 'Inter', sans-serif !important;
         display: inline-flex !important;
@@ -171,47 +585,8 @@
         color: #FFFFFF !important;
     }
 
-    .btn-view-all i {
-        color: #FFFFFF !important;
-    }
+    .btn-view-all i { color: #FFFFFF !important; }
 
-    /* Close Button in Modal - FIXED FOR BOTH MODES */
-    .btn-close-custom {
-        background: var(--bg-secondary) !important;
-        border: 2px solid var(--border-color) !important;
-        color: var(--text-secondary) !important;
-        border-radius: 50px !important;
-        padding: 0.4rem 1.5rem !important;
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
-        transition: all 0.3s ease !important;
-        text-decoration: none !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        font-family: 'Inter', sans-serif !important;
-    }
-
-    .btn-close-custom:hover {
-        background: var(--bg-card) !important;
-        border-color: var(--brand-orange) !important;
-        color: var(--text-primary) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.1) !important;
-    }
-
-    .btn-close-custom i {
-        color: var(--text-muted) !important;
-        transition: color 0.3s ease;
-    }
-
-    .btn-close-custom:hover i {
-        color: var(--brand-orange) !important;
-    }
-
-    /* ============================================
-       FIX: Modal Close Button - VISIBLE IN BOTH MODES
-    ============================================ */
     .modal-header .btn-close {
         color: var(--text-primary) !important;
         opacity: 0.7 !important;
@@ -247,760 +622,104 @@
         border-color: var(--brand-orange) !important;
     }
 
-    .modal-header .btn-close:focus {
-        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.2) !important;
-        outline: none !important;
-    }
-
-    /* Dark mode specific close button */
-    [data-theme="dark"] .modal-header .btn-close {
-        color: rgba(255, 255, 255, 0.8) !important;
-    }
-
-    [data-theme="dark"] .modal-header .btn-close::before {
-        color: rgba(255, 255, 255, 0.8) !important;
-    }
-
-    [data-theme="dark"] .modal-header .btn-close:hover {
-        background: rgba(255, 107, 0, 0.15) !important;
-        border-color: var(--brand-orange) !important;
-    }
-
-    [data-theme="dark"] .modal-header .btn-close:focus {
-        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.3) !important;
-    }
-
-    /* Light mode specific close button */
-    :root:not([data-theme="dark"]) .modal-header .btn-close {
-        color: rgba(0, 0, 0, 0.7) !important;
-    }
-
-    :root:not([data-theme="dark"]) .modal-header .btn-close::before {
-        color: rgba(0, 0, 0, 0.7) !important;
-    }
-
-    :root:not([data-theme="dark"]) .modal-header .btn-close:hover {
-        background: rgba(255, 107, 0, 0.08) !important;
-        border-color: var(--brand-orange) !important;
-    }
-
-    /* ============================================
-       FIX: View Button - VISIBLE WITH BORDER
-    ============================================ */
-    .btn-view {
-        padding: 0.25rem 0.8rem !important;
-        border-radius: 50px !important;
-        font-size: 0.7rem !important;
-        font-weight: 600 !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        background: var(--brand-gradient) !important;
-        color: #FFFFFF !important;
-        border: 2px solid transparent !important;
-        white-space: nowrap !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-        text-decoration: none !important;
-        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.2) !important;
-        min-width: 60px !important;
-        justify-content: center !important;
-    }
-
-    .btn-view:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.35) !important;
-        color: #FFFFFF !important;
-        border-color: rgba(255, 255, 255, 0.3) !important;
-    }
-
-    .btn-view:active {
-        transform: scale(0.95) !important;
-    }
-
-    .btn-view i {
-        font-size: 0.65rem !important;
-        color: #FFFFFF !important;
-    }
-
-    /* Light mode view button */
-    :root:not([data-theme="dark"]) .btn-view {
-        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.25) !important;
-    }
-
-    :root:not([data-theme="dark"]) .btn-view:hover {
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.4) !important;
-    }
-
-    /* Dark mode view button */
-    [data-theme="dark"] .btn-view {
-        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.15) !important;
-        border-color: rgba(255, 255, 255, 0.05) !important;
-    }
-
-    [data-theme="dark"] .btn-view:hover {
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3) !important;
-        border-color: rgba(255, 107, 0, 0.3) !important;
-    }
-
-    /* ============================================
-       Department Badge
-    ============================================ */
-    .dept-badge {
-        display: inline-block;
-        background: rgba(255, 107, 0, 0.08);
-        border: 1px solid rgba(255, 107, 0, 0.12);
-        border-radius: 50px;
-        padding: 0.2rem 0.8rem;
-        font-size: 0.7rem;
-        color: var(--brand-orange);
-        font-weight: 600;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .dept-badge i {
-        margin-right: 0.4rem;
-        color: var(--brand-orange);
-    }
-
-    /* ============================================
-       KPI Cards - Animated with Click Effect
-    ============================================ */
-    .kpi-card {
-        background: var(--bg-card) !important;
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--border-color) !important;
-        border-radius: 16px !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-        animation: cardSlideUp 0.5s ease;
-        cursor: pointer;
-        padding: 1rem !important;
-        color: var(--text-primary) !important;
-    }
-
-    .kpi-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--brand-gradient);
-        opacity: 0;
-        transition: all 0.4s ease;
-    }
-
-    .kpi-card:hover::before {
-        opacity: 1;
-    }
-
-    .kpi-card:hover {
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 8px 40px rgba(255, 107, 0, 0.1);
-        border-color: rgba(255, 107, 0, 0.25) !important;
-    }
-
-    .kpi-card:active {
-        transform: scale(0.95) !important;
-    }
-
-    .kpi-card .click-hint {
-        position: absolute;
-        bottom: 8px;
-        right: 12px;
-        font-size: 0.55rem;
-        color: var(--text-muted);
-        opacity: 0;
-        transition: all 0.3s ease;
-    }
-
-    .kpi-card:hover .click-hint {
-        opacity: 0.7;
-    }
-
-    .kpi-card:nth-child(1) { animation-delay: 0.05s; }
-    .kpi-card:nth-child(2) { animation-delay: 0.1s; }
-    .kpi-card:nth-child(3) { animation-delay: 0.15s; }
-    .kpi-card:nth-child(4) { animation-delay: 0.2s; }
-    .kpi-card:nth-child(5) { animation-delay: 0.25s; }
-    .kpi-card:nth-child(6) { animation-delay: 0.3s; }
-    .kpi-card:nth-child(7) { animation-delay: 0.35s; }
-
-    @keyframes cardSlideUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .kpi-value {
-        font-size: clamp(1.5rem, 2.5vw, 2rem);
-        font-weight: 700;
-        line-height: 1.2;
-        transition: all 0.3s ease;
-        color: var(--text-primary) !important;
-    }
-
-    .kpi-card:hover .kpi-value {
-        transform: scale(1.05);
-    }
-
-    .kpi-label {
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-secondary);
-        font-weight: 500;
-        margin-top: 0.25rem;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .kpi-label i {
-        color: var(--text-muted) !important;
-    }
-
-    /* KPI Color Variants */
-    .kpi-open .kpi-value { color: var(--status-open) !important; }
-    .kpi-assigned .kpi-value { color: var(--status-assigned) !important; }
-    .kpi-hold .kpi-value { color: var(--status-hold) !important; }
-    .kpi-escalated .kpi-value { color: var(--status-escalated) !important; }
-    .kpi-closed .kpi-value { color: var(--status-closed) !important; }
-    .kpi-critical .kpi-value { color: var(--status-critical) !important; }
-
-    .kpi-critical {
-        border-color: rgba(239, 68, 68, 0.2) !important;
-        animation: criticalPulse 3s ease-in-out infinite;
-    }
-
-    @keyframes criticalPulse {
-        0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
-        50% { border-color: rgba(239, 68, 68, 0.4); }
-    }
-
-    .kpi-critical .kpi-value {
-        animation: criticalNumber 2s ease-in-out infinite;
-    }
-
-    @keyframes criticalNumber {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-    }
-
-    /* ============================================
-       Chart Cards - Animated
-    ============================================ */
-    .panel-card {
-        background: var(--bg-card) !important;
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--border-color) !important;
-        box-shadow: var(--shadow-sm) !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 16px !important;
-        overflow: hidden;
-        animation: cardFadeIn 0.6s ease;
-        height: 100%;
-        min-height: 320px;
-        max-height: 400px;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .panel-card:nth-child(1) { animation-delay: 0.1s; }
-    .panel-card:nth-child(2) { animation-delay: 0.15s; }
-
-    @keyframes cardFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .panel-card:hover {
-        box-shadow: var(--shadow-md) !important;
-        transform: translateY(-4px);
-        border-color: rgba(255, 107, 0, 0.2) !important;
-    }
-
-    .glass-header {
-        background: rgba(255, 107, 0, 0.03) !important;
-        border-bottom: 1px solid var(--border-color) !important;
-        backdrop-filter: blur(10px);
-        padding: 0.6rem 1.25rem;
-        flex-shrink: 0;
-    }
-
-    .glass-header h5 {
-        color: var(--text-primary) !important;
-        font-weight: 700 !important;
-        font-family: 'Fraunces', serif;
-        font-size: 0.9rem;
-        margin: 0;
-    }
-
-    .glass-header h5 i {
-        color: var(--brand-orange) !important;
-    }
-
-    .glass-header h6 {
-        color: var(--text-primary) !important;
-        font-weight: 700;
-        font-size: 0.8rem;
-        letter-spacing: 0.3px;
-        margin: 0;
-        font-family: 'Fraunces', serif;
-    }
-
-    .glass-header h6 i {
-        color: var(--brand-orange) !important;
-    }
-
-    .card-body {
-        padding: 0.75rem 1rem;
-        background: transparent;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    /* ============================================
-       Chart Container - Clickable
-    ============================================ */
-    .chart-container {
-        position: relative;
-        width: 100%;
-        flex: 1;
-        min-height: 180px;
-        max-height: 240px;
-        padding: 0.15rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .chart-container:hover {
-        background: rgba(255, 107, 0, 0.02);
-        box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.05);
-    }
-
-    .chart-container canvas {
-        max-width: 100% !important;
-        max-height: 100% !important;
-        width: 100% !important;
-        height: 100% !important;
-        cursor: pointer;
-    }
-
-    .chart-container::after {
-        content: 'Click on chart segments to filter →';
-        position: absolute;
-        bottom: 6px;
-        right: 10px;
-        font-size: 0.5rem;
-        color: var(--text-muted);
-        opacity: 0.25;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-    }
-
-    .chart-container:hover::after {
-        opacity: 0.6;
-    }
-
-    .chart-container canvas:hover {
-        cursor: pointer;
-    }
-
-    /* Chart empty state */
-    .chart-empty {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 160px;
-        color: var(--text-muted);
-        text-align: center;
-        padding: 1rem;
-    }
-
-    .chart-empty i {
-        font-size: 2rem;
-        color: var(--brand-orange);
-        opacity: 0.3;
-        margin-bottom: 0.5rem;
-    }
-
-    .chart-empty p {
-        font-size: 0.8rem;
-        margin: 0;
-        font-family: 'Inter', sans-serif;
-    }
-
-    /* ============================================
-       Table Styles
-    ============================================ */
-    .table {
-        color: var(--text-primary) !important;
-        background: transparent !important;
-    }
-
-    .table > :not(caption) > * > * {
-        background: transparent !important;
-        color: var(--text-primary) !important;
-        border-color: var(--border-color) !important;
-    }
-
-    .table-hover-zoom tbody tr {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-        background: transparent !important;
-    }
-
-    .table-hover-zoom tbody tr:hover {
-        transform: scale(1.01) translateY(-2px);
-        background: rgba(255, 107, 0, 0.04) !important;
-        box-shadow: 0 4px 25px rgba(255, 107, 0, 0.06);
-    }
-
-    .table td {
-        vertical-align: middle;
-        padding: 0.5rem 0.4rem;
-        font-size: 0.78rem;
-        border-color: var(--border-color) !important;
-        color: var(--text-primary) !important;
-        background: transparent !important;
-    }
-
-    .table th {
-        padding: 0.5rem 0.4rem;
-        font-size: 0.6rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 700;
-        border-bottom: 2px solid rgba(255, 107, 0, 0.15) !important;
-        white-space: nowrap;
-        color: var(--text-secondary) !important;
-        background: transparent !important;
-        border-top: none !important;
-    }
-
-    .table-hover > tbody > tr:hover {
-        background: rgba(255, 107, 0, 0.04) !important;
-        color: var(--text-primary) !important;
-    }
-
-    /* ============================================
-       Badge Styles
-    ============================================ */
-    .badge-custom {
-        display: inline-block;
-        padding: 0.2rem 0.6rem;
-        border-radius: 50px;
-        font-size: 0.6rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-    }
-
-    .badge-custom:hover {
-        transform: scale(1.05);
-    }
-
-    .badge-status-open {
-        background: var(--status-open);
-        color: white;
-    }
-
-    .badge-status-assigned {
-        background: var(--status-assigned);
-        color: white;
-    }
-
-    .badge-status-hold {
-        background: var(--status-hold);
-        color: white;
-    }
-
-    .badge-status-escalated {
-        background: var(--status-escalated);
-        color: white;
-    }
-
-    .badge-status-closed {
-        background: var(--status-closed);
-        color: white;
-    }
-
-    .badge-priority {
-        padding: 0.15rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.2rem;
-    }
-
-    .badge-priority-critical {
-        background: #EF4444;
-        color: white;
-        animation: pulseCritical 2s ease-in-out infinite;
-    }
-
-    @keyframes pulseCritical {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-        50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-    }
-
-    .badge-priority-high {
-        background: #F59E0B;
-        color: #1A1A2E;
-    }
-
-    .badge-priority-medium {
-        background: #3B82F6;
-        color: white;
-    }
-
-    .badge-priority-low {
-        background: #94A3B8;
-        color: white;
-    }
-
-    .badge-priority i {
-        font-size: 0.35rem;
-    }
-
-    /* ============================================
-       Contact Card
-    ============================================ */
-    .contact-card {
-        background: var(--brand-gradient) !important;
-        border: none !important;
-        border-radius: 16px !important;
-        overflow: hidden;
-        position: relative;
-        color: #FFFFFF !important;
-    }
-
-    .contact-card::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -30%;
-        width: 300px;
-        height: 300px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 50%;
-        animation: shimmerFloat 8s ease-in-out infinite;
-    }
-
-    @keyframes shimmerFloat {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        50% { transform: translate(-30px, 20px) scale(1.2); }
-    }
-
-    .contact-card .card-body {
-        position: relative;
-        z-index: 1;
-        padding: 1.5rem !important;
-    }
-
-    .contact-card hr {
-        border-color: rgba(255, 255, 255, 0.15) !important;
-    }
-
-    .contact-card a {
-        color: #FFFFFF !important;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-
-    .contact-card a:hover {
-        text-decoration: underline;
-        opacity: 0.8;
-    }
-
-    .contact-card .text-white-50 {
-        color: rgba(255, 255, 255, 0.6) !important;
-    }
-
-    .contact-card .fs-5 {
-        font-size: 1rem !important;
-        color: #FFFFFF !important;
-    }
-
-    /* ============================================
-       KPI Filter Badge
-    ============================================ */
-    .kpi-filter-badge {
-        position: absolute;
-        top: 8px;
-        right: 12px;
-        font-size: 0.5rem;
-        padding: 0.15rem 0.6rem;
-        border-radius: 50px;
-        background: rgba(255, 107, 0, 0.08);
-        color: var(--brand-orange);
-        border: 1px solid rgba(255, 107, 0, 0.12);
-        opacity: 0;
-        transition: all 0.3s ease;
-    }
-    .kpi-card:hover .kpi-filter-badge {
-        opacity: 1;
-    }
-
-    /* ============================================
-       Modal Loading Spinner
-    ============================================ */
     .modal-loading {
         text-align: center;
         padding: 2rem;
         color: var(--text-muted);
     }
-    .modal-loading i {
-        font-size: 2rem;
-        color: var(--brand-orange);
-        margin-bottom: 1rem;
-        display: block;
-    }
-    .modal-loading p {
-        color: var(--text-secondary) !important;
-        font-family: 'Inter', sans-serif;
+    .modal-loading i { font-size: 2rem; color: var(--brand-orange); margin-bottom: 1rem; display: block; }
+    .modal-loading p { color: var(--text-secondary) !important; font-family: 'Inter', sans-serif; }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .panel-card { min-height: 300px; }
+        .chart-wrapper { min-height: 200px; max-height: 240px; }
+        .dashboard-header { padding: 1rem; }
+        .kpi-card { min-height: 70px; padding: 0.6rem 0.8rem !important; }
+        .kpi-value { font-size: 1.2rem; }
     }
 
-    /* ============================================
-       MODAL - FIXED FOR BOTH LIGHT & DARK MODES
-    ============================================ */
-    .modal-content {
-        background: var(--bg-card) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 16px !important;
-        box-shadow: var(--shadow-lg) !important;
-        color: var(--text-primary) !important;
+    @media (max-width: 768px) {
+        .dashboard-container { padding: 0 0.25rem; }
+        .dashboard-header { padding: 0.75rem; flex-direction: column; align-items: stretch; }
+        .dashboard-header .d-flex { flex-direction: column; gap: 0.5rem; }
+        .dashboard-header .btn { width: 100%; justify-content: center; }
+        .panel-card { min-height: 280px; }
+        .chart-wrapper { min-height: 180px; max-height: 210px; }
+        .kpi-card { min-height: 65px; padding: 0.5rem 0.6rem !important; }
+        .kpi-value { font-size: 1.1rem; }
+        .kpi-label { font-size: 0.55rem; }
+        .kpi-filter-badge { font-size: 0.4rem; padding: 0.05rem 0.3rem; top: 4px; right: 6px; }
+        .click-hint { font-size: 0.4rem; bottom: 4px; right: 6px; }
+        .table td { font-size: 0.7rem; padding: 0.3rem 0.2rem; }
+        .table th { font-size: 0.5rem; padding: 0.3rem 0.2rem; }
+        .badge-custom { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
+        .btn-view { font-size: 0.55rem; padding: 0.15rem 0.5rem; min-width: 45px; }
+        .btn-view i { display: none; }
+        .glass-header { padding: 0.4rem 0.75rem; }
+        .glass-header h6 { font-size: 0.75rem; }
+        .card-body { padding: 0.5rem; }
+        .contact-card { min-height: 180px; }
+        .contact-card .card-body { padding: 1rem !important; }
+        .contact-card h4 { font-size: 1rem; }
+        .contact-card .fs-5 { font-size: 0.9rem !important; }
+        .modal-body { padding: 0.75rem !important; max-height: 350px; }
+        .modal-body .table td { font-size: 0.6rem !important; padding: 0.2rem !important; }
+        .modal-header .modal-title { font-size: 0.95rem !important; }
+        .chart-wrapper::after { content: 'Click →'; font-size: 0.4rem; bottom: 3px; right: 6px; }
+        .chart-empty { min-height: 140px; }
+        .chart-empty i { font-size: 1.5rem; }
+        .chart-empty p { font-size: 0.7rem; }
     }
 
-    .modal-header {
-        border-bottom: 1px solid var(--border-color) !important;
-        background: rgba(255, 107, 0, 0.03) !important;
-        border-radius: 16px 16px 0 0 !important;
-        padding: 1rem 1.5rem !important;
+    @media (max-width: 576px) {
+        .kpi-card { min-height: 60px; padding: 0.4rem 0.5rem !important; }
+        .kpi-value { font-size: 0.95rem; }
+        .kpi-label { font-size: 0.5rem; letter-spacing: 0.3px; }
+        .panel-card { min-height: 260px; }
+        .chart-wrapper { min-height: 160px; max-height: 190px; }
+        .header-title { font-size: 1rem; }
+        .header-subtitle { font-size: 0.7rem; }
+        .dept-badge { font-size: 0.6rem; padding: 0.1rem 0.6rem; }
+        .btn-primary-custom { font-size: 0.75rem !important; padding: 0.3rem 1rem !important; }
+        .btn-outline-custom { font-size: 0.65rem !important; padding: 0.2rem 0.8rem !important; }
+        .table td { font-size: 0.6rem; padding: 0.2rem 0.15rem; }
+        .table th { font-size: 0.45rem; padding: 0.2rem 0.15rem; }
     }
 
-    .modal-header .modal-title {
-        color: var(--text-primary) !important;
-        font-weight: 700 !important;
-        font-family: 'Fraunces', serif !important;
-        font-size: 1.1rem !important;
+    @media (max-width: 400px) {
+        .kpi-card { min-height: 55px; padding: 0.3rem 0.4rem !important; }
+        .kpi-value { font-size: 0.8rem; }
+        .kpi-label { font-size: 0.45rem; }
+        .panel-card { min-height: 240px; }
+        .chart-wrapper { min-height: 140px; max-height: 170px; }
+        .chart-wrapper::after { content: ''; }
+        .kpi-filter-badge { display: none; }
+        .click-hint { display: none; }
     }
 
-    .modal-header .modal-title i {
-        color: var(--brand-orange) !important;
+    /* Dark Mode Specific */
+    [data-theme="dark"] .kpi-card {
+        border-color: rgba(255, 255, 255, 0.06) !important;
     }
 
-    .modal-header .modal-title #drillDownStatusLabel {
-        color: var(--brand-orange) !important;
+    [data-theme="dark"] .kpi-card:hover {
+        border-color: rgba(255, 107, 0, 0.3) !important;
     }
 
-    .modal-body {
-        padding: 1.25rem !important;
-        background: var(--bg-secondary) !important;
-        color: var(--text-primary) !important;
-        max-height: 500px;
-        overflow-y: auto;
+    [data-theme="dark"] .panel-card {
+        border-color: rgba(255, 255, 255, 0.06) !important;
     }
 
-    .modal-body .table {
-        color: var(--text-primary) !important;
-        background: transparent !important;
+    [data-theme="dark"] .panel-card:hover {
+        border-color: rgba(255, 107, 0, 0.2) !important;
     }
 
-    .modal-body .table > :not(caption) > * > * {
-        background: transparent !important;
-        color: var(--text-primary) !important;
-        border-color: var(--border-color) !important;
-    }
-
-    .modal-body .table th {
-        color: var(--text-secondary) !important;
-        border-bottom: 2px solid var(--border-color) !important;
-        background: transparent !important;
-        font-size: 0.6rem !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-    }
-
-    .modal-body .table td {
-        color: var(--text-primary) !important;
-        border-color: var(--border-color) !important;
-        font-size: 0.75rem !important;
-        vertical-align: middle !important;
-        padding: 0.5rem !important;
-        background: transparent !important;
-    }
-
-    .modal-body .table tr {
-        background: transparent !important;
-        transition: all 0.3s ease !important;
-    }
-
-    .modal-body .table tr:hover {
+    [data-theme="dark"] .glass-header {
         background: rgba(255, 107, 0, 0.04) !important;
     }
 
-    .modal-body .badge-custom {
-        font-size: 0.55rem !important;
-        padding: 0.15rem 0.5rem !important;
-    }
-
-    .modal-body .btn-view {
-        padding: 0.15rem 0.6rem !important;
-        font-size: 0.6rem !important;
-        min-width: 50px !important;
-    }
-
-    .modal-footer {
-        border-top: 1px solid var(--border-color) !important;
-        background: rgba(255, 107, 0, 0.02) !important;
-        border-radius: 0 0 16px 16px !important;
-        padding: 0.75rem 1.5rem !important;
-    }
-
-    /* Empty state in modal */
-    .modal-body .empty-state {
-        color: var(--text-muted) !important;
-    }
-
-    .modal-body .empty-state i {
-        color: var(--brand-orange) !important;
-        opacity: 0.3 !important;
-    }
-
-    .modal-body .empty-state p {
-        color: var(--text-muted) !important;
-    }
-
-    /* Dark mode modal overrides */
     [data-theme="dark"] .modal-content {
-        background: var(--bg-card) !important;
         border-color: rgba(255, 255, 255, 0.08) !important;
     }
 
@@ -1018,407 +737,65 @@
         background: rgba(255, 107, 0, 0.03) !important;
     }
 
-    [data-theme="dark"] .modal-body .table td {
-        border-color: rgba(255, 255, 255, 0.06) !important;
+    [data-theme="dark"] .modal-header .btn-close::before {
+        color: rgba(255, 255, 255, 0.8) !important;
     }
 
-    [data-theme="dark"] .modal-body .table th {
-        border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    [data-theme="dark"] .modal-header .btn-close:hover {
+        background: rgba(255, 107, 0, 0.15) !important;
+        border-color: var(--brand-orange) !important;
     }
 
-    [data-theme="dark"] .modal-body .table tr:hover {
-        background: rgba(255, 107, 0, 0.06) !important;
+    [data-theme="dark"] .btn-close-custom {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: var(--text-secondary) !important;
     }
 
-    /* Light mode modal overrides */
-    :root:not([data-theme="dark"]) .modal-content {
-        background: var(--bg-card) !important;
-        border-color: rgba(0, 0, 0, 0.08) !important;
+    [data-theme="dark"] .btn-close-custom:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: var(--brand-orange) !important;
+        color: var(--text-primary) !important;
     }
 
-    :root:not([data-theme="dark"]) .modal-header {
-        background: rgba(255, 107, 0, 0.03) !important;
-        border-bottom-color: rgba(0, 0, 0, 0.06) !important;
+    [data-theme="dark"] .btn-close-custom i {
+        color: var(--text-muted) !important;
     }
 
-    :root:not([data-theme="dark"]) .modal-body {
-        background: var(--bg-secondary) !important;
-    }
-
-    :root:not([data-theme="dark"]) .modal-footer {
-        border-top-color: rgba(0, 0, 0, 0.06) !important;
-        background: rgba(255, 107, 0, 0.01) !important;
-    }
-
-    /* ============================================
-       Responsive Styles
-    ============================================ */
-    @media (max-width: 992px) {
-        .col-lg-8,
-        .col-lg-4 {
-            flex: 0 0 100%;
-            max-width: 100%;
-        }
-
-        .kpi-value {
-            font-size: 1.5rem;
-        }
-        
-        .col-lg-4 {
-            margin-bottom: 1rem;
-        }
-        
-        .chart-container {
-            min-height: 160px;
-            max-height: 200px;
-        }
-        
-        .panel-card {
-            min-height: 280px;
-            max-height: 360px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .kpi-value {
-            font-size: 1.3rem;
-        }
-
-        .kpi-label {
-            font-size: 0.6rem;
-        }
-
-        .kpi-card {
-            padding: 0.75rem !important;
-        }
-
-        .col-6.col-md-3.col-lg-2 {
-            flex: 0 0 33.333%;
-            max-width: 33.333%;
-        }
-
-        .btn-primary-custom {
-            font-size: 0.8rem !important;
-            padding: 0.4rem 1rem !important;
-        }
-
-        .d-flex.justify-content-between {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .d-flex.justify-content-between .btn {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .glass-header {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .glass-header .btn {
-            width: 100%;
-        }
-
-        .table-responsive {
-            font-size: 0.8rem;
-        }
-
-        .table td, .table th {
-            padding: 0.4rem 0.3rem;
-        }
-
-        .contact-card .card-body {
-            padding: 1.25rem !important;
-        }
-
-        .contact-card h4 {
-            font-size: 1.1rem;
-        }
-
-        .chart-container {
-            min-height: 150px;
-            max-height: 190px;
-        }
-
-        .chart-container::after {
-            content: 'Click segments →';
-            font-size: 0.4rem;
-            bottom: 4px;
-            right: 8px;
-        }
-
-        .panel-card {
-            min-height: 260px;
-            max-height: 340px;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .col-6.col-md-3.col-lg-2 {
-            flex: 0 0 50%;
-            max-width: 50%;
-        }
-
-        .kpi-value {
-            font-size: 1.1rem;
-        }
-
-        .kpi-label {
-            font-size: 0.55rem;
-        }
-
-        .kpi-card {
-            padding: 0.5rem !important;
-        }
-
-        h2.fw-bold {
-            font-size: 1.2rem !important;
-        }
-
-        .btn-primary-custom {
-            font-size: 0.75rem !important;
-            padding: 0.3rem 0.8rem !important;
-        }
-
-        .panel-card {
-            margin-bottom: 0.75rem;
-            min-height: 240px;
-            max-height: 320px;
-        }
-
-        .table {
-            font-size: 0.7rem;
-        }
-
-        .badge-custom {
-            font-size: 0.5rem;
-            padding: 0.15rem 0.4rem;
-        }
-
-        .btn-view {
-            font-size: 0.6rem;
-            padding: 0.15rem 0.5rem;
-        }
-
-        .btn-view i {
-            display: none;
-        }
-
-        .contact-card h4 {
-            font-size: 1rem;
-        }
-
-        .contact-card .fs-5 {
-            font-size: 0.9rem !important;
-        }
-
-        .dept-badge {
-            font-size: 0.6rem;
-            padding: 0.15rem 0.6rem;
-        }
-
-        .modal-body {
-            padding: 1rem !important;
-            max-height: 400px;
-        }
-        .modal-body .table {
-            font-size: 0.7rem !important;
-        }
-        .modal-body .table td {
-            font-size: 0.65rem !important;
-            padding: 0.3rem 0.2rem !important;
-        }
-
-        .modal-footer .btn-close-custom {
-            font-size: 0.75rem !important;
-            padding: 0.3rem 1rem !important;
-        }
-        .modal-footer .btn-view-all {
-            font-size: 0.75rem !important;
-            padding: 0.3rem 1rem !important;
-        }
-        
-        .chart-container {
-            min-height: 130px;
-            max-height: 170px;
-        }
-
-        .chart-container::after {
-            content: 'Click →';
-            font-size: 0.35rem;
-            bottom: 3px;
-            right: 6px;
-        }
-
-        .glass-header {
-            padding: 0.4rem 0.75rem;
-        }
-
-        .glass-header h5 {
-            font-size: 0.75rem;
-        }
-        .glass-header h6 {
-            font-size: 0.7rem;
-        }
-        .card-body {
-            padding: 0.4rem;
-        }
-        .chart-empty {
-            min-height: 120px;
-        }
-        .chart-empty i {
-            font-size: 1.5rem;
-        }
-        .chart-empty p {
-            font-size: 0.7rem;
-        }
-    }
-
-    @media (max-width: 400px) {
-        .col-6.col-md-3.col-lg-2 {
-            flex: 0 0 50%;
-            max-width: 50%;
-        }
-
-        .kpi-value {
-            font-size: 0.9rem;
-        }
-
-        .kpi-label {
-            font-size: 0.5rem;
-        }
-
-        .kpi-card {
-            padding: 0.4rem !important;
-        }
-
-        .kpi-card .click-hint {
-            font-size: 0.4rem;
-            bottom: 4px;
-            right: 6px;
-        }
-
-        .panel-card {
-            min-height: 220px;
-            max-height: 280px;
-        }
-        .chart-container {
-            min-height: 110px;
-            max-height: 150px;
-        }
-        .btn-primary-custom {
-            font-size: 0.65rem !important;
-            padding: 0.25rem 0.6rem !important;
-        }
-    }
-
-    /* ============================================
-       Scrollbar Styling
-    ============================================ */
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: var(--bg-secondary);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: var(--brand-gradient);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--brand-orange);
-    }
-
-    /* ============================================
-       Text Selection
-    ============================================ */
-    ::selection {
-        background: var(--brand-orange);
-        color: white;
-    }
-
-    /* ============================================
-       Icon Pulse Animation
-    ============================================ */
-    @keyframes pulseIcon {
-        0%, 100% { transform: scale(1); opacity: 0.5; }
-        50% { transform: scale(1.2); opacity: 1; }
-    }
-
-    /* ============================================
-       Chart Loading Animation
-    ============================================ */
-    .chart-container canvas {
-        opacity: 0;
-        animation: chartFadeIn 0.8s ease forwards;
-    }
-
-    .chart-container canvas:nth-child(1) { animation-delay: 0.2s; }
-    .chart-container canvas:nth-child(2) { animation-delay: 0.3s; }
-
-    @keyframes chartFadeIn {
-        from {
-            opacity: 0;
-            transform: scale(0.9);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-
-    /* ============================================
-       DARK MODE OVERRIDES
-    ============================================ */
-    [data-theme="dark"] .kpi-card {
-        border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-
-    [data-theme="dark"] .kpi-card:hover {
-        border-color: rgba(255, 107, 0, 0.3) !important;
-    }
-
-    [data-theme="dark"] .panel-card {
-        border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-
-    [data-theme="dark"] .panel-card:hover {
-        border-color: rgba(255, 107, 0, 0.25) !important;
+    [data-theme="dark"] .btn-close-custom:hover i {
+        color: var(--brand-orange) !important;
     }
 
     [data-theme="dark"] .contact-card {
         background: var(--brand-gradient) !important;
     }
 
-    [data-theme="dark"] .glass-header {
-        background: rgba(255, 107, 0, 0.05) !important;
-    }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: #E55A00; }
+
+    ::selection { background: var(--brand-orange); color: white; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
-    <!-- Header Section -->
-    <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h2 class="fw-bold mb-1" style="font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--text-primary);">
+                <h1 class="header-title">
                     <i class="fa-solid fa-gauge-high me-2" style="color: var(--brand-orange);"></i>
                     Welcome, {{ user.username|upper }}
-                </h2>
-                <p class="mb-0" style="font-size: clamp(0.75rem, 1.5vw, 0.9rem); color: var(--text-secondary);">
+                </h1>
+                <p class="header-subtitle">
                     <i class="fa-regular fa-clock me-1"></i>
                     Manage and monitor your IT & ERP support requests
                     <span class="badge rounded-pill ms-2 px-2 py-1" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); background: rgba(255, 107, 0, 0.08); color: var(--brand-orange); border: 1px solid rgba(255, 107, 0, 0.1);">
-                        <i class="fa-regular fa-circle-check me-1"></i>
-                        Active
+                        <i class="fa-regular fa-circle-check me-1"></i>Active
                     </span>
                 </p>
                 {% if show_department_tickets and department_name and unit_name %}
@@ -1440,132 +817,100 @@
         </div>
     </div>
 
-    <!-- Department Tickets KPI Section -->
-    <div class="row g-3 mb-3">
+    <!-- KPI Section -->
+    <div class="row g-3 mb-4">
         <div class="col-12">
             <h6 class="fw-bold mb-2" style="color: var(--text-primary); font-size: 0.8rem; font-family: 'Fraunces', serif;">
-                <i class="fa-solid fa-building me-2" style="color: var(--brand-orange);"></i>
-                {% if show_department_tickets %}
-                    Department Tickets Dashboard
-                    <span class="badge rounded-pill ms-2" style="background: rgba(255, 107, 0, 0.08); color: var(--brand-orange); font-size: 0.6rem; border: 1px solid rgba(255, 107, 0, 0.1);">
-                        {{ unit_name }} - {{ department_name }}
-                    </span>
-                {% else %}
-                    My Tickets Dashboard
-                {% endif %}
+                <i class="fa-solid fa-chart-simple me-2" style="color: var(--brand-orange);"></i>
+                {% if show_department_tickets %}Department{% else %}My{% endif %} Tickets Overview
             </h6>
         </div>
     </div>
 
-    <!-- KPI Cards Section with Drill Down -->
     <div class="row g-3 mb-4">
-        <!-- Total Tickets -->
-        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
-            <div class="card kpi-card p-3 h-100" onclick="drillDownTickets('all')">
-                <div class="kpi-value text-secondary">{{ kpis.total }}</div>
-                <div class="kpi-label">
-                    <i class="fa-regular fa-circle-check me-1"></i>
-                    Total Tickets
-                </div>
-                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+        <!-- Total -->
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            <div class="kpi-card kpi-total" onclick="drillDownTickets('all')">
+                <div class="kpi-value">{{ kpis.total }}</div>
+                <div class="kpi-label"><i class="fa-regular fa-circle-check me-1"></i>Total</div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View All</span>
             </div>
         </div>
-        <!-- Open Tickets -->
-        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-open p-3 h-100" onclick="drillDownTickets('Open')">
+        <!-- Open -->
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            <div class="kpi-card kpi-open" onclick="drillDownTickets('Open')">
                 <div class="kpi-value">{{ kpis.open }}</div>
-                <div class="kpi-label">
-                    <i class="fa-regular fa-circle me-1"></i>
-                    Open
-                </div>
-                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <div class="kpi-label"><i class="fa-regular fa-circle me-1"></i>Open</div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Open</span>
             </div>
         </div>
-        <!-- Assigned Tickets -->
-        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-assigned p-3 h-100" onclick="drillDownTickets('Assigned')">
+        <!-- Assigned -->
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            <div class="kpi-card kpi-assigned" onclick="drillDownTickets('Assigned')">
                 <div class="kpi-value">{{ kpis.assigned }}</div>
-                <div class="kpi-label">
-                    <i class="fa-solid fa-user-check me-1"></i>
-                    Assigned
-                </div>
-                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <div class="kpi-label"><i class="fa-solid fa-user-check me-1"></i>Assigned</div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Assigned</span>
             </div>
         </div>
-        <!-- Hold Tickets -->
-        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-hold p-3 h-100" onclick="drillDownTickets('Hold')">
+        <!-- Hold -->
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            <div class="kpi-card kpi-hold" onclick="drillDownTickets('Hold')">
                 <div class="kpi-value">{{ kpis.hold }}</div>
-                <div class="kpi-label">
-                    <i class="fa-solid fa-pause me-1"></i>
-                    Hold
-                </div>
-                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <div class="kpi-label"><i class="fa-solid fa-pause me-1"></i>Hold</div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Hold</span>
             </div>
         </div>
-        <!-- Escalated Tickets -->
-        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-escalated p-3 h-100" onclick="drillDownTickets('Escalated')">
+        <!-- Escalated -->
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            <div class="kpi-card kpi-escalated" onclick="drillDownTickets('Escalated')">
                 <div class="kpi-value">{{ kpis.escalated }}</div>
-                <div class="kpi-label">
-                    <i class="fa-solid fa-cloud-arrow-up me-1"></i>
-                    Escalated
-                </div>
-                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <div class="kpi-label"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Escalated</div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Escalated</span>
             </div>
         </div>
-        <!-- Closed Tickets -->
-        <div class="col-6 col-sm-6 col-md-3 col-lg-2">
-            <div class="card kpi-card kpi-closed p-3 h-100" onclick="drillDownTickets('Closed')">
+        <!-- Closed -->
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            <div class="kpi-card kpi-closed" onclick="drillDownTickets('Closed')">
                 <div class="kpi-value">{{ kpis.closed }}</div>
-                <div class="kpi-label">
-                    <i class="fa-solid fa-circle-check me-1"></i>
-                    Closed
-                </div>
-                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <div class="kpi-label"><i class="fa-solid fa-circle-check me-1"></i>Closed</div>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Closed</span>
             </div>
         </div>
-        <!-- Critical Priority Tickets -->
-        <div class="col-12 mt-3">
-            <div class="card kpi-card kpi-critical p-3" onclick="drillDownTickets('Critical')">
+        <!-- Critical -->
+        <div class="col-12">
+            <div class="kpi-card kpi-critical" onclick="drillDownTickets('Critical')">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="kpi-value">{{ kpis.critical }}</div>
-                        <div class="kpi-label">
-                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
-                            Critical Priority Tickets
-                        </div>
+                        <div class="kpi-label"><i class="fa-solid fa-triangle-exclamation me-1"></i>Critical Priority</div>
                     </div>
                     <i class="fa-solid fa-triangle-exclamation text-danger fa-2x opacity-50" style="animation: pulseIcon 2s ease-in-out infinite;"></i>
                 </div>
-                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click to view</span>
+                <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Critical</span>
             </div>
         </div>
     </div>
 
-    <!-- Charts Section - Department Status & Priority Distribution -->
+    <!-- Charts Section -->
     <div class="row g-4 mb-4">
-        <!-- Chart 1: Department Status Distribution -->
-        <div class="col-12 col-md-6">
-            <div class="card panel-card h-100">
-                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0">
-                        <i class="fa-solid fa-chart-pie me-2"></i>
-                        Department Ticket Status
-                    </h6>
+        <!-- Chart 1: Status -->
+        <div class="col-12 col-lg-6">
+            <div class="panel-card">
+                <div class="glass-header">
+                    <h6><i class="fa-solid fa-chart-pie me-2"></i>Ticket Status Distribution</h6>
                     <a href="{% url 'my_tickets' %}" class="btn-outline-custom btn-sm">
                         <i class="fa-solid fa-arrow-right"></i> View All
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" id="deptStatusChartContainer" onclick="handleStatusChartClick()">
+                    <div class="chart-wrapper" id="deptStatusChartWrapper" onclick="handleStatusChartClick()">
                         <canvas id="deptStatusChart"></canvas>
                         <div id="deptStatusEmpty" class="chart-empty" style="display:none;">
                             <i class="fa-solid fa-chart-pie"></i>
@@ -1576,20 +921,17 @@
             </div>
         </div>
 
-        <!-- Chart 2: Department Priority Distribution -->
-        <div class="col-12 col-md-6">
-            <div class="card panel-card h-100">
-                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0">
-                        <i class="fa-solid fa-flag me-2"></i>
-                        Department Priority Distribution
-                    </h6>
+        <!-- Chart 2: Priority -->
+        <div class="col-12 col-lg-6">
+            <div class="panel-card">
+                <div class="glass-header">
+                    <h6><i class="fa-solid fa-flag me-2"></i>Priority Distribution</h6>
                     <a href="{% url 'my_tickets' %}" class="btn-outline-custom btn-sm">
                         <i class="fa-solid fa-arrow-right"></i> View All
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" id="deptPriorityChartContainer" onclick="handlePriorityChartClick()">
+                    <div class="chart-wrapper" id="deptPriorityChartWrapper" onclick="handlePriorityChartClick()">
                         <canvas id="deptPriorityChart"></canvas>
                         <div id="deptPriorityEmpty" class="chart-empty" style="display:none;">
                             <i class="fa-solid fa-flag"></i>
@@ -1601,20 +943,15 @@
         </div>
     </div>
 
-    <!-- Latest Tickets & Contact Section -->
+    <!-- Table & Contact -->
     <div class="row g-4">
-        <!-- Latest Tickets Table -->
+        <!-- Table -->
         <div class="col-12 col-lg-8">
-            <div class="card panel-card">
-                <div class="card-header glass-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fa-solid fa-clock-rotate-left me-2"></i>
-                        {% if show_department_tickets %}
-                            Recent Department Tickets
-                        {% else %}
-                            Recent Tickets
-                        {% endif %}
-                    </h5>
+            <div class="panel-card">
+                <div class="glass-header">
+                    <h6><i class="fa-solid fa-clock-rotate-left me-2"></i>
+                        {% if show_department_tickets %}Recent Department{% else %}Recent{% endif %} Tickets
+                    </h6>
                     <a href="{% url 'my_tickets' %}" class="btn-outline-custom btn-sm">
                         View All <i class="fa-solid fa-arrow-right ms-1"></i>
                     </a>
@@ -1624,50 +961,50 @@
                         <table class="table table-hover table-hover-zoom align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th class="ps-4">Ticket Number</th>
-                                    <th>Created Date</th>
+                                    <th class="ps-3">Ticket</th>
+                                    <th>Date</th>
                                     <th>Subject</th>
                                     <th>Status</th>
-                                    <th class="pe-4 text-center">Action</th>
+                                    <th class="pe-3 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for ticket in latest_tickets %}
-                                    <tr>
-                                        <td class="ps-4 fw-bold" style="color: var(--brand-orange); font-size: clamp(0.7rem, 0.9vw, 0.8rem);">
-                                            <i class="fa-regular fa-hashtag me-1" style="color: var(--brand-orange); font-size: 0.5rem;"></i>
-                                            {{ ticket.ticket_number }}
-                                        </td>
-                                        <td style="color: var(--text-secondary); font-size: clamp(0.6rem, 0.8vw, 0.7rem);">
-                                            <i class="fa-regular fa-calendar me-1" style="font-size: 0.4rem;"></i>
-                                            {{ ticket.created_at|date:"d-m-Y" }}
-                                            <span class="d-block" style="color: var(--text-muted); font-size: 0.6rem;">{{ ticket.created_at|date:"h:i A" }}</span>
-                                        </td>
-                                        <td class="fw-medium text-truncate" style="max-width: 150px; font-size: clamp(0.65rem, 0.8vw, 0.75rem);" title="{{ ticket.subject }}">
-                                            <i class="fa-regular fa-message me-1" style="color: var(--brand-orange); font-size: 0.4rem;"></i>
-                                            {{ ticket.subject }}
-                                        </td>
-                                        <td>
-                                            <span class="badge-custom badge-status-{{ ticket.status|lower }}">
-                                                <i class="fa-solid fa-circle me-1" style="font-size: 0.3rem;"></i>
-                                                {{ ticket.status }}
-                                            </span>
-                                        </td>
-                                        <td class="pe-4 text-center">
-                                            <a href="{% url 'ticket_detail' ticket.id %}" class="btn-view">
-                                                <i class="fa-solid fa-eye"></i>View
-                                            </a>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td class="ps-3 fw-bold" style="color: var(--brand-orange); font-size: clamp(0.65rem, 0.8vw, 0.75rem);">
+                                        <i class="fa-regular fa-hashtag me-1" style="color: var(--brand-orange); font-size: 0.45rem;"></i>
+                                        {{ ticket.ticket_number }}
+                                    </td>
+                                    <td style="color: var(--text-secondary); font-size: clamp(0.55rem, 0.7vw, 0.65rem);">
+                                        <i class="fa-regular fa-calendar me-1" style="font-size: 0.35rem;"></i>
+                                        {{ ticket.created_at|date:"d-m-Y" }}
+                                        <span class="d-block" style="color: var(--text-muted); font-size: 0.5rem;">{{ ticket.created_at|date:"h:i A" }}</span>
+                                    </td>
+                                    <td class="fw-medium text-truncate" style="max-width: 120px; font-size: clamp(0.6rem, 0.75vw, 0.7rem);" title="{{ ticket.subject }}">
+                                        <i class="fa-regular fa-message me-1" style="color: var(--brand-orange); font-size: 0.35rem;"></i>
+                                        {{ ticket.subject }}
+                                    </td>
+                                    <td>
+                                        <span class="badge-custom badge-status-{{ ticket.status|lower }}">
+                                            <i class="fa-solid fa-circle me-1" style="font-size: 0.25rem;"></i>
+                                            {{ ticket.status }}
+                                        </span>
+                                    </td>
+                                    <td class="pe-3 text-center">
+                                        <a href="{% url 'ticket_detail' ticket.id %}" class="btn-view">
+                                            <i class="fa-solid fa-eye"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
                                 {% empty %}
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4">
-                                            <div class="empty-state">
-                                                <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25"></i>
-                                                <p style="color: var(--text-muted);">No tickets found in your department.</p>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="chart-empty">
+                                            <i class="fa-solid fa-receipt"></i>
+                                            <p>No tickets found in your department.</p>
+                                        </div>
+                                    </td>
+                                </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -1676,35 +1013,35 @@
             </div>
         </div>
 
-        <!-- Contact Info Support Card - FIXED with correct field names -->
+        <!-- Contact -->
         <div class="col-12 col-lg-4">
-            <div class="card contact-card">
-                <div class="card-body p-4 text-center">
+            <div class="contact-card">
+                <div class="card-body text-center">
                     <i class="fa-solid fa-headset fa-3x mb-3 text-white-50"></i>
                     <h4 class="fw-bold mb-1" style="color: #FFFFFF;">Need Help?</h4>
-                    <p class="small text-white-50 mb-4">contact our internal ERP support helpdesk</p>
-                    
+                    <p class="small text-white-50 mb-4">Contact our internal ERP support helpdesk</p>
+
                     <hr class="my-3">
-                    
+
                     {% if contact %}
-                        <div class="text-start">
-                            <p class="mb-3 d-flex align-items-center">
-                                <i class="fa-solid fa-user-tie me-3 text-white-50"></i>
-                                <span>
-                                    <span class="d-block small text-white-50">Assigned ERP Executive</span>
-                                    <strong class="fs-5" style="color: #FFFFFF;">{{ contact.admin_name|default:"Not Set" }}</strong>
-                                </span>
-                            </p>
-                            <p class="mb-3 d-flex align-items-center">
-                                <i class="fa-solid fa-envelope me-3 text-white-50"></i>
-                                <span>
-                                    <span class="d-block small text-white-50">Email Address</span>
-                                    <a href="mailto:{{ contact.admin_email }}" class="fw-bold" style="color: #FFFFFF;">{{ contact.admin_email|default:"Not Set" }}</a>
-                                </span>
-                            </p>
-                        </div>
+                    <div class="text-start">
+                        <p class="mb-3 d-flex align-items-center">
+                            <i class="fa-solid fa-user-tie me-3 text-white-50"></i>
+                            <span>
+                                <span class="d-block small text-white-50">Assigned ERP Executive</span>
+                                <strong class="fs-5" style="color: #FFFFFF;">{{ contact.admin_name|default:"Not Set" }}</strong>
+                            </span>
+                        </p>
+                        <p class="mb-3 d-flex align-items-center">
+                            <i class="fa-solid fa-envelope me-3 text-white-50"></i>
+                            <span>
+                                <span class="d-block small text-white-50">Email Address</span>
+                                <a href="mailto:{{ contact.admin_email }}" class="fw-bold" style="color: #FFFFFF;">{{ contact.admin_email|default:"Not Set" }}</a>
+                            </span>
+                        </p>
+                    </div>
                     {% else %}
-                        <p class="mb-0 text-white-50">IT support details not configured yet.</p>
+                    <p class="mb-0 text-white-50">IT support details not configured yet.</p>
                     {% endif %}
                 </div>
             </div>
@@ -1712,14 +1049,12 @@
     </div>
 </div>
 
-<!-- ============================================
-     DRILL DOWN MODAL - FIXED WITH BACKDROP CLEANUP
-============================================ -->
+<!-- Modal -->
 <div class="modal fade" id="drillDownModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="drillDownModalTitle">
+                <h5 class="modal-title">
                     <i class="fa-solid fa-list-ul me-2"></i>
                     Tickets - <span id="drillDownStatusLabel">All</span>
                 </h5>
@@ -1736,55 +1071,38 @@
                     <i class="fa-solid fa-xmark me-1"></i>Close
                 </button>
                 <a href="{% url 'my_tickets' %}" class="btn-view-all" id="drillDownViewAllBtn">
-                    <i class="fa-solid fa-arrow-right me-1"></i>View All in My Tickets
+                    <i class="fa-solid fa-arrow-right me-1"></i>View All
                 </a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ============================================
-     CHART DATA - Pass from Django view
-============================================ -->
 {{ charts_data|json_script:"charts-data" }}
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ============================================
-        // FORCE CLEANUP FUNCTION - FIX FOR BACKDROP BLUR
-        // ============================================
+
         function forceCleanupBackdrops() {
             document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
                 backdrop.remove();
             });
             document.body.classList.remove('modal-open');
-            document.body.classList.remove('modal-show');
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
-            document.body.style.position = '';
-            document.documentElement.style.overflow = '';
-            console.log('Backdrops cleaned up');
         }
 
-        // ============================================
-        // LOAD CHART DATA
-        // ============================================
+        // Load Chart Data
         let chartsData = {};
         try {
             const dataElement = document.getElementById('charts-data');
             if (dataElement) {
                 chartsData = JSON.parse(dataElement.textContent);
-                console.log('📊 Chart data loaded:', chartsData);
-            } else {
-                console.warn('⚠️ No charts-data element found');
             }
         } catch (e) {
-            console.error('❌ Error parsing chart data:', e);
+            console.error('Error parsing chart data:', e);
         }
 
-        // ============================================
-        // CHART CLICK HANDLERS
-        // ============================================
         window.handleStatusChartClick = function() {
             const statusData = chartsData.dept_status || {};
             const statusLabels = Object.keys(statusData);
@@ -1801,29 +1119,20 @@
             }
         };
 
-        // ============================================
-        // ANIMATE KPI VALUES ON LOAD
-        // ============================================
+        // Animate KPI values
         const kpiValues = document.querySelectorAll('.kpi-value');
         kpiValues.forEach((value, index) => {
             const originalText = value.textContent;
             if (!isNaN(parseInt(originalText))) {
                 value.textContent = '0';
-                value.style.transition = 'all 0.5s ease';
-                
                 setTimeout(() => {
                     value.textContent = originalText;
                     value.style.transform = 'scale(1.1)';
-                    setTimeout(() => {
-                        value.style.transform = 'scale(1)';
-                    }, 300);
+                    setTimeout(() => { value.style.transform = 'scale(1)'; }, 300);
                 }, 200 + (index * 80));
             }
         });
 
-        // ============================================
-        // CHECK DATA AVAILABILITY
-        // ============================================
         const hasStatusData = chartsData.dept_status && Object.keys(chartsData.dept_status).length > 0;
         const hasPriorityData = chartsData.dept_priority && Object.keys(chartsData.dept_priority).length > 0;
 
@@ -1832,9 +1141,10 @@
         const statusCanvas = document.getElementById('deptStatusChart');
         const priorityCanvas = document.getElementById('deptPriorityChart');
 
-        // ============================================
-        // CHART 1: STATUS DISTRIBUTION - WITH LEGEND
-        // ============================================
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#E8EDF5' : '#1A2A6C';
+
+        // Chart 1: Status
         if (statusCanvas && hasStatusData) {
             const statusLabels = Object.keys(chartsData.dept_status);
             const statusValues = Object.values(chartsData.dept_status);
@@ -1845,9 +1155,8 @@
                 'Escalated': '#8B5CF6',
                 'Closed': '#94A3B8'
             };
-            
             const colors = statusLabels.map(label => statusColors[label] || '#6B7280');
-            
+
             const ctx = statusCanvas.getContext('2d');
             const chart = new Chart(ctx, {
                 type: 'doughnut',
@@ -1856,9 +1165,9 @@
                     datasets: [{
                         data: statusValues,
                         backgroundColor: colors,
-                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#1a202c',
-                        borderWidth: 2,
-                        hoverOffset: 10
+                        borderColor: isDark ? '#1A1A2E' : '#FFFFFF',
+                        borderWidth: 3,
+                        hoverOffset: 12
                     }]
                 },
                 options: {
@@ -1869,12 +1178,13 @@
                             display: true,
                             position: 'bottom',
                             labels: {
-                                font: { family: 'Inter, sans-serif', size: 11 },
-                                padding: 12,
-                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#1A2A6C',
+                                font: { family: 'Inter, sans-serif', size: 11, weight: '500' },
+                                padding: 14,
+                                color: textColor,
                                 usePointStyle: true,
-                                pointStyleWidth: 10,
-                                boxWidth: 12,
+                                pointStyleWidth: 12,
+                                boxWidth: 14,
+                                boxHeight: 14
                             }
                         },
                         tooltip: {
@@ -1898,16 +1208,12 @@
                 }
             });
             statusCanvas.chart = chart;
-            console.log('✅ Status chart rendered with legend');
         } else if (statusCanvas && statusEmpty) {
             statusCanvas.style.display = 'none';
             statusEmpty.style.display = 'flex';
-            console.log('ℹ️ No status data available');
         }
 
-        // ============================================
-        // CHART 2: PRIORITY DISTRIBUTION - WITH LEGEND
-        // ============================================
+        // Chart 2: Priority
         if (priorityCanvas && hasPriorityData) {
             const priorityLabels = Object.keys(chartsData.dept_priority);
             const priorityValues = Object.values(chartsData.dept_priority);
@@ -1917,9 +1223,8 @@
                 'Medium': '#3B82F6',
                 'Low': '#94A3B8'
             };
-            
             const colors = priorityLabels.map(label => priorityColors[label] || '#6B7280');
-            
+
             const ctx = priorityCanvas.getContext('2d');
             const chart = new Chart(ctx, {
                 type: 'pie',
@@ -1928,9 +1233,9 @@
                     datasets: [{
                         data: priorityValues,
                         backgroundColor: colors,
-                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#1a202c',
-                        borderWidth: 2,
-                        hoverOffset: 10
+                        borderColor: isDark ? '#1A1A2E' : '#FFFFFF',
+                        borderWidth: 3,
+                        hoverOffset: 12
                     }]
                 },
                 options: {
@@ -1941,12 +1246,13 @@
                             display: true,
                             position: 'bottom',
                             labels: {
-                                font: { family: 'Inter, sans-serif', size: 11 },
-                                padding: 12,
-                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#1A2A6C',
+                                font: { family: 'Inter, sans-serif', size: 11, weight: '500' },
+                                padding: 14,
+                                color: textColor,
                                 usePointStyle: true,
-                                pointStyleWidth: 10,
-                                boxWidth: 12,
+                                pointStyleWidth: 12,
+                                boxWidth: 14,
+                                boxHeight: 14
                             }
                         },
                         tooltip: {
@@ -1969,26 +1275,15 @@
                 }
             });
             priorityCanvas.chart = chart;
-            console.log('✅ Priority chart rendered with legend');
         } else if (priorityCanvas && priorityEmpty) {
             priorityCanvas.style.display = 'none';
             priorityEmpty.style.display = 'flex';
-            console.log('ℹ️ No priority data available');
         }
 
-        // Make drilldown functions available globally
-        window.drillDownTickets = drillDownTickets;
-        window.drillDownTicketsByPriority = drillDownTicketsByPriority;
-
-        // ============================================
-        // CHART RESIZE HANDLER
-        // ============================================
+        // Chart resize handler
         function resizeCharts() {
-            const canvases = document.querySelectorAll('.chart-container canvas');
-            canvases.forEach(canvas => {
-                if (canvas.chart) {
-                    canvas.chart.resize();
-                }
+            document.querySelectorAll('.chart-wrapper canvas').forEach(canvas => {
+                if (canvas.chart) { canvas.chart.resize(); }
             });
         }
 
@@ -1998,85 +1293,72 @@
             resizeTimeout = setTimeout(resizeCharts, 250);
         });
 
-        // ============================================
-        // MODAL BACKDROP CLEANUP - FIX FOR BLUR
-        // ============================================
-        const modalEl = document.getElementById('drillDownModal');
-        
-        if (modalEl) {
-            modalEl.addEventListener('hidden.bs.modal', function() {
-                forceCleanupBackdrops();
-                console.log('Modal hidden - backdrops cleaned');
-            });
-            
-            modalEl.addEventListener('hide.bs.modal', function() {
-                setTimeout(forceCleanupBackdrops, 50);
-            });
-            
-            modalEl.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    setTimeout(forceCleanupBackdrops, 50);
+        // Theme change handler for charts
+        function updateChartColors() {
+            const isDarkNow = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newColor = isDarkNow ? '#E8EDF5' : '#1A2A6C';
+
+            document.querySelectorAll('.chart-wrapper canvas').forEach(canvas => {
+                if (canvas.chart) {
+                    const chart = canvas.chart;
+                    if (chart.options.plugins && chart.options.plugins.legend) {
+                        chart.options.plugins.legend.labels.color = newColor;
+                        chart.update();
+                    }
                 }
             });
         }
 
-        // ============================================
-        // MUTATION OBSERVER - CLEANUP ROGUE BACKDROPS
-        // ============================================
-        const backdropObserver = new MutationObserver(function() {
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            if (backdrops.length > 1) {
-                backdrops.forEach(function(backdrop, index) {
-                    if (index > 0) {
-                        backdrop.remove();
-                    }
-                });
-            }
-            
-            if (modalEl && !modalEl.classList.contains('show') && document.body.classList.contains('modal-open')) {
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = '';
-                document.body.style.paddingRight = '';
-            }
+        const themeToggleBtn = document.getElementById('themeToggleFloating');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', function() {
+                setTimeout(updateChartColors, 150);
+            });
+        }
+
+        const themeObserver = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'data-theme') {
+                    setTimeout(updateChartColors, 150);
+                }
+            });
         });
-        
-        backdropObserver.observe(document.body, {
-            childList: true,
-            subtree: true,
+        themeObserver.observe(document.documentElement, {
             attributes: true,
-            attributeFilter: ['class', 'style']
+            attributeFilter: ['data-theme']
         });
+
+        // Modal cleanup
+        const modalEl = document.getElementById('drillDownModal');
+        if (modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', function() {
+                forceCleanupBackdrops();
+            });
+            modalEl.addEventListener('hide.bs.modal', function() {
+                setTimeout(forceCleanupBackdrops, 50);
+            });
+        }
+
+        // Make functions global
+        window.drillDownTickets = drillDownTickets;
+        window.drillDownTicketsByPriority = drillDownTicketsByPriority;
 
         console.log('✅ Employee Dashboard loaded');
-        console.log('📊 Status data available:', hasStatusData);
-        console.log('📊 Priority data available:', hasPriorityData);
-        console.log('🔄 Charts will auto-resize on window resize');
-        console.log('🧹 Backdrop cleanup initialized - blur will be removed on modal close');
+        console.log('📊 Status data:', hasStatusData ? 'Available' : 'None');
+        console.log('📊 Priority data:', hasPriorityData ? 'Available' : 'None');
     });
 
-    // ============================================
-    // DRILL DOWN FUNCTIONS WITH BACKDROP CLEANUP
-    // ============================================
-
+    // Drill Down Functions
     function drillDownTickets(status) {
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(function(backdrop) {
-            backdrop.remove();
-        });
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
+        forceCleanupBackdrops();
 
         const modalEl = document.getElementById('drillDownModal');
-        const modal = new bootstrap.Modal(modalEl, {
-            backdrop: 'static',
-            keyboard: true
-        });
-        
+        const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+
         const modalBody = document.getElementById('drillDownModalBody');
         const statusLabel = document.getElementById('drillDownStatusLabel');
         const viewAllBtn = document.getElementById('drillDownViewAllBtn');
-        
+
         const statusMap = {
             'all': 'All Tickets',
             'Open': 'Open Tickets',
@@ -2087,10 +1369,10 @@
             'Critical': 'Critical Priority Tickets'
         };
         statusLabel.textContent = statusMap[status] || status || 'All Tickets';
-        
+
         let filterParam = 'status';
         let filterValue = status;
-        
+
         if (status === 'Critical') {
             filterParam = 'priority';
             filterValue = 'Critical';
@@ -2104,57 +1386,46 @@
         } else {
             viewAllBtn.href = "{% url 'my_tickets' %}";
         }
-        
+
         modalBody.innerHTML = `
             <div class="modal-loading">
                 <i class="fa-solid fa-spinner fa-spin"></i>
                 <p>Loading tickets...</p>
             </div>
         `;
-        
+
         modal.show();
-        
+
         let url = "{% url 'my_tickets' %}?ajax=1";
         if (filterParam && filterValue) {
             url += "&" + filterParam + "=" + encodeURIComponent(filterValue);
         }
         url += "&_=" + Date.now();
-        
-        console.log('🔍 Fetching tickets with URL:', url);
-        
+
         fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Server returned ' + response.status);
-            }
+            if (!response.ok) throw new Error('Server returned ' + response.status);
             return response.json();
         })
         .then(data => {
-            console.log('📊 Response data:', data);
-            if (data.success === false) {
-                throw new Error(data.message || 'Server error occurred');
-            }
+            if (data.success === false) throw new Error(data.message || 'Server error');
             if (data.html) {
                 modalBody.innerHTML = data.html;
                 if (data.count !== undefined) {
-                    statusLabel.textContent = statusMap[status] || status || 'All Tickets';
-                    statusLabel.textContent += ` (${data.count})`;
+                    statusLabel.textContent = (statusMap[status] || status || 'All Tickets') + ` (${data.count})`;
                 }
             } else {
                 modalBody.innerHTML = `
-                    <div class="empty-state text-center py-4">
+                    <div class="text-center py-4" style="color: var(--text-muted);">
                         <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
-                        <p style="color: var(--text-muted);">No tickets found with status: ${statusLabel.textContent}</p>
+                        <p>No tickets found with status: ${statusLabel.textContent}</p>
                     </div>
                 `;
             }
         })
         .catch(error => {
-            console.error('Error fetching tickets:', error);
             modalBody.innerHTML = `
                 <div class="text-center py-4" style="color: #EF4444;">
                     <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
@@ -2169,57 +1440,39 @@
     }
 
     function drillDownTicketsByPriority(priority) {
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(function(backdrop) {
-            backdrop.remove();
-        });
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
+        forceCleanupBackdrops();
 
         const modalEl = document.getElementById('drillDownModal');
-        const modal = new bootstrap.Modal(modalEl, {
-            backdrop: 'static',
-            keyboard: true
-        });
-        
+        const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+
         const modalBody = document.getElementById('drillDownModalBody');
         const statusLabel = document.getElementById('drillDownStatusLabel');
         const viewAllBtn = document.getElementById('drillDownViewAllBtn');
-        
+
         statusLabel.textContent = 'Priority: ' + priority;
         viewAllBtn.href = "{% url 'my_tickets' %}?priority=" + encodeURIComponent(priority);
-        
+
         modalBody.innerHTML = `
             <div class="modal-loading">
                 <i class="fa-solid fa-spinner fa-spin"></i>
                 <p>Loading ${priority} priority tickets...</p>
             </div>
         `;
-        
+
         modal.show();
-        
+
         let url = "{% url 'my_tickets' %}?ajax=1&priority=" + encodeURIComponent(priority);
         url += "&_=" + Date.now();
-        
-        console.log('🔍 Fetching priority tickets with URL:', url);
-        
+
         fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Server returned ' + response.status);
-            }
+            if (!response.ok) throw new Error('Server returned ' + response.status);
             return response.json();
         })
         .then(data => {
-            console.log('📊 Response data:', data);
-            if (data.success === false) {
-                throw new Error(data.message || 'Server error occurred');
-            }
+            if (data.success === false) throw new Error(data.message || 'Server error');
             if (data.html) {
                 modalBody.innerHTML = data.html;
                 if (data.count !== undefined) {
@@ -2227,15 +1480,14 @@
                 }
             } else {
                 modalBody.innerHTML = `
-                    <div class="empty-state text-center py-4">
+                    <div class="text-center py-4" style="color: var(--text-muted);">
                         <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
-                        <p style="color: var(--text-muted);">No ${priority} priority tickets found</p>
+                        <p>No ${priority} priority tickets found</p>
                     </div>
                 `;
             }
         })
         .catch(error => {
-            console.error('Error fetching tickets:', error);
             modalBody.innerHTML = `
                 <div class="text-center py-4" style="color: #EF4444;">
                     <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
@@ -2247,6 +1499,15 @@
                 </div>
             `;
         });
-    }       
+    }
+
+    function forceCleanupBackdrops() {
+        document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+            backdrop.remove();
+        });
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }
 </script>
 {% endblock %}
