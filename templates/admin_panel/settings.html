@@ -1889,10 +1889,17 @@
 </style>
 {% endblock %}
 
+<!-- ==========================================
+CONTENT - Same as before but with updated Dept Employees tab
+========================================== -->
 {% block content %}
+<!-- Toast Container for Notifications -->
 <div class="toast-container-custom" id="toastContainer"></div>
 
 <div class="settings-container">
+    <!-- ==========================================
+    HEADER
+    ========================================== -->
     <div class="settings-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
@@ -1905,7 +1912,11 @@
         </div>
     </div>
 
+    <!-- ==========================================
+    MAIN PANEL
+    ========================================== -->
     <div class="card panel-card shadow-sm">
+        <!-- Tabs Navigation -->
         <div class="settings-tabs-wrapper">
             <div class="settings-tabs" id="settingsTabs" role="tablist">
                 <button class="settings-tab-btn" id="master-tab" data-bs-toggle="tab" data-bs-target="#master-content" type="button">
@@ -1936,10 +1947,15 @@
             </div>
         </div>
 
+        <!-- Tab Content -->
         <div class="card-body">
             <div class="tab-content" id="settingsTabContent">
 
+                <!-- ==========================================
+                TAB 1: MASTER DATA
+                ========================================== -->
                 <div class="tab-pane fade" id="master-content">
+                    <!-- Units Section -->
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-industry"></i>Units</span>
                         <button type="button" class="btn btn-primary-custom btn-sm ms-auto" data-bs-toggle="modal" data-bs-target="#addUnitModal">
@@ -1987,6 +2003,7 @@
                         </table>
                     </div>
 
+                    <!-- Departments Section -->
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-cubes"></i>Departments</span>
                         <button type="button" class="btn btn-primary-custom btn-sm ms-auto" data-bs-toggle="modal" data-bs-target="#addDeptModal">
@@ -2035,6 +2052,9 @@
                     </div>
                 </div>
 
+                <!-- ==========================================
+                TAB 2: COMMUNICATION
+                ========================================== -->
                 <div class="tab-pane fade" id="communication-content">
                     <div class="section-divider"><span class="section-title"><i class="fa-solid fa-headset"></i>Helpdesk Contact</span></div>
                     
@@ -2136,6 +2156,9 @@
                     </div>
                 </div>
 
+                <!-- ==========================================
+                TAB 3: EMPLOYEES
+                ========================================== -->
                 <div class="tab-pane fade" id="employees-content">
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
@@ -2244,13 +2267,18 @@
                                 </tr>
                                 {% empty %}
                                 <tr><td colspan="8" class="text-center py-4 text-muted">No employees found.{% if emp_search %} Try different search.{% endif %}</td></tr>
+                                <tr><td colspan="8" class="text-center py-4 text-muted">No employees found.{% if emp_search %} Try a different search.{% endif %}</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
 
+                <!-- ==========================================
+                TAB 4: CREDENTIALS
+                ========================================== -->
                 <div class="tab-pane fade" id="credentials-content">
+                <div class="tab-pane fade" id="credentials-content" role="tabpanel">
                     <div class="row mb-4">
                         <div class="col-lg-6">
                             <div class="card panel-card h-100">
@@ -2398,6 +2426,9 @@
                     {% endif %}
                 </div>
 
+                <!-- ==========================================
+                TAB 5: DEPARTMENT EMPLOYEES - HIERARCHICAL TREE VIEW
+                ========================================== -->
                 <div class="tab-pane fade" id="dept-employees-content">
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-users"></i>Department-wise Employees</span>
@@ -2408,6 +2439,7 @@
                     </div>
 
                     <div class="tree-table-container" id="deptTreeContainer">
+                        <!-- Tree Sidebar -->
                         <div class="tree-sidebar" id="deptTreeSidebar">
                             <div class="tree-header">
                                 <span>Units &amp; Departments</span>
@@ -2425,6 +2457,7 @@
                                 </div>
                             </div>
                             
+                            <!-- Global Search Box -->
                             <div class="tree-search-box">
                                 <i class="fa-solid fa-search search-icon"></i>
                                 <input type="text" id="treeSearchInput" placeholder="Search departments..." oninput="filterTreeItems(this.value)">
@@ -2436,6 +2469,7 @@
                             <div id="treeList">
                                 {% if credentials_by_unit %}
                                     {% for unit_data in credentials_by_unit %}
+                                    <!-- Unit Level -->
                                     <div class="tree-unit-item" data-unit-id="{{ unit_data.unit.id }}" data-unit-name="{{ unit_data.unit.code }}" onclick="toggleUnit(this, {{ unit_data.unit.id }})">
                                         <div class="tree-icon">
                                             <i class="fa-solid fa-building"></i>
@@ -2447,6 +2481,7 @@
                                         <span class="tree-badge" id="unitBadge-{{ unit_data.unit.id }}">{{ unit_data.credentials|length }}</span>
                                         <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
                                     </div>
+                                    <!-- Department Container (Child) -->
                                     <div class="tree-dept-container" id="deptContainer-{{ unit_data.unit.id }}">
                                         {% for cred in unit_data.credentials %}
                                         <div class="tree-dept-item" data-dept-id="{{ cred.department.id }}" data-unit-id="{{ unit_data.unit.id }}" data-dept-name="{{ cred.department.name }}" onclick="selectDepartment(this, {{ cred.department.id }}, '{{ cred.department.name|escapejs }}', '{{ unit_data.unit.code|escapejs }}')">
@@ -2471,6 +2506,7 @@
                             </div>
                         </div>
 
+                        <!-- Main Table Area -->
                         <div class="tree-table-main">
                             <div class="table-header">
                                 <div class="dept-title">
@@ -2504,6 +2540,10 @@
     </div>
 </div>
 
+<!-- ==========================================
+MODALS (Kept from original)
+========================================== -->
+<!-- Confirm Modal -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -2522,6 +2562,7 @@
     </div>
 </div>
 
+<!-- Add Unit Modal -->
 <div class="modal fade" id="addUnitModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -2545,6 +2586,7 @@
     </div>
 </div>
 
+<!-- Edit Unit Modal -->
 <div class="modal fade" id="editUnitModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -2567,6 +2609,7 @@
     </div>
 </div>
 
+<!-- Add Department Modal -->
 <div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -2590,6 +2633,7 @@
     </div>
 </div>
 
+<!-- Edit Department Modal -->
 <div class="modal fade" id="editDeptModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -2611,6 +2655,7 @@
     </div>
 </div>
 
+<!-- Add Employee Modal -->
 <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
@@ -2622,12 +2667,42 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label><input type="text" name="employee_id" class="form-control" placeholder="EMP001" required><div class="form-text small"><strong>Mandatory</strong></div></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="employee_name" class="form-control" placeholder="JOHN DOE" required><div class="form-text small"><strong>Mandatory</strong></div></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" class="form-control" placeholder="10 digits" maxlength="10" required><div class="form-text small"><strong>Mandatory</strong></div></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Email <span class="text-danger">*</span></label><input type="email" name="email" class="form-control" placeholder="email@company.com" required><div class="form-text small"><strong>Mandatory</strong></div></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Unit</label><select name="unit" class="form-select"><option value="">-- Optional --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }}</option>{% endfor %}</select></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Department</label><select name="department" class="form-select"><option value="">-- Select Unit First --</option></select></div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label>
+                            <input type="text" name="employee_id" class="form-control" placeholder="EMP001" required>
+                            <div class="form-text small"><strong>Mandatory</strong></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Name <span class="text-danger">*</span></label>
+                            <input type="text" name="employee_name" class="form-control" placeholder="JOHN DOE" required>
+                            <div class="form-text small"><strong>Mandatory</strong></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label>
+                            <input type="text" name="mobile" class="form-control" placeholder="10 digits" maxlength="10" required pattern="[0-9]{10}">
+                            <div class="form-text small"><strong>Mandatory - 10 digits only</strong></div>
+                            <div class="form-text text-danger small" id="mobileError" style="display:none;">Please enter exactly 10 digits (0-9)</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control" placeholder="email@company.com" required>
+                            <div class="form-text small"><strong>Mandatory</strong></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Unit</label>
+                            <select name="unit" class="form-select">
+                                <option value="">-- Optional --</option>
+                                {% for u in all_units %}
+                                <option value="{{ u.id }}">{{ u.code }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Department</label>
+                            <select name="department" class="form-select">
+                                <option value="">-- Select Unit First --</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
@@ -2639,6 +2714,7 @@
     </div>
 </div>
 
+<!-- Edit Employee Modal -->
 <div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
@@ -2652,7 +2728,7 @@
                     <div class="row g-3">
                         <div class="col-md-6"><label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label><input type="text" name="employee_id" id="edit_emp_empid" class="form-control" required></div>
                         <div class="col-md-6"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="employee_name" id="edit_emp_name" class="form-control" required></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" id="edit_emp_mobile" class="form-control" maxlength="10" required></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" id="edit_emp_mobile" class="form-control" maxlength="10" required pattern="[0-9]{10}"></div>
                         <div class="col-md-6"><label class="form-label fw-bold">Email <span class="text-danger">*</span></label><input type="email" name="email" id="edit_emp_email" class="form-control" required></div>
                         <div class="col-md-6"><label class="form-label fw-bold">Unit</label><select name="unit" id="edit_emp_unit" class="form-select"><option value="">-- Select --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }}</option>{% endfor %}</select></div>
                         <div class="col-md-6"><label class="form-label fw-bold">Department</label><select name="department" id="edit_emp_dept" class="form-select"><option value="">-- Select --</option>{% for d in departments %}<option value="{{ d.id }}">{{ d.name }} ({{ d.unit.code }})</option>{% endfor %}</select></div>
@@ -2667,6 +2743,7 @@
     </div>
 </div>
 
+<!-- Add Credential Modal -->
 <div class="modal fade" id="addCredentialModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -2691,6 +2768,7 @@
     </div>
 </div>
 
+<!-- Edit Credential Modal -->
 <div class="modal fade" id="editCredentialModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -2718,6 +2796,47 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ============================================
+        // ADD EMPLOYEE MOBILE VALIDATION
+        // ============================================
+        var addEmpMobileInput = document.querySelector('#addEmployeeModal input[name="mobile"]');
+        var addEmpForm = document.querySelector('#addEmployeeModal form');
+        var mobileError = document.getElementById('mobileError');
+        
+        if (addEmpMobileInput && addEmpForm) {
+            // Real-time validation
+            addEmpMobileInput.addEventListener('input', function() {
+                var val = this.value;
+                // Remove any non-digit characters
+                this.value = val.replace(/\D/g, '');
+                
+                // Validate length and digits
+                if (this.value.length > 0 && (this.value.length !== 10 || !/^\d{10}$/.test(this.value))) {
+                    if (mobileError) mobileError.style.display = 'block';
+                    this.style.borderColor = '#EF4444';
+                } else {
+                    if (mobileError) mobileError.style.display = 'none';
+                    this.style.borderColor = '';
+                }
+            });
+            
+            // Form submit validation
+            addEmpForm.addEventListener('submit', function(e) {
+                var mobileVal = addEmpMobileInput.value.trim();
+                if (!/^\d{10}$/.test(mobileVal)) {
+                    e.preventDefault();
+                    if (mobileError) mobileError.style.display = 'block';
+                    addEmpMobileInput.style.borderColor = '#EF4444';
+                    addEmpMobileInput.focus();
+                    alert('Please enter exactly 10 digits for Mobile number.');
+                    return false;
+                }
+            });
+        }
+
+        // ============================================
+        // TAB PERSISTENCE
+        // ============================================
         var defaultTab = '#master-content';
         var hash = window.location.hash;
         
@@ -2764,6 +2883,9 @@
             });
         });
 
+        // ============================================
+        // TOAST NOTIFICATION SYSTEM
+        // ============================================
         window.showToast = function(message, type, details) {
             type = type || 'info';
             var container = document.getElementById('toastContainer');
@@ -2831,6 +2953,9 @@
             }
         };
 
+        // ============================================
+        // CHECK FOR MESSAGES FROM DJANGO
+        // ============================================
         var messages = document.querySelectorAll('.django-message');
         if (messages.length > 0) {
             messages.forEach(function(msg) {
@@ -2843,6 +2968,9 @@
             });
         }
 
+        // ============================================
+        // CONFIRMATION MODAL
+        // ============================================
         let currentFormToSubmit = null;
         let isProcessing = false;
         const modalEl = document.getElementById('confirmModal');
@@ -2966,6 +3094,9 @@
             });
         }
 
+        // ============================================
+        // PASSWORD TOGGLE
+        // ============================================
         document.querySelectorAll('.password-toggle-icon').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -2989,6 +3120,9 @@
             });
         });
 
+        // ============================================
+        // PREFILL EDIT MODALS
+        // ============================================
         document.getElementById('editUnitModal')?.addEventListener('show.bs.modal', function(e) {
             var b = e.relatedTarget;
             document.getElementById('edit_unit_id').value = b.getAttribute('data-id');
@@ -3017,6 +3151,9 @@
             document.getElementById('edit_cred_password').value = b.getAttribute('data-password');
         });
 
+        // ============================================
+        // SORT TABLE FUNCTION
+        // ============================================
         window.sortTable = function(tableName, colIndex) {
             var table = document.getElementById(tableName + 'Table');
             if (!table) return;
@@ -3054,10 +3191,14 @@
             rows.forEach(function(row) { tbody.appendChild(row); });
         };
 
+        // ============================================
+        // HIERARCHICAL TREE VIEW LOGIC
+        // ============================================
         var currentDeptId = null;
         var employeeCache = {};
         var searchQuery = '';
 
+        // Toggle Unit Expansion
         window.toggleUnit = function(element, unitId) {
             var container = document.getElementById('deptContainer-' + unitId);
             var isExpanded = element.classList.contains('expanded');
@@ -3071,6 +3212,7 @@
             }
         };
 
+        // Expand All Units
         window.expandAllUnits = function() {
             document.querySelectorAll('.tree-unit-item').forEach(function(unit) {
                 var unitId = unit.getAttribute('data-unit-id');
@@ -3082,6 +3224,7 @@
             });
         };
 
+        // Collapse All Units
         window.collapseAllUnits = function() {
             document.querySelectorAll('.tree-unit-item').forEach(function(unit) {
                 var unitId = unit.getAttribute('data-unit-id');
@@ -3093,6 +3236,7 @@
             });
         };
 
+        // Tree Search / Filter
         window.filterTreeItems = function(query) {
             query = query.toLowerCase().trim();
             searchQuery = query;
@@ -3108,6 +3252,7 @@
                 var unitName = unit.getAttribute('data-unit-name').toLowerCase();
                 var hasMatch = false;
                 
+                // Check departments under this unit
                 var deptContainer = unit.nextElementSibling;
                 if (deptContainer && deptContainer.classList.contains('tree-dept-container')) {
                     var depts = deptContainer.querySelectorAll('.tree-dept-item');
@@ -3117,6 +3262,7 @@
                         
                         if (match) {
                             dept.classList.remove('hidden');
+                            // Highlight matching text in department name
                             if (query.length > 0 && deptName.includes(query)) {
                                 dept.querySelector('.tree-dept-name').innerHTML = deptName.replace(new RegExp(query, 'gi'), function(match) {
                                     return '<span class="tree-dept-match">' + match + '</span>';
@@ -3138,6 +3284,7 @@
                 }
             });
             
+            // Auto-expand units that have visible departments
             if (query.length > 0) {
                 document.querySelectorAll('.tree-dept-item:not(.hidden)').forEach(function(dept) {
                     var unitId = dept.getAttribute('data-unit-id');
@@ -3151,12 +3298,14 @@
             }
         };
 
+        // Clear Tree Search
         window.clearTreeSearch = function() {
             var input = document.getElementById('treeSearchInput');
             input.value = '';
             filterTreeItems('');
         };
 
+        // Pre-populate badge counts from Django context
         {% if credentials_by_unit %}
             {% for unit_data in credentials_by_unit %}
                 {% for cred in unit_data.credentials %}
@@ -3175,6 +3324,7 @@
             {% endfor %}
         {% endif %}
 
+        // Load employees for a department
         window.loadDepartmentEmployees = function(deptId, deptName, unitCode) {
             var tableBody = document.getElementById('employeeTableBody');
             var deptNameEl = document.getElementById('selectedDeptName');
@@ -3235,6 +3385,7 @@
                 });
         };
 
+        // Render employee table
         function renderEmployeeTable(deptId, employees, searchQuery) {
             var tableBody = document.getElementById('employeeTableBody');
             var empCountEl = document.getElementById('selectedEmpCount');
@@ -3273,6 +3424,7 @@
                 var statusText = emp.is_active ? 'Active' : 'Inactive';
                 var statusIcon = emp.is_active ? 'fa-regular fa-circle-check' : 'fa-regular fa-circle';
                 
+                // Highlight matching text in employee fields
                 var empIdDisplay = emp.employee_id || '-';
                 var empNameDisplay = emp.employee_name || '-';
                 var empMobileDisplay = emp.mobile || '-';
@@ -3324,6 +3476,7 @@
             tableBody.innerHTML = html;
         }
 
+        // Select department from tree
         window.selectDepartment = function(element, deptId, deptName, unitCode) {
             document.querySelectorAll('.tree-dept-item').forEach(function(item) {
                 item.classList.remove('active');
@@ -3334,6 +3487,7 @@
             
             currentDeptId = deptId;
             
+            // Automatically expand the parent unit if not expanded
             var unitId = element.getAttribute('data-unit-id');
             var unitElement = document.querySelector('.tree-unit-item[data-unit-id="' + unitId + '"]');
             if (unitElement && !unitElement.classList.contains('expanded')) {
@@ -3347,6 +3501,7 @@
             loadDepartmentEmployees(deptId, deptName, unitCode);
         };
 
+        // Filter employees by search (global search for employees)
         window.filterEmployees = function() {
             var searchInput = document.getElementById('empSearchInput');
             var query = searchInput.value;
@@ -3357,12 +3512,14 @@
             renderEmployeeTable(currentDeptId, employees, query);
         };
 
+        // Clear employee search
         window.clearEmployeeSearch = function() {
             var searchInput = document.getElementById('empSearchInput');
             searchInput.value = '';
             filterEmployees();
         };
 
+        // Auto-expand first unit and select first department
         setTimeout(function() {
             var firstUnit = document.querySelector('.tree-unit-item');
             if (firstUnit) {
@@ -3380,23 +3537,35 @@
             }
         }, 400);
 
+        // ============================================
+        // BULK UPLOAD
+        // ============================================
         var fileInput = document.getElementById('bulkExcelFile');
         var uploadForm = document.getElementById('bulkUploadForm');
         var errorContainer = document.getElementById('uploadErrorContainer');
         var errorList = document.getElementById('uploadErrorList');
         var errorTitle = document.getElementById('uploadErrorTitle');
+        const fileInput = document.getElementById('bulkExcelFile');
+        const uploadForm = document.getElementById('bulkUploadForm');
+        const errorContainer = document.getElementById('uploadErrorContainer');
+        const errorList = document.getElementById('uploadErrorList');
+        const errorTitle = document.getElementById('uploadErrorTitle');
 
         if (fileInput && uploadForm) {
             fileInput.removeAttribute('onchange');
             
             fileInput.addEventListener('change', function(e) {
                 var file = this.files[0];
+                const file = this.files[0];
                 if (!file) return;
 
                 var actionUrl = uploadForm.getAttribute('action') || uploadForm.action;
+                const actionUrl = uploadForm.getAttribute('action') || uploadForm.action;
                 
                 var validExtensions = ['.xlsx', '.xls'];
                 var fileExt = '.' + file.name.split('.').pop().toLowerCase();
+                const validExtensions = ['.xlsx', '.xls'];
+                const fileExt = '.' + file.name.split('.').pop().toLowerCase();
                 if (!validExtensions.includes(fileExt)) {
                     window.showToast('Invalid file format. Only .xlsx and .xls files are supported.', 'error');
                     this.value = '';
@@ -3408,12 +3577,14 @@
                 formData.append('action', 'bulk_upload');
                 
                 var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
                 if (csrfToken) {
                     formData.append('csrfmiddlewaretoken', csrfToken.value);
                 }
 
                 this.disabled = true;
                 errorContainer.classList.remove('show');
+                if (errorContainer) errorContainer.classList.remove('show');
 
                 fetch(actionUrl, {
                     method: 'POST',
@@ -3433,10 +3604,14 @@
                         errorContainer.classList.add('show');
                         errorTitle.textContent = data.message || 'Upload failed';
                         errorList.innerHTML = '';
+                        if (errorContainer) errorContainer.classList.add('show');
+                        if (errorTitle) errorTitle.textContent = data.message || 'Upload failed';
+                        if (errorList) errorList.innerHTML = '';
                         
                         if (data.errors && data.errors.length > 0) {
                             data.errors.forEach(function(err) {
                                 var li = document.createElement('li');
+                                const li = document.createElement('li');
                                 li.innerHTML = `
                                     <i class="fa-solid fa-circle-exclamation"></i>
                                     <span>
@@ -3445,6 +3620,7 @@
                                     </span>
                                 `;
                                 errorList.appendChild(li);
+                                if (errorList) errorList.appendChild(li);
                             });
                         } else {
                             var li = document.createElement('li');
@@ -3453,9 +3629,11 @@
                                 <span>${data.message || 'Unknown error occurred'}</span>
                             `;
                             errorList.appendChild(li);
+                            if (errorList) errorList.appendChild(li);
                         }
 
                         errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        if (errorContainer) errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 })
                 .catch(function(error) {
@@ -3469,6 +3647,9 @@
             });
         }
 
+        // ============================================
+        // DEPARTMENT FETCH FOR ADD EMPLOYEE MODAL
+        // ============================================
         var addEmpUnitSelect = document.querySelector('#addEmployeeModal select[name="unit"]');
         var addEmpDeptSelect = document.querySelector('#addEmployeeModal select[name="department"]');
         if (addEmpUnitSelect && addEmpDeptSelect) {
@@ -3503,6 +3684,9 @@
             });
         }
 
+        // ============================================
+        // DEPARTMENT FETCH FOR ADD CREDENTIAL MODAL
+        // ============================================
         var credUnitSelect = document.getElementById('credUnit');
         var credDeptSelect = document.getElementById('credDept');
         if (credUnitSelect && credDeptSelect) {
@@ -3537,6 +3721,9 @@
             });
         }
 
+        // ============================================
+        // TAB ANIMATION
+        // ============================================
         document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(t) {
             t.addEventListener('shown.bs.tab', function(e) {
                 var p = document.querySelector(this.getAttribute('data-bs-target'));
@@ -3549,6 +3736,9 @@
             });
         });
 
+        // ============================================
+        // THEME CHANGE HANDLER
+        // ============================================
         function updateInputTheme() {
             var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             var inputs = document.querySelectorAll('.form-control, .form-select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], textarea, select');
