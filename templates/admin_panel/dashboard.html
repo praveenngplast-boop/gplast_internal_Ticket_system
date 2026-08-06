@@ -74,9 +74,6 @@
     .text-primary { color: var(--brand-orange) !important; }
     .text-muted { color: var(--text-muted) !important; }
 
-    /* ============================================
-       SIDEBAR TOGGLE BUTTON - FIXED FOR MOBILE
-    ============================================ */
     .navbar-toggler {
         border: 2px solid var(--border-color) !important;
         padding: 0.4rem 0.6rem !important;
@@ -177,9 +174,6 @@
         }
     }
 
-    /* ============================================
-       DASHBOARD HEADER
-    ============================================ */
     .dashboard-header {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -206,9 +200,6 @@
         color: var(--text-secondary);
     }
 
-    /* ============================================
-       BUTTONS
-    ============================================ */
     .btn-primary-custom {
         background: var(--brand-gradient) !important;
         border: none !important;
@@ -335,9 +326,6 @@
 
     .btn-view-all i { color: #FFFFFF !important; }
 
-    /* ============================================
-       KPI CARDS
-    ============================================ */
     .kpi-card {
         background: var(--bg-card) !important;
         border: 1px solid var(--border-color) !important;
@@ -444,9 +432,6 @@
 
     .kpi-card:hover .kpi-filter-badge { opacity: 1; }
 
-    /* ============================================
-       PANEL CARDS
-    ============================================ */
     .panel-card {
         background: var(--bg-card) !important;
         border: 1px solid var(--border-color) !important;
@@ -497,9 +482,6 @@
         justify-content: center;
     }
 
-    /* ============================================
-       CHART WRAPPER - FIXED CLICK BEHAVIOR
-    ============================================ */
     .chart-wrapper {
         position: relative;
         width: 100%;
@@ -525,7 +507,6 @@
         cursor: pointer;
     }
 
-    /* Remove click handler from wrapper - only canvas handles clicks */
     .chart-wrapper {
         pointer-events: none;
     }
@@ -605,9 +586,6 @@
 
     .chart-legend-item:hover .legend-color { transform: scale(1.15); }
 
-    /* ============================================
-       BADGES
-    ============================================ */
     .badge-custom {
         display: inline-block;
         padding: 0.15rem 0.5rem;
@@ -628,9 +606,6 @@
     .badge-status-escalated { background: var(--status-escalated); color: white; }
     .badge-status-closed { background: var(--status-closed); color: white; }
 
-    /* ============================================
-       MODAL
-    ============================================ */
     .modal-content {
         background: var(--modal-bg) !important;
         border: 1px solid var(--border-color) !important;
@@ -767,9 +742,6 @@
     .modal-loading i { font-size: 2rem; color: var(--brand-orange); margin-bottom: 1rem; display: block; }
     .modal-loading p { color: var(--text-secondary) !important; font-family: 'Inter', sans-serif; }
 
-    /* ============================================
-       RESPONSIVE
-    ============================================ */
     @media (max-width: 992px) {
         .panel-card { min-height: 300px; }
         .chart-wrapper { min-height: 200px; max-height: 240px; }
@@ -838,9 +810,6 @@
         .modal-footer .btn { width: 100%; justify-content: center; }
     }
 
-    /* ============================================
-       DARK MODE OVERRIDES
-    ============================================ */
     [data-theme="dark"] .kpi-card {
         border-color: rgba(255, 255, 255, 0.06) !important;
     }
@@ -933,9 +902,6 @@
         color: var(--text-primary) !important;
     }
 
-    /* ============================================
-       SCROLLBAR
-    ============================================ */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
     ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 8px; }
@@ -1189,25 +1155,22 @@
             document.body.style.paddingRight = '';
         }
 
-        let chartsData = {};
+        var chartsData = {};
         try {
-            const dataElement = document.getElementById('charts-data');
+            var dataElement = document.getElementById('charts-data');
             if (dataElement) {
                 chartsData = JSON.parse(dataElement.textContent);
             }
         } catch (e) {}
 
-        // ============================================
-        // LEGEND CLICK HANDLERS - FIXED
-        // ============================================
         function setupLegendClickHandler(legendId, chartType, labels) {
-            const legendContainer = document.getElementById(legendId);
+            var legendContainer = document.getElementById(legendId);
             if (!legendContainer) return;
 
             legendContainer.querySelectorAll('.chart-legend-item').forEach(function(item, index) {
                 item.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    const label = labels[index];
+                    var label = labels[index];
                     if (!label) return;
 
                     if (chartType === 'status') {
@@ -1215,8 +1178,8 @@
                     } else if (chartType === 'priority') {
                         drillDownWithFilter('priority', label, 'Priority: ' + label);
                     } else if (chartType === 'unit') {
-                        const unitData = chartsData.units || [];
-                        const unit = unitData.find(function(u) {
+                        var unitData = chartsData.units || [];
+                        var unit = unitData.find(function(u) {
                             return (u.label || u.name || u.unit) === label;
                         });
                         drillDownWithFilter('unit', unit ? unit.id || unit.unit_id : label, 'Unit: ' + label);
@@ -1229,22 +1192,22 @@
 
         window.handleAdminChartClick = function(chartType) {
             if (chartType === 'status') {
-                const statusData = chartsData.status || {};
-                const statusLabels = Object.keys(statusData);
+                var statusData = chartsData.status || {};
+                var statusLabels = Object.keys(statusData);
                 if (statusLabels.length > 0) drillDownAdminTickets(statusLabels[0]);
             } else if (chartType === 'unit') {
-                const unitData = chartsData.units || [];
+                var unitData = chartsData.units || [];
                 if (unitData.length > 0) {
-                    const firstUnit = unitData[0];
+                    var firstUnit = unitData[0];
                     drillDownWithFilter('unit', firstUnit.id || firstUnit.unit_id, 'Unit: ' + (firstUnit.label || firstUnit.name || 'Unknown'));
                 }
             } else if (chartType === 'priority') {
-                const priorityData = chartsData.priority || {};
-                const priorityLabels = Object.keys(priorityData);
+                var priorityData = chartsData.priority || {};
+                var priorityLabels = Object.keys(priorityData);
                 if (priorityLabels.length > 0) drillDownWithFilter('priority', priorityLabels[0], 'Priority: ' + priorityLabels[0]);
             } else if (chartType === 'errorType') {
-                const errorTypeData = chartsData.errorType || {};
-                const errorTypeLabels = Object.keys(errorTypeData);
+                var errorTypeData = chartsData.errorType || {};
+                var errorTypeLabels = Object.keys(errorTypeData);
                 if (errorTypeLabels.length > 0) {
                     drillDownWithFilter('errorType', errorTypeLabels[0], 'Error Type: ' + errorTypeLabels[0] + ' (Closed Tickets)');
                 }
@@ -1254,16 +1217,16 @@
         function drillDownWithFilter(filterType, filterValue, filterLabel) {
             forceCleanupBackdrops();
 
-            const modalEl = document.getElementById('adminDrillDownModal');
-            const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+            var modalEl = document.getElementById('adminDrillDownModal');
+            var modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
 
-            const modalBody = document.getElementById('adminDrillDownModalBody');
-            const statusLabel = document.getElementById('adminDrillDownStatusLabel');
-            const viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
+            var modalBody = document.getElementById('adminDrillDownModalBody');
+            var statusLabel = document.getElementById('adminDrillDownStatusLabel');
+            var viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
 
             statusLabel.textContent = filterLabel;
 
-            let url = "{% url 'all_tickets' %}?ajax=1";
+            var url = "{% url 'all_tickets' %}?ajax=1";
             
             if (filterType === 'unit') {
                 viewAllBtn.href = "{% url 'all_tickets' %}?unit=" + encodeURIComponent(filterValue);
@@ -1326,13 +1289,13 @@
         window.drillDownWithFilter = drillDownWithFilter;
 
         function generateLegend(legendId, labels, colors, chartType) {
-            const container = document.getElementById(legendId);
+            var container = document.getElementById(legendId);
             if (!container) return;
             container.innerHTML = '';
             labels.forEach(function(label, index) {
-                const item = document.createElement('span');
+                var item = document.createElement('span');
                 item.className = 'chart-legend-item';
-                let displayLabel = label;
+                var displayLabel = label;
                 if (displayLabel.length > 12) displayLabel = displayLabel.substring(0, 10) + '...';
                 item.innerHTML = `
                     <span class="legend-color" style="background: ${colors[index % colors.length]};"></span>
@@ -1341,59 +1304,58 @@
                 container.appendChild(item);
             });
 
-            // Setup legend click handlers
             setTimeout(function() {
                 setupLegendClickHandler(legendId, chartType, labels);
             }, 100);
         }
 
         function initChartsWithLegends() {
-            const statusColors = ['#22C55E', '#3B82F6', '#F59E0B', '#8B5CF6', '#94A3B8'];
-            const unitColors = ['#FF6B00', '#FFB800', '#3B82F6', '#22C55E', '#8B5CF6', '#EF4444', '#F59E0B', '#06B6D4', '#EC4899'];
-            const priorityColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E'];
-            const errorTypeColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E', '#8B5CF6', '#EC4899', '#06B6D4', '#94A3B8'];
+            var statusColors = ['#22C55E', '#3B82F6', '#F59E0B', '#8B5CF6', '#94A3B8'];
+            var unitColors = ['#FF6B00', '#FFB800', '#3B82F6', '#22C55E', '#8B5CF6', '#EF4444', '#F59E0B', '#06B6D4', '#EC4899'];
+            var priorityColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E'];
+            var errorTypeColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E', '#8B5CF6', '#EC4899', '#06B6D4', '#94A3B8'];
 
-            const statusData = chartsData.status || {};
-            const unitData = chartsData.units || [];
-            const priorityData = chartsData.priority || {};
-            const errorTypeData = chartsData.errorType || {};
+            var statusData = chartsData.status || {};
+            var unitData = chartsData.units || [];
+            var priorityData = chartsData.priority || {};
+            var errorTypeData = chartsData.errorType || {};
 
-            const statusLabels = Object.keys(statusData);
+            var statusLabels = Object.keys(statusData);
             if (statusLabels.length > 0) {
                 generateLegend('statusLegend', statusLabels, statusColors, 'status');
             }
 
-            const unitLabels = unitData.map(function(u) { return u.label || u.name || u.unit || 'Unknown'; });
+            var unitLabels = unitData.map(function(u) { return u.label || u.name || u.unit || 'Unknown'; });
             if (unitLabels.length > 0) {
                 generateLegend('unitLegend', unitLabels, unitColors, 'unit');
             }
 
-            const priorityLabels = Object.keys(priorityData);
+            var priorityLabels = Object.keys(priorityData);
             if (priorityLabels.length > 0) {
                 generateLegend('priorityLegend', priorityLabels, priorityColors, 'priority');
             }
 
-            const errorTypeLabels = Object.keys(errorTypeData);
+            var errorTypeLabels = Object.keys(errorTypeData);
             if (errorTypeLabels.length > 0) {
                 generateLegend('errorTypeLegend', errorTypeLabels, errorTypeColors, 'errorType');
             }
         }
 
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const textColor = isDark ? '#E8EDF5' : '#1A2A6C';
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var textColor = isDark ? '#E8EDF5' : '#1A2A6C';
 
         function createChart(canvasId, data, colors, type, chartType) {
-            const canvas = document.getElementById(canvasId);
+            var canvas = document.getElementById(canvasId);
             if (!canvas) return null;
-            const labels = Object.keys(data);
-            const values = Object.values(data);
+            var labels = Object.keys(data);
+            var values = Object.values(data);
             if (labels.length === 0) {
-                const empty = document.getElementById(canvasId.replace('Chart', 'Empty'));
+                var empty = document.getElementById(canvasId.replace('Chart', 'Empty'));
                 if (empty) { empty.style.display = 'flex'; }
                 return null;
             }
-            const ctx = canvas.getContext('2d');
-            const chart = new Chart(ctx, {
+            var ctx = canvas.getContext('2d');
+            var chart = new Chart(ctx, {
                 type: type || 'doughnut',
                 data: {
                     labels: labels,
@@ -1413,8 +1375,8 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    const total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
-                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                                    var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                    var percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
                                     return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
                                 }
                             }
@@ -1423,15 +1385,15 @@
                     cutout: type === 'doughnut' ? '60%' : undefined,
                     onClick: function(event, elements) {
                         if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const label = this.data.labels[index];
+                            var index = elements[0].index;
+                            var label = this.data.labels[index];
                             if (canvasId === 'statusChart') {
                                 drillDownAdminTickets(label);
                             } else if (canvasId === 'priorityChart') {
                                 drillDownWithFilter('priority', label, 'Priority: ' + label);
                             } else if (canvasId === 'unitChart') {
-                                const unitData = chartsData.units || [];
-                                const unit = unitData.find(function(u) { return (u.label || u.name || u.unit) === label; });
+                                var unitData = chartsData.units || [];
+                                var unit = unitData.find(function(u) { return (u.label || u.name || u.unit) === label; });
                                 drillDownWithFilter('unit', unit ? unit.id || unit.unit_id : label, 'Unit: ' + label);
                             } else if (canvasId === 'errorTypeChart') {
                                 drillDownWithFilter('errorType', label, 'Error Type: ' + label + ' (Closed Tickets)');
@@ -1444,14 +1406,14 @@
             return chart;
         }
 
-        const statusColors = ['#22C55E', '#3B82F6', '#F59E0B', '#8B5CF6', '#94A3B8'];
-        const unitColors = ['#FF6B00', '#FFB800', '#3B82F6', '#22C55E', '#8B5CF6', '#EF4444', '#F59E0B', '#06B6D4', '#EC4899'];
-        const priorityColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E'];
-        const errorTypeColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E', '#8B5CF6', '#EC4899', '#06B6D4', '#94A3B8'];
+        var statusColors = ['#22C55E', '#3B82F6', '#F59E0B', '#8B5CF6', '#94A3B8'];
+        var unitColors = ['#FF6B00', '#FFB800', '#3B82F6', '#22C55E', '#8B5CF6', '#EF4444', '#F59E0B', '#06B6D4', '#EC4899'];
+        var priorityColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E'];
+        var errorTypeColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E', '#8B5CF6', '#EC4899', '#06B6D4', '#94A3B8'];
 
         createChart('statusChart', chartsData.status || {}, statusColors, 'doughnut', 'status');
         
-        const unitChartData = {};
+        var unitChartData = {};
         if (chartsData.units) {
             chartsData.units.forEach(function(u) {
                 unitChartData[u.label || u.name || u.unit] = u.count || u.value || 0;
@@ -1463,9 +1425,9 @@
 
         setTimeout(initChartsWithLegends, 500);
 
-        const kpiValues = document.querySelectorAll('.kpi-value');
+        var kpiValues = document.querySelectorAll('.kpi-value');
         kpiValues.forEach(function(value, index) {
-            const originalText = value.textContent;
+            var originalText = value.textContent;
             if (!isNaN(parseInt(originalText))) {
                 value.textContent = '0';
                 setTimeout(function() {
@@ -1489,11 +1451,11 @@
         });
 
         function updateChartColors() {
-            const isDarkNow = document.documentElement.getAttribute('data-theme') === 'dark';
-            const newColor = isDarkNow ? '#E8EDF5' : '#1A2A6C';
+            var isDarkNow = document.documentElement.getAttribute('data-theme') === 'dark';
+            var newColor = isDarkNow ? '#E8EDF5' : '#1A2A6C';
             document.querySelectorAll('.chart-wrapper canvas').forEach(function(canvas) {
                 if (canvas.chart) {
-                    const chart = canvas.chart;
+                    var chart = canvas.chart;
                     if (chart.options.plugins && chart.options.plugins.legend) {
                         chart.options.plugins.legend.labels.color = newColor;
                         chart.update();
@@ -1614,4 +1576,4 @@
         document.body.style.paddingRight = '';
     }
 </script>
-{% endblock %}  
+{% endblock %}

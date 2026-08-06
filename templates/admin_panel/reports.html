@@ -32,9 +32,6 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ============================================
-       HEADER
-    ============================================ */
     .reports-header {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -120,9 +117,6 @@
         font-size: clamp(0.5rem, 0.7vw, 0.6rem);
     }
 
-    /* ============================================
-       STATS ROW
-    ============================================ */
     .stats-row {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -138,6 +132,18 @@
         text-align: center;
         transition: var(--reports-transition);
         box-shadow: var(--reports-shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        border-radius: 0 0 12px 12px;
     }
 
     .stat-card:hover {
@@ -160,6 +166,18 @@
         color: var(--text-muted);
         font-weight: 500;
         margin-top: 0.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+    }
+
+    .stat-label .dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
     }
 
     .stat-card .stat-icon {
@@ -167,9 +185,28 @@
         opacity: 0.3;
     }
 
-    /* ============================================
-       FILTER CARD
-    ============================================ */
+    .stat-card .stat-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .stat-total .stat-bar { background: linear-gradient(90deg, #6B7280, #9CA3AF); }
+    .stat-open .stat-bar { background: linear-gradient(90deg, #22C55E, #4ADE80); }
+    .stat-assigned .stat-bar { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+    .stat-hold .stat-bar { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+    .stat-escalated .stat-bar { background: linear-gradient(90deg, #8B5CF6, #A78BFA); }
+    .stat-closed .stat-bar { background: linear-gradient(90deg, #94A3B8, #CBD5E1); }
+
+    .stat-open .stat-label .dot { background: #22C55E; }
+    .stat-assigned .stat-label .dot { background: #3B82F6; }
+    .stat-hold .stat-label .dot { background: #F59E0B; }
+    .stat-escalated .stat-label .dot { background: #8B5CF6; }
+    .stat-closed .stat-label .dot { background: #94A3B8; }
+
     .filter-card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -228,7 +265,6 @@
         padding: 1rem 1.25rem;
     }
 
-    /* Quick Filters */
     .quick-filters {
         display: flex;
         flex-wrap: wrap;
@@ -272,7 +308,6 @@
         font-size: 0.5rem;
     }
 
-    /* Filter Grid */
     .filter-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -342,7 +377,6 @@
         color: var(--text-primary);
     }
 
-    /* Date Range */
     .date-range {
         display: flex;
         align-items: center;
@@ -363,7 +397,6 @@
         flex-shrink: 0;
     }
 
-    /* Filter Actions */
     .filter-actions {
         display: flex;
         gap: 0.5rem;
@@ -428,9 +461,6 @@
         color: white;
     }
 
-    /* ============================================
-       TABLE CARD
-    ============================================ */
     .table-card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -627,9 +657,6 @@
         color: white;
     }
 
-    /* ============================================
-       EMPTY STATE - FIXED
-    ============================================ */
     .empty-state {
         padding: 2.5rem 1rem;
         text-align: center;
@@ -669,9 +696,6 @@
         min-height: 34px;
     }
 
-    /* ============================================
-       PAGINATION
-    ============================================ */
     .pagination-wrapper {
         padding: 0.75rem 1.25rem;
         border-top: 1px solid var(--border-color);
@@ -733,9 +757,6 @@
         font-size: 0.6rem;
     }
 
-    /* ============================================
-       RESPONSIVE
-    ============================================ */
     @media (max-width: 992px) {
         .reports-header { padding: 1rem 1.25rem; }
         .filter-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
@@ -805,9 +826,6 @@
         .table-card-header .timestamp { justify-content: center; }
     }
 
-    /* ============================================
-       DARK MODE
-    ============================================ */
     [data-theme="dark"] .reports-table thead {
         background: rgba(255, 255, 255, 0.03);
     }
@@ -864,9 +882,6 @@
         color: #FFFFFF;
     }
 
-    /* ============================================
-       SCROLLBAR
-    ============================================ */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
     ::-webkit-scrollbar-thumb { background: var(--reports-primary); border-radius: 8px; }
@@ -879,7 +894,6 @@
 {% block content %}
 <div class="reports-wrapper">
 
-    <!-- Header -->
     <div class="reports-header">
         <div class="reports-header-content">
             <div class="reports-header-title">
@@ -893,7 +907,7 @@
                         <span>Filter and export ticket data</span>
                         <span class="count-badge">
                             <i class="fa-regular fa-circle-check"></i>
-                            {{ tickets.paginator.count }} Tickets
+                            {{ total_count|default:tickets.paginator.count }} Tickets
                         </span>
                     </div>
                 </div>
@@ -901,35 +915,39 @@
         </div>
     </div>
 
-    <!-- Stats Row -->
     <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-number">{{ tickets.paginator.count }}</div>
+        <div class="stat-card stat-total">
+            <div class="stat-number">{{ total_count|default:0 }}</div>
             <div class="stat-label">Total Tickets</div>
+            <div class="stat-bar"></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-open">
             <div class="stat-number">{{ open_count|default:0 }}</div>
-            <div class="stat-label"><i class="fa-solid fa-circle" style="color: #22C55E; font-size: 0.4rem;"></i> Open</div>
+            <div class="stat-label"><span class="dot"></span> Open</div>
+            <div class="stat-bar"></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-assigned">
             <div class="stat-number">{{ assigned_count|default:0 }}</div>
-            <div class="stat-label"><i class="fa-solid fa-circle" style="color: #3B82F6; font-size: 0.4rem;"></i> Assigned</div>
+            <div class="stat-label"><span class="dot"></span> Assigned</div>
+            <div class="stat-bar"></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-hold">
             <div class="stat-number">{{ hold_count|default:0 }}</div>
-            <div class="stat-label"><i class="fa-solid fa-circle" style="color: #F59E0B; font-size: 0.4rem;"></i> Hold</div>
+            <div class="stat-label"><span class="dot"></span> Hold</div>
+            <div class="stat-bar"></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-escalated">
             <div class="stat-number">{{ escalated_count|default:0 }}</div>
-            <div class="stat-label"><i class="fa-solid fa-circle" style="color: #8B5CF6; font-size: 0.4rem;"></i> Escalated</div>
+            <div class="stat-label"><span class="dot"></span> Escalated</div>
+            <div class="stat-bar"></div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-closed">
             <div class="stat-number">{{ closed_count|default:0 }}</div>
-            <div class="stat-label"><i class="fa-solid fa-circle" style="color: #94A3B8; font-size: 0.4rem;"></i> Closed</div>
+            <div class="stat-label"><span class="dot"></span> Closed</div>
+            <div class="stat-bar"></div>
         </div>
     </div>
 
-    <!-- Filter Card -->
     <div class="filter-card">
         <div class="filter-card-header">
             <h3>
@@ -938,14 +956,13 @@
             </h3>
             <span class="result-count">
                 <i class="fa-solid fa-list"></i>
-                <strong>{{ tickets.paginator.count }}</strong> ticket(s) found
+                <strong>{{ total_count|default:tickets.paginator.count }}</strong> ticket(s) found
             </span>
         </div>
         <div class="filter-card-body">
             <form method="GET" action="{% url 'reports' %}" id="filterForm">
                 <input type="hidden" name="category" value="{{ category|default:'all' }}" id="categoryInput">
 
-                <!-- Quick Filters -->
                 <div class="quick-filters">
                     <a href="?category=all" class="quick-filter-btn {% if category == 'all' %}active{% endif %}">
                         <i class="fa-solid fa-list"></i> All
@@ -973,7 +990,6 @@
                     </a>
                 </div>
 
-                <!-- Filter Grid -->
                 <div class="filter-grid">
                     <div class="filter-group">
                         <label for="id_unit"><i class="fa-regular fa-building"></i> Unit</label>
@@ -1094,7 +1110,6 @@
                     </div>
                 </div>
 
-                <!-- Filter Actions -->
                 <div class="filter-actions">
                     <a href="{% url 'reports' %}" class="btn-reports btn-reports-secondary">
                         <i class="fa-solid fa-times"></i> Clear Filters
@@ -1110,7 +1125,6 @@
         </div>
     </div>
 
-    <!-- Table Card -->
     <div class="table-card">
         <div class="table-card-header">
             <h3>
@@ -1174,7 +1188,7 @@
                         <td style="font-size: clamp(0.5rem, 0.65vw, 0.6rem); white-space: nowrap;">
                             {{ ticket.created_at|date:"d M Y" }}
                             <span style="display: block; font-size: 0.45rem; color: var(--text-muted);">
-                                {{ ticket.created_at|date:"H:i" }}
+                                {{ ticket.created_at|date:"h:i A" }}
                             </span>
                         </td>
                         <td style="font-size: clamp(0.5rem, 0.65vw, 0.6rem);">
@@ -1243,13 +1257,12 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const filterForm = document.getElementById('filterForm');
-        const unitSelect = document.getElementById('id_unit');
-        const deptSelect = document.getElementById('id_department');
-        const categoryInput = document.getElementById('categoryInput');
-        const quickFilterBtns = document.querySelectorAll('.quick-filter-btn');
+        var filterForm = document.getElementById('filterForm');
+        var unitSelect = document.getElementById('id_unit');
+        var deptSelect = document.getElementById('id_department');
+        var categoryInput = document.getElementById('categoryInput');
+        var quickFilterBtns = document.querySelectorAll('.quick-filter-btn');
 
-        // Department loading
         function loadDepartments(unitId, selectedDeptId) {
             if (!unitId) {
                 deptSelect.innerHTML = '<option value="">All Departments</option>';
@@ -1266,12 +1279,12 @@
                     'Accept': 'application/json'
                 }
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
                 deptSelect.innerHTML = '<option value="">All Departments</option>';
                 if (data.departments && data.departments.length) {
-                    data.departments.forEach(dept => {
-                        const opt = document.createElement('option');
+                    data.departments.forEach(function(dept) {
+                        var opt = document.createElement('option');
                         opt.value = dept.id;
                         opt.textContent = dept.name;
                         if (selectedDeptId && dept.id == selectedDeptId) {
@@ -1284,14 +1297,14 @@
                     deptSelect.innerHTML += '<option value="">No departments available</option>';
                 }
             })
-            .catch(() => {
+            .catch(function() {
                 deptSelect.innerHTML = '<option value="">Error loading departments</option>';
                 deptSelect.disabled = true;
             });
         }
 
-        const initialUnitId = unitSelect.value;
-        const initialDeptId = '{{ selected_department|default:"" }}';
+        var initialUnitId = unitSelect.value;
+        var initialDeptId = '{{ selected_department|default:"" }}';
 
         if (initialUnitId) {
             loadDepartments(initialUnitId, initialDeptId);
@@ -1303,12 +1316,11 @@
             loadDepartments(this.value, '');
         });
 
-        // Quick filter clicks
-        quickFilterBtns.forEach(btn => {
+        quickFilterBtns.forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const url = new URL(this.href);
-                const category = url.searchParams.get('category');
+                var url = new URL(this.href);
+                var category = url.searchParams.get('category');
                 if (categoryInput) {
                     categoryInput.value = category;
                 }
@@ -1316,20 +1328,18 @@
             });
         });
 
-        // Row animation
-        const rows = document.querySelectorAll('#reportsTable tbody tr');
-        rows.forEach((row, index) => {
+        var rows = document.querySelectorAll('#reportsTable tbody tr');
+        rows.forEach(function(row, index) {
             if (row.querySelector('.empty-state')) return;
             row.style.opacity = '0';
-            row.style.animation = `fadeIn 0.3s ease forwards`;
-            row.style.animationDelay = `${index * 0.04}s`;
+            row.style.animation = 'fadeIn 0.3s ease forwards';
+            row.style.animationDelay = (index * 0.04) + 's';
         });
 
-        // Theme styles
         function updateThemeStyles() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const inputs = document.querySelectorAll('.filter-input, .filter-select');
-            inputs.forEach(input => {
+            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            var inputs = document.querySelectorAll('.filter-input, .filter-select');
+            inputs.forEach(function(input) {
                 if (isDark) {
                     input.style.backgroundColor = 'rgba(255,255,255,0.05)';
                     input.style.borderColor = 'rgba(255,255,255,0.08)';
@@ -1342,12 +1352,16 @@
             });
         }
 
-        const themeToggle = document.getElementById('themeToggleFloating');
+        var themeToggle = document.getElementById('themeToggleFloating');
         if (themeToggle) {
-            themeToggle.addEventListener('click', () => setTimeout(updateThemeStyles, 100));
+            themeToggle.addEventListener('click', function() {
+                setTimeout(updateThemeStyles, 100);
+            });
         }
 
-        const observer = new MutationObserver(() => updateThemeStyles());
+        var observer = new MutationObserver(function() {
+            updateThemeStyles();
+        });
         observer.observe(document.documentElement, {
             attributes: true,
             attributeFilter: ['data-theme']

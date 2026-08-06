@@ -4,9 +4,6 @@
 
 {% block extra_head %}
 <style>
-    /* ============================================
-       LOGIN PAGE - Charcoal Header Theme
-    ============================================ */
     html, body {
         margin: 0;
         padding: 0;
@@ -20,7 +17,6 @@
         padding-top: 0 !important;
     }
 
-    /* Hide navbar and sidebar on login page */
     .navbar-custom,
     .sidebar,
     .sidebar-overlay,
@@ -38,9 +34,6 @@
         background: var(--bg-primary);
     }
 
-    /* ============================================
-       LOGIN WRAPPER - Background
-    ============================================ */
     .login-wrapper {
         width: 100%;
         min-height: 100vh;
@@ -54,7 +47,6 @@
         transition: background 0.4s ease;
     }
 
-    /* Subtle Gradient Background */
     .login-wrapper::before {
         content: '';
         position: absolute;
@@ -96,7 +88,6 @@
         100% { transform: translate(30px, -20px) scale(1.1); }
     }
 
-    /* Decorative floating circles */
     .login-wrapper .circle-1 {
         position: absolute;
         top: 10%;
@@ -157,9 +148,6 @@
         50% { transform: translate(20px, -15px) scale(1.05); }
     }
 
-    /* ============================================
-       THEME TOGGLE - Bottom Right
-    ============================================ */
     .theme-toggle-login {
         position: absolute;
         bottom: 24px;
@@ -213,9 +201,6 @@
         color: black;
     }
 
-    /* ============================================
-       LOGIN CARD - Clean & Professional
-    ============================================ */
     .login-card {
         width: 100%;
         max-width: 420px;
@@ -258,7 +243,6 @@
         }
     }
 
-    /* Glass effect overlay */
     .login-card::before {
         content: '';
         position: absolute;
@@ -275,28 +259,21 @@
         background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 60%);
     }
 
-    /* ============================================
-       LOGIN HEADER - CHARCOAL BACKGROUND
-       Orange logo now pops beautifully
-    ============================================ */
     .login-header {
         padding: 2.5rem 2rem 2rem;
         text-align: center;
         position: relative;
         overflow: hidden;
-        /* CHARCOAL BACKGROUND - Makes orange logo stand out */
         background: linear-gradient(135deg, #2D2D3A 0%, #1A1A24 50%, #0D0D14 100%);
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         transition: background 0.4s ease, border-color 0.4s ease;
     }
 
-    /* Dark mode header - slightly darker charcoal */
     [data-theme="dark"] .login-header {
         background: linear-gradient(135deg, #1A1A24 0%, #0D0D14 50%, #050508 100%);
         border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     }
 
-    /* Brand accent overlay - subtle orange glow */
     .login-header::after {
         content: '';
         position: absolute;
@@ -331,9 +308,6 @@
         background: radial-gradient(circle, rgba(255, 184, 0, 0.03) 0%, transparent 70%);
     }
 
-    /* ============================================
-       LOGO - Clean, No Circle, Orange Pops on Charcoal
-    ============================================ */
     .login-logo-wrapper {
         position: relative;
         z-index: 1;
@@ -341,7 +315,6 @@
         margin-bottom: 0.75rem;
     }
 
-    /* Glow effect behind logo - orange glow on charcoal */
     .login-logo-wrapper::after {
         content: '';
         position: absolute;
@@ -420,9 +393,6 @@
         box-shadow: 0 2px 12px rgba(255, 107, 0, 0.3);
     }
 
-    /* ============================================
-       LOGIN BODY - Both Modes
-    ============================================ */
     .login-body {
         padding: 2rem 2rem 2.2rem;
         background: var(--bg-card);
@@ -439,9 +409,6 @@
         background: transparent;
     }
 
-    /* ============================================
-       FORM ELEMENTS - Both Modes
-    ============================================ */
     .form-label {
         font-weight: 600;
         font-size: 0.82rem;
@@ -534,9 +501,6 @@
         font-weight: 400;
     }
 
-    /* ============================================
-       PASSWORD TOGGLE - Both Modes
-    ============================================ */
     .password-wrapper {
         position: relative;
         flex: 1;
@@ -584,9 +548,6 @@
         color: var(--brand-orange);
     }
 
-    /* ============================================
-       LOGIN BUTTON - Orange Theme (Stands out on charcoal)
-    ============================================ */
     .btn-login {
         width: 100%;
         padding: 0.8rem;
@@ -675,9 +636,6 @@
         transform: translateX(3px);
     }
 
-    /* ============================================
-       ALERT MESSAGES - Both Modes
-    ============================================ */
     .alert-login {
         border-radius: var(--radius-sm);
         padding: 0.7rem 1rem;
@@ -712,9 +670,6 @@
         flex-shrink: 0;
     }
 
-    /* ============================================
-       FOOTER TEXT - Both Modes
-    ============================================ */
     .login-footer-text {
         color: var(--text-muted);
         font-size: 0.7rem;
@@ -734,9 +689,6 @@
         margin-right: 4px;
     }
 
-    /* ============================================
-       RESPONSIVE
-    ============================================ */
     @media (max-width: 576px) {
         .login-wrapper {
             padding: 12px;
@@ -830,9 +782,6 @@
         }
     }
 
-    /* ============================================
-       LIGHT MODE SPECIFIC OVERRIDES
-    ============================================ */
     :root:not([data-theme="dark"]) .login-card {
         background: rgba(255, 255, 255, 0.92);
         backdrop-filter: blur(20px);
@@ -853,7 +802,6 @@
         background: rgba(255, 255, 255, 0.02);
     }
 
-    /* Autofill Styles - Both Modes */
     input:-webkit-autofill,
     input:-webkit-autofill:hover,
     input:-webkit-autofill:focus,
@@ -882,13 +830,11 @@
 
 {% block content %}
 <div class="login-wrapper">
-    <!-- Decorative circles -->
     <div class="circle-1"></div>
     <div class="circle-2"></div>
     <div class="circle-3"></div>
 
     <div class="login-card">
-        <!-- Header - Charcoal Background, Orange Logo Pops -->
         <div class="login-header">
             <div class="login-logo-wrapper">
                 <img src="{% static 'images/logo.png' %}" alt="GPLAST Logo" class="login-logo"
@@ -899,7 +845,6 @@
             <div class="brand-accent"></div>
         </div>
 
-        <!-- Body -->
         <div class="login-body">
             {% if form.errors %}
             <div class="alert-login">
@@ -911,7 +856,6 @@
             <form method="POST" action="{% url 'login' %}" novalidate id="loginForm" class="no-confirm" data-confirm="false">
                 {% csrf_token %}
                 
-                <!-- Username Field -->
                 <div class="mb-3">
                     <label class="form-label" for="id_username">
                         <i class="fa-regular fa-user"></i> Username
@@ -930,7 +874,6 @@
                     </div>
                 </div>
 
-                <!-- Password Field -->
                 <div class="mb-3">
                     <label class="form-label" for="id_password">
                         <i class="fa-solid fa-key"></i> Password
@@ -957,7 +900,6 @@
                     </div>
                 </div>
 
-                <!-- Submit Button - Orange -->
                 <button type="submit" class="btn-login" id="loginBtn">
                     <span class="btn-text">
                         <i class="fa-solid fa-arrow-right-to-bracket"></i>
@@ -970,14 +912,12 @@
                 </button>
             </form>
 
-            <!-- Footer -->
             <div class="login-footer-text">
                 <i class="fa-regular fa-copyright"></i> {% now "Y" %} GPLAST ERP. All rights reserved.
             </div>
         </div>
     </div>
 
-    <!-- Theme Toggle - Bottom Right -->
     <button class="theme-toggle-login" id="loginThemeToggle" aria-label="Toggle theme">
         <i class="fas fa-moon" id="loginThemeIcon"></i>
     </button>
@@ -987,9 +927,6 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ============================================
-        // PASSWORD TOGGLE
-        // ============================================
         const passwordInput = document.getElementById('id_password');
         const toggleBtn = document.getElementById('passwordToggleBtn');
         const toggleIcon = document.getElementById('passwordToggleIcon');
@@ -1004,57 +941,38 @@
             });
         }
 
-        // ============================================
-        // LOGIN BUTTON LOADING STATE - SIMPLIFIED & FIXED
-        // ============================================
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
         let isSubmitting = false;
 
         if (loginForm && loginBtn) {
             loginForm.addEventListener('submit', function(e) {
-                // Prevent double submission
                 if (isSubmitting) {
                     e.preventDefault();
                     return false;
                 }
                 
-                // Basic validation - if fields are empty, let Django handle it
                 const username = document.getElementById('id_username');
                 const password = document.getElementById('id_password');
                 
                 if (!username.value.trim() || !password.value.trim()) {
-                    // Don't show spinner, let Django show validation errors
                     return true;
                 }
                 
-                // Mark as submitting
                 isSubmitting = true;
-                
-                // Show loading state using CSS classes
                 loginBtn.disabled = true;
                 loginBtn.classList.add('loading');
                 
-                // The form will submit naturally
-                // If there's an error, Django will render the page with errors
-                // and we'll reset the button state below
-                
-                return true; // Allow form to submit
+                return true;
             });
             
-            // ============================================
-            // RESET BUTTON IF THERE ARE ERRORS ON PAGE
-            // ============================================
-            // Check if there are Django form errors
             const errorAlerts = document.querySelectorAll('.alert-login');
             if (errorAlerts.length > 0) {
-                // Reset button state
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
                 isSubmitting = false;
             }
             
-            // Also watch for error alerts being added dynamically
             const errorObserver = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
                     if (mutation.addedNodes.length > 0) {
@@ -1063,7 +981,6 @@
                             loginBtn.disabled = false;
                             loginBtn.classList.remove('loading');
                             isSubmitting = false;
-                            console.log('🔄 Login button reset due to errors');
                         }
                     }
                 });
@@ -1075,34 +992,15 @@
             });
         }
 
-        // ============================================
-        // AUTO-FOCUS ON USERNAME
-        // ============================================
         const usernameInput = document.getElementById('id_username');
         if (usernameInput && !usernameInput.value) {
             usernameInput.focus();
         }
 
-        // ============================================
-        // KEYBOARD SHORTCUT - Enter key submits form
-        // ============================================
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && document.activeElement.tagName === 'INPUT') {
-                const form = document.getElementById('loginForm');
-                if (form && !isSubmitting) {
-                    form.dispatchEvent(new Event('submit'));
-                }
-            }
-        });
-
-        // ============================================
-        // THEME TOGGLE - SYNCED WITH MAIN PAGE
-        // ============================================
         const loginThemeToggle = document.getElementById('loginThemeToggle');
         const loginThemeIcon = document.getElementById('loginThemeIcon');
         const html = document.documentElement;
 
-        // Get saved theme from localStorage (same as main app)
         const savedTheme = localStorage.getItem('theme') || 'light';
         applyLoginTheme(savedTheme);
 
@@ -1122,22 +1020,18 @@
             const newTheme = current === 'dark' ? 'light' : 'dark';
             applyLoginTheme(newTheme);
             
-            // Animate button
             if (loginThemeToggle) {
                 loginThemeToggle.style.transform = 'scale(0.8) rotate(180deg)';
-                setTimeout(() => { loginThemeToggle.style.transform = ''; }, 300);
+                setTimeout(function() { 
+                    if (loginThemeToggle) loginThemeToggle.style.transform = ''; 
+                }, 300);
             }
-            
-            console.log('🌓 Theme toggled to:', newTheme);
         }
 
         if (loginThemeToggle) {
             loginThemeToggle.addEventListener('click', toggleLoginTheme);
         }
 
-        // ============================================
-        // LISTEN FOR THEME CHANGES FROM MAIN APP
-        // ============================================
         const themeObserver = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.attributeName === 'data-theme') {
@@ -1145,7 +1039,6 @@
                     if (loginThemeIcon) {
                         loginThemeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
                     }
-                    console.log('🎨 Theme synced from main app:', theme);
                 }
             });
         });
@@ -1154,10 +1047,6 @@
             attributes: true,
             attributeFilter: ['data-theme']
         });
-
-        console.log('🔐 GPLAST Login Page - Fixed Spinner Issue');
-        console.log('✅ Form has no-confirm class - confirmation.js will skip it');
-        console.log('🔄 Spinner will show on submit and reset on errors');
     });
 </script>
 {% endblock %}

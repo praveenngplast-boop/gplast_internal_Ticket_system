@@ -3,25 +3,18 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    # =========================================================================
     # AUTH URLS
-    # =========================================================================
-    # Use the custom login view
     path('login/', views.CustomLoginView.as_view(), name='login'),
     path('role-redirect/', views.role_redirect, name='role_redirect'),
     path('logout/', views.custom_logout, name='custom_logout'),
 
-    # =========================================================================
     # EMPLOYEE URLS
-    # =========================================================================
     path('dashboard/', views.employee_dashboard, name='employee_dashboard'),
     path('create-ticket/', views.create_ticket, name='create_ticket'),
     path('my-tickets/', views.my_tickets, name='my_tickets'),
     path('ticket/<int:pk>/', views.ticket_detail, name='ticket_detail'),
 
-    # =========================================================================
     # ADMIN URLS
-    # =========================================================================
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin/create-ticket/', views.create_ticket_admin, name='create_ticket_admin'),
     path('admin/tickets/', views.all_tickets, name='all_tickets'),
@@ -45,18 +38,14 @@ urlpatterns = [
     path('admin/settings/credentials/', views.settings_credentials, name='settings_credentials'),
     path('admin/settings/credentials/download/', views.download_credentials, name='download_credentials'),
 
-    # =========================================================================
-    # TEST NOTIFICATION URLS
-    # =========================================================================
+    # Test Notification URLs
     path('test-notifications/', views.test_notifications, name='test_notifications'),
     path('test/success/', views.test_success_message, name='test_success'),
     path('test/error/', views.test_error_message, name='test_error'),
     path('test/warning/', views.test_warning_message, name='test_warning'),
     path('test/info/', views.test_info_message, name='test_info'),
 
-    # =========================================================================
-    # AJAX ENDPOINTS
-    # =========================================================================
+    # AJAX Endpoints
     path('ajax/get-units/', views.get_units, name='get_units'),
     path('ajax/get-departments/', views.get_departments_by_unit, name='get_departments_by_unit'),
     path('ajax/get-employee/', views.get_employee_details, name='get_employee_details'),

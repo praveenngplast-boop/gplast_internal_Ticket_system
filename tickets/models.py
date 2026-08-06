@@ -3,9 +3,6 @@ from django.contrib.auth.models import User
 import re
 
 
-# =========================================================================
-# UNIT MODEL
-# =========================================================================
 class Unit(models.Model):
     code = models.CharField(max_length=10, unique=True)
     full_name = models.CharField(max_length=100, unique=True)
@@ -22,9 +19,6 @@ class Unit(models.Model):
         return f"{self.code} - {self.full_name}"
 
 
-# =========================================================================
-# DEPARTMENT MODEL
-# =========================================================================
 class Department(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
@@ -39,9 +33,6 @@ class Department(models.Model):
         return f"{self.name} ({self.unit.code})"
 
 
-# =========================================================================
-# ADMIN CONTACT MODEL
-# =========================================================================
 class AdminContact(models.Model):
     admin_name = models.CharField(max_length=100)
     admin_phone = models.CharField(max_length=15)
@@ -51,9 +42,6 @@ class AdminContact(models.Model):
         return f"{self.admin_name} - {self.admin_phone}"
 
 
-# =========================================================================
-# ADMIN NOTIFICATION EMAIL MODEL
-# =========================================================================
 class AdminNotificationEmail(models.Model):
     email = models.EmailField(unique=True)
     is_active = models.BooleanField(default=True)
@@ -63,11 +51,7 @@ class AdminNotificationEmail(models.Model):
         return self.email
 
 
-# =========================================================================
-# EMPLOYEE MASTER MODEL
-# =========================================================================
 class EmployeeMaster(models.Model):
-    """Employee directory for auto-fetching details in ticket creation"""
     employee_id = models.CharField(max_length=50, unique=True)
     employee_name = models.CharField(max_length=150)
     mobile = models.CharField(max_length=10)
@@ -92,11 +76,7 @@ class EmployeeMaster(models.Model):
         return f"{self.employee_id} - {self.employee_name}"
 
 
-# =========================================================================
-# DEPARTMENT CREDENTIAL MODEL (NEW - Password Management)
-# =========================================================================
 class DepartmentCredential(models.Model):
-    """Stores username & password per Unit+Department for employee login"""
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     username = models.CharField(max_length=50)
@@ -109,20 +89,13 @@ class DepartmentCredential(models.Model):
         ordering = ['unit__code', 'department__name']
         verbose_name = 'Department Credential'
         verbose_name_plural = 'Department Credentials'
-        unique_together = ['unit', 'department']  # One credential per unit+department
+        unique_together = ['unit', 'department']
 
     def __str__(self):
         return f"{self.unit.code} - {self.department.name} ({self.username})"
 
 
-# =========================================================================
-# TICKET NUMBER GENERATOR
-# =========================================================================
 def generate_ticket_number():
-    """
-    Generate sequential ticket numbers starting from 0001
-    Format: 0001, 0002, 0003, ... up to 9999
-    """
     from tickets.models import Ticket
     last_ticket = Ticket.objects.all().order_by('id').last()
     
@@ -148,9 +121,6 @@ def generate_ticket_number():
     return f"{new_number:04d}"
 
 
-# =========================================================================
-# TICKET MODEL
-# =========================================================================
 class Ticket(models.Model):
     PRIORITY_CHOICES = [
         ('Low', 'Low'),
@@ -228,9 +198,6 @@ class Ticket(models.Model):
         return f"{self.ticket_number} - {self.subject}"
 
 
-# =========================================================================
-# TICKET HISTORY MODEL
-# =========================================================================
 class TicketHistory(models.Model):
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='history')
     action = models.CharField(max_length=255)

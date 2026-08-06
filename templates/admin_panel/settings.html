@@ -5,32 +5,31 @@
 {% block extra_head %}
 {{ block.super }}
 <style>
-    /* ============================================
-       BASE SETTINGS STYLES
-    ============================================ */
     .settings-container { animation: fadeInUp 0.6s ease; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes tabFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes modalSlideIn { from { opacity: 0; transform: scale(0.9) translateY(-30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     @keyframes toastSlideIn { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes expandIn { from { opacity: 0; transform: scaleY(0); } to { opacity: 1; transform: scaleY(1); } }
 
-    /* ============================================
-       CSS VARIABLES - Theme Support
-    ============================================ */
     :root {
         --brand-orange: #FF6B00;
         --brand-orange-dark: #E05A00;
         --brand-yellow: #FFB800;
         --brand-gradient: linear-gradient(135deg, #FF6B00 0%, #FFB800 100%);
+        --tree-hover: rgba(255, 107, 0, 0.06);
+        --tree-active: rgba(255, 107, 0, 0.10);
+        --tree-border: var(--border-color);
+        --tree-text: var(--text-primary);
+        --tree-text-secondary: var(--text-secondary);
+        --tree-bg: var(--bg-card);
     }
 
     .text-primary { color: var(--brand-orange) !important; }
     .text-muted { color: var(--text-muted) !important; }
     .text-secondary { color: var(--text-secondary) !important; }
 
-    /* ============================================
-       TOAST NOTIFICATIONS
-    ============================================ */
     .toast-container-custom {
         position: fixed;
         top: 80px;
@@ -108,9 +107,6 @@
         color: #3B82F6;
     }
 
-    /* ============================================
-       HEADER
-    ============================================ */
     .settings-header {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -118,6 +114,10 @@
         padding: 1.5rem;
         margin-bottom: 1.5rem;
         box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+    }
+    .settings-header:hover {
+        box-shadow: var(--shadow-md);
     }
     .settings-header h2 {
         font-size: 1.4rem;
@@ -141,9 +141,6 @@
         border: 1px solid rgba(255, 107, 0, 0.1);
     }
 
-    /* ============================================
-       PANEL CARD
-    ============================================ */
     .panel-card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -157,9 +154,6 @@
         border-color: var(--border-light);
     }
 
-    /* ============================================
-       PROFESSIONAL TAB NAVIGATION
-    ============================================ */
     .settings-tabs-wrapper {
         background: var(--bg-secondary);
         border-bottom: 2px solid var(--border-color);
@@ -169,6 +163,7 @@
         z-index: 10;
         backdrop-filter: blur(10px);
         background: rgba(var(--bg-secondary-rgb, 245, 248, 255), 0.95);
+        transition: all 0.3s ease;
     }
 
     [data-theme="dark"] .settings-tabs-wrapper {
@@ -252,9 +247,6 @@
         color: #FFFFFF;
     }
 
-    /* ============================================
-       TAB CONTENT
-    ============================================ */
     .tab-pane {
         animation: tabFadeIn 0.5s ease;
         padding: 1.5rem 0.5rem;
@@ -284,9 +276,679 @@
     }
     .section-divider .section-title i { color: var(--brand-orange); }
 
-    /* ============================================
-       FORM CONTROLS
-    ============================================ */
+    .tree-table-container {
+        display: flex;
+        gap: 0;
+        min-height: 450px;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--bg-card);
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .tree-sidebar {
+        width: 320px;
+        min-width: 240px;
+        max-width: 360px;
+        background: var(--bg-secondary);
+        border-right: 1px solid var(--border-color);
+        overflow-y: auto;
+        max-height: 550px;
+        flex-shrink: 0;
+        padding: 0.25rem 0;
+        transition: all 0.3s ease;
+    }
+
+    .tree-sidebar .tree-header {
+        padding: 0.5rem 1rem;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        background: var(--bg-secondary);
+        z-index: 5;
+        font-family: 'Inter', sans-serif;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        transition: all 0.3s ease;
+    }
+
+    .tree-sidebar .tree-header .tree-count {
+        font-size: 0.55rem;
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
+        padding: 0.1rem 0.5rem;
+        border-radius: 50px;
+    }
+
+    .tree-sidebar .tree-header .tree-actions {
+        display: flex;
+        gap: 0.3rem;
+    }
+
+    .tree-sidebar .tree-header .tree-actions button {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 0.1rem 0.4rem;
+        font-size: 0.55rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .tree-sidebar .tree-header .tree-actions button:hover {
+        border-color: var(--brand-orange);
+        color: var(--brand-orange);
+    }
+
+    .tree-search-box {
+        padding: 0.3rem 0.8rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: var(--bg-secondary);
+        transition: all 0.3s ease;
+    }
+
+    .tree-search-box input {
+        width: 100%;
+        padding: 0.25rem 0.5rem;
+        border: 2px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.7rem;
+        transition: all 0.3s ease;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+    }
+
+    .tree-search-box input:focus {
+        border-color: var(--brand-orange);
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.08);
+    }
+
+    .tree-search-box input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.6;
+    }
+
+    .tree-search-box .search-icon {
+        color: var(--text-muted);
+        font-size: 0.6rem;
+    }
+
+    .tree-search-box .clear-search-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.6rem;
+        padding: 0.1rem 0.3rem;
+        display: none;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .tree-search-box .clear-search-btn:hover {
+        color: var(--brand-orange);
+        background: rgba(255, 107, 0, 0.05);
+    }
+
+    .tree-search-box .clear-search-btn.visible {
+        display: block;
+    }
+
+    .tree-unit-item {
+        display: flex;
+        align-items: center;
+        padding: 0.4rem 0.8rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+        gap: 0.5rem;
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        font-family: 'Inter', sans-serif;
+        position: relative;
+        margin: 0.05rem 0.3rem;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    .tree-unit-item:hover {
+        background: var(--tree-hover);
+        color: var(--text-primary);
+    }
+
+    .tree-unit-item .tree-icon {
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
+        font-size: 0.7rem;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .tree-unit-item .tree-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .tree-unit-item .tree-name {
+        font-weight: 600;
+        font-size: 0.78rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--text-primary);
+    }
+
+    .tree-unit-item .tree-unit-code {
+        font-size: 0.55rem;
+        color: var(--text-muted);
+        font-weight: 400;
+        display: block;
+        margin-top: 0.05rem;
+    }
+
+    .tree-unit-item .tree-arrow {
+        color: var(--text-muted);
+        font-size: 0.6rem;
+        transition: transform 0.3s ease;
+        flex-shrink: 0;
+        opacity: 0.5;
+    }
+
+    .tree-unit-item.expanded .tree-arrow {
+        transform: rotate(90deg);
+        opacity: 0.8;
+        color: var(--brand-orange);
+    }
+
+    .tree-unit-item .tree-badge {
+        font-size: 0.5rem;
+        font-weight: 600;
+        padding: 0.05rem 0.4rem;
+        border-radius: 50px;
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
+        flex-shrink: 0;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .tree-unit-item.hidden {
+        display: none;
+    }
+
+    .tree-dept-container {
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.4s ease;
+        padding-left: 0.5rem;
+    }
+
+    .tree-dept-container.expanded {
+        max-height: 1000px;
+    }
+
+    .tree-dept-item {
+        display: flex;
+        align-items: center;
+        padding: 0.3rem 0.8rem 0.3rem 1.8rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+        gap: 0.5rem;
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        font-family: 'Inter', sans-serif;
+        position: relative;
+        margin: 0.05rem 0.3rem;
+        border-radius: 6px;
+    }
+
+    .tree-dept-item:hover {
+        background: var(--tree-hover);
+        color: var(--text-primary);
+    }
+
+    .tree-dept-item.active {
+        background: var(--tree-active);
+        border-left-color: var(--brand-orange);
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .tree-dept-item .tree-dept-icon {
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        background: rgba(59, 130, 246, 0.08);
+        color: #3B82F6;
+        font-size: 0.55rem;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .tree-dept-item.active .tree-dept-icon {
+        background: var(--brand-gradient);
+        color: #FFFFFF;
+    }
+
+    .tree-dept-item .tree-dept-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .tree-dept-item .tree-dept-name {
+        font-weight: 500;
+        font-size: 0.72rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .tree-dept-item .tree-dept-badge {
+        font-size: 0.45rem;
+        font-weight: 600;
+        padding: 0.05rem 0.35rem;
+        border-radius: 50px;
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
+        flex-shrink: 0;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .tree-dept-item .tree-dept-loading {
+        display: none;
+        font-size: 0.5rem;
+        color: var(--text-muted);
+    }
+
+    .tree-dept-item.loading .tree-dept-loading {
+        display: inline-block;
+    }
+
+    .tree-dept-item.hidden {
+        display: none;
+    }
+
+    .tree-dept-item .tree-dept-match {
+        background: rgba(255, 107, 0, 0.15);
+        padding: 0 0.1rem;
+        border-radius: 2px;
+        font-weight: 600;
+    }
+
+    .tree-table-main {
+        flex: 1;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        background: var(--bg-card);
+        transition: all 0.3s ease;
+    }
+
+    .tree-table-main .table-header {
+        padding: 0.6rem 1.25rem;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        flex-shrink: 0;
+        min-height: 52px;
+        transition: all 0.3s ease;
+    }
+
+    .tree-table-main .table-header .dept-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .tree-table-main .table-header .dept-title h6 {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        font-family: 'Fraunces', serif;
+    }
+
+    .tree-table-main .table-header .dept-title .dept-code {
+        font-size: 0.6rem;
+        font-weight: 600;
+        color: var(--brand-orange);
+        background: rgba(255, 107, 0, 0.08);
+        padding: 0.1rem 0.6rem;
+        border-radius: 50px;
+        border: 1px solid rgba(255, 107, 0, 0.1);
+    }
+
+    .tree-table-main .table-header .dept-title .emp-count {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .tree-table-main .table-header .table-actions {
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .tree-table-main .table-header .table-actions .search-box {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: var(--input-bg);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.2rem 0.6rem;
+        transition: all 0.3s ease;
+    }
+
+    .tree-table-main .table-header .table-actions .search-box:focus-within {
+        border-color: var(--brand-orange);
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.08);
+    }
+
+    .tree-table-main .table-header .table-actions .search-box input {
+        border: none;
+        background: transparent;
+        padding: 0.2rem 0;
+        font-size: 0.7rem;
+        color: var(--text-primary);
+        outline: none;
+        width: 120px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .tree-table-main .table-header .table-actions .search-box input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.6;
+    }
+
+    .tree-table-main .table-header .table-actions .search-box i {
+        color: var(--text-muted);
+        font-size: 0.7rem;
+    }
+
+    .tree-table-main .table-body {
+        flex: 1;
+        overflow-y: auto;
+        max-height: 450px;
+        padding: 0;
+        transition: all 0.3s ease;
+    }
+
+    .tree-table-main .table-body .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 250px;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 1.5rem;
+        animation: slideIn 0.4s ease;
+    }
+
+    .tree-table-main .table-body .empty-state i {
+        font-size: 2.5rem;
+        color: var(--brand-orange);
+        opacity: 0.2;
+        margin-bottom: 0.75rem;
+    }
+
+    .tree-table-main .table-body .empty-state h6 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 0.2rem;
+        font-family: 'Fraunces', serif;
+    }
+
+    .tree-table-main .table-body .empty-state p {
+        font-size: 0.75rem;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .emp-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .emp-table thead {
+        background: var(--bg-secondary);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        transition: all 0.3s ease;
+    }
+
+    .emp-table thead th {
+        padding: 0.5rem 0.75rem;
+        text-align: left;
+        font-size: 0.55rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border-color);
+        white-space: nowrap;
+        background: var(--bg-secondary);
+        font-family: 'Inter', sans-serif;
+        transition: all 0.3s ease;
+    }
+
+    .emp-table thead th i {
+        color: var(--brand-orange);
+        margin-right: 0.3rem;
+        font-size: 0.5rem;
+    }
+
+    .emp-table tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid var(--border-color);
+        animation: slideIn 0.3s ease;
+    }
+
+    .emp-table tbody tr:hover {
+        background: var(--tree-hover);
+        transform: translateX(2px);
+    }
+
+    .emp-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .emp-table tbody td {
+        padding: 0.4rem 0.75rem;
+        vertical-align: middle;
+        color: var(--text-primary);
+        font-size: 0.72rem;
+        transition: all 0.3s ease;
+    }
+
+    .emp-table .emp-id {
+        font-weight: 700;
+        color: var(--brand-orange);
+        font-family: monospace;
+        font-size: 0.7rem;
+    }
+
+    .emp-table .emp-name {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .emp-table .emp-email {
+        color: var(--text-secondary);
+        font-size: 0.65rem;
+    }
+
+    .emp-table .emp-mobile {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        font-family: monospace;
+    }
+
+    .emp-table .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.3s ease;
+    }
+
+    .emp-table .status-badge.active {
+        background: rgba(34, 197, 94, 0.12);
+        color: #22C55E;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .emp-table .status-badge.inactive {
+        background: rgba(239, 68, 68, 0.08);
+        color: #EF4444;
+        border: 1px solid rgba(239, 68, 68, 0.1);
+    }
+
+    .emp-table .status-badge i {
+        font-size: 0.3rem;
+    }
+
+    .emp-table tbody tr .emp-match {
+        background: rgba(255, 107, 0, 0.15);
+        padding: 0 0.1rem;
+        border-radius: 2px;
+        font-weight: 600;
+    }
+
+    @media (max-width: 992px) {
+        .tree-sidebar { width: 260px; min-width: 200px; }
+        .tree-unit-item { padding: 0.3rem 0.6rem; font-size: 0.7rem; }
+        .tree-unit-item .tree-name { font-size: 0.7rem; }
+        .tree-dept-item { padding: 0.25rem 0.6rem 0.25rem 1.4rem; font-size: 0.65rem; }
+        .tree-dept-item .tree-dept-name { font-size: 0.65rem; }
+        .tree-table-main .table-header { padding: 0.4rem 0.75rem; }
+        .tree-table-main .table-header .dept-title h6 { font-size: 0.75rem; }
+        .emp-table thead th, .emp-table tbody td { padding: 0.3rem 0.5rem; font-size: 0.65rem; }
+    }
+
+    @media (max-width: 768px) {
+        .tree-table-container { flex-direction: column; min-height: 400px; }
+        .tree-sidebar { 
+            width: 100%; 
+            max-width: 100%; 
+            max-height: 250px; 
+            border-right: none; 
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.2rem 0;
+        }
+        .tree-sidebar .tree-header { padding: 0.3rem 0.75rem; font-size: 0.55rem; }
+        .tree-unit-item { padding: 0.25rem 0.5rem; font-size: 0.6rem; }
+        .tree-unit-item .tree-icon { width: 22px; height: 22px; font-size: 0.6rem; }
+        .tree-unit-item .tree-name { font-size: 0.6rem; }
+        .tree-dept-item { padding: 0.2rem 0.5rem 0.2rem 1.2rem; font-size: 0.55rem; }
+        .tree-dept-item .tree-dept-icon { width: 18px; height: 18px; font-size: 0.5rem; }
+        .tree-dept-item .tree-dept-name { font-size: 0.55rem; }
+        .tree-dept-item .tree-dept-badge { font-size: 0.4rem; padding: 0.05rem 0.25rem; }
+        .tree-table-main .table-header { padding: 0.3rem 0.6rem; flex-direction: column; align-items: stretch; gap: 0.3rem; min-height: auto; }
+        .tree-table-main .table-header .dept-title { flex-wrap: wrap; }
+        .tree-table-main .table-header .table-actions { flex-wrap: wrap; }
+        .tree-table-main .table-header .table-actions .search-box input { width: 80px; font-size: 0.6rem; }
+        .tree-table-main .table-body { max-height: 350px; }
+        .emp-table thead th, .emp-table tbody td { padding: 0.2rem 0.3rem; font-size: 0.6rem; }
+        .emp-table .emp-id { font-size: 0.6rem; }
+        .emp-table .emp-email { font-size: 0.55rem; }
+        .emp-table .status-badge { font-size: 0.45rem; padding: 0.05rem 0.3rem; }
+        .tree-table-main .table-body .empty-state { min-height: 180px; }
+        .tree-table-main .table-body .empty-state i { font-size: 2rem; }
+        .tree-table-main .table-body .empty-state h6 { font-size: 0.85rem; }
+        .tree-table-main .table-body .empty-state p { font-size: 0.65rem; }
+        .tree-search-box input { font-size: 0.6rem; padding: 0.2rem 0.4rem; }
+    }
+
+    @media (max-width: 576px) {
+        .tree-sidebar { max-height: 180px; }
+        .tree-unit-item { padding: 0.2rem 0.4rem; font-size: 0.55rem; }
+        .tree-unit-item .tree-icon { width: 18px; height: 18px; font-size: 0.5rem; }
+        .tree-unit-item .tree-name { font-size: 0.55rem; }
+        .tree-dept-item { padding: 0.15rem 0.4rem 0.15rem 1rem; font-size: 0.5rem; }
+        .tree-dept-item .tree-dept-icon { width: 16px; height: 16px; font-size: 0.45rem; }
+        .tree-dept-item .tree-dept-name { font-size: 0.5rem; }
+        .tree-table-main .table-body { max-height: 300px; }
+        .emp-table thead th, .emp-table tbody td { padding: 0.15rem 0.2rem; font-size: 0.5rem; }
+        .emp-table .emp-id { font-size: 0.5rem; }
+        .emp-table .emp-email { font-size: 0.45rem; }
+        .emp-table .emp-mobile { font-size: 0.5rem; }
+        .tree-table-main .table-header .dept-title h6 { font-size: 0.65rem; }
+        .tree-table-main .table-header .dept-title .dept-code { font-size: 0.5rem; }
+        .tree-table-main .table-header .table-actions .search-box input { width: 60px; font-size: 0.55rem; }
+        .tree-table-main .table-header .table-actions .search-box { padding: 0.1rem 0.4rem; }
+        .tree-sidebar .tree-header .tree-actions button { font-size: 0.45rem; padding: 0.05rem 0.3rem; }
+        .tree-search-box input { font-size: 0.5rem; padding: 0.15rem 0.3rem; }
+    }
+
+    .tree-sidebar::-webkit-scrollbar,
+    .tree-table-main .table-body::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+
+    .tree-sidebar::-webkit-scrollbar-track,
+    .tree-table-main .table-body::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+    }
+
+    .tree-sidebar::-webkit-scrollbar-thumb,
+    .tree-table-main .table-body::-webkit-scrollbar-thumb {
+        background: var(--brand-orange);
+        border-radius: 8px;
+    }
+
+    .tree-sidebar::-webkit-scrollbar-thumb:hover,
+    .tree-table-main .table-body::-webkit-scrollbar-thumb:hover {
+        background: var(--brand-orange-dark);
+    }
+
     .form-control, 
     .form-select,
     input[type="text"],
@@ -306,6 +968,43 @@
         width: 100%;
         -webkit-text-fill-color: var(--text-primary) !important;
         caret-color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .form-control,
+    [data-theme="dark"] .form-select,
+    [data-theme="dark"] input[type="text"],
+    [data-theme="dark"] input[type="email"],
+    [data-theme="dark"] input[type="password"],
+    [data-theme="dark"] input[type="number"],
+    [data-theme="dark"] input[type="date"],
+    [data-theme="dark"] textarea,
+    [data-theme="dark"] select {
+        background-color: rgba(255, 255, 255, 0.06) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: #E8EDF5 !important;
+        -webkit-text-fill-color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .form-control::placeholder,
+    [data-theme="dark"] input::placeholder,
+    [data-theme="dark"] textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+    }
+
+    [data-theme="dark"] .form-control:focus,
+    [data-theme="dark"] .form-select:focus,
+    [data-theme="dark"] input:focus,
+    [data-theme="dark"] textarea:focus,
+    [data-theme="dark"] select:focus {
+        border-color: var(--brand-orange) !important;
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.15) !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    [data-theme="dark"] .form-select option,
+    [data-theme="dark"] select option {
+        background: #1A1A2E !important;
+        color: #E8EDF5 !important;
     }
 
     .form-control:focus,
@@ -341,6 +1040,10 @@
         appearance: none !important;
     }
 
+    [data-theme="dark"] .form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%239CA3AF' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+    }
+
     .form-label {
         color: var(--text-secondary) !important;
         font-weight: 600 !important;
@@ -350,9 +1053,6 @@
     .form-label i { color: var(--brand-orange); width: 18px; }
     .form-text { color: var(--text-muted) !important; font-size: 0.65rem !important; }
 
-    /* ============================================
-       BUTTONS
-    ============================================ */
     .btn-primary-custom {
         background: var(--brand-gradient) !important;
         border: none !important;
@@ -457,9 +1157,6 @@
 
     .btn-sm { padding: 0.25rem 0.8rem !important; font-size: 0.7rem !important; border-radius: 50px !important; }
 
-    /* ============================================
-       TABLE STYLES
-    ============================================ */
     .table {
         color: var(--text-primary) !important;
         margin-bottom: 0 !important;
@@ -469,6 +1166,7 @@
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
         padding: 0.6rem 0.5rem !important;
+        transition: all 0.3s ease;
     }
     .table-hover tbody tr:hover {
         background: rgba(255, 107, 0, 0.04) !important;
@@ -517,9 +1215,6 @@
         border-radius: 0 0 12px 12px;
     }
 
-    /* ============================================
-       BADGE STYLES
-    ============================================ */
     .badge {
         padding: 0.25rem 0.6rem;
         border-radius: 50px;
@@ -531,9 +1226,6 @@
     .badge.bg-danger { background: #EF4444 !important; color: #FFFFFF !important; }
     .badge.bg-warning { background: #F59E0B !important; color: #1A1A2E !important; }
 
-    /* ============================================
-       HELP DESK CARDS
-    ============================================ */
     .helpdesk-card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -565,9 +1257,6 @@
         margin-right: 0.5rem;
     }
 
-    /* ============================================
-       EMAIL LIST
-    ============================================ */
     .email-list-item {
         display: flex;
         align-items: center;
@@ -617,15 +1306,13 @@
         opacity: 0.3;
     }
 
-    /* ============================================
-       UNIT CREDENTIALS SECTION
-    ============================================ */
     .unit-credentials-section {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
         border-radius: 12px;
         padding: 1rem;
         margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
     }
     .unit-credentials-section .unit-header {
         display: flex;
@@ -663,89 +1350,11 @@
         letter-spacing: 1px;
     }
 
-    /* ============================================
-       DEPT EMPLOYEE ROWS
-    ============================================ */
-    .dept-main-row {
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border-bottom: 1px solid var(--border-color);
-    }
-    .dept-main-row:hover { background: rgba(255, 107, 0, 0.04) !important; }
-    .dept-main-row .toggle-icon {
-        transition: transform 0.3s ease;
-        display: inline-block;
-        margin-right: 0.5rem;
-        color: var(--brand-orange);
-        font-size: 0.8rem;
-    }
-    .dept-main-row .toggle-icon.expanded { transform: rotate(90deg); }
-    .dept-main-row .dept-name {
-        font-weight: 600;
-        color: var(--brand-orange);
-        font-size: 0.85rem;
-    }
-    .dept-main-row .employee-count {
-        font-size: 0.65rem;
-        color: var(--text-muted);
-        margin-left: 0.5rem;
-    }
-    .dept-main-row .credential-info {
-        font-size: 0.65rem;
-        color: var(--text-muted);
-        margin-left: 0.5rem;
-    }
-    .dept-main-row .credential-info i { color: var(--brand-orange); }
-    .dept-main-row .dept-loading-spinner {
-        display: none;
-        margin-left: 0.5rem;
-        color: var(--brand-orange);
-    }
-    .employee-details-row { display: none; }
-    .employee-details-row.expanded { display: table-row; }
-    .employee-details-row td { padding: 0 !important; }
-    .employee-details-row .employee-table-wrapper {
-        padding: 0.5rem 1rem 0.5rem 2.5rem;
-    }
-    .employee-details-row .employee-table-wrapper .table th {
-        font-size: 0.55rem;
-        padding: 0.3rem 0.5rem;
-    }
-    .employee-details-row .employee-table-wrapper .table td {
-        font-size: 0.7rem;
-        padding: 0.3rem 0.5rem;
-    }
-    .employee-id {
-        font-weight: 600;
-        color: var(--brand-orange);
-        font-family: monospace;
-    }
-    .no-employees {
-        padding: 0.5rem 0.5rem;
-        color: var(--text-muted);
-        font-size: 0.7rem;
-        font-style: italic;
-    }
-    .dept-loading {
-        text-align: center;
-        padding: 0.5rem;
-        color: var(--text-muted);
-        font-size: 0.7rem;
-    }
-    .dept-error {
-        text-align: center;
-        padding: 0.5rem;
-        color: #EF4444;
-        font-size: 0.7rem;
-    }
-
-    /* ============================================
-       PASSWORD WRAPPER
-    ============================================ */
     .password-wrapper { position: relative; }
+    .password-wrapper .form-control { padding-right: 45px !important; }
     .password-toggle-icon {
         position: absolute;
-        right: 12px;
+        right: 8px;
         top: 50%;
         transform: translateY(-50%);
         cursor: pointer;
@@ -753,17 +1362,30 @@
         z-index: 10;
         background: transparent;
         border: none;
-        padding: 8px 10px;
-        border-radius: 8px;
-        font-size: 1rem;
+        padding: 6px 8px;
+        border-radius: 4px;
+        font-size: 0.9rem;
         transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-    .password-toggle-icon:hover { color: var(--brand-orange); }
-    .password-wrapper .form-control { padding-right: 45px !important; }
+    .password-toggle-icon:hover { 
+        color: var(--brand-orange); 
+        background: rgba(255, 107, 0, 0.05);
+    }
+    .password-toggle-icon:focus {
+        outline: none;
+    }
 
-    /* ============================================
-       USER BADGE
-    ============================================ */
+    [data-theme="dark"] .password-toggle-icon {
+        color: rgba(255, 255, 255, 0.4);
+    }
+    [data-theme="dark"] .password-toggle-icon:hover {
+        color: var(--brand-orange);
+        background: rgba(255, 107, 0, 0.08);
+    }
+
     .user-badge {
         display: inline-flex;
         align-items: center;
@@ -781,9 +1403,6 @@
         font-size: 0.85rem;
     }
 
-    /* ============================================
-       ACTION CARDS
-    ============================================ */
     .action-card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -810,9 +1429,6 @@
         margin-bottom: 0.75rem;
     }
 
-    /* ============================================
-       PASSWORD RESET CARD
-    ============================================ */
     .password-reset-card {
         background: rgba(245, 158, 11, 0.04);
         border: 1px solid rgba(245, 158, 11, 0.15);
@@ -827,9 +1443,6 @@
         font-family: 'Fraunces', serif;
     }
 
-    /* ============================================
-       NO DATA MESSAGE
-    ============================================ */
     .no-data-message {
         text-align: center;
         padding: 2rem;
@@ -843,14 +1456,12 @@
         opacity: 0.3;
     }
 
-    /* ============================================
-       MODAL STYLES
-    ============================================ */
     .modal-content {
         background: var(--bg-card) !important;
         border: 1px solid var(--border-color) !important;
         border-radius: 16px !important;
         animation: modalSlideIn 0.4s ease !important;
+        transition: all 0.3s ease;
     }
     .modal-header {
         border-bottom: 1px solid var(--border-color) !important;
@@ -877,9 +1488,6 @@
     #confirmModal .modal-header .modal-title i { color: #FFFFFF !important; }
     #confirmModal .btn-close { filter: brightness(0) invert(1) !important; }
 
-    /* ============================================
-       RESPONSIVE
-    ============================================ */
     @media (max-width: 992px) {
         .settings-tab-btn { font-size: 0.7rem !important; padding: 0.5rem 0.8rem !important; }
         .settings-tab-btn .tab-icon { font-size: 0.8rem; }
@@ -901,18 +1509,6 @@
         .settings-tab-btn .tab-badge { display: none; }
         .section-divider { flex-wrap: wrap; }
         .section-divider .section-title { font-size: 0.85rem; }
-        .helpdesk-card { padding: 1rem; }
-        .helpdesk-card .helpdesk-value { font-size: 0.85rem; }
-        .d-flex.justify-content-end .gap-2 { flex-direction: column !important; width: 100% !important; }
-        .d-flex.justify-content-end .gap-2 .btn { width: 100% !important; }
-        .email-list-item .email-address { font-size: 0.75rem; }
-        .employee-details-row .employee-table-wrapper { padding: 0.5rem 0.5rem 0.5rem 1.5rem; }
-        .employee-details-row .employee-table-wrapper .table td,
-        .employee-details-row .employee-table-wrapper .table th {
-            font-size: 0.6rem;
-            padding: 0.2rem 0.3rem;
-        }
-        .table td, .table th { font-size: 0.65rem !important; padding: 0.3rem 0.25rem !important; }
         .toast-container-custom { max-width: 95%; right: 5px; top: 70px; }
         .toast-container-custom .toast-body { max-height: 150px; }
     }
@@ -932,39 +1528,11 @@
             font-size: 0.75rem !important;
             padding: 0.35rem 0.8rem !important;
         }
-        .table td, .table th { font-size: 0.55rem !important; padding: 0.2rem 0.15rem !important; }
-        .badge { font-size: 0.5rem !important; padding: 0.15rem 0.35rem !important; }
-        .helpdesk-card { padding: 0.75rem; }
-        .helpdesk-card .helpdesk-value { font-size: 0.75rem; }
-        .helpdesk-card .helpdesk-label { font-size: 0.6rem; }
-        .user-badge { font-size: 0.7rem; padding: 0.2rem 0.6rem; }
-        .email-list-item .email-address { font-size: 0.7rem; }
-        .action-card .card-body { padding: 0.75rem; }
-        .action-card .action-icon { font-size: 1.5rem; }
-        .action-card .action-title { font-size: 0.75rem; }
-        .action-card .action-subtitle { font-size: 0.6rem; }
-        .modal-body { padding: 1rem !important; }
-        .modal-header { padding: 0.75rem 1rem !important; }
-        .modal-footer { padding: 0.75rem 1rem !important; }
-        .password-reset-card { padding: 0.75rem; }
-        .password-reset-card .card-title { font-size: 0.8rem; }
-        .employee-details-row .employee-table-wrapper { padding: 0.5rem 0.3rem 0.5rem 0.8rem; }
-        .employee-details-row .employee-table-wrapper .table td,
-        .employee-details-row .employee-table-wrapper .table th {
-            font-size: 0.5rem;
-            padding: 0.15rem 0.2rem;
-        }
-        .unit-credentials-section { padding: 0.75rem; }
-        .unit-credentials-section .unit-header h6 { font-size: 0.8rem; }
-        .cred-username, .cred-password { font-size: 0.65rem; }
-        .tab-pane { padding: 1rem 0.25rem; }
         .toast-container-custom { max-width: 98%; right: 5px; top: 65px; }
         .toast-container-custom .toast-body { max-height: 120px; font-size: 0.75rem; }
+        .tab-pane { padding: 1rem 0.25rem; }
     }
 
-    /* ============================================
-       SCROLLBAR
-    ============================================ */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 10px; }
     ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 10px; }
@@ -972,9 +1540,6 @@
 
     ::selection { background: var(--brand-orange); color: #FFFFFF; }
 
-    /* ============================================
-       BULK UPLOAD ERROR STYLES
-    ============================================ */
     .upload-error-container {
         margin-top: 0.75rem;
         padding: 0.75rem;
@@ -1022,17 +1587,312 @@
         color: var(--brand-orange);
         font-size: 0.65rem;
     }
+
+    [data-theme="dark"] .tree-sidebar {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .tree-sidebar .tree-header {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .tree-unit-item .tree-name {
+        color: #E8EDF5;
+    }
+
+    [data-theme="dark"] .tree-unit-item:hover {
+        background: rgba(255, 107, 0, 0.08);
+    }
+
+    [data-theme="dark"] .tree-dept-item:hover {
+        background: rgba(255, 107, 0, 0.08);
+    }
+
+    [data-theme="dark"] .tree-dept-item.active {
+        background: rgba(255, 107, 0, 0.12);
+    }
+
+    [data-theme="dark"] .tree-search-box {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .tree-search-box input {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #E8EDF5;
+    }
+
+    [data-theme="dark"] .tree-search-box input:focus {
+        border-color: var(--brand-orange);
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
+    }
+
+    [data-theme="dark"] .tree-search-box input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    [data-theme="dark"] .tree-table-main .table-header {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .emp-table thead {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    [data-theme="dark"] .emp-table thead th {
+        color: rgba(255, 255, 255, 0.6);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .emp-table tbody tr {
+        border-color: rgba(255, 255, 255, 0.04);
+    }
+
+    [data-theme="dark"] .emp-table tbody td {
+        color: #E8EDF5;
+    }
+
+    [data-theme="dark"] .emp-table .emp-name {
+        color: #E8EDF5;
+    }
+
+    [data-theme="dark"] .emp-table .emp-email {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    [data-theme="dark"] .emp-table .emp-mobile {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    [data-theme="dark"] .emp-table tbody tr:hover {
+        background: rgba(255, 107, 0, 0.06);
+    }
+
+    [data-theme="dark"] .tree-table-main .table-body .empty-state h6 {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    [data-theme="dark"] .tree-table-main .table-body .empty-state p {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    [data-theme="dark"] .tree-sidebar .tree-header .tree-actions button {
+        border-color: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    [data-theme="dark"] .tree-sidebar .tree-header .tree-actions button:hover {
+        border-color: var(--brand-orange);
+        color: var(--brand-orange);
+    }
+
+    [data-theme="dark"] .tree-unit-item .tree-unit-code {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    [data-theme="dark"] .tree-dept-item .tree-dept-name {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    [data-theme="dark"] .tree-dept-item.active .tree-dept-name {
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .tree-dept-item .tree-dept-badge {
+        background: rgba(255, 107, 0, 0.15);
+    }
+
+    [data-theme="dark"] .tree-unit-item .tree-badge {
+        background: rgba(255, 107, 0, 0.15);
+    }
+
+    [data-theme="dark"] .tree-table-main .table-header .dept-title h6 {
+        color: #E8EDF5;
+    }
+
+    [data-theme="dark"] .tree-table-main .table-header .dept-title .emp-count {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    [data-theme="dark"] .tree-table-main .table-header .table-actions .search-box {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-theme="dark"] .tree-table-main .table-header .table-actions .search-box input {
+        color: #E8EDF5;
+    }
+
+    [data-theme="dark"] .tree-table-main .table-header .table-actions .search-box input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    [data-theme="dark"] .tree-table-main .table-header .table-actions .search-box:focus-within {
+        border-color: var(--brand-orange);
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
+    }
+
+    [data-theme="dark"] .tree-dept-container {
+        border-color: rgba(255, 255, 255, 0.04);
+    }
+
+    [data-theme="dark"] .tree-unit-item .tree-arrow {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    [data-theme="dark"] .tree-unit-item.expanded .tree-arrow {
+        color: var(--brand-orange);
+    }
+
+    [data-theme="dark"] .tree-dept-item .tree-dept-icon {
+        background: rgba(59, 130, 246, 0.12);
+        color: #60A5FA;
+    }
+
+    [data-theme="dark"] .tree-dept-item.active .tree-dept-icon {
+        background: var(--brand-gradient);
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .tree-unit-item .tree-icon {
+        background: rgba(255, 107, 0, 0.12);
+        color: #FF8C38;
+    }
+
+    [data-theme="dark"] .tree-dept-item .tree-dept-match {
+        background: rgba(255, 107, 0, 0.2);
+    }
+
+    [data-theme="dark"] .emp-table tbody tr .emp-match {
+        background: rgba(255, 107, 0, 0.2);
+    }
+
+    [data-theme="dark"] .helpdesk-card {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .unit-credentials-section {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .action-card {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .action-card .action-title {
+        color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .panel-card {
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .settings-header {
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .password-reset-card {
+        background: rgba(245, 158, 11, 0.05);
+        border-color: rgba(245, 158, 11, 0.08);
+    }
+
+    [data-theme="dark"] .upload-error-container {
+        background: rgba(239, 68, 68, 0.05);
+        border-color: rgba(239, 68, 68, 0.1);
+    }
+
+    [data-theme="dark"] .toast-container-custom .toast {
+        background: rgba(26, 26, 46, 0.95);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .email-list-item {
+        border-color: rgba(255, 255, 255, 0.04);
+    }
+
+    [data-theme="dark"] .modal-content {
+        background: rgba(26, 26, 46, 0.98) !important;
+        border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    [data-theme="dark"] .modal-header {
+        border-color: rgba(255, 255, 255, 0.06) !important;
+        background: rgba(255, 107, 0, 0.05) !important;
+    }
+
+    [data-theme="dark"] .modal-body {
+        color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .modal-footer {
+        border-color: rgba(255, 255, 255, 0.06) !important;
+        background: rgba(255, 107, 0, 0.03) !important;
+    }
+
+    [data-theme="dark"] .modal-header .btn-close::before {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    [data-theme="dark"] .modal-header .btn-close:hover {
+        background: rgba(255, 107, 0, 0.15) !important;
+        border-color: var(--brand-orange) !important;
+    }
+
+    [data-theme="dark"] .btn-close-custom {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] .btn-close-custom:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: var(--brand-orange) !important;
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .btn-close-custom i {
+        color: var(--text-muted) !important;
+    }
+
+    [data-theme="dark"] .btn-close-custom:hover i {
+        color: var(--brand-orange) !important;
+    }
+
+    [data-theme="dark"] .table {
+        color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .table > :not(caption) > * > * {
+        color: #E8EDF5 !important;
+        border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    [data-theme="dark"] .table-hover tbody tr:hover {
+        background: rgba(255, 107, 0, 0.06) !important;
+    }
+
+    [data-theme="dark"] .table th {
+        color: rgba(255, 255, 255, 0.6) !important;
+        border-color: rgba(255, 107, 0, 0.1) !important;
+    }
+
+    [data-theme="dark"] .badge.bg-success { background: rgba(34, 197, 94, 0.2) !important; color: #4ADE80 !important; }
+    [data-theme="dark"] .badge.bg-danger { background: rgba(239, 68, 68, 0.2) !important; color: #F87171 !important; }
+    [data-theme="dark"] .badge.bg-warning { background: rgba(245, 158, 11, 0.2) !important; color: #FBBF24 !important; }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Toast Container for Notifications -->
 <div class="toast-container-custom" id="toastContainer"></div>
 
 <div class="settings-container">
-    <!-- ==========================================
-    HEADER
-    ========================================== -->
     <div class="settings-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
@@ -1045,14 +1905,10 @@
         </div>
     </div>
 
-    <!-- ==========================================
-    MAIN PANEL
-    ========================================== -->
     <div class="card panel-card shadow-sm">
-        <!-- Tabs Navigation -->
         <div class="settings-tabs-wrapper">
             <div class="settings-tabs" id="settingsTabs" role="tablist">
-                <button class="settings-tab-btn active" id="master-tab" data-bs-toggle="tab" data-bs-target="#master-content" type="button">
+                <button class="settings-tab-btn" id="master-tab" data-bs-toggle="tab" data-bs-target="#master-content" type="button">
                     <i class="fa-solid fa-database tab-icon"></i>
                     <span>Master Data</span>
                     <span class="tab-badge">Units and Depts</span>
@@ -1080,15 +1936,10 @@
             </div>
         </div>
 
-        <!-- Tab Content -->
         <div class="card-body">
             <div class="tab-content" id="settingsTabContent">
 
-                <!-- ==========================================
-                TAB 1: MASTER DATA
-                ========================================== -->
-                <div class="tab-pane fade show active" id="master-content">
-                    <!-- Units Section -->
+                <div class="tab-pane fade" id="master-content">
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-industry"></i>Units</span>
                         <button type="button" class="btn btn-primary-custom btn-sm ms-auto" data-bs-toggle="modal" data-bs-target="#addUnitModal">
@@ -1136,7 +1987,6 @@
                         </table>
                     </div>
 
-                    <!-- Departments Section -->
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-cubes"></i>Departments</span>
                         <button type="button" class="btn btn-primary-custom btn-sm ms-auto" data-bs-toggle="modal" data-bs-target="#addDeptModal">
@@ -1185,14 +2035,9 @@
                     </div>
                 </div>
 
-                <!-- ==========================================
-                TAB 2: COMMUNICATION
-                ========================================== -->
                 <div class="tab-pane fade" id="communication-content">
-                    <!-- Helpdesk Contact Section -->
                     <div class="section-divider"><span class="section-title"><i class="fa-solid fa-headset"></i>Helpdesk Contact</span></div>
                     
-                    <!-- Display Cards -->
                     <div class="row g-3 mb-4">
                         <div class="col-lg-6">
                             <div class="helpdesk-card">
@@ -1214,7 +2059,6 @@
                         </div>
                     </div>
 
-                    <!-- Edit Form -->
                     <div class="card panel-card mb-4">
                         <div class="card-header glass-header py-2">
                             <h5 class="fw-bold mb-0"><i class="fa-solid fa-pen-to-square me-2"></i>Update Helpdesk Contact</h5>
@@ -1237,7 +2081,6 @@
                         </div>
                     </div>
 
-                    <!-- Notification Emails Section -->
                     <div class="section-divider"><span class="section-title"><i class="fa-solid fa-envelope-circle-check"></i>Notification Emails</span></div>
                     <div class="row g-3">
                         <div class="col-lg-5">
@@ -1293,11 +2136,7 @@
                     </div>
                 </div>
 
-                <!-- ==========================================
-                TAB 3: EMPLOYEES
-                ========================================== -->
                 <div class="tab-pane fade" id="employees-content">
-                    <!-- Action Cards -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <div class="card action-card">
@@ -1337,15 +2176,12 @@
                                         </a>
                                     </div>
                                     
-                                    <!-- Error Container for Bulk Upload -->
                                     <div class="upload-error-container" id="uploadErrorContainer">
                                         <div class="error-title">
                                             <i class="fa-solid fa-circle-exclamation me-1"></i>
                                             <span id="uploadErrorTitle">Upload Failed</span>
                                         </div>
-                                        <ul class="error-list" id="uploadErrorList">
-                                            <!-- Errors will be injected here -->
-                                        </ul>
+                                        <ul class="error-list" id="uploadErrorList"></ul>
                                     </div>
                                 </div>
                             </div>
@@ -1365,7 +2201,6 @@
                         </div>
                     </div>
 
-                    <!-- Employee List -->
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                         <h6 class="fw-bold mb-0" style="color: var(--text-primary); font-size: 0.9rem; font-family: 'Fraunces', serif;">
                             <i class="fa-solid fa-list-ul me-2" style="color: var(--brand-orange);"></i>Employee List
@@ -1415,11 +2250,7 @@
                     </div>
                 </div>
 
-                <!-- ==========================================
-                TAB 4: CREDENTIALS
-                ========================================== -->
                 <div class="tab-pane fade" id="credentials-content">
-                    <!-- Password Management -->
                     <div class="row mb-4">
                         <div class="col-lg-6">
                             <div class="card panel-card h-100">
@@ -1428,9 +2259,34 @@
                                     <div class="user-badge"><i class="fa-solid fa-user-shield"></i><span class="username">{{ request.user.username }}</span></div>
                                     <form method="POST" action="{% url 'settings_passwords' %}" data-confirm="Update your password?">
                                         {% csrf_token %}<input type="hidden" name="action" value="change_my_password">
-                                        <div class="mb-2"><label class="form-label fw-bold">Current Password</label><div class="password-wrapper"><input type="password" name="current_password" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_change_current_password"><i class="fa-regular fa-eye"></i></button></div></div>
-                                        <div class="mb-2"><label class="form-label fw-bold">New Password</label><div class="password-wrapper"><input type="password" name="new_password1" id="id_change_new_password1" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_change_new_password1"><i class="fa-regular fa-eye"></i></button></div><div class="form-text">Min 8 characters, not entirely numeric</div></div>
-                                        <div class="mb-2"><label class="form-label fw-bold">Confirm Password</label><div class="password-wrapper"><input type="password" name="new_password2" id="id_change_new_password2" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_change_new_password2"><i class="fa-regular fa-eye"></i></button></div></div>
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold">Current Password</label>
+                                            <div class="password-wrapper">
+                                                <input type="password" name="current_password" id="id_current_password" class="form-control" required>
+                                                <button type="button" class="password-toggle-icon" data-target="id_current_password">
+                                                    <i class="fa-regular fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold">New Password</label>
+                                            <div class="password-wrapper">
+                                                <input type="password" name="new_password1" id="id_new_password1" class="form-control" required>
+                                                <button type="button" class="password-toggle-icon" data-target="id_new_password1">
+                                                    <i class="fa-regular fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <div class="form-text">Min 8 characters, not entirely numeric</div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold">Confirm Password</label>
+                                            <div class="password-wrapper">
+                                                <input type="password" name="new_password2" id="id_new_password2" class="form-control" required>
+                                                <button type="button" class="password-toggle-icon" data-target="id_new_password2">
+                                                    <i class="fa-regular fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                         <button type="submit" class="btn btn-primary-custom mt-2"><i class="fa-solid fa-save me-1"></i>Update Password</button>
                                     </form>
                                 </div>
@@ -1458,8 +2314,24 @@
                                             </select>
                                             <div class="form-text">Select the employee whose password needs to be reset</div>
                                         </div>
-                                        <div class="mb-2"><label class="form-label fw-bold">New Password</label><div class="password-wrapper"><input type="password" name="new_password1" id="id_reset_new_password1" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_reset_new_password1"><i class="fa-regular fa-eye"></i></button></div></div>
-                                        <div class="mb-2"><label class="form-label fw-bold">Confirm Password</label><div class="password-wrapper"><input type="password" name="new_password2" id="id_reset_new_password2" class="form-control" required><button type="button" class="password-toggle-icon toggle-password" data-target="id_reset_new_password2"><i class="fa-regular fa-eye"></i></button></div></div>
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold">New Password</label>
+                                            <div class="password-wrapper">
+                                                <input type="password" name="new_password1" id="id_reset_password1" class="form-control" required>
+                                                <button type="button" class="password-toggle-icon" data-target="id_reset_password1">
+                                                    <i class="fa-regular fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label fw-bold">Confirm Password</label>
+                                            <div class="password-wrapper">
+                                                <input type="password" name="new_password2" id="id_reset_password2" class="form-control" required>
+                                                <button type="button" class="password-toggle-icon" data-target="id_reset_password2">
+                                                    <i class="fa-regular fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                         <button type="submit" class="btn btn-warning-custom mt-2"><i class="fa-solid fa-sync-alt me-1"></i>Reset Password</button>
                                     </form>
                                 </div>
@@ -1467,7 +2339,6 @@
                         </div>
                     </div>
 
-                    <!-- Unit-wise Credentials -->
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-key"></i>Unit-wise Credentials</span>
                         <div class="d-flex gap-2 ms-auto flex-wrap">
@@ -1527,9 +2398,6 @@
                     {% endif %}
                 </div>
 
-                <!-- ==========================================
-                TAB 5: DEPARTMENT EMPLOYEES
-                ========================================== -->
                 <div class="tab-pane fade" id="dept-employees-content">
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-users"></i>Department-wise Employees</span>
@@ -1539,55 +2407,96 @@
                         </div>
                     </div>
 
-                    {% if credentials_by_unit %}
-                        {% for unit_data in credentials_by_unit %}
-                        <div class="unit-credentials-section">
-                            <div class="unit-header">
-                                <h6><i class="fa-solid fa-building me-2"></i>{{ unit_data.unit.code }} - {{ unit_data.unit.full_name }}</h6>
-                                <span class="unit-badge">{{ unit_data.credentials|length }} departments</span>
+                    <div class="tree-table-container" id="deptTreeContainer">
+                        <div class="tree-sidebar" id="deptTreeSidebar">
+                            <div class="tree-header">
+                                <span>Units &amp; Departments</span>
+                                <div class="tree-actions">
+                                    <button onclick="expandAllUnits()" title="Expand All">
+                                        <i class="fa-solid fa-chevron-down"></i> All
+                                    </button>
+                                    <button onclick="collapseAllUnits()" title="Collapse All">
+                                        <i class="fa-solid fa-chevron-up"></i> All
+                                    </button>
+                                    <span class="tree-count" id="treeTotalCount">
+                                        <i class="fa-regular fa-building me-1"></i>
+                                        <span id="treeDeptCount">{{ credentials_by_unit|length }}</span>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <tbody>
+                            
+                            <div class="tree-search-box">
+                                <i class="fa-solid fa-search search-icon"></i>
+                                <input type="text" id="treeSearchInput" placeholder="Search departments..." oninput="filterTreeItems(this.value)">
+                                <button class="clear-search-btn" id="clearTreeSearch" onclick="clearTreeSearch()">
+                                    <i class="fa-solid fa-times"></i>
+                                </button>
+                            </div>
+                            
+                            <div id="treeList">
+                                {% if credentials_by_unit %}
+                                    {% for unit_data in credentials_by_unit %}
+                                    <div class="tree-unit-item" data-unit-id="{{ unit_data.unit.id }}" data-unit-name="{{ unit_data.unit.code }}" onclick="toggleUnit(this, {{ unit_data.unit.id }})">
+                                        <div class="tree-icon">
+                                            <i class="fa-solid fa-building"></i>
+                                        </div>
+                                        <div class="tree-info">
+                                            <div class="tree-name">{{ unit_data.unit.code }}</div>
+                                            <span class="tree-unit-code">{{ unit_data.unit.full_name }}</span>
+                                        </div>
+                                        <span class="tree-badge" id="unitBadge-{{ unit_data.unit.id }}">{{ unit_data.credentials|length }}</span>
+                                        <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+                                    </div>
+                                    <div class="tree-dept-container" id="deptContainer-{{ unit_data.unit.id }}">
                                         {% for cred in unit_data.credentials %}
-                                        <tr class="dept-main-row" data-dept-id="{{ cred.department.id }}" data-unit-id="{{ unit_data.unit.id }}">
-                                            <td>
-                                                <span class="toggle-icon" id="toggle-icon-{{ cred.department.id }}"><i class="fa-solid fa-chevron-right"></i></span>
-                                                <span class="dept-name">{{ cred.department.name }}</span>
-                                                <span class="employee-count" id="emp-count-{{ cred.department.id }}">(0 employees)</span>
-                                                <span class="credential-info">
-                                                    <i class="fa-solid fa-user me-1"></i>{{ cred.username }}
-                                                    <i class="fa-solid fa-key ms-2 me-1"></i>{{ cred.password }}
-                                                </span>
-                                                <span class="dept-loading-spinner" id="spinner-{{ cred.department.id }}">
-                                                    <i class="fa-solid fa-spinner fa-spin"></i>
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        <tr class="employee-details-row" id="employee-row-{{ cred.department.id }}">
-                                            <td>
-                                                <div class="employee-table-wrapper" id="employee-content-{{ cred.department.id }}">
-                                                    <div class="dept-loading" id="loading-{{ cred.department.id }}">
-                                                        <i class="fa-solid fa-spinner fa-spin me-2"></i>Loading employees...
-                                                    </div>
-                                                    <div id="employee-list-{{ cred.department.id }}" style="display:none;"></div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr><td class="text-center py-3 text-muted">No departments found for this unit.</td></tr>
+                                        <div class="tree-dept-item" data-dept-id="{{ cred.department.id }}" data-unit-id="{{ unit_data.unit.id }}" data-dept-name="{{ cred.department.name }}" onclick="selectDepartment(this, {{ cred.department.id }}, '{{ cred.department.name|escapejs }}', '{{ unit_data.unit.code|escapejs }}')">
+                                            <div class="tree-dept-icon">
+                                                <i class="fa-solid fa-users"></i>
+                                            </div>
+                                            <div class="tree-dept-info">
+                                                <div class="tree-dept-name">{{ cred.department.name }}</div>
+                                            </div>
+                                            <span class="tree-dept-badge" id="deptBadge-{{ cred.department.id }}">0</span>
+                                            <span class="tree-dept-loading"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                                        </div>
                                         {% endfor %}
-                                    </tbody>
-                                </table>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-4 text-muted" style="font-size: 0.7rem;">
+                                        <i class="fa-solid fa-building fa-2x d-block mb-2 opacity-25"></i>
+                                        No departments found
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="no-data-message">
-                            <i class="fa-solid fa-users"></i>
-                            <p class="mb-0">No departments found. Add credentials to manage employees.</p>
+
+                        <div class="tree-table-main">
+                            <div class="table-header">
+                                <div class="dept-title">
+                                    <h6 id="selectedDeptName">Select a Department</h6>
+                                    <span class="dept-code" id="selectedDeptCode">—</span>
+                                    <span class="emp-count" id="selectedEmpCount">0 employees</span>
+                                </div>
+                                <div class="table-actions">
+                                    <div class="search-box">
+                                        <i class="fa-solid fa-search"></i>
+                                        <input type="text" id="empSearchInput" placeholder="Search employees..." oninput="filterEmployees()">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary-custom border-0" onclick="clearEmployeeSearch()" style="font-size: 0.6rem; padding: 0.1rem 0.3rem;">
+                                            <i class="fa-solid fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-body" id="employeeTableBody">
+                                <div class="empty-state">
+                                    <i class="fa-solid fa-users"></i>
+                                    <h6>No Department Selected</h6>
+                                    <p>Click a department from the left sidebar to view employees</p>
+                                </div>
+                            </div>
                         </div>
-                    {% endif %}
+                    </div>
                 </div>
 
             </div>
@@ -1595,10 +2504,6 @@
     </div>
 </div>
 
-<!-- ==========================================
-MODALS
-========================================== -->
-<!-- Confirm Modal -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -1610,14 +2515,13 @@ MODALS
                 <p id="confirmModalBody" class="mb-0">Are you sure?</p>
             </div>
             <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
-                <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" data-bs-dismiss="modal" id="confirmModalCancelBtn">Cancel</button>
+                <button type="button" class="btn btn-outline-secondary-custom rounded-pill border px-4" id="confirmModalCancelBtn">Cancel</button>
                 <button type="button" class="btn btn-danger-custom rounded-pill px-4 fw-bold" id="confirmModalYesBtn">Yes</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Add Unit Modal -->
 <div class="modal fade" id="addUnitModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -1641,7 +2545,6 @@ MODALS
     </div>
 </div>
 
-<!-- Edit Unit Modal -->
 <div class="modal fade" id="editUnitModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -1664,7 +2567,6 @@ MODALS
     </div>
 </div>
 
-<!-- Add Department Modal -->
 <div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -1688,7 +2590,6 @@ MODALS
     </div>
 </div>
 
-<!-- Edit Department Modal -->
 <div class="modal fade" id="editDeptModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -1710,7 +2611,6 @@ MODALS
     </div>
 </div>
 
-<!-- Add Employee Modal -->
 <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
@@ -1739,7 +2639,6 @@ MODALS
     </div>
 </div>
 
-<!-- Edit Employee Modal -->
 <div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
@@ -1768,7 +2667,6 @@ MODALS
     </div>
 </div>
 
-<!-- Add Credential Modal -->
 <div class="modal fade" id="addCredentialModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -1793,7 +2691,6 @@ MODALS
     </div>
 </div>
 
-<!-- Edit Credential Modal -->
 <div class="modal fade" id="editCredentialModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -1821,52 +2718,52 @@ MODALS
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ============================================
-        // TAB PERSISTENCE - Restore active tab from URL hash
-        // ============================================
-        function restoreActiveTab() {
-            var hash = window.location.hash;
-            if (hash) {
-                var targetTab = document.querySelector('[data-bs-target="' + hash + '"]');
-                if (targetTab) {
-                    // Remove active class from all tabs
-                    document.querySelectorAll('.settings-tab-btn').forEach(function(btn) {
-                        btn.classList.remove('active');
-                    });
-                    // Add active class to target tab
-                    targetTab.classList.add('active');
-                    
-                    // Hide all tab panes
-                    document.querySelectorAll('.tab-pane').forEach(function(pane) {
-                        pane.classList.remove('show', 'active');
-                    });
-                    
-                    // Show target tab pane
-                    var targetPane = document.querySelector(hash);
-                    if (targetPane) {
-                        targetPane.classList.add('show', 'active');
-                    }
-                }
+        var defaultTab = '#master-content';
+        var hash = window.location.hash;
+        
+        function activateTab(tabId) {
+            if (!tabId) tabId = defaultTab;
+            
+            document.querySelectorAll('.settings-tab-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-pane').forEach(function(pane) {
+                pane.classList.remove('show', 'active');
+            });
+            
+            var targetBtn = document.querySelector('[data-bs-target="' + tabId + '"]');
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+            }
+            
+            var targetPane = document.querySelector(tabId);
+            if (targetPane) {
+                targetPane.classList.add('show', 'active');
+            } else {
+                var defaultBtn = document.querySelector('[data-bs-target="' + defaultTab + '"]');
+                var defaultPane = document.querySelector(defaultTab);
+                if (defaultBtn) defaultBtn.classList.add('active');
+                if (defaultPane) defaultPane.classList.add('show', 'active');
             }
         }
         
-        // Restore tab on load
-        restoreActiveTab();
+        if (hash && document.querySelector('[data-bs-target="' + hash + '"]')) {
+            activateTab(hash);
+        } else {
+            activateTab(defaultTab);
+            history.replaceState(null, null, defaultTab);
+        }
         
-        // Update URL hash when tab changes
         document.querySelectorAll('.settings-tab-btn').forEach(function(btn) {
             btn.addEventListener('shown.bs.tab', function(e) {
                 var target = this.getAttribute('data-bs-target');
-                if (target) {
-                    // Update URL hash without scrolling
+                if (target && target !== window.location.hash) {
                     history.pushState(null, null, target);
                 }
             });
         });
 
-        // ============================================
-        // TOAST NOTIFICATION SYSTEM
-        // ============================================
         window.showToast = function(message, type, details) {
             type = type || 'info';
             var container = document.getElementById('toastContainer');
@@ -1934,9 +2831,6 @@ MODALS
             }
         };
 
-        // ============================================
-        // CHECK FOR MESSAGES FROM DJANGO
-        // ============================================
         var messages = document.querySelectorAll('.django-message');
         if (messages.length > 0) {
             messages.forEach(function(msg) {
@@ -1949,33 +2843,20 @@ MODALS
             });
         }
 
-        // ============================================
-        // CONFIRMATION MODAL - FIXED
-        // ============================================
-        let currentFormToSubmit = null, isProcessing = false;
+        let currentFormToSubmit = null;
+        let isProcessing = false;
         const modalEl = document.getElementById('confirmModal');
+        
         if (modalEl) {
             const confirmBody = document.getElementById('confirmModalBody');
             const confirmYes = document.getElementById('confirmModalYesBtn');
             const confirmCancel = document.getElementById('confirmModalCancelBtn');
             
-            function forceCleanup() {
-                document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
-                document.body.classList.remove('modal-open');
-                document.body.style.overflow = '';
-                document.body.style.paddingRight = '';
-                if(modalEl) {
-                    modalEl.style.display = 'none';
-                    modalEl.classList.remove('show');
-                    modalEl.setAttribute('aria-hidden', 'true');
-                    modalEl.removeAttribute('aria-modal');
-                }
-            }
-            
             let bsModal = null;
+            
             function initModal() {
-                if(window.bootstrap?.Modal){
-                    if(bsModal) {
+                if (window.bootstrap && window.bootstrap.Modal) {
+                    if (bsModal) {
                         try { bsModal.dispose(); } catch(e) {}
                     }
                     bsModal = new bootstrap.Modal(modalEl, {
@@ -1989,13 +2870,13 @@ MODALS
             }
             initModal();
             
-            // Handle form submit events
             document.addEventListener('submit', function(e) {
-                const form = e.target;
+                var form = e.target;
                 if (form.classList.contains('confirmed')) {
                     setTimeout(function() { form.classList.remove('confirmed'); }, 100);
                     return;
                 }
+                
                 var msg = form.getAttribute('data-confirm');
                 if (msg) {
                     e.preventDefault();
@@ -2003,7 +2884,6 @@ MODALS
                     currentFormToSubmit = form;
                     confirmBody.textContent = msg;
                     
-                    // Close any other open modals
                     document.querySelectorAll('.modal.show').forEach(function(m) {
                         if (m !== modalEl) {
                             var inst = bootstrap.Modal.getInstance(m);
@@ -2011,51 +2891,51 @@ MODALS
                         }
                     });
                     
-                    setTimeout(function() {
-                        forceCleanup();
-                        if (bsModal) bsModal.show();
-                        else if (initModal()) bsModal.show();
-                    }, 150);
+                    if (bsModal) {
+                        bsModal.show();
+                    } else if (initModal()) {
+                        bsModal.show();
+                    }
                 }
             });
             
-            // Yes button - submit form
             confirmYes.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
+                
                 if (isProcessing || !currentFormToSubmit) return;
                 isProcessing = true;
-                var f = currentFormToSubmit;
+                
+                var form = currentFormToSubmit;
                 currentFormToSubmit = null;
                 
-                // Get current tab hash before submitting
-                var currentTab = window.location.hash;
+                var currentTab = window.location.hash || '#master-content';
                 
-                if (bsModal) bsModal.hide();
-                setTimeout(forceCleanup, 50);
+                if (bsModal) {
+                    bsModal.hide();
+                }
                 
                 setTimeout(function() {
-                    if (f && f.tagName === 'FORM') {
-                        f.classList.add('confirmed');
-                        // Add hidden input to preserve tab
+                    if (form && form.tagName === 'FORM') {
                         var tabInput = document.createElement('input');
                         tabInput.type = 'hidden';
                         tabInput.name = 'tab_hash';
                         tabInput.value = currentTab;
-                        f.appendChild(tabInput);
-                        f.submit();
+                        form.appendChild(tabInput);
+                        
+                        form.classList.add('confirmed');
+                        form.submit();
                     }
                     isProcessing = false;
-                    forceCleanup();
                 }, 200);
             });
             
-            // Cancel button - JUST CLOSE MODAL, NO REFRESH
             function handleCancel() {
                 currentFormToSubmit = null;
                 isProcessing = false;
-                if (bsModal) bsModal.hide();
-                setTimeout(forceCleanup, 150);
+                if (bsModal) {
+                    bsModal.hide();
+                }
             }
             
             if (confirmCancel) {
@@ -2066,8 +2946,8 @@ MODALS
                 });
             }
             
-            modalEl.querySelectorAll('[data-bs-dismiss="modal"], .btn-close').forEach(function(b) {
-                b.addEventListener('click', function(e) {
+            modalEl.querySelectorAll('[data-bs-dismiss="modal"], .btn-close').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     handleCancel();
@@ -2075,7 +2955,6 @@ MODALS
             });
             
             modalEl.addEventListener('hidden.bs.modal', function() {
-                forceCleanup();
                 currentFormToSubmit = null;
                 isProcessing = false;
             });
@@ -2087,28 +2966,29 @@ MODALS
             });
         }
 
-        // ============================================
-        // PASSWORD TOGGLE
-        // ============================================
         document.querySelectorAll('.password-toggle-icon').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                var input = document.getElementById(this.getAttribute('data-target'));
-                if (input) {
-                    var t = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                    input.setAttribute('type', t);
-                    var icon = this.querySelector('i');
-                    if (icon) {
-                        icon.className = t === 'password' ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
-                    }
-                    input.focus();
+                e.stopPropagation();
+                
+                var inputId = this.getAttribute('data-target');
+                if (!inputId) return;
+                
+                var input = document.getElementById(inputId);
+                if (!input) return;
+                
+                var isPassword = input.getAttribute('type') === 'password';
+                input.setAttribute('type', isPassword ? 'text' : 'password');
+                
+                var icon = this.querySelector('i');
+                if (icon) {
+                    icon.className = isPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
                 }
+                
+                input.focus();
             });
         });
 
-        // ============================================
-        // PREFILL EDIT MODALS
-        // ============================================
         document.getElementById('editUnitModal')?.addEventListener('show.bs.modal', function(e) {
             var b = e.relatedTarget;
             document.getElementById('edit_unit_id').value = b.getAttribute('data-id');
@@ -2137,9 +3017,6 @@ MODALS
             document.getElementById('edit_cred_password').value = b.getAttribute('data-password');
         });
 
-        // ============================================
-        // SORT TABLE FUNCTION
-        // ============================================
         window.sortTable = function(tableName, colIndex) {
             var table = document.getElementById(tableName + 'Table');
             if (!table) return;
@@ -2177,205 +3054,332 @@ MODALS
             rows.forEach(function(row) { tbody.appendChild(row); });
         };
 
-        // ============================================
-        // EXPANDABLE DEPARTMENT ROWS WITH AJAX
-        // ============================================
-        var loadedDepartments = new Set();
+        var currentDeptId = null;
+        var employeeCache = {};
+        var searchQuery = '';
 
-        document.querySelectorAll('.dept-main-row').forEach(function(row) {
-            row.addEventListener('click', function(e) {
-                if (e.target.closest('button') || e.target.closest('form') || e.target.closest('a')) {
-                    return;
+        window.toggleUnit = function(element, unitId) {
+            var container = document.getElementById('deptContainer-' + unitId);
+            var isExpanded = element.classList.contains('expanded');
+            
+            if (isExpanded) {
+                element.classList.remove('expanded');
+                container.classList.remove('expanded');
+            } else {
+                element.classList.add('expanded');
+                container.classList.add('expanded');
+            }
+        };
+
+        window.expandAllUnits = function() {
+            document.querySelectorAll('.tree-unit-item').forEach(function(unit) {
+                var unitId = unit.getAttribute('data-unit-id');
+                var container = document.getElementById('deptContainer-' + unitId);
+                if (container && !unit.classList.contains('expanded')) {
+                    unit.classList.add('expanded');
+                    container.classList.add('expanded');
+                }
+            });
+        };
+
+        window.collapseAllUnits = function() {
+            document.querySelectorAll('.tree-unit-item').forEach(function(unit) {
+                var unitId = unit.getAttribute('data-unit-id');
+                var container = document.getElementById('deptContainer-' + unitId);
+                if (container && unit.classList.contains('expanded')) {
+                    unit.classList.remove('expanded');
+                    container.classList.remove('expanded');
+                }
+            });
+        };
+
+        window.filterTreeItems = function(query) {
+            query = query.toLowerCase().trim();
+            searchQuery = query;
+            var clearBtn = document.getElementById('clearTreeSearch');
+            
+            if (query.length > 0) {
+                clearBtn.classList.add('visible');
+            } else {
+                clearBtn.classList.remove('visible');
+            }
+            
+            document.querySelectorAll('.tree-unit-item').forEach(function(unit) {
+                var unitName = unit.getAttribute('data-unit-name').toLowerCase();
+                var hasMatch = false;
+                
+                var deptContainer = unit.nextElementSibling;
+                if (deptContainer && deptContainer.classList.contains('tree-dept-container')) {
+                    var depts = deptContainer.querySelectorAll('.tree-dept-item');
+                    depts.forEach(function(dept) {
+                        var deptName = dept.getAttribute('data-dept-name').toLowerCase();
+                        var match = query.length === 0 || deptName.includes(query) || unitName.includes(query);
+                        
+                        if (match) {
+                            dept.classList.remove('hidden');
+                            if (query.length > 0 && deptName.includes(query)) {
+                                dept.querySelector('.tree-dept-name').innerHTML = deptName.replace(new RegExp(query, 'gi'), function(match) {
+                                    return '<span class="tree-dept-match">' + match + '</span>';
+                                });
+                            } else {
+                                dept.querySelector('.tree-dept-name').innerHTML = deptName;
+                            }
+                            hasMatch = true;
+                        } else {
+                            dept.classList.add('hidden');
+                        }
+                    });
                 }
                 
-                var deptId = this.getAttribute('data-dept-id');
-                var employeeRow = document.getElementById('employee-row-' + deptId);
-                var toggleIcon = document.getElementById('toggle-icon-' + deptId);
-                var loadingDiv = document.getElementById('loading-' + deptId);
-                var employeeListDiv = document.getElementById('employee-list-' + deptId);
-                var spinner = document.getElementById('spinner-' + deptId);
-                var empCount = document.getElementById('emp-count-' + deptId);
-                
-                if (employeeRow) {
-                    var isExpanded = employeeRow.classList.contains('expanded');
-                    if (isExpanded) {
-                        employeeRow.classList.remove('expanded');
-                        if (toggleIcon) toggleIcon.classList.remove('expanded');
-                    } else {
-                        employeeRow.classList.add('expanded');
-                        if (toggleIcon) toggleIcon.classList.add('expanded');
-                        
-                        if (!loadedDepartments.has(deptId)) {
-                            if (spinner) spinner.style.display = 'inline-block';
-                            if (loadingDiv) loadingDiv.style.display = 'block';
-                            if (employeeListDiv) employeeListDiv.style.display = 'none';
-                            
-                            fetch('/ajax/get-employees-by-department/?department_id=' + deptId)
-                                .then(function(response) {
-                                    if (!response.ok) throw new Error('Network response was not ok');
-                                    return response.json();
-                                })
-                                .then(function(data) {
-                                    if (spinner) spinner.style.display = 'none';
-                                    if (loadingDiv) loadingDiv.style.display = 'none';
-                                    
-                                    if (data.success) {
-                                        if (empCount) empCount.textContent = '(' + data.count + ' employees)';
-                                        
-                                        var html = '';
-                                        if (data.employees && data.employees.length > 0) {
-                                            html = `
-                                            <table class="table table-sm table-hover">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Employee ID</th>
-                                                        <th>Name</th>
-                                                        <th>Mobile</th>
-                                                        <th>Email</th>
-                                                        <th>Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                            `;
-                                            data.employees.forEach(function(emp) {
-                                                var statusBadge = emp.is_active 
-                                                    ? '<span class="badge bg-success" style="font-size: 0.5rem;">Active</span>' 
-                                                    : '<span class="badge bg-danger" style="font-size: 0.5rem;">Inactive</span>';
-                                                html += `
-                                                    <tr>
-                                                        <td><span class="employee-id">${emp.employee_id}</span></td>
-                                                        <td>${emp.employee_name}</td>
-                                                        <td>${emp.mobile}</td>
-                                                        <td>${emp.email}</td>
-                                                        <td>${statusBadge}</td>
-                                                    </tr>
-                                                `;
-                                            });
-                                            html += `</tbody></table>`;
-                                        } else {
-                                            html = `
-                                                <div class="no-employees">
-                                                    <i class="fa-regular fa-user me-1"></i> No employees assigned to this department.
-                                                </div>
-                                            `;
-                                        }
-                                        
-                                        if (employeeListDiv) {
-                                            employeeListDiv.innerHTML = html;
-                                            employeeListDiv.style.display = 'block';
-                                        }
-                                        loadedDepartments.add(deptId);
-                                    } else {
-                                        if (employeeListDiv) {
-                                            employeeListDiv.innerHTML = `
-                                                <div class="dept-error">
-                                                    <i class="fa-solid fa-circle-exclamation me-1"></i> 
-                                                    Error: ${data.message || 'Unknown error'}
-                                                </div>
-                                            `;
-                                            employeeListDiv.style.display = 'block';
-                                        }
-                                        if (loadingDiv) loadingDiv.style.display = 'none';
-                                        if (spinner) spinner.style.display = 'none';
-                                    }
-                                })
-                                .catch(function(error) {
-                                    if (spinner) spinner.style.display = 'none';
-                                    if (loadingDiv) loadingDiv.style.display = 'none';
-                                    if (employeeListDiv) {
-                                        employeeListDiv.innerHTML = `
-                                            <div class="dept-error">
-                                                <i class="fa-solid fa-circle-exclamation me-1"></i> 
-                                                Error loading employees. Please try again.
-                                            </div>
-                                        `;
-                                        employeeListDiv.style.display = 'block';
-                                    }
-                                    console.error('Error loading employees:', error);
-                                });
+                if (hasMatch || query.length === 0) {
+                    unit.classList.remove('hidden');
+                } else {
+                    unit.classList.add('hidden');
+                }
+            });
+            
+            if (query.length > 0) {
+                document.querySelectorAll('.tree-dept-item:not(.hidden)').forEach(function(dept) {
+                    var unitId = dept.getAttribute('data-unit-id');
+                    var unitElement = document.querySelector('.tree-unit-item[data-unit-id="' + unitId + '"]');
+                    var container = document.getElementById('deptContainer-' + unitId);
+                    if (unitElement && container) {
+                        unitElement.classList.add('expanded');
+                        container.classList.add('expanded');
+                    }
+                });
+            }
+        };
+
+        window.clearTreeSearch = function() {
+            var input = document.getElementById('treeSearchInput');
+            input.value = '';
+            filterTreeItems('');
+        };
+
+        {% if credentials_by_unit %}
+            {% for unit_data in credentials_by_unit %}
+                {% for cred in unit_data.credentials %}
+                    employeeCache['{{ cred.department.id }}'] = {
+                        deptId: {{ cred.department.id }},
+                        deptName: '{{ cred.department.name|escapejs }}',
+                        unitCode: '{{ unit_data.unit.code|escapejs }}',
+                        unitId: {{ unit_data.unit.id }},
+                        employees: []
+                    };
+                    var badge = document.getElementById('deptBadge-{{ cred.department.id }}');
+                    if (badge) {
+                        badge.textContent = '0';
+                    }
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+
+        window.loadDepartmentEmployees = function(deptId, deptName, unitCode) {
+            var tableBody = document.getElementById('employeeTableBody');
+            var deptNameEl = document.getElementById('selectedDeptName');
+            var deptCodeEl = document.getElementById('selectedDeptCode');
+            var empCountEl = document.getElementById('selectedEmpCount');
+            
+            deptNameEl.textContent = deptName || 'Select a Department';
+            deptCodeEl.textContent = unitCode || '—';
+            empCountEl.textContent = 'Loading...';
+            
+            tableBody.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <h6>Loading employees...</h6>
+                    <p>Please wait while we fetch the employee data</p>
+                </div>
+            `;
+            
+            if (employeeCache[deptId] && employeeCache[deptId].employees && employeeCache[deptId].employees.length > 0) {
+                renderEmployeeTable(deptId, employeeCache[deptId].employees);
+                return;
+            }
+            
+            fetch('/ajax/get-employees-by-department/?department_id=' + deptId)
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success) {
+                        if (employeeCache[deptId]) {
+                            employeeCache[deptId].employees = data.employees || [];
                         }
+                        var badge = document.getElementById('deptBadge-' + deptId);
+                        if (badge) {
+                            badge.textContent = data.count || 0;
+                        }
+                        renderEmployeeTable(deptId, data.employees || []);
+                    } else {
+                        tableBody.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fa-solid fa-circle-exclamation" style="color: #EF4444; opacity: 0.4;"></i>
+                                <h6>Error Loading Employees</h6>
+                                <p>${data.message || 'Please try again'}</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error loading employees:', error);
+                    tableBody.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fa-solid fa-circle-exclamation" style="color: #EF4444; opacity: 0.4;"></i>
+                            <h6>Error Loading Employees</h6>
+                            <p>Network error. Please try again.</p>
+                        </div>
+                    `;
+                });
+        };
+
+        function renderEmployeeTable(deptId, employees, searchQuery) {
+            var tableBody = document.getElementById('employeeTableBody');
+            var empCountEl = document.getElementById('selectedEmpCount');
+            
+            empCountEl.textContent = employees.length + ' employees';
+            
+            if (!employees || employees.length === 0) {
+                tableBody.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-users"></i>
+                        <h6>No Employees Found</h6>
+                        <p>This department has no employees assigned</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            var html = `
+                <table class="emp-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fa-regular fa-id-card"></i>Employee ID</th>
+                            <th><i class="fa-regular fa-user"></i>Name</th>
+                            <th><i class="fa-solid fa-phone"></i>Mobile</th>
+                            <th><i class="fa-regular fa-envelope"></i>Email</th>
+                            <th><i class="fa-regular fa-circle"></i>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            var query = (searchQuery || '').toLowerCase().trim();
+            
+            employees.forEach(function(emp) {
+                var statusClass = emp.is_active ? 'active' : 'inactive';
+                var statusText = emp.is_active ? 'Active' : 'Inactive';
+                var statusIcon = emp.is_active ? 'fa-regular fa-circle-check' : 'fa-regular fa-circle';
+                
+                var empIdDisplay = emp.employee_id || '-';
+                var empNameDisplay = emp.employee_name || '-';
+                var empMobileDisplay = emp.mobile || '-';
+                var empEmailDisplay = emp.email || '-';
+                
+                if (query) {
+                    if (empIdDisplay.toLowerCase().includes(query)) {
+                        empIdDisplay = empIdDisplay.replace(new RegExp(query, 'gi'), function(match) {
+                            return '<span class="emp-match">' + match + '</span>';
+                        });
+                    }
+                    if (empNameDisplay.toLowerCase().includes(query)) {
+                        empNameDisplay = empNameDisplay.replace(new RegExp(query, 'gi'), function(match) {
+                            return '<span class="emp-match">' + match + '</span>';
+                        });
+                    }
+                    if (empMobileDisplay.toLowerCase().includes(query)) {
+                        empMobileDisplay = empMobileDisplay.replace(new RegExp(query, 'gi'), function(match) {
+                            return '<span class="emp-match">' + match + '</span>';
+                        });
+                    }
+                    if (empEmailDisplay.toLowerCase().includes(query)) {
+                        empEmailDisplay = empEmailDisplay.replace(new RegExp(query, 'gi'), function(match) {
+                            return '<span class="emp-match">' + match + '</span>';
+                        });
                     }
                 }
+                
+                html += `
+                    <tr>
+                        <td><span class="emp-id">${empIdDisplay}</span></td>
+                        <td><span class="emp-name">${empNameDisplay}</span></td>
+                        <td><span class="emp-mobile">${empMobileDisplay}</span></td>
+                        <td><span class="emp-email">${empEmailDisplay}</span></td>
+                        <td>
+                            <span class="status-badge ${statusClass}">
+                                <i class="${statusIcon}"></i> ${statusText}
+                            </span>
+                        </td>
+                    </tr>
+                `;
             });
-        });
-
-        // ============================================
-        // DEPARTMENT FETCH FOR ADD EMPLOYEE MODAL
-        // ============================================
-        var addEmpUnitSelect = document.querySelector('#addEmployeeModal select[name="unit"]');
-        var addEmpDeptSelect = document.querySelector('#addEmployeeModal select[name="department"]');
-        if (addEmpUnitSelect && addEmpDeptSelect) {
-            addEmpUnitSelect.addEventListener('change', function() {
-                var unitId = this.value;
-                if (!unitId) {
-                    addEmpDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>';
-                    addEmpDeptSelect.disabled = true;
-                    return;
-                }
-                addEmpDeptSelect.disabled = true;
-                addEmpDeptSelect.innerHTML = '<option value="">Loading...</option>';
-                fetch('/ajax/get-departments/?unit_id=' + unitId)
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) {
-                        addEmpDeptSelect.innerHTML = '<option value="">-- Optional --</option>';
-                        if (data.departments && data.departments.length > 0) {
-                            data.departments.forEach(function(d) {
-                                var opt = document.createElement('option');
-                                opt.value = d.id;
-                                opt.textContent = d.name;
-                                addEmpDeptSelect.appendChild(opt);
-                            });
-                            addEmpDeptSelect.disabled = false;
-                        } else {
-                            addEmpDeptSelect.innerHTML += '<option value="">None</option>';
-                        }
-                    })
-                    .catch(function() {
-                        addEmpDeptSelect.innerHTML = '<option value="">Error</option>';
-                    });
-            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            tableBody.innerHTML = html;
         }
 
-        // ============================================
-        // DEPARTMENT FETCH FOR ADD CREDENTIAL MODAL
-        // ============================================
-        var credUnitSelect = document.getElementById('credUnit');
-        var credDeptSelect = document.getElementById('credDept');
-        if (credUnitSelect && credDeptSelect) {
-            credUnitSelect.addEventListener('change', function() {
-                var unitId = this.value;
-                if (!unitId) {
-                    credDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>';
-                    credDeptSelect.disabled = true;
-                    return;
-                }
-                credDeptSelect.disabled = true;
-                credDeptSelect.innerHTML = '<option value="">Loading...</option>';
-                fetch('/ajax/get-departments/?unit_id=' + unitId)
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) {
-                        credDeptSelect.innerHTML = '<option value="">-- Select --</option>';
-                        if (data.departments && data.departments.length > 0) {
-                            data.departments.forEach(function(d) {
-                                var opt = document.createElement('option');
-                                opt.value = d.id;
-                                opt.textContent = d.name;
-                                credDeptSelect.appendChild(opt);
-                            });
-                            credDeptSelect.disabled = false;
-                        } else {
-                            credDeptSelect.innerHTML += '<option value="">None</option>';
-                        }
-                    })
-                    .catch(function() {
-                        credDeptSelect.innerHTML = '<option value="">Error</option>';
-                    });
+        window.selectDepartment = function(element, deptId, deptName, unitCode) {
+            document.querySelectorAll('.tree-dept-item').forEach(function(item) {
+                item.classList.remove('active');
             });
-        }
+            if (element) {
+                element.classList.add('active');
+            }
+            
+            currentDeptId = deptId;
+            
+            var unitId = element.getAttribute('data-unit-id');
+            var unitElement = document.querySelector('.tree-unit-item[data-unit-id="' + unitId + '"]');
+            if (unitElement && !unitElement.classList.contains('expanded')) {
+                unitElement.classList.add('expanded');
+                var container = document.getElementById('deptContainer-' + unitId);
+                if (container) {
+                    container.classList.add('expanded');
+                }
+            }
+            
+            loadDepartmentEmployees(deptId, deptName, unitCode);
+        };
 
-        // ============================================
-        // BULK UPLOAD WITH ENHANCED VALIDATION
-        // ============================================
+        window.filterEmployees = function() {
+            var searchInput = document.getElementById('empSearchInput');
+            var query = searchInput.value;
+            
+            if (!currentDeptId) return;
+            
+            var employees = employeeCache[currentDeptId]?.employees || [];
+            renderEmployeeTable(currentDeptId, employees, query);
+        };
+
+        window.clearEmployeeSearch = function() {
+            var searchInput = document.getElementById('empSearchInput');
+            searchInput.value = '';
+            filterEmployees();
+        };
+
+        setTimeout(function() {
+            var firstUnit = document.querySelector('.tree-unit-item');
+            if (firstUnit) {
+                var unitId = firstUnit.getAttribute('data-unit-id');
+                firstUnit.classList.add('expanded');
+                var container = document.getElementById('deptContainer-' + unitId);
+                if (container) {
+                    container.classList.add('expanded');
+                }
+                
+                var firstDept = document.querySelector('.tree-dept-item');
+                if (firstDept) {
+                    firstDept.click();
+                }
+            }
+        }, 400);
+
         var fileInput = document.getElementById('bulkExcelFile');
         var uploadForm = document.getElementById('bulkUploadForm');
         var errorContainer = document.getElementById('uploadErrorContainer');
@@ -2465,9 +3469,74 @@ MODALS
             });
         }
 
-        // ============================================
-        // TAB ANIMATION
-        // ============================================
+        var addEmpUnitSelect = document.querySelector('#addEmployeeModal select[name="unit"]');
+        var addEmpDeptSelect = document.querySelector('#addEmployeeModal select[name="department"]');
+        if (addEmpUnitSelect && addEmpDeptSelect) {
+            addEmpUnitSelect.addEventListener('change', function() {
+                var unitId = this.value;
+                if (!unitId) {
+                    addEmpDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>';
+                    addEmpDeptSelect.disabled = true;
+                    return;
+                }
+                addEmpDeptSelect.disabled = true;
+                addEmpDeptSelect.innerHTML = '<option value="">Loading...</option>';
+                fetch('/ajax/get-departments/?unit_id=' + unitId)
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        addEmpDeptSelect.innerHTML = '<option value="">-- Optional --</option>';
+                        if (data.departments && data.departments.length > 0) {
+                            data.departments.forEach(function(d) {
+                                var opt = document.createElement('option');
+                                opt.value = d.id;
+                                opt.textContent = d.name;
+                                addEmpDeptSelect.appendChild(opt);
+                            });
+                            addEmpDeptSelect.disabled = false;
+                        } else {
+                            addEmpDeptSelect.innerHTML += '<option value="">None</option>';
+                        }
+                    })
+                    .catch(function() {
+                        addEmpDeptSelect.innerHTML = '<option value="">Error</option>';
+                    });
+            });
+        }
+
+        var credUnitSelect = document.getElementById('credUnit');
+        var credDeptSelect = document.getElementById('credDept');
+        if (credUnitSelect && credDeptSelect) {
+            credUnitSelect.addEventListener('change', function() {
+                var unitId = this.value;
+                if (!unitId) {
+                    credDeptSelect.innerHTML = '<option value="">-- Select Unit First --</option>';
+                    credDeptSelect.disabled = true;
+                    return;
+                }
+                credDeptSelect.disabled = true;
+                credDeptSelect.innerHTML = '<option value="">Loading...</option>';
+                fetch('/ajax/get-departments/?unit_id=' + unitId)
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        credDeptSelect.innerHTML = '<option value="">-- Select --</option>';
+                        if (data.departments && data.departments.length > 0) {
+                            data.departments.forEach(function(d) {
+                                var opt = document.createElement('option');
+                                opt.value = d.id;
+                                opt.textContent = d.name;
+                                credDeptSelect.appendChild(opt);
+                            });
+                            credDeptSelect.disabled = false;
+                        } else {
+                            credDeptSelect.innerHTML += '<option value="">None</option>';
+                        }
+                    })
+                    .catch(function() {
+                        credDeptSelect.innerHTML = '<option value="">Error</option>';
+                    });
+            });
+        }
+
         document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(t) {
             t.addEventListener('shown.bs.tab', function(e) {
                 var p = document.querySelector(this.getAttribute('data-bs-target'));
@@ -2480,9 +3549,6 @@ MODALS
             });
         });
 
-        // ============================================
-        // THEME CHANGE HANDLER
-        // ============================================
         function updateInputTheme() {
             var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             var inputs = document.querySelectorAll('.form-control, .form-select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], textarea, select');
@@ -2496,10 +3562,21 @@ MODALS
                     input.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
                     input.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                     input.style.color = '#E8EDF5';
+                    input.style.webkitTextFillColor = '#E8EDF5';
                 } else {
-                    input.style.backgroundColor = '#F5F8FF';
-                    input.style.borderColor = '#DCE3F0';
-                    input.style.color = '#1A2A6C';
+                    input.style.backgroundColor = '';
+                    input.style.borderColor = '';
+                    input.style.color = '';
+                    input.style.webkitTextFillColor = '';
+                }
+            });
+            
+            var toggleIcons = document.querySelectorAll('.password-toggle-icon');
+            toggleIcons.forEach(function(icon) {
+                if (isDark) {
+                    icon.style.color = 'rgba(255, 255, 255, 0.4)';
+                } else {
+                    icon.style.color = '';
                 }
             });
         }

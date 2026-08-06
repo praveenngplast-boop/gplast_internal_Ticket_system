@@ -19,12 +19,9 @@ class TicketForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Limit choices to active units only
         self.fields['unit'].queryset = Unit.objects.filter(is_active=True)
-        # Limit choices to active departments
         self.fields['department'].queryset = Department.objects.filter(is_active=True)
         
-        # Apply Bootstrap styling to all fields
         for name, field in self.fields.items():
             if isinstance(field.widget, (forms.Select, forms.RadioSelect)):
                 field.widget.attrs.update({'class': 'form-select'})
@@ -35,7 +32,6 @@ class TicketForm(forms.ModelForm):
             else:
                 field.widget.attrs.update({'class': 'form-control'})
 
-        # Restrict error type to employee-level choices only
         EMPLOYEE_ERROR_TYPE_CHOICES = [
             ('New', 'New'),
             ('Regular', 'Regular'),
@@ -45,7 +41,6 @@ class TicketForm(forms.ModelForm):
 
     def clean_mobile(self):
         mobile = self.cleaned_data.get('mobile', '')
-        # Only digits allowed, exactly 10, no spaces/dashes
         if not mobile.isdigit():
             raise ValidationError("Mobile number must contain digits only.")
         if len(mobile) != 10:
@@ -69,7 +64,6 @@ class TicketForm(forms.ModelForm):
         unit = cleaned_data.get('unit')
         department = cleaned_data.get('department')
         
-        # Verify department belongs to the selected unit
         if unit and department:
             if department.unit != unit:
                 raise ValidationError({"department": "Selected department does not belong to the selected unit."})
@@ -79,7 +73,6 @@ class TicketForm(forms.ModelForm):
 
 
 class AdminTicketForm(TicketForm):
-    # Overwrite Meta to add fields, widgets
     class Meta(TicketForm.Meta):
         fields = TicketForm.Meta.fields + ['created_by_role', 'admin_creation_reason']
         widgets = {
@@ -89,11 +82,8 @@ class AdminTicketForm(TicketForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Apply Bootstrap styling for admin fields
         self.fields['created_by_role'].widget.attrs.update({'class': 'form-check-input'})
         self.fields['admin_creation_reason'].widget.attrs.update({'class': 'form-select'})
-        
-        # Set default role as Admin when created by admin (but user can toggle)
         self.initial['created_by_role'] = 'Admin'
 
     def clean(self):
@@ -106,19 +96,13 @@ class AdminTicketForm(TicketForm):
                 "admin_creation_reason": "Reason for Admin Creation is mandatory when Created By is 'Admin'."
             })
             
-        # Clear reason if created by Employee
         if created_by_role == 'Employee':
             cleaned_data['admin_creation_reason'] = None
             
         return cleaned_data
 
 
-# =========================================================================
-# Settings & User Management Forms
-# =========================================================================
-
 class AdminPasswordChangeForm(PasswordChangeForm):
-    """ Form for an admin to change their own password. """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
@@ -126,7 +110,6 @@ class AdminPasswordChangeForm(PasswordChangeForm):
 
 
 class AdminSetUserPasswordForm(SetPasswordForm):
-    """ Form for an admin to set a password for another user. """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
@@ -141,7 +124,6 @@ class UserSelectionForm(forms.Form):
     )
 
 
-# Settings Forms
 class AdminContactForm(forms.ModelForm):
     class Meta:
         model = AdminContact
@@ -168,7 +150,6 @@ class UnitForm(forms.ModelForm):
 
     def clean_code(self):
         code = self.cleaned_data.get('code', '').upper()
-        # Ensure only alphanumeric codes
         if not code.isalnum():
             raise ValidationError("Unit code must be alphanumeric.")
         return code
@@ -181,7 +162,7 @@ class DepartmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['unit'].queryset = Unit.objects.all()  # Allow selecting inactive for updates
+        self.fields['unit'].queryset = Unit.objects.all()
         for name, field in self.fields.items():
             if name == 'is_active':
                 field.widget.attrs.update({'class': 'form-check-input'})
@@ -202,12 +183,7 @@ class AdminNotificationEmailForm(forms.ModelForm):
         self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})
 
 
-# =========================================================================
-# NEW: Department Credential Form (if needed)
-# =========================================================================
-
 class DepartmentCredentialForm(forms.ModelForm):
-    """ Form for adding/editing department credentials """
     class Meta:
         model = DepartmentCredential
         fields = ['unit', 'department', 'username', 'password', 'is_active']

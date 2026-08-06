@@ -32,10 +32,6 @@ from tickets.utils import generate_ticket_number, send_ticket_email
 logger = logging.getLogger(__name__)
 
 
-# =========================================================================
-# HELPER FUNCTIONS
-# =========================================================================
-
 def is_admin(user):
     return user.is_authenticated and user.is_staff
 
@@ -84,7 +80,6 @@ def reopen_ticket_logic(ticket, performed_by, remarks):
 
 
 def generate_ticket_list_html(tickets, status):
-    """Fallback HTML generation if template is missing"""
     if not tickets:
         return """
         <div class="empty-state text-center py-5">
@@ -159,7 +154,6 @@ def generate_ticket_list_html(tickets, status):
 
 
 def generate_admin_ticket_list_html(tickets, status):
-    """Fallback HTML generation for admin ticket list if template is missing"""
     if not tickets:
         return """
         <div class="empty-state text-center py-5">
@@ -251,15 +245,7 @@ def generate_admin_ticket_list_html(tickets, status):
     return html
 
 
-# =========================================================================
-# AUTH VIEWS
-# =========================================================================
-
 class CustomLoginView(LoginView):
-    """
-    Custom login view that passes IT contact info to the template.
-    Handles redirects properly without relying on settings.LOGIN_REDIRECT_URL.
-    """
     template_name = 'login.html'
     redirect_authenticated_user = True
     
@@ -304,10 +290,6 @@ def custom_logout(request):
     messages.success(request, "You have been logged out successfully.")
     return redirect('login')
 
-
-# =========================================================================
-# EMPLOYEE VIEWS
-# =========================================================================
 
 @login_required
 @user_passes_test(lambda u: not u.is_staff, login_url='login')
@@ -530,7 +512,6 @@ def my_tickets(request):
             Q(description__icontains=search)
         )
     
-    # Date filters with timezone-aware comparisons
     if date_from:
         try:
             date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
@@ -655,10 +636,6 @@ def ticket_detail(request, pk):
     return render(request, 'employee/ticket_detail.html', context)
 
 
-# =========================================================================
-# ADMIN VIEWS
-# =========================================================================
-
 @login_required
 @user_passes_test(is_admin, login_url='admin_dashboard')
 def admin_dashboard(request):
@@ -674,19 +651,15 @@ def admin_dashboard(request):
         'critical': all_tickets.filter(priority='Critical').count(),
     }
     
-    # Chart 1: Status Distribution
     status_counts = list(all_tickets.values('status').annotate(count=Count('id')))
     chart_status = {item['status']: item['count'] for item in status_counts}
     
-    # Chart 2: Unit-wise Tickets
     unit_counts = list(all_tickets.filter(unit__isnull=False).values('unit_id', 'unit__code').annotate(count=Count('id')).order_by('unit__code'))
     chart_units = [{'id': item['unit_id'], 'label': item['unit__code'], 'value': item['count']} for item in unit_counts]
     
-    # Chart 3: Priority Distribution
     prio_counts = list(all_tickets.values('priority').annotate(count=Count('id')))
     chart_priority = {item['priority']: item['count'] for item in prio_counts}
     
-    # Chart 4: Error Type Distribution for Closed Tickets
     closed_tickets = Ticket.objects.filter(status='Closed')
     error_type_counts = (
         closed_tickets
@@ -698,9 +671,6 @@ def admin_dashboard(request):
     )
     chart_error_type = {item['error_type']: item['count'] for item in error_type_counts}
     
-    logger.info(f"Error Type Data: {chart_error_type}")
-    
-    # Monthly trend
     twelve_months_ago = timezone.now() - timedelta(days=365)
     monthly_counts_qs = Ticket.objects.filter(created_at__gte=twelve_months_ago).annotate(month=TruncMonth(Cast('created_at', output_field=DateField()))).values('month').annotate(count=Count('id')).order_by('month')
     chart_monthly = [{'label': item['month'].strftime('%b %Y'), 'value': item['count']} for item in monthly_counts_qs]
@@ -795,7 +765,6 @@ def all_tickets(request):
     if ticket_number: 
         tickets_qs = tickets_qs.filter(ticket_number__icontains=ticket_number)
     
-    # Date filters with timezone-aware comparisons
     if date_from:
         try:
             date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
@@ -1023,7 +992,6 @@ def reports(request):
     units = Unit.objects.all()
     departments = Department.objects.all()
     
-    # Get filter parameters
     unit_id = request.GET.get('unit', '').strip()
     dept_id = request.GET.get('department', '').strip()
     priority = request.GET.get('priority', '').strip()
@@ -1033,7 +1001,6 @@ def reports(request):
     error_type = request.GET.get('error_type', '').strip()
     vendor_ticket = request.GET.get('vendor_ticket_number', '').strip()
     
-    # Date filters
     created_start = request.GET.get('created_start', '').strip()
     created_end = request.GET.get('created_end', '').strip()
     closed_start = request.GET.get('closed_start', '').strip()
@@ -1044,7 +1011,6 @@ def reports(request):
     category = request.GET.get('category', 'all').strip()
     is_reopened = request.GET.get('is_reopened', '').strip()
     
-    # Apply category filters
     if category == 'open': 
         tickets_qs = tickets_qs.filter(status='Open')
     elif category == 'assigned': 
@@ -1060,7 +1026,6 @@ def reports(request):
     elif category == 'reopened': 
         tickets_qs = tickets_qs.filter(history__action='Ticket Reopened').distinct()
     
-    # Apply filters
     if unit_id and unit_id != '': 
         tickets_qs = tickets_qs.filter(unit_id=unit_id)
     if dept_id and dept_id != '': 
@@ -1078,7 +1043,6 @@ def reports(request):
     if vendor_ticket and vendor_ticket != '': 
         tickets_qs = tickets_qs.filter(vendor_ticket_number__icontains=vendor_ticket)
     
-    # Date range filters with timezone awareness
     if created_start and created_start != '':
         try:
             created_start_date = datetime.strptime(created_start, '%Y-%m-%d').date()
@@ -1139,13 +1103,18 @@ def reports(request):
         except ValueError:
             pass
     
-    # Reopened filter
     if is_reopened == 'yes': 
         tickets_qs = tickets_qs.filter(history__action='Ticket Reopened').distinct()
     elif is_reopened == 'no': 
         tickets_qs = tickets_qs.exclude(history__action='Ticket Reopened')
     
-    # Export to Excel
+    total_count = tickets_qs.count()
+    open_count = tickets_qs.filter(status='Open').count()
+    assigned_count = tickets_qs.filter(status='Assigned').count()
+    hold_count = tickets_qs.filter(status='Hold').count()
+    escalated_count = tickets_qs.filter(status='Escalated').count()
+    closed_count = tickets_qs.filter(status='Closed').count()
+    
     if 'export' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename=GPLAST_Report_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
@@ -1223,7 +1192,6 @@ def reports(request):
         wb.save(response)
         return response
     
-    # Pagination
     paginator = Paginator(tickets_qs, 15)
     page_number = request.GET.get('page')
     try: 
@@ -1233,18 +1201,22 @@ def reports(request):
     except EmptyPage: 
         tickets_page = paginator.page(paginator.num_pages)
     
-    # Get error type choices for filter dropdown
     error_type_choices = Ticket.objects.filter(
         error_type__isnull=False
     ).exclude(
         error_type__exact=''
     ).values_list('error_type', flat=True).distinct().order_by('error_type')
     
-    # Prepare error type choices as list of tuples for the template
     error_type_choices_list = [(et, et) for et in error_type_choices]
     
     context = {
         'tickets': tickets_page,
+        'total_count': total_count,
+        'open_count': open_count,
+        'assigned_count': assigned_count,
+        'hold_count': hold_count,
+        'escalated_count': escalated_count,
+        'closed_count': closed_count,
         'units': units,
         'departments': departments,
         'category': category,
@@ -1270,10 +1242,6 @@ def reports(request):
     }
     return render(request, 'admin_panel/reports.html', context)
 
-
-# =========================================================================
-# SETTINGS VIEWS
-# =========================================================================
 
 def _get_contact_data():
     contact_obj, _ = AdminContact.objects.get_or_create(
@@ -1469,10 +1437,6 @@ def settings_passwords(request):
     return redirect('settings_page')
 
 
-# =========================================================================
-# EMPLOYEE DIRECTORY VIEWS - FIXED BULK UPLOAD WITH VALIDATION
-# =========================================================================
-
 @login_required
 @user_passes_test(is_admin, login_url='admin_dashboard')
 def settings_employees(request):
@@ -1505,7 +1469,6 @@ def settings_employees(request):
                 messages.error(request, f'Employee ID "{eid}" already exists.')
         
         elif action == 'bulk_upload':
-            # Check if request is AJAX for JSON response
             is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
             
             excel_file = request.FILES.get('excel_file')
@@ -1518,7 +1481,6 @@ def settings_employees(request):
                 messages.error(request, "Please select an Excel file.")
                 return redirect('settings_page')
             
-            # Validate file extension
             if not excel_file.name.endswith(('.xlsx', '.xls')):
                 if is_ajax:
                     return JsonResponse({
@@ -1529,10 +1491,8 @@ def settings_employees(request):
                 return redirect('settings_page')
             
             try:
-                # Read the Excel file
                 df = pd.read_excel(excel_file, dtype=str)
                 
-                # Check if the dataframe is empty
                 if df.empty:
                     if is_ajax:
                         return JsonResponse({
@@ -1542,14 +1502,10 @@ def settings_employees(request):
                     messages.error(request, "The uploaded file is empty.")
                     return redirect('settings_page')
                 
-                # Define required columns
                 required_columns = ['Employee ID', 'Employee Name', 'Mobile', 'Email']
-                
-                # Check for required columns in the dataframe
                 missing_columns = []
                 for col in required_columns:
                     if col not in df.columns:
-                        # Try case-insensitive matching
                         found = False
                         for existing_col in df.columns:
                             if existing_col.lower() == col.lower():
@@ -1568,18 +1524,15 @@ def settings_employees(request):
                     messages.error(request, error_msg)
                     return redirect('settings_page')
                 
-                # Validate all rows before processing
                 validation_errors = []
                 successful_rows = 0
                 
-                # Get all existing units and departments for validation
                 all_units = {unit.code.upper(): unit for unit in Unit.objects.filter(is_active=True)}
                 all_departments = {dept.name.upper(): dept for dept in Department.objects.filter(is_active=True)}
                 
                 for idx, row in df.iterrows():
-                    row_num = idx + 2  # 1-based with header row
+                    row_num = idx + 2
                     
-                    # Get values from the row (handle case-insensitive column names)
                     eid = None
                     ename = None
                     mob = None
@@ -1602,78 +1555,39 @@ def settings_employees(request):
                         elif col_lower in ['department', 'dept', 'department name', 'department_name']:
                             dn = str(row.get(col, '')).strip().upper()
                     
-                    # Validate required fields
                     if not eid:
-                        validation_errors.append({
-                            'row': row_num,
-                            'message': 'Employee ID is required'
-                        })
+                        validation_errors.append({'row': row_num, 'message': 'Employee ID is required'})
                         continue
-                    
                     if not ename:
-                        validation_errors.append({
-                            'row': row_num,
-                            'message': 'Employee Name is required'
-                        })
+                        validation_errors.append({'row': row_num, 'message': 'Employee Name is required'})
                         continue
-                    
                     if not mob:
-                        validation_errors.append({
-                            'row': row_num,
-                            'message': 'Mobile number is required'
-                        })
+                        validation_errors.append({'row': row_num, 'message': 'Mobile number is required'})
                         continue
-                    
                     if not email:
-                        validation_errors.append({
-                            'row': row_num,
-                            'message': 'Email is required'
-                        })
+                        validation_errors.append({'row': row_num, 'message': 'Email is required'})
                         continue
-                    
-                    # Validate email format
                     if '@' not in email or '.' not in email:
-                        validation_errors.append({
-                            'row': row_num,
-                            'message': f'Invalid email format: {email}'
-                        })
+                        validation_errors.append({'row': row_num, 'message': f'Invalid email format: {email}'})
                         continue
-                    
-                    # Validate mobile format (simple check)
                     if not mob.isdigit() or len(mob) != 10:
-                        validation_errors.append({
-                            'row': row_num,
-                            'message': f'Mobile number must be 10 digits: {mob}'
-                        })
+                        validation_errors.append({'row': row_num, 'message': f'Mobile number must be 10 digits: {mob}'})
                         continue
-                    
-                    # Validate Unit Code if provided
-                    if uc:
-                        if uc not in all_units:
-                            valid_units = ', '.join(list(all_units.keys())[:5])
-                            if len(all_units) > 5:
-                                valid_units += f' and {len(all_units) - 5} more'
-                            validation_errors.append({
-                                'row': row_num,
-                                'message': f'Invalid Unit Code "{uc}". Valid units: {valid_units}'
-                            })
-                            continue
-                    
-                    # Validate Department if provided
-                    if dn:
-                        if dn not in all_departments:
-                            valid_depts = ', '.join(list(all_departments.keys())[:5])
-                            if len(all_departments) > 5:
-                                valid_depts += f' and {len(all_departments) - 5} more'
-                            validation_errors.append({
-                                'row': row_num,
-                                'message': f'Invalid Department "{dn}". Valid departments: {valid_depts}'
-                            })
-                            continue
+                    if uc and uc not in all_units:
+                        valid_units = ', '.join(list(all_units.keys())[:5])
+                        if len(all_units) > 5:
+                            valid_units += f' and {len(all_units) - 5} more'
+                        validation_errors.append({'row': row_num, 'message': f'Invalid Unit Code "{uc}". Valid units: {valid_units}'})
+                        continue
+                    if dn and dn not in all_departments:
+                        valid_depts = ', '.join(list(all_departments.keys())[:5])
+                        if len(all_departments) > 5:
+                            valid_depts += f' and {len(all_departments) - 5} more'
+                        validation_errors.append({'row': row_num, 'message': f'Invalid Department "{dn}". Valid departments: {valid_depts}'})
+                        continue
                     
                     successful_rows += 1
                 
-                # If there are validation errors, reject the entire file
                 if validation_errors:
                     if is_ajax:
                         return JsonResponse({
@@ -1681,22 +1595,18 @@ def settings_employees(request):
                             'message': f'Validation failed. Found {len(validation_errors)} error(s).',
                             'errors': validation_errors
                         })
-                    
-                    # Show error messages for non-AJAX
                     messages.error(request, f'Validation failed. Found {len(validation_errors)} error(s).')
-                    for err in validation_errors[:5]:  # Show first 5 errors
+                    for err in validation_errors[:5]:
                         messages.error(request, f'Row {err["row"]}: {err["message"]}')
                     if len(validation_errors) > 5:
                         messages.error(request, f'... and {len(validation_errors) - 5} more errors.')
                     return redirect('settings_page')
                 
-                # All validations passed - proceed with bulk insert
                 success_count = 0
                 error_count = 0
                 
                 for idx, row in df.iterrows():
                     try:
-                        # Get values from the row
                         eid = None
                         ename = None
                         mob = None
@@ -1719,16 +1629,13 @@ def settings_employees(request):
                             elif col_lower in ['department', 'dept', 'department name', 'department_name']:
                                 dn = str(row.get(col, '')).strip().upper()
                         
-                        # Skip rows with missing required fields (already validated)
                         if not eid or not ename or not mob or not email:
                             error_count += 1
                             continue
                         
-                        # Get unit and department objects
                         unit_obj = all_units.get(uc) if uc else None
                         dept_obj = all_departments.get(dn) if dn else None
                         
-                        # Create or update employee
                         EmployeeMaster.objects.update_or_create(
                             employee_id=eid,
                             defaults={
@@ -1900,10 +1807,6 @@ def download_employee_template(request):
     return response
 
 
-# =========================================================================
-# DEPARTMENT CREDENTIAL VIEWS
-# =========================================================================
-
 @login_required
 @user_passes_test(is_admin, login_url='admin_dashboard')
 def settings_credentials(request):
@@ -2026,14 +1929,11 @@ def download_credentials(request):
     return resp
 
 
-# =========================================================================
-# TEST NOTIFICATION VIEWS
-# =========================================================================
-
 @login_required
 @user_passes_test(is_admin, login_url='admin_dashboard')
 def test_notifications(request): 
     return render(request, 'admin_panel/test_notifications.html')
+
 
 @login_required
 @user_passes_test(is_admin, login_url='admin_dashboard')
@@ -2041,17 +1941,20 @@ def test_success_message(request):
     messages.success(request, 'Test success message.')
     return redirect('test_notifications')
 
+
 @login_required
 @user_passes_test(is_admin, login_url='admin_dashboard')
 def test_error_message(request): 
     messages.error(request, 'Test error message.')
     return redirect('test_notifications')
 
+
 @login_required
 @user_passes_test(is_admin, login_url='admin_dashboard')
 def test_warning_message(request): 
     messages.warning(request, 'Test warning message.')
     return redirect('test_notifications')
+
 
 @login_required
 @user_passes_test(is_admin, login_url='admin_dashboard')
@@ -2060,12 +1963,7 @@ def test_info_message(request):
     return redirect('test_notifications')
 
 
-# =========================================================================
-# AJAX ENDPOINTS
-# =========================================================================
-
 def get_units(request):
-    """AJAX endpoint to get all active units"""
     try:
         units = Unit.objects.filter(is_active=True).order_by('code')
         units_list = []
@@ -2091,7 +1989,6 @@ def get_units(request):
 
 
 def get_departments_by_unit(request):
-    """AJAX endpoint to get departments for a specific unit"""
     unit_id = request.GET.get('unit_id')
     
     try:
@@ -2123,7 +2020,6 @@ def get_departments_by_unit(request):
 
 
 def get_employee_details(request):
-    """AJAX endpoint to get employee details by employee_id"""
     eid = request.GET.get('employee_id', '').strip().upper()
     u_uid = request.GET.get('unit_id', '')
     u_did = request.GET.get('department_id', '')
@@ -2187,7 +2083,6 @@ def get_employee_details(request):
 
 
 def get_employees_by_department(request):
-    """AJAX endpoint to get employees by department"""
     dept_id = request.GET.get('department_id')
     
     if not dept_id:

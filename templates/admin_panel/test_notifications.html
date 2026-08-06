@@ -15,7 +15,6 @@
                 </div>
                 <div class="card-body p-3 p-md-4">
                     
-                    <!-- Toast Tests -->
                     <h5 class="mb-3" style="color: var(--text-primary); font-size: clamp(0.9rem, 1.2vw, 1rem);">
                         <i class="fa-solid fa-flask me-2" style="color: var(--brand-orange);"></i>Toast Notification Tests
                     </h5>
@@ -60,7 +59,6 @@
 
                     <hr style="border-color: var(--border-color); margin: 1.5rem 0;">
 
-                    <!-- Django Messages -->
                     <h5 class="mb-3" style="color: var(--text-primary); font-size: clamp(0.9rem, 1.2vw, 1rem);">
                         <i class="fa-solid fa-server me-2" style="color: var(--brand-orange);"></i>Django Messages (Page Reload)
                     </h5>
@@ -82,7 +80,6 @@
 
                     <hr style="border-color: var(--border-color); margin: 1.5rem 0;">
 
-                    <!-- Quick Tests -->
                     <h5 class="mb-3" style="color: var(--text-primary); font-size: clamp(0.9rem, 1.2vw, 1rem);">
                         <i class="fa-solid fa-code me-2" style="color: var(--brand-orange);"></i>Quick Test Buttons
                     </h5>
@@ -111,9 +108,6 @@
 </div>
 
 <style>
-    /* ============================================
-       BUTTON STYLES - RESPONSIVE
-    ============================================ */
     .btn-success {
         background: linear-gradient(135deg, #22C55E, #16A34A) !important;
         border: none !important;
@@ -205,7 +199,6 @@
         transform: scale(0.95) !important;
     }
     
-    /* Outline Buttons */
     .btn-outline-success {
         border-color: #22C55E !important;
         color: #22C55E !important;
@@ -257,9 +250,6 @@
         border-color: transparent !important;
     }
     
-    /* ============================================
-       RESPONSIVE FIXES
-    ============================================ */
     @media (max-width: 576px) {
         .card-header {
             padding: 0.6rem 1rem !important;
@@ -325,9 +315,6 @@
         }
     }
 
-    /* ============================================
-       DARK MODE SUPPORT
-    ============================================ */
     [data-theme="dark"] .btn-outline-success {
         color: #34D399 !important;
         border-color: #34D399 !important;
@@ -375,10 +362,6 @@
 </style>
 
 <script>
-    // ============================================
-    // TEST FUNCTIONS - PRODUCTION READY
-    // ============================================
-    
     function testSuccess() {
         window.showToast('Operation completed successfully! All changes have been saved.', 'success', 'Success');
     }
@@ -437,7 +420,7 @@
         });
         
         setTimeout(function() {
-            window.showToast('All notifications cleared! 🧹', 'success', 'Cleared');
+            window.showToast('All notifications cleared!', 'success', 'Cleared');
         }, 500);
     }
 </script>

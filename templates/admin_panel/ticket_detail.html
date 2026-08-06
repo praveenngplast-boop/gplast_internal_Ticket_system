@@ -147,9 +147,6 @@
         padding: 0.75rem 1rem;
     }
 
-    /* ============================================
-       ACTION BANNER - PROMINENT POSITION
-    ============================================ */
     .action-banner {
         background: var(--ticket-bg);
         border: 2px solid var(--brand-orange);
@@ -232,9 +229,6 @@
         margin-left: 0.2rem;
     }
 
-    /* ============================================
-       DETAILS GRID
-    ============================================ */
     .details-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -409,9 +403,6 @@
         box-shadow: 0 4px 15px rgba(255, 107, 0, 0.2);
     }
 
-    /* ============================================
-       TIMELINE
-    ============================================ */
     .timeline-scroll {
         max-height: 380px;
         overflow-y: auto;
@@ -513,9 +504,6 @@
         margin: 0;
     }
 
-    /* ============================================
-       MODALS
-    ============================================ */
     .modal-content {
         background: var(--ticket-bg) !important;
         border: 1px solid var(--ticket-border) !important;
@@ -606,9 +594,6 @@
     .modal-header.bg-close { background: var(--success-color) !important; }
     .modal-header.bg-reopen { background: #3B82F6 !important; }
 
-    /* ============================================
-       FORM CONTROLS
-    ============================================ */
     .form-control, .form-select, textarea {
         background-color: var(--input-bg) !important;
         border: 2px solid var(--ticket-border) !important;
@@ -659,9 +644,6 @@
         font-size: 0.8rem;
     }
 
-    /* ============================================
-       SCROLLBAR
-    ============================================ */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: var(--input-bg); border-radius: 8px; }
     ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 8px; }
@@ -669,9 +651,6 @@
 
     ::selection { background: var(--brand-orange); color: white; }
 
-    /* ============================================
-       RESPONSIVE
-    ============================================ */
     @media (max-width: 992px) {
         .ticket-header { padding: 0.75rem 1rem; }
         .panel-card { margin-bottom: 0.75rem; }
@@ -731,9 +710,6 @@
         .action-btn { flex: 1 1 auto; min-width: 80px; justify-content: center; }
     }
 
-    /* ============================================
-       DARK MODE OVERRIDES
-    ============================================ */
     [data-theme="dark"] .detail-item {
         background: rgba(255, 255, 255, 0.04);
         border-color: rgba(255, 255, 255, 0.06);
@@ -815,7 +791,6 @@
 {% block content %}
 <div class="ticket-container">
 
-    <!-- Header -->
     <div class="ticket-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
@@ -837,9 +812,6 @@
         </div>
     </div>
 
-    <!-- ============================================
-         ACTION BANNER - PROMINENT POSITION AT TOP
-    ============================================ -->
     <div class="action-banner">
         <div class="banner-title">
             <i class="fa-solid fa-gears"></i>
@@ -891,22 +863,18 @@
     </div>
 
     <div class="row g-3">
-        <!-- Left Column -->
         <div class="col-lg-8">
-            <!-- Ticket Details -->
             <div class="panel-card">
                 <div class="glass-header">
                     <h6><i class="fa-solid fa-circle-info me-2"></i>Ticket Details</h6>
                 </div>
                 <div class="card-body">
                     <div class="details-grid">
-                        <!-- Subject -->
                         <div class="detail-item full-width" style="background: rgba(255, 107, 0, 0.04); border-color: rgba(255, 107, 0, 0.12);">
                             <span class="detail-label">Subject</span>
                             <div class="detail-value" style="color: var(--brand-orange); font-weight: 700;">{{ ticket.subject }}</div>
                         </div>
 
-                        <!-- Employee Info -->
                         <div class="detail-item">
                             <span class="detail-label">Employee</span>
                             <div class="detail-value">{{ ticket.employee_name }}</div>
@@ -976,13 +944,11 @@
                             <div class="detail-value">{{ ticket.updated_at|date:"d M Y h:i A" }}</div>
                         </div>
 
-                        <!-- Description -->
                         <div class="detail-item detail-description">
                             <span class="detail-label">Description</span>
                             <div class="detail-value">{{ ticket.description|default:"No description provided." }}</div>
                         </div>
 
-                        <!-- Attachment -->
                         {% if ticket.attachment %}
                         <div class="detail-item full-width">
                             <span class="detail-label">Attachment</span>
@@ -997,7 +963,6 @@
                 </div>
             </div>
 
-            <!-- Status Boxes -->
             {% if ticket.status == 'Hold' and ticket.hold_reason %}
             <div class="status-box status-box-hold">
                 <strong style="color: var(--warning-color);"><i class="fa-solid fa-pause me-1"></i>Hold Reason</strong>
@@ -1030,7 +995,6 @@
             {% endif %}
         </div>
 
-        <!-- Right Column - Timeline -->
         <div class="col-lg-4">
             <div class="panel-card">
                 <div class="glass-header">
@@ -1082,10 +1046,6 @@
         </div>
     </div>
 </div>
-
-<!-- ============================================
-     MODALS
-============================================ -->
 
 {% if ticket.status != 'Closed' %}
 <!-- Assign Modal -->
@@ -1249,9 +1209,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
 
-        // ============================================
-        // COUNTDOWN TIMER FOR REOPEN
-        // ============================================
         function startCountdown(deadlineISO) {
             var timerBadge = document.getElementById('reopen-timer-badge');
             var timerText = document.getElementById('reopen-timer-text');
@@ -1298,7 +1255,6 @@
                     timerText.textContent = 'Time left to reopen';
                 }
 
-                // Update badge color based on time remaining
                 if (timerBadge) {
                     if (hours < 1) {
                         timerBadge.style.background = 'rgba(239, 68, 68, 0.3)';
@@ -1316,9 +1272,6 @@
             startCountdown(deadlineISO);
         }
 
-        // ============================================
-        // VALIDATION FUNCTIONS
-        // ============================================
         function validateAssign() {
             var person = document.getElementById('assignPerson');
             if (!person.value.trim()) {
@@ -1371,9 +1324,6 @@
         window.validateClose = validateClose;
         window.validateReopen = validateReopen;
 
-        // ============================================
-        // PREVENT DOUBLE SUBMISSION
-        // ============================================
         document.querySelectorAll('form').forEach(function(form) {
             form.addEventListener('submit', function(e) {
                 if (this.dataset.submitted === 'true') {
@@ -1387,9 +1337,6 @@
             });
         });
 
-        // ============================================
-        // THEME SYNC
-        // ============================================
         function updateFormTheme() {
             var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             var inputs = document.querySelectorAll('.form-control, .form-select, textarea');

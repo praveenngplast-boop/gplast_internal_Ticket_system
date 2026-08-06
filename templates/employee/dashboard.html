@@ -347,7 +347,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
     }
 
     .chart-wrapper canvas {
@@ -358,8 +357,7 @@
         cursor: pointer;
     }
 
-    .chart-wrapper::after {
-        content: 'Click segments →';
+    .chart-wrapper .chart-hint {
         position: absolute;
         bottom: 4px;
         right: 8px;
@@ -370,7 +368,7 @@
         transition: opacity 0.3s ease;
     }
 
-    .chart-wrapper:hover::after { opacity: 0.5; }
+    .chart-wrapper:hover .chart-hint { opacity: 0.5; }
 
     .chart-empty {
         display: flex;
@@ -666,7 +664,7 @@
         .modal-body { padding: 0.75rem !important; max-height: 350px; }
         .modal-body .table td { font-size: 0.6rem !important; padding: 0.2rem !important; }
         .modal-header .modal-title { font-size: 0.95rem !important; }
-        .chart-wrapper::after { content: 'Click →'; font-size: 0.4rem; bottom: 3px; right: 6px; }
+        .chart-wrapper .chart-hint { content: 'Click →'; font-size: 0.4rem; bottom: 3px; right: 6px; }
         .chart-empty { min-height: 140px; }
         .chart-empty i { font-size: 1.5rem; }
         .chart-empty p { font-size: 0.7rem; }
@@ -693,7 +691,7 @@
         .kpi-label { font-size: 0.45rem; }
         .panel-card { min-height: 240px; }
         .chart-wrapper { min-height: 140px; max-height: 170px; }
-        .chart-wrapper::after { content: ''; }
+        .chart-wrapper .chart-hint { content: ''; }
         .kpi-filter-badge { display: none; }
         .click-hint { display: none; }
     }
@@ -910,12 +908,13 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-wrapper" id="deptStatusChartWrapper" onclick="handleStatusChartClick()">
+                    <div class="chart-wrapper" id="deptStatusChartWrapper">
                         <canvas id="deptStatusChart"></canvas>
                         <div id="deptStatusEmpty" class="chart-empty" style="display:none;">
                             <i class="fa-solid fa-chart-pie"></i>
                             <p>No status data available</p>
                         </div>
+                        <span class="chart-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click segments</span>
                     </div>
                 </div>
             </div>
@@ -931,12 +930,13 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-wrapper" id="deptPriorityChartWrapper" onclick="handlePriorityChartClick()">
+                    <div class="chart-wrapper" id="deptPriorityChartWrapper">
                         <canvas id="deptPriorityChart"></canvas>
                         <div id="deptPriorityEmpty" class="chart-empty" style="display:none;">
                             <i class="fa-solid fa-flag"></i>
                             <p>No priority data available</p>
                         </div>
+                        <span class="chart-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click segments</span>
                     </div>
                 </div>
             </div>
@@ -1103,36 +1103,6 @@
             console.error('Error parsing chart data:', e);
         }
 
-        window.handleStatusChartClick = function() {
-            const statusData = chartsData.dept_status || {};
-            const statusLabels = Object.keys(statusData);
-            if (statusLabels.length > 0) {
-                drillDownTickets(statusLabels[0]);
-            }
-        };
-
-        window.handlePriorityChartClick = function() {
-            const priorityData = chartsData.dept_priority || {};
-            const priorityLabels = Object.keys(priorityData);
-            if (priorityLabels.length > 0) {
-                drillDownTicketsByPriority(priorityLabels[0]);
-            }
-        };
-
-        // Animate KPI values
-        const kpiValues = document.querySelectorAll('.kpi-value');
-        kpiValues.forEach((value, index) => {
-            const originalText = value.textContent;
-            if (!isNaN(parseInt(originalText))) {
-                value.textContent = '0';
-                setTimeout(() => {
-                    value.textContent = originalText;
-                    value.style.transform = 'scale(1.1)';
-                    setTimeout(() => { value.style.transform = 'scale(1)'; }, 300);
-                }, 200 + (index * 80));
-            }
-        });
-
         const hasStatusData = chartsData.dept_status && Object.keys(chartsData.dept_status).length > 0;
         const hasPriorityData = chartsData.dept_priority && Object.keys(chartsData.dept_priority).length > 0;
 
@@ -1198,6 +1168,7 @@
                         }
                     },
                     cutout: '60%',
+                    // ONLY trigger on click when clicking on actual chart segments
                     onClick: function(event, elements) {
                         if (elements.length > 0) {
                             const index = elements[0].index;
@@ -1265,6 +1236,7 @@
                             }
                         }
                     },
+                    // ONLY trigger on click when clicking on actual chart segments
                     onClick: function(event, elements) {
                         if (elements.length > 0) {
                             const index = elements[0].index;

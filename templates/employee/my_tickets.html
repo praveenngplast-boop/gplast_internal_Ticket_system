@@ -108,7 +108,6 @@
         flex-wrap: wrap;
     }
 
-    /* FIXED: Smaller button with responsive sizing */
     .btn-primary-gradient {
         background: linear-gradient(135deg, var(--ticket-primary), var(--ticket-primary-dark));
         border: none;
@@ -567,7 +566,6 @@
         margin-bottom: 1.5rem;
     }
 
-    /* FIXED: Empty state button - small and responsive */
     .empty-state .btn-primary-gradient {
         padding: 0.35rem 1rem;
         font-size: 0.75rem;
@@ -657,7 +655,6 @@
         color: #E8EDF5;
     }
 
-    /* FIXED: Complete responsive solution for all buttons */
     @media (max-width: 768px) {
         .tickets-header {
             padding: 1rem 1.25rem;
@@ -672,7 +669,6 @@
             width: 100%;
         }
 
-        /* FIXED: New Ticket button on tablet */
         .tickets-header-actions .btn-primary-gradient {
             width: auto !important;
             justify-content: center;
@@ -685,7 +681,6 @@
             font-size: 0.7rem !important;
         }
 
-        /* FIXED: Empty state button on tablet */
         .empty-state .btn-primary-gradient {
             padding: 0.3rem 0.8rem !important;
             font-size: 0.7rem !important;
@@ -894,7 +889,6 @@
             font-size: 0.75rem;
         }
 
-        /* FIXED: Both buttons on mobile - very small */
         .tickets-header-actions .btn-primary-gradient {
             padding: 0.25rem 0.7rem !important;
             font-size: 0.65rem !important;
@@ -918,7 +912,6 @@
     }
 
     @media (max-width: 380px) {
-        /* Extra small devices - even smaller buttons */
         .tickets-header-actions .btn-primary-gradient {
             padding: 0.2rem 0.5rem !important;
             font-size: 0.6rem !important;
@@ -1158,10 +1151,6 @@
                                     <i class="fa-regular fa-folder-open"></i>
                                     <h4>No Tickets Found</h4>
                                     <p>You haven't created any support tickets yet, or none match your filters.</p>
-                                    <!-- <a href="{% url 'create_ticket' %}" class="btn-primary-gradient">
-                                        <i class="fa-solid fa-circle-plus"></i>
-                                        Create Your First Ticket
-                                    </a> -->
                                 </div>
                             </td>
                         </tr>
@@ -1208,26 +1197,26 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const filterForm = document.getElementById('filterForm');
-        const clearFiltersBtn = document.getElementById('clearFilters');
-        const toggleAdvancedBtn = document.getElementById('toggleAdvanced');
-        const filterStatus = document.getElementById('filterStatus');
-        const filterPriority = document.getElementById('filterPriority');
-        const filterSearch = document.getElementById('filterSearch');
-        const filterTicketNumber = document.getElementById('filterTicketNumber');
-        const filterDateFrom = document.getElementById('filterDateFrom');
-        const filterDateTo = document.getElementById('filterDateTo');
-        const ticketNumberGroup = document.getElementById('ticketNumberGroup');
-        const dateFromGroup = document.getElementById('dateFromGroup');
-        const dateToGroup = document.getElementById('dateToGroup');
+        var filterForm = document.getElementById('filterForm');
+        var clearFiltersBtn = document.getElementById('clearFilters');
+        var toggleAdvancedBtn = document.getElementById('toggleAdvanced');
+        var filterStatus = document.getElementById('filterStatus');
+        var filterPriority = document.getElementById('filterPriority');
+        var filterSearch = document.getElementById('filterSearch');
+        var filterTicketNumber = document.getElementById('filterTicketNumber');
+        var filterDateFrom = document.getElementById('filterDateFrom');
+        var filterDateTo = document.getElementById('filterDateTo');
+        var ticketNumberGroup = document.getElementById('ticketNumberGroup');
+        var dateFromGroup = document.getElementById('dateFromGroup');
+        var dateToGroup = document.getElementById('dateToGroup');
 
-        let advancedVisible = false;
+        var advancedVisible = false;
 
         function toggleAdvancedFields(show) {
             advancedVisible = show !== undefined ? show : !advancedVisible;
             
-            const groups = [ticketNumberGroup, dateFromGroup, dateToGroup];
-            groups.forEach(group => {
+            var groups = [ticketNumberGroup, dateFromGroup, dateToGroup];
+            groups.forEach(function(group) {
                 group.style.display = advancedVisible ? 'flex' : 'none';
             });
             
@@ -1236,7 +1225,7 @@
                 : '<i class="fa-solid fa-sliders-horizontal"></i> Advanced';
         }
 
-        const hasAdvancedValue = filterTicketNumber.value || filterDateFrom.value || filterDateTo.value;
+        var hasAdvancedValue = filterTicketNumber.value || filterDateFrom.value || filterDateTo.value;
         toggleAdvancedFields(hasAdvancedValue);
 
         toggleAdvancedBtn.addEventListener('click', function(e) {
@@ -1246,7 +1235,7 @@
 
         clearFiltersBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            filterForm.querySelectorAll('input, select').forEach(field => {
+            filterForm.querySelectorAll('input, select').forEach(function(field) {
                 if (field.name) {
                     field.value = '';
                 }
@@ -1254,15 +1243,15 @@
             filterForm.submit();
         });
 
-        const rows = document.querySelectorAll('#ticketsTable tbody tr[data-url]');
-        rows.forEach((row, index) => {
+        var rows = document.querySelectorAll('#ticketsTable tbody tr[data-url]');
+        rows.forEach(function(row, index) {
             row.style.opacity = '0';
-            row.style.animation = `fadeIn 0.3s ease forwards`;
-            row.style.animationDelay = `${index * 0.05}s`;
+            row.style.animation = 'fadeIn 0.3s ease forwards';
+            row.style.animationDelay = (index * 0.05) + 's';
             
             row.addEventListener('click', function(e) {
                 if (!e.target.closest('.btn-view-details') && !e.target.closest('a')) {
-                    const url = this.getAttribute('data-url');
+                    var url = this.getAttribute('data-url');
                     if (url) {
                         window.location.href = url;
                     }
@@ -1270,26 +1259,22 @@
             });
         });
 
-        // FIXED: Date filter - properly handle and submit dates
         filterForm.addEventListener('submit', function(e) {
-            const dateFromValue = filterDateFrom.value;
-            const dateToValue = filterDateTo.value;
+            var dateFromValue = filterDateFrom.value;
+            var dateToValue = filterDateTo.value;
 
             if (dateFromValue && dateToValue && new Date(dateFromValue) > new Date(dateToValue)) {
-                e.preventDefault(); // Stop the form submission
+                e.preventDefault();
                 alert('The "From Date" cannot be later than the "To Date". Please correct the date range.');
                 filterDateFrom.focus();
-                return; // Exit the function
+                return;
             }
-
-            // If validation passes, the form will submit as normal.
-            // No need for `return true` or any other action.
         });
 
         function updateThemeStyles() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const inputs = document.querySelectorAll('.filter-input, .filter-select');
-            inputs.forEach(input => {
+            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            var inputs = document.querySelectorAll('.filter-input, .filter-select');
+            inputs.forEach(function(input) {
                 if (isDark) {
                     input.style.backgroundColor = 'rgba(255,255,255,0.05)';
                     input.style.borderColor = 'rgba(255,255,255,0.08)';
@@ -1302,14 +1287,14 @@
             });
         }
 
-        const themeToggle = document.getElementById('themeToggleFloating');
+        var themeToggle = document.getElementById('themeToggleFloating');
         if (themeToggle) {
             themeToggle.addEventListener('click', function() {
                 setTimeout(updateThemeStyles, 100);
             });
         }
 
-        const observer = new MutationObserver(function() {
+        var observer = new MutationObserver(function() {
             updateThemeStyles();
         });
         observer.observe(document.documentElement, {

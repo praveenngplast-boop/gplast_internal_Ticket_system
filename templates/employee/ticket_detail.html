@@ -4,9 +4,6 @@
 {% block extra_head %}
 {{ block.super }}
 <style>
-    /* ============================================
-       Container Animation
-    ============================================ */
     .ticket-detail-container {
         animation-name: fadeInUp;
         animation-duration: 0.6s;
@@ -25,9 +22,6 @@
         }
     }
 
-    /* ============================================
-       PROFESSIONAL DETAILS GRID
-    ============================================ */
     .details-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -42,7 +36,6 @@
         }
     }
 
-    /* Detail Item - Professional Card Style */
     .detail-item {
         background: var(--input-bg);
         border-radius: 10px;
@@ -71,7 +64,6 @@
         box-shadow: 0 2px 12px rgba(255, 107, 0, 0.06);
     }
 
-    /* Label - Professional & Clean */
     .detail-label {
         font-size: 0.5rem;
         font-weight: 700;
@@ -91,7 +83,6 @@
         opacity: 0.7;
     }
 
-    /* Value - Bold & Clear */
     .detail-value {
         font-size: 0.85rem;
         font-weight: 600;
@@ -112,7 +103,6 @@
         text-decoration: underline;
     }
 
-    /* Subject Row - Full Width */
     .detail-subject {
         grid-column: 1 / -1;
         background: rgba(255, 107, 0, 0.04);
@@ -133,7 +123,6 @@
         color: var(--brand-orange) !important;
     }
 
-    /* Status & Priority - Highlighted */
     .detail-item.highlight-status {
         background: rgba(255, 107, 0, 0.04);
         border-color: rgba(255, 107, 0, 0.1);
@@ -143,7 +132,6 @@
         font-size: 0.9rem;
     }
 
-    /* Ticket Number - Special Badge Style */
     .detail-item.ticket-number {
         background: rgba(255, 107, 0, 0.06);
         border-color: rgba(255, 107, 0, 0.15);
@@ -157,7 +145,6 @@
         letter-spacing: 0.5px;
     }
 
-    /* Description - Full Width */
     .detail-description {
         grid-column: 1 / -1;
         margin-top: 0.1rem;
@@ -181,12 +168,10 @@
         border-color: rgba(255, 107, 0, 0.2);
     }
 
-    /* Attachment - Full Width */
     .detail-attachment {
         grid-column: 1 / -1;
     }
 
-    /* Divider Line */
     .detail-divider {
         grid-column: 1 / -1;
         border-bottom: 1px solid var(--border-color);
@@ -194,7 +179,6 @@
         opacity: 0.3;
     }
 
-    /* Small Helper Text */
     .detail-helper {
         font-size: 0.5rem;
         color: var(--text-muted);
@@ -202,9 +186,6 @@
         opacity: 0.7;
     }
 
-    /* ============================================
-       HEADER STYLES
-    ============================================ */
     .text-primary {
         color: var(--brand-orange) !important;
     }
@@ -217,9 +198,6 @@
         color: var(--text-secondary) !important;
     }
 
-    /* ============================================
-       BUTTONS
-    ============================================ */
     .btn-primary-custom {
         background: var(--brand-gradient) !important;
         border: none !important;
@@ -286,9 +264,6 @@
         transform: translateX(-3px) !important;
     }
 
-    /* ============================================
-       CARD STYLES
-    ============================================ */
     .panel-card {
         background: var(--bg-card) !important;
         border: 1px solid var(--border-color) !important;
@@ -340,9 +315,6 @@
         padding: 1.25rem !important;
     }
 
-    /* ============================================
-       BADGE STYLES
-    ============================================ */
     .badge-custom {
         display: inline-block;
         padding: 0.25rem 0.7rem;
@@ -417,9 +389,6 @@
         color: white;
     }
 
-    /* ============================================
-       STATUS BOXES
-    ============================================ */
     .status-box {
         padding: 0.75rem 1rem;
         border-radius: 12px;
@@ -446,9 +415,6 @@
         background: rgba(34, 197, 94, 0.04) !important;
     }
 
-    /* ============================================
-       TIMELINE - AUDIT HISTORY
-    ============================================ */
     .timeline {
         position: relative;
         padding: 0;
@@ -557,9 +523,6 @@
         color: var(--brand-orange);
     }
 
-    /* ============================================
-       TIMELINE SCROLL
-    ============================================ */
     .timeline-scroll {
         max-height: 450px;
         overflow-y: auto;
@@ -580,9 +543,6 @@
         border-radius: 10px;
     }
 
-    /* ============================================
-       MODAL
-    ============================================ */
     .modal-content {
         background: var(--bg-card) !important;
         border: 1px solid var(--border-color) !important;
@@ -656,9 +616,6 @@
         transform: translateY(-2px) !important;
     }
 
-    /* ============================================
-       REOPEN TIMER
-    ============================================ */
     .reopen-timer-box {
         background: rgba(255, 107, 0, 0.04);
         border: 1px solid rgba(255, 107, 0, 0.1);
@@ -683,9 +640,6 @@
         letter-spacing: 1px;
     }
 
-    /* ============================================
-       RESPONSIVE
-    ============================================ */
     @media (max-width: 992px) {
         .col-lg-7, .col-lg-5 {
             flex: 0 0 100%;
@@ -739,9 +693,6 @@
         .reopen-timer-box { padding: 0.3rem 0.6rem; }
     }
 
-    /* ============================================
-       DARK MODE OVERRIDES
-    ============================================ */
     [data-theme="dark"] .panel-card {
         border-color: rgba(255, 255, 255, 0.06) !important;
     }
@@ -777,9 +728,6 @@
         border-color: rgba(255, 107, 0, 0.12);
     }
 
-    /* ============================================
-       SCROLLBAR
-    ============================================ */
     ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -801,7 +749,6 @@
 
 {% block content %}
 <div class="ticket-detail-container">
-    <!-- Header Section -->
     <div class="row mb-3">
         <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
@@ -825,7 +772,6 @@
     </div>
 
     <div class="row g-3">
-        <!-- Ticket Details Card -->
         <div class="col-lg-7">
             <div class="card panel-card h-100">
                 <div class="card-header glass-header py-2">
@@ -835,7 +781,6 @@
                 </div>
                 <div class="card-body">
                     <div class="details-grid">
-                        <!-- Ticket Number - Highlighted -->
                         <div class="detail-item ticket-number">
                             <span class="detail-label">
                                 <i class="fa-regular fa-hashtag"></i> Ticket Number
@@ -845,7 +790,6 @@
                             </div>
                         </div>
 
-                        <!-- Subject - Full Width -->
                         <div class="detail-subject">
                             <span class="detail-label">
                                 <i class="fa-regular fa-heading"></i> Subject
@@ -853,10 +797,8 @@
                             <div class="detail-value">{{ ticket.subject }}</div>
                         </div>
 
-                        <!-- Divider -->
                         <div class="detail-divider"></div>
 
-                        <!-- Unit -->
                         <div class="detail-item">
                             <span class="detail-label">
                                 <i class="fa-regular fa-building"></i> Unit
@@ -869,7 +811,6 @@
                             </div>
                         </div>
 
-                        <!-- Department -->
                         <div class="detail-item">
                             <span class="detail-label">
                                 <i class="fa-regular fa-layer-group"></i> Department
@@ -877,7 +818,6 @@
                             <div class="detail-value">{{ ticket.department.name }}</div>
                         </div>
 
-                        <!-- Screen Number -->
                         <div class="detail-item">
                             <span class="detail-label">
                                 <i class="fa-regular fa-display"></i> Screen Number
@@ -885,7 +825,6 @@
                             <div class="detail-value">{{ ticket.screen_number }}</div>
                         </div>
 
-                        <!-- Error Type -->
                         <div class="detail-item">
                             <span class="detail-label">
                                 <i class="fa-regular fa-bug"></i> Error Type
@@ -893,7 +832,6 @@
                             <div class="detail-value">{{ ticket.error_type|default:"Not Set" }}</div>
                         </div>
 
-                        <!-- Priority - Highlighted -->
                         <div class="detail-item highlight-status">
                             <span class="detail-label">
                                 <i class="fa-solid fa-flag"></i> Priority
@@ -906,7 +844,6 @@
                             </div>
                         </div>
 
-                        <!-- Status - Highlighted -->
                         <div class="detail-item highlight-status">
                             <span class="detail-label">
                                 <i class="fa-regular fa-circle"></i> Status
@@ -919,7 +856,6 @@
                             </div>
                         </div>
 
-                        <!-- Created Date -->
                         <div class="detail-item">
                             <span class="detail-label">
                                 <i class="fa-regular fa-calendar-plus"></i> Created
@@ -932,7 +868,6 @@
                             </div>
                         </div>
 
-                        <!-- Last Updated -->
                         <div class="detail-item">
                             <span class="detail-label">
                                 <i class="fa-regular fa-calendar-check"></i> Last Updated
@@ -945,10 +880,8 @@
                             </div>
                         </div>
 
-                        <!-- Divider -->
                         <div class="detail-divider"></div>
 
-                        <!-- Description - Full Width -->
                         <div class="detail-description">
                             <span class="detail-label" style="margin-bottom: 0.3rem;">
                                 <i class="fa-regular fa-align-left"></i> Detailed Description
@@ -958,7 +891,6 @@
                             </div>
                         </div>
 
-                        <!-- Attachment - Full Width -->
                         {% if ticket.attachment %}
                             <div class="detail-attachment">
                                 <span class="detail-label" style="margin-bottom: 0.3rem;">
@@ -979,7 +911,6 @@
             </div>
         </div>
 
-        <!-- Timeline History Card -->
         <div class="col-lg-5">
             <div class="card panel-card h-100">
                 <div class="card-header glass-header py-2 d-flex justify-content-between align-items-center">
@@ -1040,7 +971,6 @@
             </div>
         </div>
 
-        <!-- Closing Details (If Closed) -->
         {% if ticket.status == 'Closed' %}
         <div class="col-12">
             <div class="status-box status-box-closed">
@@ -1073,7 +1003,6 @@
         </div>
         {% endif %}
 
-        <!-- Reopen Action for Closed Tickets -->
         {% if ticket.status == 'Closed' %}
             <div class="col-12">
                 <div class="card panel-card">
@@ -1109,7 +1038,6 @@
     </div>
 </div>
 
-<!-- Reopen Modal -->
 <div class="modal fade" id="reopenModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -1144,7 +1072,6 @@
 </div>
 
 <script>
-    // ✅ 48-HOUR COUNTDOWN TIMER
     function startCountdown(deadlineISO) {
         const timerEl = document.getElementById('reopen-timer');
         if (!timerEl || !deadlineISO || deadlineISO === '') {
@@ -1154,7 +1081,6 @@
 
         const deadline = new Date(deadlineISO).getTime();
         
-        // Add pulse animation for urgency
         const style = document.createElement('style');
         style.textContent = `
             @keyframes timerPulse {
@@ -1201,14 +1127,12 @@
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             
-            // Format with leading zeros
             const h = String(hours).padStart(2, '0');
             const m = String(minutes).padStart(2, '0');
             const s = String(seconds).padStart(2, '0');
             
-            timerEl.innerHTML = `${h}h ${m}m ${s}s`;
+            timerEl.innerHTML = h + 'h ' + m + 'm ' + s + 's';
             
-            // Color coding based on urgency
             if (hours < 1) {
                 timerEl.style.color = '#EF4444';
                 timerEl.style.animation = 'timerPulse 1s ease-in-out infinite';
@@ -1224,31 +1148,25 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // ✅ Start 48-hour countdown
         const deadlineISO = "{{ reopen_deadline_iso|default:'' }}";
         if (deadlineISO && deadlineISO !== '') {
-            console.log('⏰ Starting 48-hour countdown timer');
             startCountdown(deadlineISO);
-        } else {
-            console.log('ℹ️ No reopen deadline set');
         }
 
-        // Animate timeline items
         const timelineItems = document.querySelectorAll('.timeline-item');
-        timelineItems.forEach((item, index) => {
+        timelineItems.forEach(function(item, index) {
             item.style.opacity = '0';
-            setTimeout(() => {
+            setTimeout(function() {
                 item.style.transition = 'all 0.4s ease';
                 item.style.opacity = '1';
             }, 200 + (index * 80));
         });
 
-        // Theme handler
         function updateTheme() {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const inputs = document.querySelectorAll('.form-control, textarea');
             
-            inputs.forEach(input => {
+            inputs.forEach(function(input) {
                 input.style.display = 'none';
                 void input.offsetHeight;
                 input.style.display = '';
@@ -1286,9 +1204,6 @@
         });
 
         setTimeout(updateTheme, 200);
-
-        console.log('✅ Employee Ticket Detail page loaded');
-        console.log('📋 Ticket #{{ ticket.ticket_number }}');
     });
 </script>
 {% endblock %}
