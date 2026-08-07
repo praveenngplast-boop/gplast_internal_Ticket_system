@@ -1886,20 +1886,71 @@
     [data-theme="dark"] .badge.bg-success { background: rgba(34, 197, 94, 0.2) !important; color: #4ADE80 !important; }
     [data-theme="dark"] .badge.bg-danger { background: rgba(239, 68, 68, 0.2) !important; color: #F87171 !important; }
     [data-theme="dark"] .badge.bg-warning { background: rgba(245, 158, 11, 0.2) !important; color: #FBBF24 !important; }
+      .badge-can-assign {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.3s ease;
+    }
+    .badge-can-assign.yes {
+        background: rgba(34, 197, 94, 0.12);
+        color: #22C55E;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+    .badge-can-assign.no {
+        background: rgba(239, 68, 68, 0.08);
+        color: #EF4444;
+        border: 1px solid rgba(239, 68, 68, 0.1);
+    }
+    .badge-can-assign i {
+        font-size: 0.3rem;
+    }
+    .btn-toggle-assign {
+        padding: 0.15rem 0.5rem;
+        font-size: 0.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .btn-toggle-assign.enable {
+        background: rgba(34, 197, 94, 0.12);
+        color: #22C55E;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+    .btn-toggle-assign.enable:hover {
+        background: #22C55E;
+        color: white;
+        transform: scale(1.05);
+    }
+    .btn-toggle-assign.disable {
+        background: rgba(239, 68, 68, 0.08);
+        color: #EF4444;
+        border: 1px solid rgba(239, 68, 68, 0.1);
+    }
+    .btn-toggle-assign.disable:hover {
+        background: #EF4444;
+        color: white;
+        transform: scale(1.05);
+    }
 </style>
 {% endblock %}
 
-<!-- ==========================================
-CONTENT - Same as before but with updated Dept Employees tab
-========================================== -->
 {% block content %}
-<!-- Toast Container for Notifications -->
 <div class="toast-container-custom" id="toastContainer"></div>
 
 <div class="settings-container">
-    <!-- ==========================================
-    HEADER
-    ========================================== -->
     <div class="settings-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
@@ -1912,11 +1963,7 @@ CONTENT - Same as before but with updated Dept Employees tab
         </div>
     </div>
 
-    <!-- ==========================================
-    MAIN PANEL
-    ========================================== -->
     <div class="card panel-card shadow-sm">
-        <!-- Tabs Navigation -->
         <div class="settings-tabs-wrapper">
             <div class="settings-tabs" id="settingsTabs" role="tablist">
                 <button class="settings-tab-btn" id="master-tab" data-bs-toggle="tab" data-bs-target="#master-content" type="button">
@@ -1947,15 +1994,11 @@ CONTENT - Same as before but with updated Dept Employees tab
             </div>
         </div>
 
-        <!-- Tab Content -->
         <div class="card-body">
             <div class="tab-content" id="settingsTabContent">
 
-                <!-- ==========================================
-                TAB 1: MASTER DATA
-                ========================================== -->
+                <!-- Master Data Tab -->
                 <div class="tab-pane fade" id="master-content">
-                    <!-- Units Section -->
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-industry"></i>Units</span>
                         <button type="button" class="btn btn-primary-custom btn-sm ms-auto" data-bs-toggle="modal" data-bs-target="#addUnitModal">
@@ -2003,7 +2046,6 @@ CONTENT - Same as before but with updated Dept Employees tab
                         </table>
                     </div>
 
-                    <!-- Departments Section -->
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-cubes"></i>Departments</span>
                         <button type="button" class="btn btn-primary-custom btn-sm ms-auto" data-bs-toggle="modal" data-bs-target="#addDeptModal">
@@ -2052,9 +2094,7 @@ CONTENT - Same as before but with updated Dept Employees tab
                     </div>
                 </div>
 
-                <!-- ==========================================
-                TAB 2: COMMUNICATION
-                ========================================== -->
+                <!-- Communication Tab -->
                 <div class="tab-pane fade" id="communication-content">
                     <div class="section-divider"><span class="section-title"><i class="fa-solid fa-headset"></i>Helpdesk Contact</span></div>
                     
@@ -2156,9 +2196,7 @@ CONTENT - Same as before but with updated Dept Employees tab
                     </div>
                 </div>
 
-                <!-- ==========================================
-                TAB 3: EMPLOYEES
-                ========================================== -->
+                <!-- Employees Tab - UPDATED with Can Assign functionality -->
                 <div class="tab-pane fade" id="employees-content">
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
@@ -2235,6 +2273,7 @@ CONTENT - Same as before but with updated Dept Employees tab
                             {% if emp_search %}<a href="{% url 'settings_page' %}#employees-content" class="btn btn-sm btn-outline-secondary-custom" style="font-size: 0.75rem;"><i class="fa-solid fa-times"></i></a>{% endif %}
                         </form>
                     </div>
+                    
                     <div class="table-responsive" style="max-height: 350px;">
                         <table class="table table-hover align-middle mb-0" id="employeesTable">
                             <thead>
@@ -2246,6 +2285,8 @@ CONTENT - Same as before but with updated Dept Employees tab
                                     <th onclick="sortTable('employees', 4)">Unit <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
                                     <th onclick="sortTable('employees', 5)">Dept <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
                                     <th onclick="sortTable('employees', 6)">Status <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
+                                    <!-- NEW: Can Assign column -->
+                                    <th onclick="sortTable('employees', 7)">Can Assign <span class="sort-icon"><i class="fa-solid fa-chevron-up"></i></span></th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -2258,27 +2299,74 @@ CONTENT - Same as before but with updated Dept Employees tab
                                     <td style="font-size: 0.7rem;">{{ emp.email }}</td>
                                     <td style="font-size: 0.65rem;">{{ emp.unit.code|default:"-" }}</td>
                                     <td style="font-size: 0.65rem;">{{ emp.department.name|default:"-" }}</td>
-                                    <td><span class="badge bg-{% if emp.is_active %}success{% else %}danger{% endif %}" style="font-size: 0.5rem;">{% if emp.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                                    <td>
+                                        <span class="badge bg-{% if emp.is_active %}success{% else %}danger{% endif %}" style="font-size: 0.5rem;">
+                                            {% if emp.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                    <!-- NEW: Can Assign status badge -->
+                                    <td>
+                                        <span class="badge-can-assign {% if emp.can_assign_ticket %}yes{% else %}no{% endif %}" style="font-size: 0.5rem;">
+                                            <i class="fa-solid {% if emp.can_assign_ticket %}fa-circle-check{% else %}fa-circle-xmark{% endif %}"></i>
+                                            {% if emp.can_assign_ticket %}Yes{% else %}No{% endif %}
+                                        </span>
+                                    </td>
                                     <td class="text-center" style="white-space: nowrap;">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary-custom rounded-pill px-1" style="font-size: 0.55rem;" data-bs-toggle="modal" data-bs-target="#editEmployeeModal" data-id="{{ emp.id }}" data-empid="{{ emp.employee_id }}" data-name="{{ emp.employee_name }}" data-mobile="{{ emp.mobile }}" data-email="{{ emp.email }}" data-unit="{{ emp.unit_id }}" data-dept="{{ emp.department_id }}"><i class="fa-solid fa-pen-to-square"></i></button>
-                                        <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Toggle {{ emp.employee_id }}?">{% csrf_token %}<input type="hidden" name="action" value="toggle_employee"><input type="hidden" name="emp_id" value="{{ emp.id }}"><button type="submit" class="btn btn-sm {% if emp.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-1 ms-1" style="font-size: 0.55rem;">{% if emp.is_active %}Off{% else %}On{% endif %}</button></form>
-                                        <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Delete {{ emp.employee_id }}?">{% csrf_token %}<input type="hidden" name="action" value="delete_employee"><input type="hidden" name="emp_id" value="{{ emp.id }}"><button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-1 ms-1 border-0" style="font-size: 0.55rem;"><i class="fa-solid fa-trash-can"></i></button></form>
+                                        <!-- Edit button -->
+                                        <button type="button" class="btn btn-sm btn-outline-secondary-custom rounded-pill px-1" style="font-size: 0.55rem;" 
+                                            data-bs-toggle="modal" data-bs-target="#editEmployeeModal" 
+                                            data-id="{{ emp.id }}" 
+                                            data-empid="{{ emp.employee_id }}" 
+                                            data-name="{{ emp.employee_name }}" 
+                                            data-mobile="{{ emp.mobile }}" 
+                                            data-email="{{ emp.email }}" 
+                                            data-unit="{{ emp.unit_id }}" 
+                                            data-dept="{{ emp.department_id }}"
+                                            data-canassign="{{ emp.can_assign_ticket|yesno:'true,false' }}">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        
+                                        <!-- Toggle Active/Inactive -->
+                                        <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Toggle {{ emp.employee_id }}?">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="toggle_employee">
+                                            <input type="hidden" name="emp_id" value="{{ emp.id }}">
+                                            <button type="submit" class="btn btn-sm {% if emp.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-1 ms-1" style="font-size: 0.55rem;">
+                                                {% if emp.is_active %}Off{% else %}On{% endif %}
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- NEW: Toggle Can Assign -->
+                                        <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Toggle assignment permission for {{ emp.employee_id }}?">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="toggle_can_assign">
+                                            <input type="hidden" name="emp_id" value="{{ emp.id }}">
+                                            <button type="submit" class="btn-toggle-assign {% if emp.can_assign_ticket %}disable{% else %}enable{% endif %} ms-1" style="font-size: 0.45rem; padding: 0.1rem 0.4rem;">
+                                                {% if emp.can_assign_ticket %}✗ Disable{% else %}✓ Enable{% endif %}
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Delete -->
+                                        <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Delete {{ emp.employee_id }}?">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete_employee">
+                                            <input type="hidden" name="emp_id" value="{{ emp.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-1 ms-1 border-0" style="font-size: 0.55rem;">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                                 {% empty %}
-                                <tr><td colspan="8" class="text-center py-4 text-muted">No employees found.{% if emp_search %} Try different search.{% endif %}</td></tr>
-                                <tr><td colspan="8" class="text-center py-4 text-muted">No employees found.{% if emp_search %} Try a different search.{% endif %}</td></tr>
+                                <tr><td colspan="9" class="text-center py-4 text-muted">No employees found.{% if emp_search %} Try different search.{% endif %}</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- ==========================================
-                TAB 4: CREDENTIALS
-                ========================================== -->
+                <!-- Credentials Tab -->
                 <div class="tab-pane fade" id="credentials-content">
-                <div class="tab-pane fade" id="credentials-content" role="tabpanel">
                     <div class="row mb-4">
                         <div class="col-lg-6">
                             <div class="card panel-card h-100">
@@ -2426,9 +2514,7 @@ CONTENT - Same as before but with updated Dept Employees tab
                     {% endif %}
                 </div>
 
-                <!-- ==========================================
-                TAB 5: DEPARTMENT EMPLOYEES - HIERARCHICAL TREE VIEW
-                ========================================== -->
+                <!-- Dept Employees Tab -->
                 <div class="tab-pane fade" id="dept-employees-content">
                     <div class="section-divider">
                         <span class="section-title"><i class="fa-solid fa-users"></i>Department-wise Employees</span>
@@ -2439,7 +2525,6 @@ CONTENT - Same as before but with updated Dept Employees tab
                     </div>
 
                     <div class="tree-table-container" id="deptTreeContainer">
-                        <!-- Tree Sidebar -->
                         <div class="tree-sidebar" id="deptTreeSidebar">
                             <div class="tree-header">
                                 <span>Units &amp; Departments</span>
@@ -2457,7 +2542,6 @@ CONTENT - Same as before but with updated Dept Employees tab
                                 </div>
                             </div>
                             
-                            <!-- Global Search Box -->
                             <div class="tree-search-box">
                                 <i class="fa-solid fa-search search-icon"></i>
                                 <input type="text" id="treeSearchInput" placeholder="Search departments..." oninput="filterTreeItems(this.value)">
@@ -2469,7 +2553,6 @@ CONTENT - Same as before but with updated Dept Employees tab
                             <div id="treeList">
                                 {% if credentials_by_unit %}
                                     {% for unit_data in credentials_by_unit %}
-                                    <!-- Unit Level -->
                                     <div class="tree-unit-item" data-unit-id="{{ unit_data.unit.id }}" data-unit-name="{{ unit_data.unit.code }}" onclick="toggleUnit(this, {{ unit_data.unit.id }})">
                                         <div class="tree-icon">
                                             <i class="fa-solid fa-building"></i>
@@ -2481,7 +2564,6 @@ CONTENT - Same as before but with updated Dept Employees tab
                                         <span class="tree-badge" id="unitBadge-{{ unit_data.unit.id }}">{{ unit_data.credentials|length }}</span>
                                         <span class="tree-arrow"><i class="fa-solid fa-chevron-right"></i></span>
                                     </div>
-                                    <!-- Department Container (Child) -->
                                     <div class="tree-dept-container" id="deptContainer-{{ unit_data.unit.id }}">
                                         {% for cred in unit_data.credentials %}
                                         <div class="tree-dept-item" data-dept-id="{{ cred.department.id }}" data-unit-id="{{ unit_data.unit.id }}" data-dept-name="{{ cred.department.name }}" onclick="selectDepartment(this, {{ cred.department.id }}, '{{ cred.department.name|escapejs }}', '{{ unit_data.unit.code|escapejs }}')">
@@ -2506,7 +2588,6 @@ CONTENT - Same as before but with updated Dept Employees tab
                             </div>
                         </div>
 
-                        <!-- Main Table Area -->
                         <div class="tree-table-main">
                             <div class="table-header">
                                 <div class="dept-title">
@@ -2540,9 +2621,6 @@ CONTENT - Same as before but with updated Dept Employees tab
     </div>
 </div>
 
-<!-- ==========================================
-MODALS (Kept from original)
-========================================== -->
 <!-- Confirm Modal -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -2714,24 +2792,65 @@ MODALS (Kept from original)
     </div>
 </div>
 
-<!-- Edit Employee Modal -->
+<!-- Edit Employee Modal - UPDATED with Can Assign checkbox -->
 <div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
             <form method="POST" action="{% url 'settings_employees' %}" data-confirm="Save changes?">
-                {% csrf_token %}<input type="hidden" name="action" value="edit_employee"><input type="hidden" name="emp_id" id="edit_emp_id">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit_employee">
+                <input type="hidden" name="emp_id" id="edit_emp_id">
                 <div class="modal-header py-3" style="background: #8B5CF6;">
                     <h5 class="modal-title fw-bold text-white"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Employee</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label><input type="text" name="employee_id" id="edit_emp_empid" class="form-control" required></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Name <span class="text-danger">*</span></label><input type="text" name="employee_name" id="edit_emp_name" class="form-control" required></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label><input type="text" name="mobile" id="edit_emp_mobile" class="form-control" maxlength="10" required pattern="[0-9]{10}"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Email <span class="text-danger">*</span></label><input type="email" name="email" id="edit_emp_email" class="form-control" required></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Unit</label><select name="unit" id="edit_emp_unit" class="form-select"><option value="">-- Select --</option>{% for u in all_units %}<option value="{{ u.id }}">{{ u.code }}</option>{% endfor %}</select></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">Department</label><select name="department" id="edit_emp_dept" class="form-select"><option value="">-- Select --</option>{% for d in departments %}<option value="{{ d.id }}">{{ d.name }} ({{ d.unit.code }})</option>{% endfor %}</select></div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label>
+                            <input type="text" name="employee_id" id="edit_emp_empid" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Name <span class="text-danger">*</span></label>
+                            <input type="text" name="employee_name" id="edit_emp_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Mobile <span class="text-danger">*</span></label>
+                            <input type="text" name="mobile" id="edit_emp_mobile" class="form-control" maxlength="10" required pattern="[0-9]{10}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="email" id="edit_emp_email" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Unit</label>
+                            <select name="unit" id="edit_emp_unit" class="form-select">
+                                <option value="">-- Select --</option>
+                                {% for u in all_units %}
+                                <option value="{{ u.id }}">{{ u.code }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Department</label>
+                            <select name="department" id="edit_emp_dept" class="form-select">
+                                <option value="">-- Select --</option>
+                                {% for d in departments %}
+                                <option value="{{ d.id }}">{{ d.name }} ({{ d.unit.code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <!-- NEW: Can Assign Tickets checkbox -->
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input type="checkbox" name="can_assign_ticket" id="edit_emp_can_assign" class="form-check-input">
+                                <label class="form-check-label fw-bold" for="edit_emp_can_assign">
+                                    <i class="fa-solid fa-user-check me-1" style="color: var(--brand-orange);"></i>
+                                    Can Assign Tickets
+                                </label>
+                                <div class="form-text">Enable to allow this employee to be assigned tickets by admin</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
@@ -2796,21 +2915,16 @@ MODALS (Kept from original)
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ============================================
         // ADD EMPLOYEE MOBILE VALIDATION
-        // ============================================
         var addEmpMobileInput = document.querySelector('#addEmployeeModal input[name="mobile"]');
         var addEmpForm = document.querySelector('#addEmployeeModal form');
         var mobileError = document.getElementById('mobileError');
         
         if (addEmpMobileInput && addEmpForm) {
-            // Real-time validation
             addEmpMobileInput.addEventListener('input', function() {
                 var val = this.value;
-                // Remove any non-digit characters
                 this.value = val.replace(/\D/g, '');
                 
-                // Validate length and digits
                 if (this.value.length > 0 && (this.value.length !== 10 || !/^\d{10}$/.test(this.value))) {
                     if (mobileError) mobileError.style.display = 'block';
                     this.style.borderColor = '#EF4444';
@@ -2820,7 +2934,6 @@ MODALS (Kept from original)
                 }
             });
             
-            // Form submit validation
             addEmpForm.addEventListener('submit', function(e) {
                 var mobileVal = addEmpMobileInput.value.trim();
                 if (!/^\d{10}$/.test(mobileVal)) {
@@ -2834,9 +2947,7 @@ MODALS (Kept from original)
             });
         }
 
-        // ============================================
         // TAB PERSISTENCE
-        // ============================================
         var defaultTab = '#master-content';
         var hash = window.location.hash;
         
@@ -2883,9 +2994,7 @@ MODALS (Kept from original)
             });
         });
 
-        // ============================================
         // TOAST NOTIFICATION SYSTEM
-        // ============================================
         window.showToast = function(message, type, details) {
             type = type || 'info';
             var container = document.getElementById('toastContainer');
@@ -2953,9 +3062,7 @@ MODALS (Kept from original)
             }
         };
 
-        // ============================================
         // CHECK FOR MESSAGES FROM DJANGO
-        // ============================================
         var messages = document.querySelectorAll('.django-message');
         if (messages.length > 0) {
             messages.forEach(function(msg) {
@@ -2968,9 +3075,7 @@ MODALS (Kept from original)
             });
         }
 
-        // ============================================
         // CONFIRMATION MODAL
-        // ============================================
         let currentFormToSubmit = null;
         let isProcessing = false;
         const modalEl = document.getElementById('confirmModal');
@@ -3094,9 +3199,7 @@ MODALS (Kept from original)
             });
         }
 
-        // ============================================
         // PASSWORD TOGGLE
-        // ============================================
         document.querySelectorAll('.password-toggle-icon').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -3120,9 +3223,7 @@ MODALS (Kept from original)
             });
         });
 
-        // ============================================
         // PREFILL EDIT MODALS
-        // ============================================
         document.getElementById('editUnitModal')?.addEventListener('show.bs.modal', function(e) {
             var b = e.relatedTarget;
             document.getElementById('edit_unit_id').value = b.getAttribute('data-id');
@@ -3134,6 +3235,8 @@ MODALS (Kept from original)
             document.getElementById('edit_dept_id').value = b.getAttribute('data-id');
             document.getElementById('edit_dept_name').value = b.getAttribute('data-name');
         });
+        
+        // UPDATED: Edit Employee Modal - handle can_assign_ticket checkbox
         document.getElementById('editEmployeeModal')?.addEventListener('show.bs.modal', function(e) {
             var b = e.relatedTarget;
             document.getElementById('edit_emp_id').value = b.getAttribute('data-id');
@@ -3143,7 +3246,15 @@ MODALS (Kept from original)
             document.getElementById('edit_emp_email').value = b.getAttribute('data-email');
             document.getElementById('edit_emp_unit').value = b.getAttribute('data-unit') || '';
             document.getElementById('edit_emp_dept').value = b.getAttribute('data-dept') || '';
+            
+            // Handle can_assign_ticket checkbox
+            var canAssign = b.getAttribute('data-canassign');
+            var checkbox = document.getElementById('edit_emp_can_assign');
+            if (checkbox) {
+                checkbox.checked = canAssign === 'true';
+            }
         });
+        
         document.getElementById('editCredentialModal')?.addEventListener('show.bs.modal', function(e) {
             var b = e.relatedTarget;
             document.getElementById('edit_cred_id').value = b.getAttribute('data-id');
@@ -3151,9 +3262,7 @@ MODALS (Kept from original)
             document.getElementById('edit_cred_password').value = b.getAttribute('data-password');
         });
 
-        // ============================================
         // SORT TABLE FUNCTION
-        // ============================================
         window.sortTable = function(tableName, colIndex) {
             var table = document.getElementById(tableName + 'Table');
             if (!table) return;
@@ -3191,14 +3300,11 @@ MODALS (Kept from original)
             rows.forEach(function(row) { tbody.appendChild(row); });
         };
 
-        // ============================================
         // HIERARCHICAL TREE VIEW LOGIC
-        // ============================================
         var currentDeptId = null;
         var employeeCache = {};
         var searchQuery = '';
 
-        // Toggle Unit Expansion
         window.toggleUnit = function(element, unitId) {
             var container = document.getElementById('deptContainer-' + unitId);
             var isExpanded = element.classList.contains('expanded');
@@ -3212,7 +3318,6 @@ MODALS (Kept from original)
             }
         };
 
-        // Expand All Units
         window.expandAllUnits = function() {
             document.querySelectorAll('.tree-unit-item').forEach(function(unit) {
                 var unitId = unit.getAttribute('data-unit-id');
@@ -3224,7 +3329,6 @@ MODALS (Kept from original)
             });
         };
 
-        // Collapse All Units
         window.collapseAllUnits = function() {
             document.querySelectorAll('.tree-unit-item').forEach(function(unit) {
                 var unitId = unit.getAttribute('data-unit-id');
@@ -3236,7 +3340,6 @@ MODALS (Kept from original)
             });
         };
 
-        // Tree Search / Filter
         window.filterTreeItems = function(query) {
             query = query.toLowerCase().trim();
             searchQuery = query;
@@ -3252,7 +3355,6 @@ MODALS (Kept from original)
                 var unitName = unit.getAttribute('data-unit-name').toLowerCase();
                 var hasMatch = false;
                 
-                // Check departments under this unit
                 var deptContainer = unit.nextElementSibling;
                 if (deptContainer && deptContainer.classList.contains('tree-dept-container')) {
                     var depts = deptContainer.querySelectorAll('.tree-dept-item');
@@ -3262,7 +3364,6 @@ MODALS (Kept from original)
                         
                         if (match) {
                             dept.classList.remove('hidden');
-                            // Highlight matching text in department name
                             if (query.length > 0 && deptName.includes(query)) {
                                 dept.querySelector('.tree-dept-name').innerHTML = deptName.replace(new RegExp(query, 'gi'), function(match) {
                                     return '<span class="tree-dept-match">' + match + '</span>';
@@ -3284,7 +3385,6 @@ MODALS (Kept from original)
                 }
             });
             
-            // Auto-expand units that have visible departments
             if (query.length > 0) {
                 document.querySelectorAll('.tree-dept-item:not(.hidden)').forEach(function(dept) {
                     var unitId = dept.getAttribute('data-unit-id');
@@ -3298,14 +3398,12 @@ MODALS (Kept from original)
             }
         };
 
-        // Clear Tree Search
         window.clearTreeSearch = function() {
             var input = document.getElementById('treeSearchInput');
             input.value = '';
             filterTreeItems('');
         };
 
-        // Pre-populate badge counts from Django context
         {% if credentials_by_unit %}
             {% for unit_data in credentials_by_unit %}
                 {% for cred in unit_data.credentials %}
@@ -3324,7 +3422,6 @@ MODALS (Kept from original)
             {% endfor %}
         {% endif %}
 
-        // Load employees for a department
         window.loadDepartmentEmployees = function(deptId, deptName, unitCode) {
             var tableBody = document.getElementById('employeeTableBody');
             var deptNameEl = document.getElementById('selectedDeptName');
@@ -3385,7 +3482,6 @@ MODALS (Kept from original)
                 });
         };
 
-        // Render employee table
         function renderEmployeeTable(deptId, employees, searchQuery) {
             var tableBody = document.getElementById('employeeTableBody');
             var empCountEl = document.getElementById('selectedEmpCount');
@@ -3424,7 +3520,6 @@ MODALS (Kept from original)
                 var statusText = emp.is_active ? 'Active' : 'Inactive';
                 var statusIcon = emp.is_active ? 'fa-regular fa-circle-check' : 'fa-regular fa-circle';
                 
-                // Highlight matching text in employee fields
                 var empIdDisplay = emp.employee_id || '-';
                 var empNameDisplay = emp.employee_name || '-';
                 var empMobileDisplay = emp.mobile || '-';
@@ -3476,7 +3571,6 @@ MODALS (Kept from original)
             tableBody.innerHTML = html;
         }
 
-        // Select department from tree
         window.selectDepartment = function(element, deptId, deptName, unitCode) {
             document.querySelectorAll('.tree-dept-item').forEach(function(item) {
                 item.classList.remove('active');
@@ -3487,7 +3581,6 @@ MODALS (Kept from original)
             
             currentDeptId = deptId;
             
-            // Automatically expand the parent unit if not expanded
             var unitId = element.getAttribute('data-unit-id');
             var unitElement = document.querySelector('.tree-unit-item[data-unit-id="' + unitId + '"]');
             if (unitElement && !unitElement.classList.contains('expanded')) {
@@ -3501,7 +3594,6 @@ MODALS (Kept from original)
             loadDepartmentEmployees(deptId, deptName, unitCode);
         };
 
-        // Filter employees by search (global search for employees)
         window.filterEmployees = function() {
             var searchInput = document.getElementById('empSearchInput');
             var query = searchInput.value;
@@ -3512,14 +3604,12 @@ MODALS (Kept from original)
             renderEmployeeTable(currentDeptId, employees, query);
         };
 
-        // Clear employee search
         window.clearEmployeeSearch = function() {
             var searchInput = document.getElementById('empSearchInput');
             searchInput.value = '';
             filterEmployees();
         };
 
-        // Auto-expand first unit and select first department
         setTimeout(function() {
             var firstUnit = document.querySelector('.tree-unit-item');
             if (firstUnit) {
@@ -3537,35 +3627,24 @@ MODALS (Kept from original)
             }
         }, 400);
 
-        // ============================================
         // BULK UPLOAD
-        // ============================================
         var fileInput = document.getElementById('bulkExcelFile');
         var uploadForm = document.getElementById('bulkUploadForm');
         var errorContainer = document.getElementById('uploadErrorContainer');
         var errorList = document.getElementById('uploadErrorList');
         var errorTitle = document.getElementById('uploadErrorTitle');
-        const fileInput = document.getElementById('bulkExcelFile');
-        const uploadForm = document.getElementById('bulkUploadForm');
-        const errorContainer = document.getElementById('uploadErrorContainer');
-        const errorList = document.getElementById('uploadErrorList');
-        const errorTitle = document.getElementById('uploadErrorTitle');
 
         if (fileInput && uploadForm) {
             fileInput.removeAttribute('onchange');
             
             fileInput.addEventListener('change', function(e) {
                 var file = this.files[0];
-                const file = this.files[0];
                 if (!file) return;
 
                 var actionUrl = uploadForm.getAttribute('action') || uploadForm.action;
-                const actionUrl = uploadForm.getAttribute('action') || uploadForm.action;
                 
                 var validExtensions = ['.xlsx', '.xls'];
                 var fileExt = '.' + file.name.split('.').pop().toLowerCase();
-                const validExtensions = ['.xlsx', '.xls'];
-                const fileExt = '.' + file.name.split('.').pop().toLowerCase();
                 if (!validExtensions.includes(fileExt)) {
                     window.showToast('Invalid file format. Only .xlsx and .xls files are supported.', 'error');
                     this.value = '';
@@ -3577,14 +3656,12 @@ MODALS (Kept from original)
                 formData.append('action', 'bulk_upload');
                 
                 var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
                 if (csrfToken) {
                     formData.append('csrfmiddlewaretoken', csrfToken.value);
                 }
 
                 this.disabled = true;
                 errorContainer.classList.remove('show');
-                if (errorContainer) errorContainer.classList.remove('show');
 
                 fetch(actionUrl, {
                     method: 'POST',
@@ -3604,14 +3681,10 @@ MODALS (Kept from original)
                         errorContainer.classList.add('show');
                         errorTitle.textContent = data.message || 'Upload failed';
                         errorList.innerHTML = '';
-                        if (errorContainer) errorContainer.classList.add('show');
-                        if (errorTitle) errorTitle.textContent = data.message || 'Upload failed';
-                        if (errorList) errorList.innerHTML = '';
                         
                         if (data.errors && data.errors.length > 0) {
                             data.errors.forEach(function(err) {
                                 var li = document.createElement('li');
-                                const li = document.createElement('li');
                                 li.innerHTML = `
                                     <i class="fa-solid fa-circle-exclamation"></i>
                                     <span>
@@ -3620,7 +3693,6 @@ MODALS (Kept from original)
                                     </span>
                                 `;
                                 errorList.appendChild(li);
-                                if (errorList) errorList.appendChild(li);
                             });
                         } else {
                             var li = document.createElement('li');
@@ -3629,11 +3701,9 @@ MODALS (Kept from original)
                                 <span>${data.message || 'Unknown error occurred'}</span>
                             `;
                             errorList.appendChild(li);
-                            if (errorList) errorList.appendChild(li);
                         }
 
                         errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        if (errorContainer) errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 })
                 .catch(function(error) {
@@ -3647,9 +3717,7 @@ MODALS (Kept from original)
             });
         }
 
-        // ============================================
         // DEPARTMENT FETCH FOR ADD EMPLOYEE MODAL
-        // ============================================
         var addEmpUnitSelect = document.querySelector('#addEmployeeModal select[name="unit"]');
         var addEmpDeptSelect = document.querySelector('#addEmployeeModal select[name="department"]');
         if (addEmpUnitSelect && addEmpDeptSelect) {
@@ -3684,9 +3752,7 @@ MODALS (Kept from original)
             });
         }
 
-        // ============================================
         // DEPARTMENT FETCH FOR ADD CREDENTIAL MODAL
-        // ============================================
         var credUnitSelect = document.getElementById('credUnit');
         var credDeptSelect = document.getElementById('credDept');
         if (credUnitSelect && credDeptSelect) {
@@ -3721,9 +3787,7 @@ MODALS (Kept from original)
             });
         }
 
-        // ============================================
         // TAB ANIMATION
-        // ============================================
         document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(t) {
             t.addEventListener('shown.bs.tab', function(e) {
                 var p = document.querySelector(this.getAttribute('data-bs-target'));
@@ -3736,9 +3800,7 @@ MODALS (Kept from original)
             });
         });
 
-        // ============================================
         // THEME CHANGE HANDLER
-        // ============================================
         function updateInputTheme() {
             var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             var inputs = document.querySelectorAll('.form-control, .form-select, input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], textarea, select');

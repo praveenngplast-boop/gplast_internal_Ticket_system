@@ -1034,6 +1034,19 @@
                     </select>
                 </div>
 
+                <!-- NEW: Assigned To filter dropdown -->
+                <div class="filter-group">
+                    <label for="filterAssignedTo"><i class="fa-solid fa-user"></i> Assigned To</label>
+                    <select class="filter-select" name="assigned_person" id="filterAssignedTo">
+                        <option value="">All Assigned Persons</option>
+                        {% for employee in employees %}
+                            <option value="{{ employee.employee_name }}" {% if selected_assigned_person == employee.employee_name %}selected{% endif %}>
+                                {{ employee.employee_name }} ({{ employee.employee_id }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
                 <div class="filter-group">
                     <label for="filterSearch"><i class="fa-solid fa-search"></i> Search</label>
                     <input class="filter-input" type="text" name="search" id="filterSearch" value="{{ search_query|default:'' }}" placeholder="Search tickets...">

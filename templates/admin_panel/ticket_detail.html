@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Admin Ticket Detail - {{ ticket.ticket_number }}{% endblock %}
 
 {% block extra_head %}
@@ -22,6 +23,7 @@
         --brand-gradient: linear-gradient(135deg, #FF6B00 0%, #FF8C38 100%);
         --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
         --shadow-md: 0 4px 24px rgba(0,0,0,0.10);
+        --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
     }
 
     [data-theme="dark"] {
@@ -35,13 +37,16 @@
         --text-muted: #6A7A9A;
         --shadow-sm: 0 2px 12px rgba(0,0,0,0.3);
         --shadow-md: 0 4px 24px rgba(0,0,0,0.4);
+        --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
     }
 
+    /* ========== GLOBAL RESET & BASE ========== */
     .ticket-container {
         animation: fadeInUp 0.6s ease;
         max-width: 1400px;
         margin: 0 auto;
-        padding: 0 0.5rem;
+        padding: 0 0.5rem 2rem 0.5rem;
+        min-height: calc(100vh - 200px);
     }
 
     @keyframes fadeInUp {
@@ -49,6 +54,7 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
+    /* ========== HEADER ========== */
     .ticket-header {
         background: var(--ticket-bg);
         border: 1px solid var(--ticket-border);
@@ -57,6 +63,25 @@
         margin-bottom: 1.25rem;
         box-shadow: var(--shadow-sm);
         transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ticket-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--brand-gradient);
+        background-size: 200% 100%;
+        animation: shimmerMove 3s ease infinite;
+    }
+
+    @keyframes shimmerMove {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
     }
 
     .ticket-header:hover {
@@ -70,23 +95,49 @@
         font-family: 'Fraunces', serif;
     }
 
+    .header-title i {
+        color: var(--brand-orange);
+    }
+
     .header-subtitle {
         font-size: clamp(0.7rem, 1vw, 0.8rem);
         color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .header-subtitle .time-badge {
+        background: rgba(255, 107, 0, 0.08);
+        border: 1px solid rgba(255, 107, 0, 0.1);
+        color: var(--brand-orange);
+        font-size: 0.55rem;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        font-weight: 600;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
     }
 
     .btn-back {
         border: 2px solid var(--ticket-border) !important;
         color: var(--text-secondary) !important;
         border-radius: 50px !important;
-        padding: 0.25rem 0.8rem !important;
+        padding: 0.3rem 0.9rem !important;
         font-size: 0.75rem !important;
         transition: all 0.3s ease !important;
         text-decoration: none !important;
         display: inline-flex !important;
         align-items: center !important;
-        gap: 4px !important;
+        gap: 6px !important;
         background: transparent !important;
+        min-height: 36px;
     }
 
     .btn-back:hover {
@@ -96,57 +147,34 @@
         box-shadow: 0 4px 15px rgba(255, 107, 0, 0.1) !important;
     }
 
-    .panel-card {
-        background: var(--ticket-bg);
-        border: 1px solid var(--ticket-border);
-        border-radius: var(--ticket-radius);
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease;
-        height: 100%;
+    .btn-download-excel {
+        background: linear-gradient(135deg, #22C55E, #16A34A) !important;
+        border: none !important;
+        color: white !important;
+        border-radius: 50px !important;
+        padding: 0.3rem 1rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        min-height: 36px;
+        box-shadow: 0 2px 12px rgba(34, 197, 94, 0.25) !important;
     }
 
-    .panel-card:hover {
-        box-shadow: var(--shadow-md);
-        border-color: rgba(255, 107, 0, 0.15);
+    .btn-download-excel:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.35) !important;
+        color: white !important;
     }
 
-    .glass-header {
-        background: rgba(255, 107, 0, 0.03);
-        border-bottom: 1px solid var(--ticket-border);
-        padding: 0.6rem 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .glass-header h6 {
-        color: var(--text-primary) !important;
-        font-weight: 700;
+    .btn-download-excel i {
         font-size: 0.8rem;
-        margin: 0;
-        font-family: 'Fraunces', serif;
     }
 
-    .glass-header h6 i {
-        color: var(--brand-orange) !important;
-    }
-
-    .glass-header .badge-count {
-        background: rgba(255, 107, 0, 0.08);
-        color: var(--brand-orange);
-        font-size: 0.55rem;
-        padding: 0.1rem 0.5rem;
-        border-radius: 50px;
-        border: 1px solid rgba(255, 107, 0, 0.1);
-    }
-
-    .card-body {
-        padding: 0.75rem 1rem;
-    }
-
+    /* ========== ACTION BANNER ========== */
     .action-banner {
         background: var(--ticket-bg);
         border: 2px solid var(--brand-orange);
@@ -172,10 +200,21 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
     .action-banner .banner-title i {
         color: var(--brand-orange);
+    }
+
+    .action-banner .banner-title .reopen-badge {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3B82F6;
+        font-size: 0.5rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 50px;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        font-weight: 600;
     }
 
     .action-buttons {
@@ -229,16 +268,82 @@
         margin-left: 0.2rem;
     }
 
+    .action-btn .reopen-expired {
+        background: rgba(239, 68, 68, 0.3);
+        color: white;
+        font-size: 0.55rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        margin-left: 0.2rem;
+    }
+
+    .action-status-msg {
+        color: var(--text-muted);
+        font-size: 0.65rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.5rem;
+    }
+
+    /* ========== PANEL CARDS ========== */
+    .panel-card {
+        background: var(--ticket-bg);
+        border: 1px solid var(--ticket-border);
+        border-radius: var(--ticket-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .panel-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: rgba(255, 107, 0, 0.15);
+    }
+
+    .glass-header {
+        background: rgba(255, 107, 0, 0.03);
+        border-bottom: 1px solid var(--ticket-border);
+        padding: 0.6rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .glass-header h6 {
+        color: var(--text-primary) !important;
+        font-weight: 700;
+        font-size: 0.8rem;
+        margin: 0;
+        font-family: 'Fraunces', serif;
+    }
+
+    .glass-header h6 i {
+        color: var(--brand-orange) !important;
+    }
+
+    .glass-header .badge-count {
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--brand-orange);
+        font-size: 0.55rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 50px;
+        border: 1px solid rgba(255, 107, 0, 0.1);
+        font-weight: 600;
+    }
+
+    .card-body {
+        padding: 0.75rem 1rem;
+    }
+
+    /* ========== DETAILS GRID ========== */
     .details-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 0.5rem;
-    }
-
-    @media (max-width: 768px) {
-        .details-grid {
-            grid-template-columns: 1fr;
-        }
     }
 
     .detail-item {
@@ -257,6 +362,11 @@
         grid-column: 1 / -1;
     }
 
+    .detail-item.highlight {
+        background: rgba(255, 107, 0, 0.04);
+        border-color: rgba(255, 107, 0, 0.12);
+    }
+
     .detail-label {
         font-size: 0.55rem;
         font-weight: 600;
@@ -272,6 +382,11 @@
         font-weight: 500;
         color: var(--text-primary);
         word-break: break-word;
+    }
+
+    .detail-value.highlight-text {
+        color: var(--brand-orange);
+        font-weight: 700;
     }
 
     .detail-value a {
@@ -299,6 +414,7 @@
         font-size: 0.8rem;
     }
 
+    /* ========== BADGES ========== */
     .badge-status {
         display: inline-block;
         padding: 0.15rem 0.5rem;
@@ -325,10 +441,15 @@
         letter-spacing: 0.3px;
     }
 
-    .badge-priority-critical { background: var(--danger-color); color: white; }
+    .badge-priority-critical { background: var(--danger-color); color: white; animation: pulseCritical 2s ease-in-out infinite; }
     .badge-priority-high { background: var(--warning-color); color: #1A1A2E; }
     .badge-priority-medium { background: #3B82F6; color: white; }
     .badge-priority-low { background: #94A3B8; color: white; }
+
+    @keyframes pulseCritical {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    }
 
     .badge-origin {
         display: inline-block;
@@ -349,6 +470,7 @@
         border: 1px solid var(--ticket-border);
     }
 
+    /* ========== STATUS BOXES ========== */
     .status-box {
         padding: 0.5rem 0.75rem;
         border-radius: 8px;
@@ -403,6 +525,7 @@
         box-shadow: 0 4px 15px rgba(255, 107, 0, 0.2);
     }
 
+    /* ========== TIMELINE ========== */
     .timeline-scroll {
         max-height: 380px;
         overflow-y: auto;
@@ -431,6 +554,12 @@
         position: relative;
         padding-left: 34px;
         margin-bottom: 0.5rem;
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
     }
 
     .timeline-item:last-child {
@@ -504,11 +633,12 @@
         margin: 0;
     }
 
+    /* ========== MODALS ========== */
     .modal-content {
         background: var(--ticket-bg) !important;
         border: 1px solid var(--ticket-border) !important;
         border-radius: var(--ticket-radius) !important;
-        box-shadow: var(--shadow-md) !important;
+        box-shadow: var(--shadow-lg) !important;
     }
 
     .modal-header {
@@ -555,6 +685,7 @@
         font-size: 0.75rem !important;
         transition: all 0.3s ease !important;
         font-family: 'Inter', sans-serif !important;
+        min-height: 34px;
     }
 
     .btn-modal-close:hover {
@@ -594,6 +725,7 @@
     .modal-header.bg-close { background: var(--success-color) !important; }
     .modal-header.bg-reopen { background: #3B82F6 !important; }
 
+    /* ========== FORM ELEMENTS ========== */
     .form-control, .form-select, textarea {
         background-color: var(--input-bg) !important;
         border: 2px solid var(--ticket-border) !important;
@@ -644,6 +776,7 @@
         font-size: 0.8rem;
     }
 
+    /* ========== SCROLLBAR ========== */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: var(--input-bg); border-radius: 8px; }
     ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 8px; }
@@ -651,31 +784,38 @@
 
     ::selection { background: var(--brand-orange); color: white; }
 
+    /* ========== RESPONSIVE ========== */
     @media (max-width: 992px) {
         .ticket-header { padding: 0.75rem 1rem; }
         .panel-card { margin-bottom: 0.75rem; }
         .detail-value { font-size: 0.78rem; }
         .action-btn { font-size: 0.7rem; padding: 0.3rem 0.8rem; min-height: 34px; }
         .action-banner { padding: 0.6rem 1rem; }
+        .details-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 768px) {
-        .ticket-container { padding: 0 0.25rem; }
+        .ticket-container { padding: 0 0.25rem 1rem 0.25rem; }
         .ticket-header { padding: 0.6rem 0.75rem; }
         .header-title { font-size: 0.95rem; }
+        .header-actions { width: 100%; justify-content: flex-end; }
+        .btn-back, .btn-download-excel { font-size: 0.65rem !important; padding: 0.2rem 0.6rem !important; min-height: 30px; }
+        
         .action-banner { padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; }
         .action-banner .banner-title { font-size: 0.6rem; }
-        .action-btn { font-size: 0.65rem; padding: 0.25rem 0.6rem; min-height: 30px; }
+        .action-btn { font-size: 0.6rem; padding: 0.2rem 0.5rem; min-height: 28px; }
+        .action-btn i { font-size: 0.55rem; }
         .action-buttons { gap: 0.3rem; }
+        
         .glass-header { padding: 0.4rem 0.6rem; }
         .glass-header h6 { font-size: 0.7rem; }
         .card-body { padding: 0.5rem; }
-        .details-grid { gap: 0.3rem; }
+        .details-grid { grid-template-columns: 1fr; gap: 0.3rem; }
         .detail-item { padding: 0.3rem 0.4rem; }
         .detail-value { font-size: 0.72rem; }
         .detail-label { font-size: 0.5rem; }
         .detail-description .detail-value { font-size: 0.72rem; padding: 0.3rem 0.4rem; }
-        .btn-back { font-size: 0.65rem !important; padding: 0.15rem 0.6rem !important; }
+        
         .timeline-scroll { max-height: 280px; }
         .timeline-item { padding-left: 28px; margin-bottom: 0.4rem; }
         .timeline::before { left: 10px; }
@@ -684,32 +824,89 @@
         .timeline-body { font-size: 0.65rem; }
         .status-box p { font-size: 0.72rem; }
         .status-box strong { font-size: 0.75rem; }
+        
+        .modal-body { padding: 0.75rem !important; }
+        .modal-header .modal-title { font-size: 0.85rem !important; }
+        .form-control, .form-select, textarea { font-size: 0.7rem !important; padding: 0.25rem 0.4rem !important; }
+        .form-label { font-size: 0.65rem !important; }
+        .btn-modal-submit, .btn-modal-close { font-size: 0.65rem !important; padding: 0.2rem 0.6rem !important; min-height: 30px; }
+        
+        .action-status-msg { font-size: 0.55rem; }
+        .header-subtitle .time-badge { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
     }
 
     @media (max-width: 576px) {
         .ticket-header { padding: 0.5rem 0.6rem; }
         .header-title { font-size: 0.85rem; }
         .header-subtitle { font-size: 0.6rem; }
+        .header-actions { flex-wrap: wrap; justify-content: stretch; }
+        .btn-back, .btn-download-excel { flex: 1; justify-content: center; font-size: 0.6rem !important; padding: 0.2rem 0.4rem !important; min-height: 28px; }
+        
         .action-banner { padding: 0.4rem 0.5rem; }
         .action-banner .banner-title { font-size: 0.55rem; }
-        .action-btn { font-size: 0.6rem; padding: 0.2rem 0.5rem; min-height: 26px; }
-        .action-btn i { font-size: 0.6rem; }
+        .action-btn { font-size: 0.55rem; padding: 0.15rem 0.4rem; min-height: 24px; flex: 1; justify-content: center; min-width: 70px; }
+        .action-btn i { font-size: 0.5rem; }
+        .action-buttons { gap: 0.2rem; }
+        
         .glass-header h6 { font-size: 0.65rem; }
         .detail-value { font-size: 0.68rem; }
         .detail-description .detail-value { font-size: 0.68rem; }
         .detail-item { padding: 0.2rem 0.3rem; }
-        .badge-status, .badge-priority, .badge-origin { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
-        .btn-attachment { font-size: 0.55rem; padding: 0.1rem 0.4rem; }
-        .timeline-scroll { max-height: 220px; }
-        .modal-body { padding: 0.75rem !important; }
-        .modal-header .modal-title { font-size: 0.85rem !important; }
-        .form-control, .form-select, textarea { font-size: 0.7rem !important; padding: 0.25rem 0.4rem !important; }
-        .form-label { font-size: 0.65rem !important; }
-        .btn-modal-submit, .btn-modal-close { font-size: 0.7rem !important; padding: 0.2rem 0.7rem !important; min-height: 28px; }
-        .action-buttons { flex-direction: row; flex-wrap: wrap; }
-        .action-btn { flex: 1 1 auto; min-width: 80px; justify-content: center; }
+        .badge-status, .badge-priority, .badge-origin { font-size: 0.45rem; padding: 0.08rem 0.3rem; }
+        .btn-attachment { font-size: 0.5rem; padding: 0.08rem 0.3rem; }
+        
+        .timeline-scroll { max-height: 200px; }
+        .timeline-item { padding-left: 24px; margin-bottom: 0.3rem; }
+        .timeline::before { left: 8px; }
+        .timeline-marker { left: 4px; width: 6px; height: 6px; }
+        .timeline-title { font-size: 0.65rem; }
+        .timeline-body { font-size: 0.6rem; }
+        .timeline-time { font-size: 0.5rem; }
+        .timeline-by { font-size: 0.5rem; }
+        
+        .modal-dialog { margin: 0.5rem; }
+        .modal-body { padding: 0.5rem !important; }
+        .modal-header .modal-title { font-size: 0.8rem !important; }
+        .btn-modal-submit, .btn-modal-close { font-size: 0.6rem !important; padding: 0.15rem 0.5rem !important; min-height: 26px; }
+        
+        .status-box { padding: 0.3rem 0.5rem; }
+        .status-box p { font-size: 0.65rem; }
+        .status-box strong { font-size: 0.7rem; }
     }
 
+    @media (max-width: 400px) {
+        .ticket-container { padding: 0 0.1rem 0.5rem 0.1rem; }
+        .ticket-header { padding: 0.4rem 0.4rem; }
+        .header-title { font-size: 0.75rem; }
+        .header-subtitle { font-size: 0.5rem; flex-direction: column; align-items: flex-start; }
+        .header-actions { flex-direction: column; width: 100%; }
+        .btn-back, .btn-download-excel { width: 100%; justify-content: center; font-size: 0.55rem !important; min-height: 24px; }
+        
+        .action-btn { font-size: 0.5rem; padding: 0.1rem 0.3rem; min-height: 22px; min-width: 50px; }
+        .action-btn i { font-size: 0.45rem; }
+        
+        .glass-header { padding: 0.3rem 0.4rem; flex-direction: column; align-items: stretch; text-align: center; }
+        .glass-header h6 { font-size: 0.6rem; }
+        .card-body { padding: 0.3rem; }
+        .detail-item { padding: 0.15rem 0.2rem; }
+        .detail-value { font-size: 0.6rem; }
+        .detail-label { font-size: 0.45rem; }
+        .detail-description .detail-value { font-size: 0.6rem; padding: 0.2rem 0.3rem; }
+        
+        .badge-status, .badge-priority, .badge-origin { font-size: 0.4rem; padding: 0.05rem 0.2rem; }
+        .badge-status i, .badge-priority i { display: none; }
+        
+        .timeline-scroll { max-height: 160px; }
+        .timeline-item { padding-left: 20px; }
+        .timeline::before { left: 6px; }
+        .timeline-marker { left: 2px; width: 5px; height: 5px; }
+        
+        .modal-dialog { margin: 0.2rem; }
+        .modal-body { padding: 0.3rem !important; }
+        .btn-modal-submit, .btn-modal-close { font-size: 0.55rem !important; padding: 0.1rem 0.4rem !important; min-height: 22px; }
+    }
+
+    /* ========== DARK THEME OVERRIDES ========== */
     [data-theme="dark"] .detail-item {
         background: rgba(255, 255, 255, 0.04);
         border-color: rgba(255, 255, 255, 0.06);
@@ -785,39 +982,106 @@
         border-color: rgba(255, 107, 0, 0.5);
         box-shadow: 0 4px 30px rgba(255, 107, 0, 0.1);
     }
+
+    [data-theme="dark"] .detail-item.highlight {
+        background: rgba(255, 107, 0, 0.06);
+        border-color: rgba(255, 107, 0, 0.15);
+    }
+
+    [data-theme="dark"] .ticket-header::before {
+        background: var(--brand-gradient);
+    }
+
+    [data-theme="dark"] .form-control, 
+    [data-theme="dark"] .form-select, 
+    [data-theme="dark"] textarea {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        color: #E8EDF5 !important;
+        -webkit-text-fill-color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .form-control:focus,
+    [data-theme="dark"] .form-select:focus,
+    [data-theme="dark"] textarea:focus {
+        border-color: var(--brand-orange) !important;
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12) !important;
+    }
+
+    [data-theme="dark"] .form-select option,
+    [data-theme="dark"] select option {
+        background: #1A1A2E !important;
+        color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .modal-content {
+        background: rgba(26, 26, 46, 0.98) !important;
+        border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    [data-theme="dark"] .modal-header {
+        border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    [data-theme="dark"] .modal-footer {
+        border-color: rgba(255, 255, 255, 0.06) !important;
+        background: rgba(255, 107, 0, 0.03) !important;
+    }
+
+    [data-theme="dark"] .modal .btn-close {
+        filter: brightness(0) invert(1) !important;
+        opacity: 0.5 !important;
+    }
+
+    [data-theme="dark"] .modal .btn-close:hover {
+        opacity: 1 !important;
+    }
+
+    [data-theme="dark"] .btn-download-excel {
+        background: linear-gradient(135deg, #22C55E, #16A34A) !important;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="ticket-container">
 
+    <!-- ========== HEADER ========== -->
     <div class="ticket-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <h1 class="header-title">
-                    <i class="fa-solid fa-screwdriver-wrench me-2" style="color: var(--brand-orange);"></i>
+                    <i class="fa-solid fa-screwdriver-wrench me-2"></i>
                     Ticket #{{ ticket.ticket_number }}
                 </h1>
                 <div class="header-subtitle">
                     <i class="fa-regular fa-calendar me-1"></i>
                     {{ ticket.created_at|date:"d M Y h:i A" }}
-                    <span class="badge rounded-pill ms-2" style="background: rgba(255, 107, 0, 0.08); color: var(--brand-orange); font-size: 0.55rem; border: 1px solid rgba(255, 107, 0, 0.1);">
+                    <span class="time-badge">
+                        <i class="fa-regular fa-clock me-1"></i>
                         {{ ticket.created_at|timesince }} ago
                     </span>
                 </div>
             </div>
-            <a href="{% url 'all_tickets' %}" class="btn-back">
-                <i class="fa-solid fa-arrow-left me-1"></i>Back
-            </a>
+            <div class="header-actions">
+                <a href="{% url 'all_tickets' %}" class="btn-back">
+                    <i class="fa-solid fa-arrow-left me-1"></i>Back
+                </a>
+                <a href="{% url 'download_ticket_excel' ticket.id %}" class="btn-download-excel" target="_blank">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span>Download Excel</span>
+                </a>
+            </div>
         </div>
     </div>
 
+    <!-- ========== ACTION BANNER ========== -->
     <div class="action-banner">
         <div class="banner-title">
             <i class="fa-solid fa-gears"></i>
             Lifecycle Actions
             {% if ticket.status == 'Closed' and can_reopen %}
-                <span class="badge rounded-pill" style="background: rgba(59, 130, 246, 0.15); color: #3B82F6; font-size: 0.5rem; border: 1px solid rgba(59, 130, 246, 0.2);">
+                <span class="reopen-badge">
                     <i class="fa-regular fa-clock me-1"></i>Reopen Available
                 </span>
             {% endif %}
@@ -848,12 +1112,12 @@
                         <i class="fa-solid fa-envelope-open"></i>Reopen
                         <span class="badge-reopen-time" id="reopen-timer-badge">Loading...</span>
                     </button>
-                    <span style="color: var(--text-muted); font-size: 0.65rem; display: flex; align-items: center; gap: 0.3rem;">
+                    <span class="action-status-msg">
                         <i class="fa-regular fa-clock"></i>
                         <span id="reopen-timer-text">Time left to reopen</span>
                     </span>
                 {% else %}
-                    <span style="color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 0.3rem;">
+                    <span class="action-status-msg" style="color: var(--text-muted);">
                         <i class="fa-regular fa-clock"></i>
                         Cannot reopen (48+ hours elapsed)
                     </span>
@@ -862,7 +1126,9 @@
         </div>
     </div>
 
+    <!-- ========== MAIN CONTENT ========== -->
     <div class="row g-3">
+        <!-- LEFT COLUMN - Ticket Details -->
         <div class="col-lg-8">
             <div class="panel-card">
                 <div class="glass-header">
@@ -870,9 +1136,9 @@
                 </div>
                 <div class="card-body">
                     <div class="details-grid">
-                        <div class="detail-item full-width" style="background: rgba(255, 107, 0, 0.04); border-color: rgba(255, 107, 0, 0.12);">
+                        <div class="detail-item full-width highlight">
                             <span class="detail-label">Subject</span>
-                            <div class="detail-value" style="color: var(--brand-orange); font-weight: 700;">{{ ticket.subject }}</div>
+                            <div class="detail-value highlight-text">{{ ticket.subject }}</div>
                         </div>
 
                         <div class="detail-item">
@@ -932,7 +1198,11 @@
                         <div class="detail-item">
                             <span class="detail-label">Assigned To</span>
                             <div class="detail-value">
-                                {{ ticket.assigned_person|default:"<span style='color: var(--text-muted);'>Not Assigned</span>" }}
+                                {% if ticket.assigned_person %}
+                                    <span style="font-weight: 600; color: var(--brand-orange);">{{ ticket.assigned_person }}</span>
+                                {% else %}
+                                    <span style="color: var(--text-muted);">Not Assigned</span>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="detail-item">
@@ -963,6 +1233,7 @@
                 </div>
             </div>
 
+            <!-- ========== STATUS BOXES ========== -->
             {% if ticket.status == 'Hold' and ticket.hold_reason %}
             <div class="status-box status-box-hold">
                 <strong style="color: var(--warning-color);"><i class="fa-solid fa-pause me-1"></i>Hold Reason</strong>
@@ -995,6 +1266,7 @@
             {% endif %}
         </div>
 
+        <!-- RIGHT COLUMN - Audit History -->
         <div class="col-lg-4">
             <div class="panel-card">
                 <div class="glass-header">
@@ -1047,12 +1319,16 @@
     </div>
 </div>
 
+<!-- ============================================
+     MODALS
+============================================ -->
+
 {% if ticket.status != 'Closed' %}
 <!-- Assign Modal -->
 <div class="modal fade" id="assignModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <form method="POST" id="assignForm" onsubmit="return validateAssign()">
+            <form method="POST" id="assignForm">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Assign">
                 <div class="modal-header bg-assign">
@@ -1062,7 +1338,12 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label"><i class="fa-regular fa-user"></i>Assigned Person <span class="required">*</span></label>
-                        <input type="text" name="assigned_person" id="assignPerson" class="form-control" placeholder="Enter name" required>
+                        <select name="assigned_person" id="assignPerson" class="form-select" required>
+                            <option value="">-- Select Employee --</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp.employee_name }}">{{ emp.employee_name }} ({{ emp.employee_id }})</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="mb-0">
                         <label class="form-label"><i class="fa-regular fa-message"></i>Remarks</label>
@@ -1082,7 +1363,7 @@
 <div class="modal fade" id="holdModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <form method="POST" id="holdForm" onsubmit="return validateHold()">
+            <form method="POST" id="holdForm">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Hold">
                 <div class="modal-header bg-hold">
@@ -1138,7 +1419,7 @@
 <div class="modal fade" id="closeModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <form method="POST" id="closeForm" onsubmit="return validateClose()">
+            <form method="POST" id="closeForm">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Close">
                 <div class="modal-header bg-close">
@@ -1177,7 +1458,7 @@
 <div class="modal fade" id="reopenModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <form method="POST" id="reopenForm" onsubmit="return validateReopen()">
+            <form method="POST" id="reopenForm">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Reopen">
                 <div class="modal-header bg-reopen">
@@ -1209,6 +1490,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
 
+        // ========== REOPEN COUNTDOWN TIMER ==========
         function startCountdown(deadlineISO) {
             var timerBadge = document.getElementById('reopen-timer-badge');
             var timerText = document.getElementById('reopen-timer-text');
@@ -1234,7 +1516,7 @@
                     if (reopenBtn) {
                         var parent = reopenBtn.closest('.action-buttons');
                         if (parent) {
-                            parent.innerHTML = '<span style="color: var(--text-muted); font-size: 0.75rem; display: flex; align-items: center; gap: 0.3rem;"><i class="fa-regular fa-clock"></i> Cannot reopen (48+ hours elapsed)</span>';
+                            parent.innerHTML = '<span class="action-status-msg" style="color: var(--text-muted);"><i class="fa-regular fa-clock"></i> Cannot reopen (48+ hours elapsed)</span>';
                         }
                     }
                     return;
@@ -1272,58 +1554,7 @@
             startCountdown(deadlineISO);
         }
 
-        function validateAssign() {
-            var person = document.getElementById('assignPerson');
-            if (!person.value.trim()) {
-                alert('Please enter the assigned person name.');
-                person.focus();
-                return false;
-            }
-            return true;
-        }
-
-        function validateHold() {
-            var reason = document.getElementById('holdReason');
-            if (!reason.value.trim()) {
-                alert('Please enter the reason for hold.');
-                reason.focus();
-                return false;
-            }
-            return true;
-        }
-
-        function validateClose() {
-            var errorType = document.getElementById('errorType');
-            var remarks = document.getElementById('closingRemarks');
-
-            if (!errorType.value.trim()) {
-                alert('Please select error classification.');
-                errorType.focus();
-                return false;
-            }
-            if (!remarks.value.trim()) {
-                alert('Please provide closing remarks.');
-                remarks.focus();
-                return false;
-            }
-            return true;
-        }
-
-        function validateReopen() {
-            var remarks = document.getElementById('reopenRemarks');
-            if (!remarks.value.trim()) {
-                alert('Please provide a reason for reopening.');
-                remarks.focus();
-                return false;
-            }
-            return true;
-        }
-
-        window.validateAssign = validateAssign;
-        window.validateHold = validateHold;
-        window.validateClose = validateClose;
-        window.validateReopen = validateReopen;
-
+        // ========== PREVENT DOUBLE SUBMIT ==========
         document.querySelectorAll('form').forEach(function(form) {
             form.addEventListener('submit', function(e) {
                 if (this.dataset.submitted === 'true') {
@@ -1337,6 +1568,7 @@
             });
         });
 
+        // ========== THEME SYNC ==========
         function updateFormTheme() {
             var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             var inputs = document.querySelectorAll('.form-control, .form-select, textarea');
@@ -1346,10 +1578,12 @@
                     input.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
                     input.style.borderColor = 'rgba(255, 255, 255, 0.08)';
                     input.style.color = '#E8EDF5';
+                    input.style.webkitTextFillColor = '#E8EDF5';
                 } else {
                     input.style.backgroundColor = '#F8FAFF';
                     input.style.borderColor = '#DCE3F0';
                     input.style.color = '#1A2A6C';
+                    input.style.webkitTextFillColor = '#1A2A6C';
                 }
             });
         }
@@ -1375,6 +1609,12 @@
         });
 
         setTimeout(updateFormTheme, 200);
+
+        // ========== ANIMATE TIMELINE ITEMS ==========
+        var timelineItems = document.querySelectorAll('.timeline-item');
+        timelineItems.forEach(function(item, index) {
+            item.style.animationDelay = (index * 0.05) + 's';
+        });
     });
 </script>
 {% endblock %}

@@ -22,7 +22,8 @@ from datetime import datetime, timedelta
 import json
 import openpyxl
 import pandas as pd
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
 import logging
 
 from tickets.models import Unit, Department, AdminContact, AdminNotificationEmail, Ticket, TicketHistory, EmployeeMaster, DepartmentCredential
@@ -472,12 +473,14 @@ def create_ticket(request):
 @login_required
 @user_passes_test(lambda u: not u.is_staff, login_url='login')
 def my_tickets(request):
+    # Get all filter parameters
     status = request.GET.get('status')
     priority = request.GET.get('priority')
     ticket_number = request.GET.get('ticket_number', '').strip()
     search = request.GET.get('search', '').strip()
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
+    assigned_person = request.GET.get('assigned_person', '').strip()
     is_ajax = request.GET.get('ajax', False)
     filter_type = request.GET.get('filter_type')
     
@@ -488,6 +491,7 @@ def my_tickets(request):
         username=request.user.username, is_active=True
     ).first()
     
+    # Build base queryset
     if user_credential:
         tickets_qs = Ticket.objects.filter(
             unit=user_credential.unit,
@@ -499,12 +503,15 @@ def my_tickets(request):
     else:
         tickets_qs = Ticket.objects.filter(created_by_user=request.user).order_by('-created_at')
     
+    # Apply filters
     if status: 
         tickets_qs = tickets_qs.filter(status=status)
     if priority: 
         tickets_qs = tickets_qs.filter(priority=priority)
     if ticket_number: 
         tickets_qs = tickets_qs.filter(ticket_number__icontains=ticket_number)
+    if assigned_person:
+        tickets_qs = tickets_qs.filter(assigned_person=assigned_person)
     if search: 
         tickets_qs = tickets_qs.filter(
             Q(ticket_number__icontains=search) | 
@@ -570,6 +577,9 @@ def my_tickets(request):
     except EmptyPage: 
         tickets_page = paginator.page(paginator.num_pages)
     
+    # Get employees who can assign tickets for dropdown
+    employees = EmployeeMaster.objects.filter(is_active=True, can_assign_ticket=True).order_by('employee_name')
+    
     return render(request, 'employee/my_tickets.html', {
         'tickets': tickets_page, 
         'status_choices': Ticket.STATUS_CHOICES,
@@ -580,6 +590,8 @@ def my_tickets(request):
         'search_query': search, 
         'date_from': date_from, 
         'date_to': date_to,
+        'employees': employees,
+        'selected_assigned_person': assigned_person,
     })
 
 
@@ -690,6 +702,9 @@ def admin_dashboard(request):
 @login_required
 @user_passes_test(is_admin, login_url='admin_dashboard')
 def create_ticket_admin(request):
+    # Get only employees who can assign tickets
+    employees = EmployeeMaster.objects.filter(is_active=True, can_assign_ticket=True).order_by('employee_name')
+    
     if request.method == 'POST':
         form = AdminTicketForm(request.POST, request.FILES)
         if form.is_valid():
@@ -711,7 +726,11 @@ def create_ticket_admin(request):
             return redirect('admin_dashboard')
     else:
         form = AdminTicketForm()
-    return render(request, 'admin_panel/create_ticket.html', {'form': form})
+    
+    return render(request, 'admin_panel/create_ticket.html', {
+        'form': form,
+        'employees': employees,
+    })
 
 
 @login_required
@@ -736,6 +755,9 @@ def all_tickets(request):
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
     search = request.GET.get('search', '').strip()
+    
+    # Get only employees who can assign tickets for filter dropdown
+    employees = EmployeeMaster.objects.filter(is_active=True, can_assign_ticket=True).order_by('employee_name')
     
     if category == 'open': 
         tickets_qs = tickets_qs.filter(status='Open')
@@ -848,6 +870,7 @@ def all_tickets(request):
         'tickets': tickets_page, 
         'units': units, 
         'departments': departments,
+        'employees': employees,
         'status_choices': Ticket.STATUS_CHOICES, 
         'priority_choices': Ticket.PRIORITY_CHOICES,
         'created_by_choices': Ticket.CREATED_BY_CHOICES, 
@@ -883,6 +906,9 @@ def ticket_detail_admin(request, pk):
     if ticket.status == 'Closed' and ticket.created_at and ticket.closed_at:
         time_to_close = ticket.closed_at - ticket.created_at
         time_to_close_str = format_timedelta_display(time_to_close)
+    
+    # Get only employees who can assign tickets
+    employees = EmployeeMaster.objects.filter(is_active=True, can_assign_ticket=True).order_by('employee_name')
     
     if request.method == 'POST':
         action_type = request.POST.get('action_type')
@@ -977,12 +1003,249 @@ def ticket_detail_admin(request, pk):
     context = {
         'ticket': ticket,
         'history': history,
+        'employees': employees,
         'can_reopen': can_reopen,
         'time_to_close': time_to_close_str,
         'reopen_time_left': reopen_time_left,
         'reopen_deadline_iso': reopen_deadline.isoformat() if reopen_deadline else None,
     }
     return render(request, 'admin_panel/ticket_detail.html', context)
+
+
+# ========== DOWNLOAD TICKET EXCEL ==========
+@login_required
+@user_passes_test(is_admin, login_url='admin_dashboard')
+def download_ticket_excel(request, pk):
+    ticket = get_object_or_404(Ticket, pk=pk)
+    
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename=Ticket_{ticket.ticket_number}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"Ticket {ticket.ticket_number}"
+    
+    # ========== STYLES ==========
+    title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    section_font = Font(name='Calibri', size=12, bold=True, color='FFFFFF')
+    label_font = Font(name='Calibri', size=11, bold=True, color='1A2A6C')
+    data_font = Font(name='Calibri', size=11, color='333333')
+    history_header_font = Font(name='Calibri', size=10, bold=True, color='FFFFFF')
+    history_data_font = Font(name='Calibri', size=10, color='333333')
+    
+    title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+    header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
+    section_fill = PatternFill(start_color='FF6B00', end_color='FF6B00', fill_type='solid')
+    label_fill = PatternFill(start_color='E8EDF5', end_color='E8EDF5', fill_type='solid')
+    history_header_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+    
+    thin_border = Border(
+        left=Side(style='thin', color='D0D0D0'),
+        right=Side(style='thin', color='D0D0D0'),
+        top=Side(style='thin', color='D0D0D0'),
+        bottom=Side(style='thin', color='D0D0D0')
+    )
+    
+    # ========== TITLE ==========
+    ws.merge_cells('A1:F1')
+    ws['A1'] = f"GPLAST TICKET DETAILS - {ticket.ticket_number}"
+    ws['A1'].font = title_font
+    ws['A1'].fill = title_fill
+    ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[1].height = 40
+    
+    # ========== BASIC INFORMATION ==========
+    row = 3
+    ws.merge_cells(f'A{row}:F{row}')
+    ws[f'A{row}'] = "BASIC INFORMATION"
+    ws[f'A{row}'].font = section_font
+    ws[f'A{row}'].fill = section_fill
+    ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.row_dimensions[row].height = 30
+    row += 1
+    
+    basic_info = [
+        ('Ticket Number', ticket.ticket_number),
+        ('Subject', ticket.subject),
+        ('Description', ticket.description or ''),
+        ('Priority', ticket.priority),
+        ('Status', ticket.status),
+        ('Error Type', ticket.error_type or 'Not Set'),
+        ('Created Date', ticket.created_at.strftime('%d-%b-%Y %I:%M %p') if ticket.created_at else ''),
+        ('Updated Date', ticket.updated_at.strftime('%d-%b-%Y %I:%M %p') if ticket.updated_at else ''),
+    ]
+    
+    for label, value in basic_info:
+        ws.cell(row=row, column=1, value=label).font = label_font
+        ws.cell(row=row, column=1).fill = label_fill
+        ws.cell(row=row, column=1).border = thin_border
+        ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        
+        ws.cell(row=row, column=2, value=value).font = data_font
+        ws.cell(row=row, column=2).border = thin_border
+        ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+        row += 1
+    
+    row += 1
+    
+    # ========== EMPLOYEE DETAILS ==========
+    ws.merge_cells(f'A{row}:F{row}')
+    ws[f'A{row}'] = "EMPLOYEE DETAILS"
+    ws[f'A{row}'].font = section_font
+    ws[f'A{row}'].fill = section_fill
+    ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.row_dimensions[row].height = 30
+    row += 1
+    
+    emp_info = [
+        ('Employee Name', ticket.employee_name),
+        ('Employee ID', ticket.employee_id),
+        ('Mobile', ticket.mobile),
+        ('Email', ticket.email),
+        ('Unit', ticket.unit.full_name if ticket.unit else ''),
+        ('Department', ticket.department.name if ticket.department else ''),
+        ('Screen/Module', ticket.screen_number),
+    ]
+    
+    for label, value in emp_info:
+        ws.cell(row=row, column=1, value=label).font = label_font
+        ws.cell(row=row, column=1).fill = label_fill
+        ws.cell(row=row, column=1).border = thin_border
+        ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        
+        ws.cell(row=row, column=2, value=value).font = data_font
+        ws.cell(row=row, column=2).border = thin_border
+        ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+        row += 1
+    
+    row += 1
+    
+    # ========== ASSIGNMENT & STATUS ==========
+    ws.merge_cells(f'A{row}:F{row}')
+    ws[f'A{row}'] = "ASSIGNMENT & STATUS"
+    ws[f'A{row}'].font = section_font
+    ws[f'A{row}'].fill = section_fill
+    ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.row_dimensions[row].height = 30
+    row += 1
+    
+    assign_info = [
+        ('Created By Role', ticket.created_by_role),
+        ('Assigned To', ticket.assigned_person or 'Not Assigned'),
+        ('Hold Reason', ticket.hold_reason or ''),
+        ('Vendor Ticket', ticket.vendor_ticket_number or ''),
+        ('Admin Creation Reason', ticket.admin_creation_reason or ''),
+    ]
+    
+    for label, value in assign_info:
+        ws.cell(row=row, column=1, value=label).font = label_font
+        ws.cell(row=row, column=1).fill = label_fill
+        ws.cell(row=row, column=1).border = thin_border
+        ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        
+        ws.cell(row=row, column=2, value=value).font = data_font
+        ws.cell(row=row, column=2).border = thin_border
+        ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+        row += 1
+    
+    row += 1
+    
+    # ========== CLOSING DETAILS (if closed) ==========
+    if ticket.status == 'Closed':
+        ws.merge_cells(f'A{row}:F{row}')
+        ws[f'A{row}'] = "CLOSING DETAILS"
+        ws[f'A{row}'].font = section_font
+        ws[f'A{row}'].fill = section_fill
+        ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        ws.row_dimensions[row].height = 30
+        row += 1
+        
+        closing_info = [
+            ('Closed By', ticket.closed_by or ''),
+            ('Closed Date', ticket.closed_at.strftime('%d-%b-%Y %I:%M %p') if ticket.closed_at else ''),
+            ('Closing Remarks', ticket.closing_remarks or ''),
+            ('Time to Close', format_timedelta_display(ticket.closed_at - ticket.created_at) if ticket.closed_at else ''),
+        ]
+        
+        for label, value in closing_info:
+            ws.cell(row=row, column=1, value=label).font = label_font
+            ws.cell(row=row, column=1).fill = label_fill
+            ws.cell(row=row, column=1).border = thin_border
+            ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+            
+            ws.cell(row=row, column=2, value=value).font = data_font
+            ws.cell(row=row, column=2).border = thin_border
+            ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+            ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+            row += 1
+        
+        row += 1
+    
+    # ========== AUDIT HISTORY ==========
+    ws.merge_cells(f'A{row}:F{row}')
+    ws[f'A{row}'] = "AUDIT HISTORY"
+    ws[f'A{row}'].font = section_font
+    ws[f'A{row}'].fill = section_fill
+    ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.row_dimensions[row].height = 30
+    row += 1
+    
+    # History headers
+    history_headers = ['Timestamp', 'Action', 'Remarks', 'Performed By']
+    for col_idx, header in enumerate(history_headers, 1):
+        cell = ws.cell(row=row, column=col_idx)
+        cell.value = header
+        cell.font = history_header_font
+        cell.fill = history_header_fill
+        cell.border = thin_border
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[row].height = 25
+    row += 1
+    
+    # History data
+    for history in ticket.history.all().order_by('timestamp'):
+        ws.cell(row=row, column=1, value=history.timestamp.strftime('%d-%b-%Y %I:%M %p')).font = history_data_font
+        ws.cell(row=row, column=1).border = thin_border
+        ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        
+        ws.cell(row=row, column=2, value=history.action).font = history_data_font
+        ws.cell(row=row, column=2).border = thin_border
+        ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        
+        ws.cell(row=row, column=3, value=history.remarks or '').font = history_data_font
+        ws.cell(row=row, column=3).border = thin_border
+        ws.cell(row=row, column=3).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        
+        ws.cell(row=row, column=4, value=history.performed_by).font = history_data_font
+        ws.cell(row=row, column=4).border = thin_border
+        ws.cell(row=row, column=4).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        row += 1
+    
+    # ========== FOOTER ==========
+    row += 1
+    ws.merge_cells(f'A{row}:F{row}')
+    ws[f'A{row}'] = f"Report generated on {timezone.now().strftime('%d-%b-%Y %I:%M %p')} | GPLAST Support System"
+    ws[f'A{row}'].font = Font(name='Calibri', size=9, italic=True, color='666666')
+    ws[f'A{row}'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[row].height = 25
+    
+    # ========== SET COLUMN WIDTHS ==========
+    ws.column_dimensions['A'].width = 28
+    ws.column_dimensions['B'].width = 35
+    ws.column_dimensions['C'].width = 30
+    ws.column_dimensions['D'].width = 30
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 15
+    
+    # ========== FREEZE PANES ==========
+    ws.freeze_panes = 'A1'
+    
+    wb.save(response)
+    return response
 
 
 @login_required
@@ -1010,6 +1273,9 @@ def reports(request):
     
     category = request.GET.get('category', 'all').strip()
     is_reopened = request.GET.get('is_reopened', '').strip()
+    
+    # Get only employees who can assign tickets for filter
+    employees = EmployeeMaster.objects.filter(is_active=True, can_assign_ticket=True).order_by('employee_name')
     
     if category == 'open': 
         tickets_qs = tickets_qs.filter(status='Open')
@@ -1219,6 +1485,7 @@ def reports(request):
         'closed_count': closed_count,
         'units': units,
         'departments': departments,
+        'employees': employees,
         'category': category,
         'is_reopened': is_reopened,
         'status_choices': Ticket.STATUS_CHOICES,
@@ -1681,6 +1948,8 @@ def settings_employees(request):
             emp.email = request.POST.get('email','').strip()
             emp.unit_id = request.POST.get('unit') or None
             emp.department_id = request.POST.get('department') or None
+            # Handle can_assign_ticket
+            emp.can_assign_ticket = request.POST.get('can_assign_ticket') == 'on'
             try: 
                 emp.save()
                 messages.success(request, 'Employee updated successfully.')
@@ -1692,6 +1961,13 @@ def settings_employees(request):
             emp.is_active = not emp.is_active
             emp.save()
             messages.success(request, f'Employee {"activated" if emp.is_active else "deactivated"}.')
+        
+        elif action == 'toggle_can_assign':
+            emp = get_object_or_404(EmployeeMaster, pk=request.POST.get('emp_id'))
+            emp.can_assign_ticket = not emp.can_assign_ticket
+            emp.save()
+            status = "enabled" if emp.can_assign_ticket else "disabled"
+            messages.success(request, f'Employee "{emp.employee_id}" assignment {status}.')
         
         elif action == 'delete_employee':
             emp = get_object_or_404(EmployeeMaster, pk=request.POST.get('emp_id'))
@@ -1716,13 +1992,13 @@ def download_employee_list(request):
     df = Font(name='Calibri', size=11)
     tfill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
     hfill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
-    ws.merge_cells('A1:H1')
+    ws.merge_cells('A1:I1')
     ws['A1'] = "Employee Directory"
     ws['A1'].font = tf
     ws['A1'].fill = tfill
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 35
-    for ci, h in enumerate(['Employee ID', 'Name', 'Mobile', 'Email', 'Unit Code', 'Unit Name', 'Department', 'Status'], 1):
+    for ci, h in enumerate(['Employee ID', 'Name', 'Mobile', 'Email', 'Unit Code', 'Unit Name', 'Department', 'Status', 'Can Assign'], 1):
         c = ws.cell(row=3, column=ci)
         c.value = h
         c.font = hf
@@ -1738,7 +2014,8 @@ def download_employee_list(request):
             emp.unit.code if emp.unit else '',
             emp.unit.full_name if emp.unit else '',
             emp.department.name if emp.department else '',
-            'Active' if emp.is_active else 'Inactive'
+            'Active' if emp.is_active else 'Inactive',
+            'Yes' if emp.can_assign_ticket else 'No'
         ]
         for ci, v in enumerate(rd, 1):
             c = ws.cell(row=ri, column=ci)
@@ -2105,7 +2382,8 @@ def get_employees_by_department(request):
                 'employee_name': emp.employee_name or '-',
                 'mobile': emp.mobile or '-',
                 'email': emp.email or '-',
-                'is_active': emp.is_active
+                'is_active': emp.is_active,
+                'can_assign_ticket': emp.can_assign_ticket
             })
         
         return JsonResponse({

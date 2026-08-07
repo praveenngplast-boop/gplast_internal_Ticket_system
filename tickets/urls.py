@@ -50,4 +50,7 @@ urlpatterns = [
     path('ajax/get-departments/', views.get_departments_by_unit, name='get_departments_by_unit'),
     path('ajax/get-employee/', views.get_employee_details, name='get_employee_details'),
     path('ajax/get-employees-by-department/', views.get_employees_by_department, name='get_employees_by_department'),
+
+    # DOWNLOAD TICKET EXCEL - NEW URL
+    path('download-ticket/<int:pk>/excel/', views.download_ticket_excel, name='download_ticket_excel'),
 ]

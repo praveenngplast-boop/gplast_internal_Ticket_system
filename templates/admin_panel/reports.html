@@ -1035,10 +1035,17 @@
                         </select>
                     </div>
 
+                    <!-- CHANGED: Assigned To filter - Now a dropdown instead of input -->
                     <div class="filter-group">
                         <label for="id_assigned_person"><i class="fa-solid fa-user"></i> Assigned</label>
-                        <input type="text" name="assigned_person" id="id_assigned_person" class="filter-input" 
-                               value="{{ selected_assigned_person|default:'' }}" placeholder="Enter name...">
+                        <select name="assigned_person" id="id_assigned_person" class="filter-select">
+                            <option value="">All Assigned Persons</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.employee_name }}" {% if selected_assigned_person == employee.employee_name %}selected{% endif %}>
+                                {{ employee.employee_name }} ({{ employee.employee_id }})
+                            </option>
+                            {% endfor %}
+                        </select>
                     </div>
 
                     <div class="filter-group">

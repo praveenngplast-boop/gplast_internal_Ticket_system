@@ -1043,9 +1043,17 @@
                         </select>
                     </div>
 
+                    <!-- CHANGED: Assigned To filter - Now a dropdown instead of input -->
                     <div class="filter-item">
                         <label for="id_assigned_person"><i class="fa-solid fa-user"></i> Assigned To</label>
-                        <input class="input-field" type="text" name="assigned_person" id="id_assigned_person" value="{{ selected_assigned_person|default:'' }}" placeholder="Person name">
+                        <select class="select-field" name="assigned_person" id="id_assigned_person">
+                            <option value="">All Assigned Persons</option>
+                            {% for employee in employees %}
+                                <option value="{{ employee.employee_name }}" {% if selected_assigned_person == employee.employee_name %}selected{% endif %}>
+                                    {{ employee.employee_name }} ({{ employee.employee_id }})
+                                </option>
+                            {% endfor %}
+                        </select>
                     </div>
 
                     <div class="filter-item">
