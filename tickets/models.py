@@ -101,7 +101,9 @@ class DepartmentCredential(models.Model):
 
 
 def generate_ticket_number():
+    """Generate a unique ticket number"""
     from tickets.models import Ticket
+    
     last_ticket = Ticket.objects.all().order_by('id').last()
     
     if last_ticket and last_ticket.ticket_number:
@@ -194,6 +196,21 @@ class Ticket(models.Model):
     closed_at = models.DateTimeField(blank=True, null=True)
     escalated_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # ✅ NOTIFICATION FIELDS - Add these for the bell notification system
+    is_viewed = models.BooleanField(
+        default=False,
+        help_text="Admin has viewed this ticket"
+    )
+    viewed_at = models.DateTimeField(
+        blank=True, 
+        null=True,
+        help_text="When the ticket was first viewed by admin"
+    )
+    notification_sent = models.BooleanField(
+        default=False,
+        help_text="Notification email has been sent to admin"
+    )
 
     def save(self, *args, **kwargs):
         if not self.ticket_number:

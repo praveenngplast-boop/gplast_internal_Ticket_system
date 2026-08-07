@@ -418,31 +418,6 @@
             flex: 1;
         }
 
-        .sidebar-toggle {
-            background: none;
-            border: none;
-            color: var(--navbar-text);
-            font-size: 1.2rem;
-            padding: 6px 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: var(--radius-sm);
-            line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .sidebar-toggle:hover {
-            color: var(--navbar-text-hover);
-            background: var(--bg-sidebar-hover);
-            transform: scale(1.05);
-        }
-
-        .sidebar-toggle:active {
-            transform: scale(0.95);
-        }
-
         .company-logo-nav {
             height: 36px;
             width: auto;
@@ -478,6 +453,211 @@
             flex: 1;
             justify-content: flex-end;
         }
+
+        /* Notification Bell Styles */
+        .notification-bell-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .notification-bell-btn {
+            color: var(--navbar-text);
+            padding: 6px 10px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            position: relative;
+            font-size: 1.2rem;
+        }
+
+        .notification-bell-btn:hover {
+            background: var(--bg-sidebar-hover);
+            color: var(--navbar-text-hover);
+            transform: scale(1.05);
+        }
+
+        .notification-bell-btn:active {
+            transform: scale(0.95);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #EF4444;
+            color: white;
+            font-size: 0.5rem;
+            padding: 0.15rem 0.4rem;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            border: 2px solid var(--bg-navbar);
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            line-height: 1;
+        }
+
+        .notification-badge.hidden {
+            display: none;
+        }
+
+        .notification-badge.pulse {
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .notification-dropdown-menu {
+            min-width: 380px;
+            max-width: 420px;
+            max-height: 450px;
+            overflow-y: auto;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+        }
+
+        .notification-dropdown-menu .dropdown-header {
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-dropdown-menu .dropdown-header .mark-all-btn {
+            font-size: 0.55rem;
+            padding: 0.15rem 0.6rem;
+            border-radius: 50px;
+            background: var(--brand-gradient);
+            color: white;
+            border: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .notification-dropdown-menu .dropdown-header .mark-all-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 12px rgba(255, 107, 0, 0.3);
+        }
+
+        .notification-item {
+            display: block;
+            padding: 0.6rem 0.8rem;
+            margin: 0.1rem 0.2rem;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            background: transparent;
+        }
+
+        .notification-item:hover {
+            background: var(--bg-sidebar-hover);
+            transform: translateX(2px);
+        }
+
+        .notification-item .notif-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.2rem;
+            flex-wrap: wrap;
+        }
+
+        .notification-item .notif-title {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+        }
+
+        .notification-item .notif-meta {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .notification-item .notif-meta i {
+            font-size: 0.5rem;
+        }
+
+        .notification-empty {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .notification-empty i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #22C55E;
+        }
+
+        .notification-empty .empty-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .notification-empty .empty-sub {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        .notification-view-all {
+            padding: 10px 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--brand-orange);
+            transition: all 0.3s ease;
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .notification-view-all:hover {
+            background: var(--bg-sidebar-hover);
+            color: var(--brand-orange-dark);
+        }
+
+        .badge-status-open { background: var(--status-open); color: white; }
+        .badge-status-assigned { background: var(--status-assigned); color: white; }
+        .badge-status-hold { background: var(--status-hold); color: white; }
+        .badge-status-escalated { background: var(--status-escalated); color: white; }
+        .badge-status-closed { background: var(--status-closed); color: white; }
+        
+        .badge-priority-critical { background: var(--status-critical); color: white; }
+        .badge-priority-high { background: var(--warning); color: #1A1A2E; }
+        .badge-priority-medium { background: var(--info); color: white; }
+        .badge-priority-low { background: var(--status-closed); color: white; }
 
         .user-info-wrapper {
             display: flex;
@@ -909,10 +1089,6 @@
                 display: block;
             }
 
-            .sidebar-toggle {
-                display: flex !important;
-            }
-
             .main-content-wrapper {
                 margin-left: 0;
                 padding: 16px 20px 32px;
@@ -1023,11 +1199,6 @@
             .navbar-page-title {
                 font-size: 0.7rem;
             }
-
-            .sidebar-toggle {
-                font-size: 1rem;
-                padding: 4px 6px;
-            }
         }
 
         @media (max-width: 576px) {
@@ -1052,11 +1223,6 @@
 
             .btn-logout i {
                 font-size: 0.7rem;
-            }
-
-            .sidebar-toggle {
-                font-size: 0.9rem;
-                padding: 2px 4px;
             }
 
             .navbar-page-title {
@@ -1113,6 +1279,7 @@
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+    <!-- ===== SIDEBAR ===== -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-section">
             <div class="sidebar-section-title">Main</div>
@@ -1180,18 +1347,20 @@
 
         <div class="sidebar-section">
             <div class="sidebar-section-title">Preferences</div>
-            <a class="sidebar-link theme-toggle-link" id="sidebarThemeToggle" onclick="toggleThemeFromSidebar()">
+            <a class="sidebar-link theme-toggle-link" id="sidebarThemeToggle">
                 <i class="fas fa-moon" id="sidebarThemeIcon"></i>
                 <span class="theme-toggle-text" id="sidebarThemeText">Dark Mode</span>
                 <span class="tooltip-text">Toggle Theme</span>
             </a>
         </div>
 
+        <!-- ===== SIDEBAR COLLAPSE TOGGLE (Bottom) ===== -->
         <button class="sidebar-collapse-toggle" id="sidebarCollapseToggle" aria-label="Toggle sidebar collapse">
             <i class="fa-solid fa-chevron-left"></i>
         </button>
     </nav>
 
+    <!-- ===== NAVBAR ===== -->
     <nav class="navbar-custom {% if request.resolver_match.url_name == 'login' %}navbar-hidden{% endif %}" id="mainNav">
         <div class="navbar-left">
             <a href="{% if user.is_authenticated %}{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'employee_dashboard' %}{% endif %}{% else %}/{% endif %}" class="d-flex align-items-center">
@@ -1218,6 +1387,43 @@
 
         <div class="navbar-right">
             {% if user.is_authenticated %}
+                <!-- 🔔 NOTIFICATION BELL - Only for Admin -->
+                {% if user.is_staff %}
+                <div class="notification-bell-wrapper">
+                    <button class="notification-bell-btn" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="notification-badge {% if unviewed_count == 0 %}hidden{% endif %} pulse" id="notificationBadge">
+                            {{ unviewed_count|default:"0" }}
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end notification-dropdown-menu" id="notificationDropdownMenu">
+                        <li>
+                            <div class="dropdown-header">
+                                <span><i class="fa-regular fa-bell me-2"></i>Notifications</span>
+                                {% if unviewed_count > 0 %}
+                                <button class="mark-all-btn" onclick="confirmMarkAllRead()">
+                                    <i class="fa-regular fa-check-circle me-1"></i>Mark All Read
+                                </button>
+                                {% endif %}
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider" style="margin: 0;"></li>
+                        
+                        <!-- Notification Items -->
+                        <div id="notificationItems">
+                            {% include 'admin_panel/_notification_items.html' %}
+                        </div>
+                        
+                        <li><hr class="dropdown-divider" style="margin: 0;"></li>
+                        <li>
+                            <a class="notification-view-all" href="{% url 'all_tickets' %}?is_viewed=false">
+                                <i class="fa-regular fa-eye me-1"></i>View All Unread
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+
                 <div class="user-info-wrapper">
                     <div class="user-avatar">{{ user.username|first|upper }}</div>
                     <div class="user-details">
@@ -1298,25 +1504,172 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // ============================================================
+        // NOTIFICATION FUNCTIONS - GLOBAL SCOPE
+        // ============================================================
+
+        function getCSRFToken() {
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+            return cookieValue || '';
+        }
+
+        function performMarkAllRead() {
+            const badge = document.getElementById('notificationBadge');
+            const itemsContainer = document.getElementById('notificationItems');
+            const header = document.querySelector('#notificationDropdownMenu .dropdown-header');
+            
+            fetch('/admin/notifications/mark-all-read/', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (badge) {
+                        badge.classList.add('hidden');
+                        badge.textContent = '0';
+                    }
+                    
+                    if (itemsContainer) {
+                        itemsContainer.innerHTML = `
+                            <li style="list-style: none; margin: 0; padding: 0;">
+                                <div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted, #7A7A8A);">
+                                    <i class="fa-regular fa-circle-check" style="font-size: 2.5rem; display: block; margin-bottom: 0.75rem; color: #22C55E;"></i>
+                                    <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-primary, #0A0A1A);">All caught up!</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted, #7A7A8A); margin-top: 0.15rem;">No unread notifications</div>
+                                </div>
+                            </li>
+                        `;
+                    }
+                    
+                    if (header) {
+                        const markBtn = header.querySelector('.mark-all-btn');
+                        if (markBtn) markBtn.remove();
+                    }
+                    
+                    if (window.showToast) {
+                        window.showToast('All notifications marked as read!', 'success', 'All Read');
+                    }
+                }
+            })
+            .catch(error => console.error('Error marking all as read:', error));
+        }
+
+        window.confirmMarkAllRead = function() {
+            const badge = document.getElementById('notificationBadge');
+            if (badge && (badge.textContent === '0' || badge.textContent === '')) {
+                return;
+            }
+            
+            if (window.showConfirmation) {
+                window.showConfirmation(
+                    'Are you sure you want to mark all notifications as read? This action cannot be undone.',
+                    function() {
+                        performMarkAllRead();
+                    }
+                );
+            } else {
+                if (confirm('Are you sure you want to mark all notifications as read?')) {
+                    performMarkAllRead();
+                }
+            }
+        };
+
+        function refreshNotifications() {
+            const badge = document.getElementById('notificationBadge');
+            if (!badge) return;
+            
+            fetch('/admin/notifications/get/', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (badge) {
+                        if (data.count > 0) {
+                            badge.classList.remove('hidden');
+                            badge.textContent = data.count;
+                        } else {
+                            badge.classList.add('hidden');
+                            badge.textContent = '0';
+                        }
+                    }
+                    
+                    const itemsContainer = document.getElementById('notificationItems');
+                    if (itemsContainer && data.html) {
+                        itemsContainer.innerHTML = data.html;
+                    }
+                }
+            })
+            .catch(error => console.error('Error refreshing notifications:', error));
+        }
+
+        // ============================================================
+        // DOM CONTENT LOADED
+        // ============================================================
+
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebarOverlay = document.getElementById('sidebarOverlay');
             const sidebarCollapseToggle = document.getElementById('sidebarCollapseToggle');
+            
+            // ===== THEME TOGGLE =====
+            const sidebarThemeToggle = document.getElementById('sidebarThemeToggle');
+            const sidebarThemeIcon = document.getElementById('sidebarThemeIcon');
+            const sidebarThemeText = document.getElementById('sidebarThemeText');
+            
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            applyTheme(savedTheme);
 
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    if (sidebarThemeIcon) {
+                        sidebarThemeIcon.className = 'fas fa-sun';
+                    }
+                    if (sidebarThemeText) {
+                        sidebarThemeText.textContent = 'Light Mode';
+                    }
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    if (sidebarThemeIcon) {
+                        sidebarThemeIcon.className = 'fas fa-moon';
+                    }
+                    if (sidebarThemeText) {
+                        sidebarThemeText.textContent = 'Dark Mode';
+                    }
+                }
+                localStorage.setItem('theme', theme);
+            }
+
+            function toggleTheme() {
+                const current = document.documentElement.getAttribute('data-theme');
+                const newTheme = current === 'dark' ? 'light' : 'dark';
+                applyTheme(newTheme);
+            }
+
+            if (sidebarThemeToggle) {
+                sidebarThemeToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleTheme();
+                });
+            }
+
+            // ===== SIDEBAR COLLAPSE =====
             const isSidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-
             if (isSidebarCollapsed && window.innerWidth >= 992) {
                 sidebar.classList.add('collapsed');
                 if (sidebarCollapseToggle) {
                     sidebarCollapseToggle.querySelector('i').className = 'fa-solid fa-chevron-right';
                 }
-            }
-
-            function toggleSidebar() {
-                sidebar.classList.toggle('open');
-                sidebarOverlay.classList.toggle('show');
-                document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
             }
 
             function toggleSidebarCollapse() {
@@ -1334,66 +1687,39 @@
                 }
             }
 
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    toggleSidebar();
-                });
-            }
-
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', toggleSidebar);
-            }
-
             if (sidebarCollapseToggle) {
                 sidebarCollapseToggle.addEventListener('click', toggleSidebarCollapse);
             }
 
+            // ===== RESPONSIVE SIDEBAR (Mobile) =====
+            let isSidebarOpen = false;
+
+            function toggleSidebarMobile() {
+                isSidebarOpen = !isSidebarOpen;
+                sidebar.classList.toggle('open', isSidebarOpen);
+                sidebarOverlay.classList.toggle('show', isSidebarOpen);
+                document.body.style.overflow = isSidebarOpen ? 'hidden' : '';
+            }
+
+            // Click on overlay to close
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    if (isSidebarOpen) {
+                        toggleSidebarMobile();
+                    }
+                });
+            }
+
+            // Close sidebar when clicking a link (mobile)
             document.querySelectorAll('.sidebar-link:not(.theme-toggle-link)').forEach(function(link) {
                 link.addEventListener('click', function() {
-                    if (window.innerWidth < 992 && sidebar.classList.contains('open')) {
-                        toggleSidebar();
+                    if (window.innerWidth < 992 && isSidebarOpen) {
+                        toggleSidebarMobile();
                     }
                 });
             });
 
-            const sidebarThemeToggle = document.getElementById('sidebarThemeToggle');
-            const sidebarThemeIcon = document.getElementById('sidebarThemeIcon');
-            const sidebarThemeText = document.getElementById('sidebarThemeText');
-            
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            applyTheme(savedTheme);
-
-            function applyTheme(theme) {
-                if (theme === 'dark') {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    if (sidebarThemeIcon) sidebarThemeIcon.className = 'fas fa-sun';
-                    if (sidebarThemeText) sidebarThemeText.textContent = 'Light Mode';
-                } else {
-                    document.documentElement.removeAttribute('data-theme');
-                    if (sidebarThemeIcon) sidebarThemeIcon.className = 'fas fa-moon';
-                    if (sidebarThemeText) sidebarThemeText.textContent = 'Dark Mode';
-                }
-                localStorage.setItem('theme', theme);
-            }
-
-            function toggleTheme() {
-                const current = document.documentElement.getAttribute('data-theme');
-                const newTheme = current === 'dark' ? 'light' : 'dark';
-                applyTheme(newTheme);
-                
-                setTimeout(function() {
-                    window.dispatchEvent(new Event('resize'));
-                }, 300);
-            }
-
-            if (sidebarThemeToggle) {
-                sidebarThemeToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    toggleTheme();
-                });
-            }
-
+            // ===== TOAST NOTIFICATIONS =====
             const toastContainer = document.getElementById('toastContainer');
 
             window.showToast = function(message, type = 'info', title = null) {
@@ -1444,6 +1770,7 @@
                 djangoMessagesContainer.remove();
             }
 
+            // ===== NAVBAR SCROLL EFFECT =====
             const navbar = document.getElementById('mainNav');
             if (navbar && !navbar.classList.contains('navbar-hidden')) {
                 window.addEventListener('scroll', function() {
@@ -1451,6 +1778,7 @@
                 });
             }
 
+            // ===== CONFIRMATION MODAL =====
             window.showConfirmation = function(message, onConfirm) {
                 const confirmModal = document.getElementById('confirmModal');
                 const confirmBody = document.getElementById('confirmModalBody');
@@ -1470,38 +1798,40 @@
                 });
             };
 
+            // ===== RESPONSIVE HANDLING =====
             window.addEventListener('resize', function() {
-                if (window.innerWidth >= 992 && sidebar.classList.contains('open')) {
-                    sidebar.classList.remove('open');
-                    sidebarOverlay.classList.remove('show');
-                    document.body.style.overflow = '';
-                }
-                
-                if (window.innerWidth < 992) {
-                    sidebar.classList.remove('collapsed');
-                    if (sidebarCollapseToggle) {
-                        sidebarCollapseToggle.querySelector('i').className = 'fa-solid fa-chevron-left';
+                if (window.innerWidth >= 992) {
+                    if (isSidebarOpen) {
+                        isSidebarOpen = false;
+                        sidebar.classList.remove('open');
+                        sidebarOverlay.classList.remove('show');
+                        document.body.style.overflow = '';
                     }
-                } else {
-                    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-                    if (isCollapsed) {
+                    if (localStorage.getItem('sidebarCollapsed') === 'true') {
                         sidebar.classList.add('collapsed');
                         if (sidebarCollapseToggle) {
                             sidebarCollapseToggle.querySelector('i').className = 'fa-solid fa-chevron-right';
                         }
+                    } else {
+                        sidebar.classList.remove('collapsed');
+                        if (sidebarCollapseToggle) {
+                            sidebarCollapseToggle.querySelector('i').className = 'fa-solid fa-chevron-left';
+                        }
+                    }
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    if (sidebarCollapseToggle) {
+                        sidebarCollapseToggle.querySelector('i').className = 'fa-solid fa-chevron-left';
                     }
                 }
             });
 
-            document.addEventListener('click', function(e) {
-                if (window.innerWidth < 992 && sidebar.classList.contains('open')) {
-                    const isClickInsideSidebar = sidebar.contains(e.target);
-                    const isClickOnToggle = sidebarToggle && sidebarToggle.contains(e.target);
-                    if (!isClickInsideSidebar && !isClickOnToggle) {
-                        toggleSidebar();
-                    }
-                }
-            });
+            // ===== START NOTIFICATION REFRESH =====
+            const isAdmin = document.querySelector('.role-badge.admin') !== null;
+            if (isAdmin) {
+                setTimeout(refreshNotifications, 2000);
+                setInterval(refreshNotifications, 30000);
+            }
         });
     </script>
 

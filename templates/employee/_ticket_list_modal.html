@@ -1,0 +1,127 @@
+{% load static %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Ticket #</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Created</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets %}
+            <tr>
+                <td><strong>{{ ticket.ticket_number }}</strong></td>
+                <td>{{ ticket.subject|truncatechars:30 }}</td>
+                <td>
+                    <span class="badge-custom badge-status-{{ ticket.status|lower }}">
+                        {{ ticket.status }}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge-priority {% if ticket.priority == 'Critical' %}badge-priority-critical{% elif ticket.priority == 'High' %}badge-priority-high{% elif ticket.priority == 'Medium' %}badge-priority-medium{% else %}badge-priority-low{% endif %}">
+                        {{ ticket.priority }}
+                    </span>
+                </td>
+                <td>{{ ticket.created_at|date:"d M Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'ticket_detail' ticket.id %}" class="btn-view btn-sm">
+                        <i class="fa-solid fa-eye"></i> View
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">No tickets found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .badge-priority-critical { 
+        background: #EF4444; 
+        color: white; 
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: inline-block;
+    }
+    .badge-priority-high { 
+        background: #F59E0B; 
+        color: #1A1A2E;
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: inline-block;
+    }
+    .badge-priority-medium { 
+        background: #3B82F6; 
+        color: white;
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: inline-block;
+    }
+    .badge-priority-low { 
+        background: #94A3B8; 
+        color: white;
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        display: inline-block;
+    }
+    .badge-custom {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+    .badge-status-open { background: #22C55E; color: white; }
+    .badge-status-assigned { background: #3B82F6; color: white; }
+    .badge-status-hold { background: #F59E0B; color: white; }
+    .badge-status-escalated { background: #8B5CF6; color: white; }
+    .badge-status-closed { background: #94A3B8; color: white; }
+    
+    .btn-view {
+        padding: 0.2rem 0.8rem !important;
+        border-radius: 50px !important;
+        font-size: 0.6rem !important;
+        font-weight: 600 !important;
+        background: linear-gradient(135deg, #FF6B00, #FF8C38) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.2) !important;
+        transition: all 0.3s ease !important;
+    }
+    .btn-view:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.35) !important;
+        color: #FFFFFF !important;
+    }
+</style>

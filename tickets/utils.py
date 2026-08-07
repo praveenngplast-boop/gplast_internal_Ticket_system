@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.contrib.staticfiles import finders
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.templatetags.static import static
-from tickets.models import AdminNotificationEmail
+from django.apps import apps
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ def get_footer_logo_html():
     
     # Try multiple paths to find the logo
     logo_paths = [
-    '../static/images/logo.png',
+        '../static/images/logo.png',
         'img/gplast-logo.png',
         'logo.png',
         'images/logo.png',
@@ -162,22 +162,47 @@ def send_ticket_email(ticket, action, remarks=None, request=None):
     TO: The employee who created the ticket (from email input box)
     CC: All Notification Emails configured in Settings
     """
-    notification_emails = list(AdminNotificationEmail.objects.values_list('email', flat=True))
+    # Import here to avoid circular import
+    from tickets.models import AdminNotificationEmail
+    
+    # Get notification emails from database
+    notification_emails = list(AdminNotificationEmail.objects.filter(is_active=True).values_list('email', flat=True))
     employee_email = ticket.email
     
     to_emails = []
     cc_emails = list(notification_emails)
     
+    # Always add the employee who created the ticket
     if employee_email:
         to_emails.append(employee_email)
     
+    # If no notification emails exist, use a default from settings
+    if not notification_emails:
+        # Use DEFAULT_FROM_EMAIL as fallback
+        default_email = settings.DEFAULT_FROM_EMAIL
+        if default_email and 'erpimd@gplast.com' in default_email:
+            # Add to cc if employee exists, else add to to
+            if to_emails:
+                cc_emails.append(default_email)
+            else:
+                to_emails.append(default_email)
+        
+        logger.warning(f"No AdminNotificationEmail records found. Using DEFAULT_FROM_EMAIL: {default_email}")
+    
+    # If we have to_emails but no cc, we're fine
     if not to_emails and notification_emails:
         to_emails = notification_emails
         cc_emails = []
     
+    # If still no recipients, log and return
     if not to_emails and not cc_emails:
-        logger.warning("No recipients found. Skipping email send.")
+        logger.error("No recipients found. Cannot send email. Please configure AdminNotificationEmail or check DEFAULT_FROM_EMAIL.")
         return
+    
+    # Log what we're doing
+    logger.info(f"Preparing to send email for ticket {ticket.ticket_number}")
+    logger.info(f"TO: {to_emails}")
+    logger.info(f"CC: {cc_emails}")
     
     subject = f"[GPLAST] Ticket {ticket.ticket_number} - {action}"
     
@@ -533,7 +558,8 @@ def get_file_size_display(file):
 
 
 def generate_ticket_number():
-    from tickets.models import Ticket
+    """Generate a unique ticket number using apps.get_model to avoid circular import"""
+    Ticket = apps.get_model('tickets', 'Ticket')
     
     all_tickets = Ticket.objects.all()
     highest_num = 0
