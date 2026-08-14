@@ -156,6 +156,7 @@
         h5 { font-size: 1.1rem; font-weight: 500; }
         h6 { font-size: 0.95rem; font-weight: 500; }
 
+        /* ===== SIDEBAR ===== */
         .sidebar {
             position: fixed;
             top: var(--navbar-height);
@@ -385,6 +386,25 @@
             transform: translateX(-50%) rotate(180deg) scale(1.05);
         }
 
+        /* ===== SIDEBAR OVERLAY (Mobile) ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: var(--navbar-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1039;
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* ===== NAVBAR ===== */
         .navbar-custom {
             position: fixed;
             top: 0;
@@ -416,6 +436,29 @@
             align-items: center;
             gap: 16px;
             flex: 1;
+        }
+
+        /* ===== HAMBURGER MENU BUTTON (Mobile) ===== */
+        .hamburger-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--navbar-text);
+            font-size: 1.4rem;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .hamburger-btn:hover {
+            background: var(--bg-sidebar-hover);
+            color: var(--navbar-text-hover);
+        }
+
+        .hamburger-btn:active {
+            transform: scale(0.95);
         }
 
         .company-logo-nav {
@@ -454,7 +497,7 @@
             justify-content: flex-end;
         }
 
-        /* Notification Bell Styles */
+        /* ===== NOTIFICATION BELL ===== */
         .notification-bell-wrapper {
             position: relative;
             display: inline-block;
@@ -648,6 +691,7 @@
             color: var(--brand-orange-dark);
         }
 
+        /* ===== BADGES ===== */
         .badge-status-open { background: var(--status-open); color: white; }
         .badge-status-assigned { background: var(--status-assigned); color: white; }
         .badge-status-hold { background: var(--status-hold); color: white; }
@@ -659,6 +703,7 @@
         .badge-priority-medium { background: var(--info); color: white; }
         .badge-priority-low { background: var(--status-closed); color: white; }
 
+        /* ===== USER INFO ===== */
         .user-info-wrapper {
             display: flex;
             align-items: center;
@@ -742,6 +787,7 @@
             color: white;
         }
 
+        /* ===== BUTTONS ===== */
         .btn-logout {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
@@ -799,23 +845,7 @@
             color: white;
         }
 
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: var(--navbar-height);
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 1039;
-            backdrop-filter: blur(4px);
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar-overlay.show {
-            display: block;
-        }
-
+        /* ===== MAIN CONTENT ===== */
         .main-content-wrapper {
             margin-left: var(--sidebar-width);
             padding: 24px 32px 40px;
@@ -848,6 +878,7 @@
             margin: 0;
         }
 
+        /* ===== TOASTS ===== */
         .toast-container-custom {
             position: fixed;
             top: calc(var(--navbar-height) + 16px);
@@ -959,6 +990,7 @@
             to { width: 0%; }
         }
 
+        /* ===== MODAL ===== */
         .modal-backdrop.show { backdrop-filter: blur(6px); background-color: rgba(0, 0, 0, 0.3); }
 
         #confirmModal .modal-content {
@@ -1019,6 +1051,7 @@
             color: white;
         }
 
+        /* ===== UTILITY ===== */
         .text-brand { color: var(--brand-orange); }
         .bg-brand-gradient { background: var(--brand-gradient); }
         .border-brand { border-color: var(--brand-orange) !important; }
@@ -1030,6 +1063,10 @@
         ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 10px; }
 
         ::selection { background: var(--brand-orange); color: white; }
+
+        /* ============================================================
+           RESPONSIVE
+        ============================================================ */
 
         @media (max-width: 1199px) {
             .sidebar.collapsed {
@@ -1046,6 +1083,11 @@
         }
 
         @media (max-width: 991px) {
+            /* Show hamburger button on mobile */
+            .hamburger-btn {
+                display: block !important;
+            }
+
             .sidebar {
                 transform: translateX(-100%);
                 width: 280px;
@@ -1182,6 +1224,11 @@
                 font-size: 0.8rem;
             }
 
+            .hamburger-btn {
+                font-size: 1.2rem;
+                padding: 2px 6px;
+            }
+
             .toast-container-custom {
                 top: calc(var(--navbar-height) + 8px);
                 right: 8px;
@@ -1225,6 +1272,11 @@
                 font-size: 0.7rem;
             }
 
+            .hamburger-btn {
+                font-size: 1rem;
+                padding: 2px 4px;
+            }
+
             .navbar-page-title {
                 font-size: 0.6rem;
             }
@@ -1261,6 +1313,10 @@
 
             .btn-logout i {
                 font-size: 0.6rem;
+            }
+
+            .hamburger-btn {
+                font-size: 0.9rem;
             }
 
             .main-content-wrapper {
@@ -1363,6 +1419,11 @@
     <!-- ===== NAVBAR ===== -->
     <nav class="navbar-custom {% if request.resolver_match.url_name == 'login' %}navbar-hidden{% endif %}" id="mainNav">
         <div class="navbar-left">
+            <!-- ===== HAMBURGER MENU BUTTON (Mobile) ===== -->
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle sidebar">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            
             <a href="{% if user.is_authenticated %}{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'employee_dashboard' %}{% endif %}{% else %}/{% endif %}" class="d-flex align-items-center">
                 <img src="{% static 'images/logo.png' %}" alt="GPLAST Logo" class="company-logo-nav" onerror="this.style.display='none';">
             </a>
@@ -1620,7 +1681,54 @@
             const sidebar = document.getElementById('sidebar');
             const sidebarOverlay = document.getElementById('sidebarOverlay');
             const sidebarCollapseToggle = document.getElementById('sidebarCollapseToggle');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
             
+            // ===== HAMBURGER MENU TOGGLE (Mobile) =====
+            let isSidebarOpen = false;
+
+            function toggleSidebarMobile() {
+                isSidebarOpen = !isSidebarOpen;
+                sidebar.classList.toggle('open', isSidebarOpen);
+                sidebarOverlay.classList.toggle('show', isSidebarOpen);
+                document.body.style.overflow = isSidebarOpen ? 'hidden' : '';
+                
+                // Change hamburger icon
+                if (hamburgerBtn) {
+                    const icon = hamburgerBtn.querySelector('i');
+                    if (isSidebarOpen) {
+                        icon.className = 'fa-solid fa-xmark';
+                    } else {
+                        icon.className = 'fa-solid fa-bars';
+                    }
+                }
+            }
+
+            // Hamburger button click
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleSidebarMobile();
+                });
+            }
+
+            // Click on overlay to close
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    if (isSidebarOpen) {
+                        toggleSidebarMobile();
+                    }
+                });
+            }
+
+            // Close sidebar when clicking a link (mobile)
+            document.querySelectorAll('.sidebar-link:not(.theme-toggle-link)').forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992 && isSidebarOpen) {
+                        toggleSidebarMobile();
+                    }
+                });
+            });
+
             // ===== THEME TOGGLE =====
             const sidebarThemeToggle = document.getElementById('sidebarThemeToggle');
             const sidebarThemeIcon = document.getElementById('sidebarThemeIcon');
@@ -1690,34 +1798,6 @@
             if (sidebarCollapseToggle) {
                 sidebarCollapseToggle.addEventListener('click', toggleSidebarCollapse);
             }
-
-            // ===== RESPONSIVE SIDEBAR (Mobile) =====
-            let isSidebarOpen = false;
-
-            function toggleSidebarMobile() {
-                isSidebarOpen = !isSidebarOpen;
-                sidebar.classList.toggle('open', isSidebarOpen);
-                sidebarOverlay.classList.toggle('show', isSidebarOpen);
-                document.body.style.overflow = isSidebarOpen ? 'hidden' : '';
-            }
-
-            // Click on overlay to close
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', function() {
-                    if (isSidebarOpen) {
-                        toggleSidebarMobile();
-                    }
-                });
-            }
-
-            // Close sidebar when clicking a link (mobile)
-            document.querySelectorAll('.sidebar-link:not(.theme-toggle-link)').forEach(function(link) {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth < 992 && isSidebarOpen) {
-                        toggleSidebarMobile();
-                    }
-                });
-            });
 
             // ===== TOAST NOTIFICATIONS =====
             const toastContainer = document.getElementById('toastContainer');
@@ -1801,12 +1881,18 @@
             // ===== RESPONSIVE HANDLING =====
             window.addEventListener('resize', function() {
                 if (window.innerWidth >= 992) {
+                    // Close mobile sidebar if open
                     if (isSidebarOpen) {
                         isSidebarOpen = false;
                         sidebar.classList.remove('open');
                         sidebarOverlay.classList.remove('show');
                         document.body.style.overflow = '';
+                        if (hamburgerBtn) {
+                            hamburgerBtn.querySelector('i').className = 'fa-solid fa-bars';
+                        }
                     }
+                    
+                    // Apply collapse state
                     if (localStorage.getItem('sidebarCollapsed') === 'true') {
                         sidebar.classList.add('collapsed');
                         if (sidebarCollapseToggle) {
@@ -1819,6 +1905,7 @@
                         }
                     }
                 } else {
+                    // On mobile, remove collapsed state
                     sidebar.classList.remove('collapsed');
                     if (sidebarCollapseToggle) {
                         sidebarCollapseToggle.querySelector('i').className = 'fa-solid fa-chevron-left';

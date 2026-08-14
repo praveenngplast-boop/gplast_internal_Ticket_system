@@ -1,4 +1,5 @@
 # tickets/views/admin_views.py
+
 """
 Admin Views - Dashboard, Create Ticket, All Tickets, Ticket Detail, Reports, Download Excel
 """
@@ -21,7 +22,7 @@ import logging
 
 from tickets.models import (
     Unit, Department, Ticket, TicketHistory, EmployeeMaster,
-    AdminContact, AdminNotificationEmail
+    AdminContact, AdminNotificationEmail, SettingsAuditLog
 )
 from tickets.forms import AdminTicketForm
 from tickets.utils import send_ticket_email
@@ -36,8 +37,11 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
+# ============================================================
+# ADMIN DASHBOARD
+# ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def admin_dashboard(request):
     """
     Admin dashboard showing:
@@ -47,7 +51,6 @@ def admin_dashboard(request):
     """
     all_tickets = Ticket.objects.all()
     
-    # Get unviewed tickets count for notification badge
     unviewed_count = Ticket.objects.filter(is_viewed=False).count()
     unviewed_tickets = Ticket.objects.filter(is_viewed=False).order_by('-created_at')[:10]
     
@@ -105,14 +108,18 @@ def admin_dashboard(request):
     return render(request, 'admin_panel/dashboard.html', context)
 
 
+# ============================================================
+# CREATE TICKET - ADMIN
+# ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def create_ticket_admin(request):
     """
     Admin ticket creation with:
     - Employee assignment options
     - Admin creation reason
     - Admin or Employee role selection
+    - 3 attachment fields
     """
     employees = EmployeeMaster.objects.filter(is_active=True, can_assign_ticket=True).order_by('employee_name')
     
@@ -121,6 +128,7 @@ def create_ticket_admin(request):
         if form.is_valid():
             with transaction.atomic():
                 ticket = form.save(commit=False)
+                
                 if ticket.created_by_role == 'Admin':
                     hist_remark = f"Ticket created by Admin on behalf of employee (Reason: {ticket.admin_creation_reason})"
                     hist_perf = f"Admin {request.user.username}"
@@ -133,16 +141,23 @@ def create_ticket_admin(request):
                         defaults={'is_staff': False, 'password': 'pbkdf2_sha256$720000$j5xL6pS0LpGvLq3sRjVbWk$V/Hq7aYt2x531enqYm5d9f2uZdtsJ7MLd2y221C+L9s='}
                     )
                     ticket.created_by_user = employee_user
+                
                 ticket.save()
+                
                 TicketHistory.objects.create(
                     ticket=ticket, 
                     action="Ticket Created", 
                     remarks=hist_remark, 
                     performed_by=hist_perf
                 )
+            
             send_ticket_email(ticket, 'Created')
             messages.success(request, f'Ticket {ticket.ticket_number} created successfully by Admin!')
             return redirect('admin_dashboard')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = AdminTicketForm()
     
@@ -152,14 +167,14 @@ def create_ticket_admin(request):
     })
 
 
+# ============================================================
+# ALL TICKETS - ADMIN
+# ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def all_tickets(request):
     """
-    Admin ticket listing with:
-    - Multiple filters (Status, Priority, Unit, Department, Assigned Person, etc.)
-    - AJAX support for modal views
-    - Pagination
+    Admin ticket listing with filters, AJAX support, and pagination
     """
     is_ajax = request.GET.get('ajax', False)
     
@@ -181,7 +196,6 @@ def all_tickets(request):
     date_to = request.GET.get('date_to', '').strip()
     search = request.GET.get('search', '').strip()
     
-    # ✅ Add filter for viewed/unviewed
     is_viewed = request.GET.get('is_viewed', '')
     if is_viewed == 'false':
         tickets_qs = tickets_qs.filter(is_viewed=False)
@@ -246,6 +260,12 @@ def all_tickets(request):
             Q(department__name__icontains=search)
         )
     
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    closed_count_30_days = Ticket.objects.filter(
+        status='Closed',
+        closed_at__gte=thirty_days_ago
+    ).count()
+    
     if is_ajax:
         filter_value = 'All'
         filter_type = 'status'
@@ -288,7 +308,7 @@ def all_tickets(request):
                 'message': 'Error loading tickets. Please try again.'
             }, status=500)
     
-    paginator = Paginator(tickets_qs, 10)
+    paginator = Paginator(tickets_qs, 20)
     page_number = request.GET.get('page')
     try: 
         tickets_page = paginator.page(page_number)
@@ -298,7 +318,7 @@ def all_tickets(request):
         tickets_page = paginator.page(paginator.num_pages)
     
     context = {
-        'tickets': tickets_page, 
+        'page_obj': tickets_page,
         'units': units, 
         'departments': departments,
         'employees': employees,
@@ -317,24 +337,22 @@ def all_tickets(request):
         'search_query': search, 
         'category': category,
         'is_viewed': is_viewed,
+        'closed_count_30_days': closed_count_30_days,
     }
     return render(request, 'admin_panel/all_tickets.html', context)
 
 
+# ============================================================
+# TICKET DETAIL - ADMIN
+# ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def ticket_detail_admin(request, pk):
     """
-    Admin ticket detail view with:
-    - Full ticket management (Assign, Hold, Escalate, Close, Reopen)
-    - Employee assignment dropdown
-    - Audit history
-    - Reopen timer (48 hours)
-    - Mark as viewed when opened
+    Admin ticket detail view with full ticket management
     """
     ticket = get_object_or_404(Ticket, pk=pk)
     
-    # ✅ Mark ticket as viewed when admin opens it
     if not ticket.is_viewed:
         ticket.is_viewed = True
         ticket.viewed_at = timezone.now()
@@ -345,17 +363,27 @@ def ticket_detail_admin(request, pk):
     can_reopen = False
     reopen_time_left = None
     reopen_deadline = None
+    
     if ticket.status == 'Closed' and ticket.closed_at:
         reopen_deadline = ticket.closed_at + timedelta(hours=48)
         if timezone.now() < reopen_deadline: 
             can_reopen = True
             reopen_time_left = reopen_deadline - timezone.now()
+    
     time_to_close_str = ""
     if ticket.status == 'Closed' and ticket.created_at and ticket.closed_at:
         time_to_close = ticket.closed_at - ticket.created_at
         time_to_close_str = format_timedelta_display(time_to_close)
     
     employees = EmployeeMaster.objects.filter(is_active=True, can_assign_ticket=True).order_by('employee_name')
+    
+    attachments = []
+    if ticket.attachment_1:
+        attachments.append({'file': ticket.attachment_1, 'name': 'Attachment 1'})
+    if ticket.attachment_2:
+        attachments.append({'file': ticket.attachment_2, 'name': 'Attachment 2'})
+    if ticket.attachment_3:
+        attachments.append({'file': ticket.attachment_3, 'name': 'Attachment 3'})
     
     if request.method == 'POST':
         action_type = request.POST.get('action_type')
@@ -451,6 +479,7 @@ def ticket_detail_admin(request, pk):
         'ticket': ticket,
         'history': history,
         'employees': employees,
+        'attachments': attachments,
         'can_reopen': can_reopen,
         'time_to_close': time_to_close_str,
         'reopen_time_left': reopen_time_left,
@@ -459,9 +488,11 @@ def ticket_detail_admin(request, pk):
     return render(request, 'admin_panel/ticket_detail.html', context)
 
 
-# ========== DOWNLOAD TICKET EXCEL ==========
+# ============================================================
+# DOWNLOAD TICKET EXCEL
+# ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def download_ticket_excel(request, pk):
     """
     Export single ticket details to Excel
@@ -475,7 +506,6 @@ def download_ticket_excel(request, pk):
     ws = wb.active
     ws.title = f"Ticket {ticket.ticket_number}"
     
-    # ========== STYLES ==========
     title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
     header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
     section_font = Font(name='Calibri', size=12, bold=True, color='FFFFFF')
@@ -497,7 +527,6 @@ def download_ticket_excel(request, pk):
         bottom=Side(style='thin', color='D0D0D0')
     )
     
-    # ========== TITLE ==========
     ws.merge_cells('A1:F1')
     ws['A1'] = f"GPLAST TICKET DETAILS - {ticket.ticket_number}"
     ws['A1'].font = title_font
@@ -505,7 +534,6 @@ def download_ticket_excel(request, pk):
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 40
     
-    # ========== BASIC INFORMATION ==========
     row = 3
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = "BASIC INFORMATION"
@@ -540,7 +568,6 @@ def download_ticket_excel(request, pk):
     
     row += 1
     
-    # ========== EMPLOYEE DETAILS ==========
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = "EMPLOYEE DETAILS"
     ws[f'A{row}'].font = section_font
@@ -573,7 +600,44 @@ def download_ticket_excel(request, pk):
     
     row += 1
     
-    # ========== ASSIGNMENT & STATUS ==========
+    ws.merge_cells(f'A{row}:F{row}')
+    ws[f'A{row}'] = "ATTACHMENTS"
+    ws[f'A{row}'].font = section_font
+    ws[f'A{row}'].fill = PatternFill(start_color='8B5CF6', end_color='8B5CF6', fill_type='solid')
+    ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws.row_dimensions[row].height = 30
+    row += 1
+    
+    attachments = []
+    if ticket.attachment_1:
+        attachments.append({'file': ticket.attachment_1, 'name': 'Attachment 1'})
+    if ticket.attachment_2:
+        attachments.append({'file': ticket.attachment_2, 'name': 'Attachment 2'})
+    if ticket.attachment_3:
+        attachments.append({'file': ticket.attachment_3, 'name': 'Attachment 3'})
+    
+    if attachments:
+        for idx, att in enumerate(attachments, 1):
+            att_label = f"Attachment {idx}"
+            att_value = att['file'].name if att['file'] else 'No file'
+            ws.cell(row=row, column=1, value=att_label).font = label_font
+            ws.cell(row=row, column=1).fill = label_fill
+            ws.cell(row=row, column=1).border = thin_border
+            ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+            
+            ws.cell(row=row, column=2, value=att_value).font = data_font
+            ws.cell(row=row, column=2).border = thin_border
+            ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+            ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+            row += 1
+    else:
+        ws.cell(row=row, column=1, value="No Attachments").font = data_font
+        ws.cell(row=row, column=1).border = thin_border
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=6)
+        row += 1
+    
+    row += 1
+    
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = "ASSIGNMENT & STATUS"
     ws[f'A{row}'].font = section_font
@@ -604,7 +668,6 @@ def download_ticket_excel(request, pk):
     
     row += 1
     
-    # ========== CLOSING DETAILS (if closed) ==========
     if ticket.status == 'Closed':
         ws.merge_cells(f'A{row}:F{row}')
         ws[f'A{row}'] = "CLOSING DETAILS"
@@ -635,7 +698,6 @@ def download_ticket_excel(request, pk):
         
         row += 1
     
-    # ========== AUDIT HISTORY ==========
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = "AUDIT HISTORY"
     ws[f'A{row}'].font = section_font
@@ -693,8 +755,183 @@ def download_ticket_excel(request, pk):
     return response
 
 
+# ============================================================
+# EXPORT CLOSED TICKETS (LAST 30 DAYS) TO EXCEL
+# ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
+def export_closed_tickets_30_days(request):
+    """
+    Export closed tickets from the last 30 days to Excel
+    """
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    
+    tickets_qs = Ticket.objects.filter(
+        status='Closed',
+        closed_at__gte=thirty_days_ago
+    ).order_by('-closed_at')
+    
+    current_tz = timezone.get_current_timezone()
+    now_utc = timezone.now()
+    if timezone.is_naive(now_utc):
+        now_utc = timezone.make_aware(now_utc, timezone.utc)
+    now_local = now_utc.astimezone(current_tz)
+    report_time = now_local.strftime('%d-%b-%Y %I:%M:%S %p')
+    
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename=Closed_Tickets_30_Days_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Closed Tickets (30 Days)"
+    
+    title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    data_font = Font(name='Calibri', size=10)
+    title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+    header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
+    thin_border = Border(
+        left=Side(style='thin', color='D0D0D0'),
+        right=Side(style='thin', color='D0D0D0'),
+        top=Side(style='thin', color='D0D0D0'),
+        bottom=Side(style='thin', color='D0D0D0')
+    )
+    
+    ws.merge_cells('A1:Z1')
+    ws['A1'] = f"CLOSED TICKETS - LAST 30 DAYS"
+    ws['A1'].font = title_font
+    ws['A1'].fill = title_fill
+    ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[1].height = 45
+    
+    ws.merge_cells('A2:Z2')
+    ws['A2'] = f"Generated: {report_time}  |  Total Closed Tickets: {tickets_qs.count()}  |  Period: {thirty_days_ago.strftime('%d-%b-%Y')} to {timezone.now().strftime('%d-%b-%Y')}"
+    ws['A2'].font = Font(name='Calibri', size=10, italic=True, color='666666')
+    ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[2].height = 25
+    
+    headers = [
+        'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
+        'Employee ID', 'Employee Name', 'Mobile', 'Email', 'Screen/Module',
+        'Subject', 'Description', 'Priority', 'Error Type', 'Created By Role',
+        'Admin Creation Reason', 'Assigned Person', 'Hold Reason',
+        'Closing Remarks', 'Closed By', 'Vendor Ticket Number',
+        'Created At', 'Closed At', 'Time to Close', 'Escalated At',
+        'Attachment 1', 'Attachment 2', 'Attachment 3'
+    ]
+    
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=4, column=col_idx)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.border = thin_border
+    ws.row_dimensions[4].height = 30
+    
+    row_idx = 5
+    for ticket in tickets_qs:
+        if ticket.created_at:
+            if timezone.is_naive(ticket.created_at):
+                utc_time = timezone.make_aware(ticket.created_at, timezone.utc)
+            else:
+                utc_time = ticket.created_at
+            created_at_local = utc_time.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+        else:
+            created_at_local = ''
+        
+        if ticket.closed_at:
+            if timezone.is_naive(ticket.closed_at):
+                utc_time = timezone.make_aware(ticket.closed_at, timezone.utc)
+            else:
+                utc_time = ticket.closed_at
+            closed_at_local = utc_time.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+        else:
+            closed_at_local = ''
+        
+        if ticket.escalated_at:
+            if timezone.is_naive(ticket.escalated_at):
+                utc_time = timezone.make_aware(ticket.escalated_at, timezone.utc)
+            else:
+                utc_time = ticket.escalated_at
+            escalated_at_local = utc_time.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+        else:
+            escalated_at_local = ''
+        
+        time_to_close = ''
+        if ticket.created_at and ticket.closed_at:
+            duration = ticket.closed_at - ticket.created_at
+            days = duration.days
+            hours = duration.seconds // 3600
+            minutes = (duration.seconds % 3600) // 60
+            if days > 0:
+                time_to_close = f"{days}d {hours}h {minutes}m"
+            else:
+                time_to_close = f"{hours}h {minutes}m"
+        
+        row_data = [
+            ticket.ticket_number,
+            ticket.status,
+            ticket.unit.code if ticket.unit else '',
+            ticket.unit.full_name if ticket.unit else '',
+            ticket.department.name if ticket.department else '',
+            ticket.employee_id,
+            ticket.employee_name,
+            ticket.mobile,
+            ticket.email,
+            ticket.screen_number,
+            ticket.subject,
+            ticket.description or '',
+            ticket.priority,
+            ticket.error_type or '',
+            ticket.created_by_role,
+            ticket.admin_creation_reason or '',
+            ticket.assigned_person or '',
+            ticket.hold_reason or '',
+            ticket.closing_remarks or '',
+            ticket.closed_by or '',
+            ticket.vendor_ticket_number or '',
+            created_at_local,
+            closed_at_local,
+            time_to_close,
+            escalated_at_local,
+            ticket.attachment_1.name if ticket.attachment_1 else '',
+            ticket.attachment_2.name if ticket.attachment_2 else '',
+            ticket.attachment_3.name if ticket.attachment_3 else '',
+        ]
+        
+        for col_idx, val in enumerate(row_data, 1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.value = val
+            cell.font = data_font
+            cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+            cell.border = thin_border
+        
+        row_idx += 1
+    
+    column_widths = {
+        'A': 18, 'B': 14, 'C': 12, 'D': 25, 'E': 20,
+        'F': 14, 'G': 22, 'H': 16, 'I': 25, 'J': 16,
+        'K': 30, 'L': 40, 'M': 14, 'N': 20, 'O': 18,
+        'P': 25, 'Q': 20, 'R': 20, 'S': 30, 'T': 18,
+        'U': 18, 'V': 22, 'W': 22, 'X': 16, 'Y': 22,
+        'Z': 30, 'AA': 30, 'AB': 30
+    }
+    
+    for col_letter, width in column_widths.items():
+        ws.column_dimensions[col_letter].width = width
+    
+    wb.save(response)
+    return response
+
+
+# ============================================================
+# REPORTS VIEW
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='tickets:login')
 def reports(request):
     """
     Reports page with advanced filtering and export
@@ -724,7 +961,6 @@ def reports(request):
     
     employees = EmployeeMaster.objects.filter(is_active=True, can_assign_ticket=True).order_by('employee_name')
     
-    # Category filters
     if category == 'open': 
         tickets_qs = tickets_qs.filter(status='Open')
     elif category == 'assigned': 
@@ -740,7 +976,6 @@ def reports(request):
     elif category == 'reopened': 
         tickets_qs = tickets_qs.filter(history__action='Ticket Reopened').distinct()
     
-    # Filter by fields
     if unit_id and unit_id != '': 
         tickets_qs = tickets_qs.filter(unit_id=unit_id)
     if dept_id and dept_id != '': 
@@ -758,13 +993,13 @@ def reports(request):
     if vendor_ticket and vendor_ticket != '': 
         tickets_qs = tickets_qs.filter(vendor_ticket_number__icontains=vendor_ticket)
     
-    # Date filters
+    current_tz = timezone.get_current_timezone()
+    
     if created_start and created_start != '':
         try:
             created_start_date = datetime.strptime(created_start, '%Y-%m-%d').date()
-            from_datetime = timezone.make_aware(
-                datetime.combine(created_start_date, datetime.min.time())
-            )
+            start_dt = datetime.combine(created_start_date, datetime.min.time())
+            from_datetime = timezone.make_aware(start_dt, current_tz)
             tickets_qs = tickets_qs.filter(created_at__gte=from_datetime)
         except ValueError:
             pass
@@ -772,9 +1007,8 @@ def reports(request):
     if created_end and created_end != '':
         try:
             created_end_date = datetime.strptime(created_end, '%Y-%m-%d').date()
-            to_datetime = timezone.make_aware(
-                datetime.combine(created_end_date, datetime.max.time())
-            )
+            end_dt = datetime.combine(created_end_date, datetime.max.time())
+            to_datetime = timezone.make_aware(end_dt, current_tz)
             tickets_qs = tickets_qs.filter(created_at__lte=to_datetime)
         except ValueError:
             pass
@@ -782,9 +1016,8 @@ def reports(request):
     if closed_start and closed_start != '':
         try:
             closed_start_date = datetime.strptime(closed_start, '%Y-%m-%d').date()
-            from_datetime = timezone.make_aware(
-                datetime.combine(closed_start_date, datetime.min.time())
-            )
+            start_dt = datetime.combine(closed_start_date, datetime.min.time())
+            from_datetime = timezone.make_aware(start_dt, current_tz)
             tickets_qs = tickets_qs.filter(closed_at__gte=from_datetime)
         except ValueError:
             pass
@@ -792,9 +1025,8 @@ def reports(request):
     if closed_end and closed_end != '':
         try:
             closed_end_date = datetime.strptime(closed_end, '%Y-%m-%d').date()
-            to_datetime = timezone.make_aware(
-                datetime.combine(closed_end_date, datetime.max.time())
-            )
+            end_dt = datetime.combine(closed_end_date, datetime.max.time())
+            to_datetime = timezone.make_aware(end_dt, current_tz)
             tickets_qs = tickets_qs.filter(closed_at__lte=to_datetime)
         except ValueError:
             pass
@@ -802,9 +1034,8 @@ def reports(request):
     if escalated_start and escalated_start != '':
         try:
             escalated_start_date = datetime.strptime(escalated_start, '%Y-%m-%d').date()
-            from_datetime = timezone.make_aware(
-                datetime.combine(escalated_start_date, datetime.min.time())
-            )
+            start_dt = datetime.combine(escalated_start_date, datetime.min.time())
+            from_datetime = timezone.make_aware(start_dt, current_tz)
             tickets_qs = tickets_qs.filter(escalated_at__gte=from_datetime)
         except ValueError:
             pass
@@ -812,9 +1043,8 @@ def reports(request):
     if escalated_end and escalated_end != '':
         try:
             escalated_end_date = datetime.strptime(escalated_end, '%Y-%m-%d').date()
-            to_datetime = timezone.make_aware(
-                datetime.combine(escalated_end_date, datetime.max.time())
-            )
+            end_dt = datetime.combine(escalated_end_date, datetime.max.time())
+            to_datetime = timezone.make_aware(end_dt, current_tz)
             tickets_qs = tickets_qs.filter(escalated_at__lte=to_datetime)
         except ValueError:
             pass
@@ -831,7 +1061,6 @@ def reports(request):
     escalated_count = tickets_qs.filter(status='Escalated').count()
     closed_count = tickets_qs.filter(status='Closed').count()
     
-    # Export to Excel
     if 'export' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename=GPLAST_Report_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
@@ -844,13 +1073,25 @@ def reports(request):
         data_font = Font(name='Calibri', size=11)
         title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
         header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
+        thin_border = Border(
+            left=Side(style='thin', color='D0D0D0'),
+            right=Side(style='thin', color='D0D0D0'),
+            top=Side(style='thin', color='D0D0D0'),
+            bottom=Side(style='thin', color='D0D0D0')
+        )
+        
+        now_utc = timezone.now()
+        if timezone.is_naive(now_utc):
+            now_utc = timezone.make_aware(now_utc, timezone.utc)
+        now_local = now_utc.astimezone(current_tz)
+        report_time = now_local.strftime('%d-%b-%Y %I:%M:%S %p')
         
         ws.merge_cells('A1:Y1')
-        ws['A1'] = "GPLAST Ticket Report"
+        ws['A1'] = f"GPLAST TICKET REPORT - Generated: {report_time}  |  Total Entries: {tickets_qs.count()}"
         ws['A1'].font = title_font
         ws['A1'].fill = title_fill
         ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
-        ws.row_dimensions[1].height = 40
+        ws.row_dimensions[1].height = 45
         
         headers = ["Ticket Number","Status","Unit Code","Unit Full Name","Department","Employee ID","Employee Name","Mobile","Email","Screen Number","Subject","Description","Priority","Error Type","Created By Role","Time to Close","Admin Reason","Assigned Person","Hold Reason","Closing Remarks","Closed By","Vendor Ticket","Created At","Closed At","Escalated At"]
         for col_idx, header in enumerate(headers, 1):
@@ -859,13 +1100,38 @@ def reports(request):
             cell.font = header_font
             cell.fill = header_fill
             cell.alignment = Alignment(horizontal='center', vertical='center')
-            ws.row_dimensions[3].height = 25
+            cell.border = thin_border
+        ws.row_dimensions[3].height = 25
         
         row_idx = 4
         for t in tickets_qs:
-            c_at = t.created_at.strftime('%d-%b-%Y %I:%M %p') if t.created_at else ""
-            cl_at = t.closed_at.strftime('%d-%b-%Y %I:%M %p') if t.closed_at else ""
-            esc_at = t.escalated_at.strftime('%d-%b-%Y %I:%M %p') if t.escalated_at else ""
+            if t.created_at:
+                if timezone.is_naive(t.created_at):
+                    utc_time = timezone.make_aware(t.created_at, timezone.utc)
+                else:
+                    utc_time = t.created_at
+                c_at = utc_time.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+            else:
+                c_at = ""
+            
+            if t.closed_at:
+                if timezone.is_naive(t.closed_at):
+                    utc_time = timezone.make_aware(t.closed_at, timezone.utc)
+                else:
+                    utc_time = t.closed_at
+                cl_at = utc_time.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+            else:
+                cl_at = ""
+            
+            if t.escalated_at:
+                if timezone.is_naive(t.escalated_at):
+                    utc_time = timezone.make_aware(t.escalated_at, timezone.utc)
+                else:
+                    utc_time = t.escalated_at
+                esc_at = utc_time.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+            else:
+                esc_at = ""
+            
             ttc = format_timedelta_display(t.closed_at - t.created_at) if t.status == 'Closed' and t.created_at and t.closed_at else ""
             
             row_data = [
@@ -900,16 +1166,23 @@ def reports(request):
                 cell.value = val
                 cell.font = data_font
                 cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+                cell.border = thin_border
             row_idx += 1
         
-        for col in ws.columns:
-            max_len = max(len(str(cell.value or '')) for cell in col if cell.row > 1)
-            ws.column_dimensions[openpyxl.utils.get_column_letter(col[0].column)].width = max(max_len + 3, 12)
-            
+        column_widths = {
+            'A': 18, 'B': 14, 'C': 14, 'D': 25, 'E': 20,
+            'F': 14, 'G': 22, 'H': 16, 'I': 25, 'J': 16,
+            'K': 30, 'L': 40, 'M': 14, 'N': 20, 'O': 18,
+            'P': 16, 'Q': 20, 'R': 20, 'S': 20, 'T': 30,
+            'U': 18, 'V': 18, 'W': 22, 'X': 22, 'Y': 22
+        }
+        
+        for col_letter, width in column_widths.items():
+            ws.column_dimensions[col_letter].width = width
+        
         wb.save(response)
         return response
     
-    # Pagination
     paginator = Paginator(tickets_qs, 15)
     page_number = request.GET.get('page')
     try: 
@@ -967,7 +1240,7 @@ def reports(request):
 # ============================================================
 
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def get_notifications(request):
     """
     Get unviewed tickets for AJAX dropdown refresh
@@ -988,11 +1261,10 @@ def get_notifications(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def mark_all_notifications_read(request):
     """
     Mark all tickets as viewed
-    AJAX endpoint to mark all notifications as read
     """
     if request.method == 'POST':
         count = Ticket.objects.filter(is_viewed=False).update(
@@ -1008,7 +1280,7 @@ def mark_all_notifications_read(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def mark_notification_read(request, ticket_id):
     """
     Mark a single ticket as viewed
@@ -1025,36 +1297,205 @@ def mark_notification_read(request, ticket_id):
     return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
 
 
-# ========== TEST NOTIFICATIONS ==========
+# ============================================================
+# TEST NOTIFICATIONS
+# ============================================================
+
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def test_notifications(request): 
     return render(request, 'admin_panel/test_notifications.html')
 
 
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def test_success_message(request): 
     messages.success(request, 'Test success message.')
     return redirect('test_notifications')
 
 
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def test_error_message(request): 
     messages.error(request, 'Test error message.')
     return redirect('test_notifications')
 
 
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def test_warning_message(request): 
     messages.warning(request, 'Test warning message.')
     return redirect('test_notifications')
 
 
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def test_info_message(request): 
     messages.info(request, 'Test info message.')
     return redirect('test_notifications')
+
+
+# ============================================================
+# DOWNLOAD AUDIT LOG EXCEL
+# ============================================================
+
+@login_required
+@user_passes_test(is_admin, login_url='tickets:login')
+def download_audit_log_excel(request):
+    """
+    Export filtered audit logs to Excel
+    """
+    audit_logs = SettingsAuditLog.objects.all().order_by('-created_at')
+    
+    action = request.GET.get('action', '')
+    setting_type = request.GET.get('setting_type', '')
+    performed_by = request.GET.get('performed_by', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    search = request.GET.get('search', '')
+    
+    if action:
+        audit_logs = audit_logs.filter(action_type=action)
+    if setting_type:
+        audit_logs = audit_logs.filter(setting_type=setting_type)
+    if performed_by:
+        audit_logs = audit_logs.filter(performed_by_name__icontains=performed_by)
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            from_datetime = timezone.make_aware(
+                datetime.combine(date_from_obj, datetime.min.time())
+            )
+            audit_logs = audit_logs.filter(created_at__gte=from_datetime)
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            to_datetime = timezone.make_aware(
+                datetime.combine(date_to_obj, datetime.max.time())
+            )
+            audit_logs = audit_logs.filter(created_at__lte=to_datetime)
+        except ValueError:
+            pass
+    if search:
+        audit_logs = audit_logs.filter(
+            Q(setting_name__icontains=search) |
+            Q(change_summary__icontains=search) |
+            Q(performed_by_name__icontains=search)
+        )
+    
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename=Audit_Log_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Audit Log"
+    
+    title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    data_font = Font(name='Calibri', size=10)
+    title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+    header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
+    thin_border = Border(
+        left=Side(style='thin', color='D0D0D0'),
+        right=Side(style='thin', color='D0D0D0'),
+        top=Side(style='thin', color='D0D0D0'),
+        bottom=Side(style='thin', color='D0D0D0')
+    )
+    
+    current_tz = timezone.get_current_timezone()
+    now_utc = timezone.now()
+    if timezone.is_naive(now_utc):
+        now_utc = timezone.make_aware(now_utc, timezone.utc)
+    now_local = now_utc.astimezone(current_tz)
+    report_time = now_local.strftime('%d-%b-%Y %I:%M:%S %p')
+    
+    ws.merge_cells('A1:K1')
+    ws['A1'] = f"GPLAST SETTINGS AUDIT LOG - Generated: {report_time}  |  Total Entries: {audit_logs.count()}"
+    ws['A1'].font = title_font
+    ws['A1'].fill = title_fill
+    ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[1].height = 45
+    
+    headers = ['ID', 'Action', 'Setting Type', 'Setting Name', 'Old Value', 'New Value', 
+               'Change Summary', 'Performed By', 'IP Address', 'Remarks', 'Created At']
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col_idx)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = thin_border
+    ws.row_dimensions[3].height = 30
+    
+    row_idx = 4
+    for log in audit_logs:
+        ws.cell(row=row_idx, column=1, value=log.id).font = data_font
+        ws.cell(row=row_idx, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        ws.cell(row=row_idx, column=1).border = thin_border
+        
+        ws.cell(row=row_idx, column=2, value=log.get_action_type_display()).font = data_font
+        ws.cell(row=row_idx, column=2).alignment = Alignment(horizontal='left', vertical='center')
+        ws.cell(row=row_idx, column=2).border = thin_border
+        
+        ws.cell(row=row_idx, column=3, value=log.get_setting_type_display()).font = data_font
+        ws.cell(row=row_idx, column=3).alignment = Alignment(horizontal='left', vertical='center')
+        ws.cell(row=row_idx, column=3).border = thin_border
+        
+        ws.cell(row=row_idx, column=4, value=log.setting_name).font = data_font
+        ws.cell(row=row_idx, column=4).alignment = Alignment(horizontal='left', vertical='center')
+        ws.cell(row=row_idx, column=4).border = thin_border
+        
+        ws.cell(row=row_idx, column=5, value=log.old_value or '').font = data_font
+        ws.cell(row=row_idx, column=5).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws.cell(row=row_idx, column=5).border = thin_border
+        
+        ws.cell(row=row_idx, column=6, value=log.new_value or '').font = data_font
+        ws.cell(row=row_idx, column=6).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws.cell(row=row_idx, column=6).border = thin_border
+        
+        ws.cell(row=row_idx, column=7, value=log.change_summary or '').font = data_font
+        ws.cell(row=row_idx, column=7).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws.cell(row=row_idx, column=7).border = thin_border
+        
+        ws.cell(row=row_idx, column=8, value=log.performed_by_name).font = data_font
+        ws.cell(row=row_idx, column=8).alignment = Alignment(horizontal='left', vertical='center')
+        ws.cell(row=row_idx, column=8).border = thin_border
+        
+        ws.cell(row=row_idx, column=9, value=log.ip_address or 'N/A').font = data_font
+        ws.cell(row=row_idx, column=9).alignment = Alignment(horizontal='left', vertical='center')
+        ws.cell(row=row_idx, column=9).border = thin_border
+        
+        ws.cell(row=row_idx, column=10, value=log.remarks or '').font = data_font
+        ws.cell(row=row_idx, column=10).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws.cell(row=row_idx, column=10).border = thin_border
+        
+        if log.created_at:
+            if timezone.is_naive(log.created_at):
+                utc_time = timezone.make_aware(log.created_at, timezone.utc)
+            else:
+                utc_time = log.created_at
+            local_time = utc_time.astimezone(current_tz)
+            formatted_time = local_time.strftime('%d-%b-%Y %I:%M:%S %p')
+        else:
+            formatted_time = ''
+        
+        ws.cell(row=row_idx, column=11, value=formatted_time).font = data_font
+        ws.cell(row=row_idx, column=11).alignment = Alignment(horizontal='center', vertical='center')
+        ws.cell(row=row_idx, column=11).border = thin_border
+        
+        row_idx += 1
+    
+    column_widths = {
+        'A': 10, 'B': 20, 'C': 20, 'D': 30, 'E': 35,
+        'F': 35, 'G': 40, 'H': 22, 'I': 18, 'J': 35, 'K': 25
+    }
+    
+    for col_letter, width in column_widths.items():
+        ws.column_dimensions[col_letter].width = width
+    
+    wb.save(response)
+    return response

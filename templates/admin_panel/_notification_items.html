@@ -4,7 +4,7 @@
 {% if unviewed_tickets %}
     {% for ticket in unviewed_tickets %}
     <li style="list-style: none; margin: 0; padding: 0;">
-        <a class="notification-item" href="/admin/ticket/{{ ticket.id }}/"
+        <a class="notification-item" href="{% url 'admin_ticket_detail' ticket.id %}"
            style="border-left: 3px solid {% if ticket.priority == 'Critical' %}#EF4444{% elif ticket.priority == 'High' %}#F59E0B{% elif ticket.priority == 'Medium' %}#3B82F6{% else %}#94A3B8{% endif %};
                   padding: 0.6rem 0.8rem;
                   margin: 0.1rem 0.2rem;

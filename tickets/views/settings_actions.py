@@ -1,4 +1,5 @@
 # tickets/views/settings_actions.py
+
 """
 Settings Actions (POST Handlers) - All settings POST actions
 - Contact
@@ -24,7 +25,10 @@ import pandas as pd
 from openpyxl.styles import Font, Alignment, PatternFill
 import logging
 
-from tickets.models import Unit, Department, AdminContact, AdminNotificationEmail, EmployeeMaster, DepartmentCredential
+from tickets.models import (
+    Unit, Department, AdminContact, AdminNotificationEmail, 
+    EmployeeMaster, DepartmentCredential, SettingsAuditLog
+)
 from tickets.forms import (
     UnitForm, DepartmentForm, AdminNotificationEmailForm, 
     AdminPasswordChangeForm, AdminSetUserPasswordForm,
@@ -37,16 +41,45 @@ from .utils import (
     _get_employee_directory_data,
     _get_credentials_data,
     format_timedelta_display,
+    get_client_ip,
 )
 
 logger = logging.getLogger(__name__)
 
 
 # ============================================================
+# AUDIT LOG HELPER FUNCTION
+# ============================================================
+
+def log_settings_change(request, action_type, setting_type, setting_name, 
+                        old_value=None, new_value=None, change_summary=None, remarks=None):
+    """
+    Helper function to log settings changes
+    """
+    try:
+        SettingsAuditLog.objects.create(
+            performed_by=request.user if request.user.is_authenticated else None,
+            performed_by_name=request.user.username if request.user.is_authenticated else 'System',
+            action_type=action_type,
+            setting_type=setting_type,
+            setting_name=setting_name,
+            old_value=str(old_value) if old_value else None,
+            new_value=str(new_value) if new_value else None,
+            change_summary=change_summary or '',
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            remarks=remarks or '',
+        )
+    except Exception as e:
+        logger.error(f"Failed to log settings change: {str(e)}")
+
+
+# ============================================================
 # CONTACT SETTINGS
 # ============================================================
+
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def settings_contact(request):
     """
     Update Helpdesk Contact information
@@ -62,24 +95,50 @@ def settings_contact(request):
                 admin_email="admin@gplast.com"
             )
         
+        old_name = contact_obj.admin_name
+        old_email = contact_obj.admin_email
         admin_name = request.POST.get('admin_name', '').strip()
         admin_email = request.POST.get('admin_email', '').strip()
         
-        if admin_name:
-            contact_obj.admin_name = admin_name
-        if admin_email:
-            contact_obj.admin_email = admin_email
+        changed = False
+        change_details = []
         
-        contact_obj.save()
-        messages.success(request, "IT Support Contact updated successfully.")
+        if admin_name and admin_name != contact_obj.admin_name:
+            contact_obj.admin_name = admin_name
+            changed = True
+            change_details.append(f"Name: {old_name} → {admin_name}")
+        
+        if admin_email and admin_email != contact_obj.admin_email:
+            contact_obj.admin_email = admin_email
+            changed = True
+            change_details.append(f"Email: {old_email} → {admin_email}")
+        
+        if changed:
+            contact_obj.save()
+            messages.success(request, "IT Support Contact updated successfully.")
+            
+            log_settings_change(
+                request,
+                action_type='UPDATE',
+                setting_type='CONTACT',
+                setting_name='Helpdesk Contact',
+                old_value=f"Name: {old_name}, Email: {old_email}",
+                new_value=f"Name: {admin_name}, Email: {admin_email}",
+                change_summary='; '.join(change_details),
+                remarks="Contact information updated"
+            )
+        else:
+            messages.info(request, "No changes made to contact information.")
+    
     return redirect('settings_communication')
 
 
 # ============================================================
 # UNIT SETTINGS
 # ============================================================
+
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def settings_units(request):
     """
     Manage Units: Add, Edit, Toggle Active/Inactive
@@ -96,6 +155,16 @@ def settings_units(request):
                 unit.created_by = request.user.username
                 unit.save()
                 messages.success(request, f"Unit '{unit.code}' added.")
+                
+                log_settings_change(
+                    request,
+                    action_type='CREATE',
+                    setting_type='UNIT',
+                    setting_name=f"Unit: {unit.code}",
+                    new_value=f"Code: {unit.code}, Name: {unit.full_name}",
+                    change_summary=f"Added unit '{unit.code}' - {unit.full_name}",
+                    remarks=f"Unit added by {request.user.username}"
+                )
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
@@ -103,10 +172,30 @@ def settings_units(request):
         
         elif action == 'edit':
             unit = get_object_or_404(Unit, pk=request.POST.get('unit_id'))
+            old_code = unit.code
+            old_name = unit.full_name
+            
             form = UnitForm(request.POST, instance=unit)
             if form.is_valid(): 
                 form.save()
                 messages.success(request, f"Unit '{unit.code}' updated.")
+                
+                change_details = []
+                if old_code != unit.code:
+                    change_details.append(f"Code: {old_code} → {unit.code}")
+                if old_name != unit.full_name:
+                    change_details.append(f"Name: {old_name} → {unit.full_name}")
+                
+                log_settings_change(
+                    request,
+                    action_type='UPDATE',
+                    setting_type='UNIT',
+                    setting_name=f"Unit: {unit.code}",
+                    old_value=f"Code: {old_code}, Name: {old_name}",
+                    new_value=f"Code: {unit.code}, Name: {unit.full_name}",
+                    change_summary='; '.join(change_details) if change_details else 'Unit updated',
+                    remarks=f"Unit updated by {request.user.username}"
+                )
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
@@ -114,9 +203,23 @@ def settings_units(request):
         
         elif action == 'toggle':
             unit = get_object_or_404(Unit, pk=request.POST.get('unit_id'))
+            old_status = 'Active' if unit.is_active else 'Inactive'
             unit.is_active = not unit.is_active
             unit.save()
+            new_status = 'Active' if unit.is_active else 'Inactive'
+            
             messages.success(request, f"Unit '{unit.code}' {'activated' if unit.is_active else 'deactivated'}.")
+            
+            log_settings_change(
+                request,
+                action_type='TOGGLE',
+                setting_type='UNIT',
+                setting_name=f"Unit: {unit.code}",
+                old_value=f"Status: {old_status}",
+                new_value=f"Status: {new_status}",
+                change_summary=f"Status changed from {old_status} to {new_status}",
+                remarks=f"Unit toggled by {request.user.username}"
+            )
     
     return redirect('settings_units_departments')
 
@@ -124,8 +227,9 @@ def settings_units(request):
 # ============================================================
 # DEPARTMENT SETTINGS
 # ============================================================
+
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def settings_departments(request):
     """
     Manage Departments: Add, Edit, Toggle Active/Inactive
@@ -140,6 +244,16 @@ def settings_departments(request):
             if form.is_valid(): 
                 dept = form.save()
                 messages.success(request, f"Department '{dept.name}' added.")
+                
+                log_settings_change(
+                    request,
+                    action_type='CREATE',
+                    setting_type='DEPARTMENT',
+                    setting_name=f"Department: {dept.name}",
+                    new_value=f"Name: {dept.name}, Unit: {dept.unit.code}",
+                    change_summary=f"Added department '{dept.name}' under unit '{dept.unit.code}'",
+                    remarks=f"Department added by {request.user.username}"
+                )
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
@@ -147,10 +261,30 @@ def settings_departments(request):
         
         elif action == 'edit':
             dept = get_object_or_404(Department, pk=request.POST.get('dept_id'))
+            old_name = dept.name
+            old_unit = dept.unit.code
+            
             form = DepartmentForm(request.POST, instance=dept)
             if form.is_valid(): 
                 form.save()
                 messages.success(request, f"Department '{dept.name}' updated.")
+                
+                change_details = []
+                if old_name != dept.name:
+                    change_details.append(f"Name: {old_name} → {dept.name}")
+                if old_unit != dept.unit.code:
+                    change_details.append(f"Unit: {old_unit} → {dept.unit.code}")
+                
+                log_settings_change(
+                    request,
+                    action_type='UPDATE',
+                    setting_type='DEPARTMENT',
+                    setting_name=f"Department: {dept.name}",
+                    old_value=f"Name: {old_name}, Unit: {old_unit}",
+                    new_value=f"Name: {dept.name}, Unit: {dept.unit.code}",
+                    change_summary='; '.join(change_details) if change_details else 'Department updated',
+                    remarks=f"Department updated by {request.user.username}"
+                )
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
@@ -158,9 +292,23 @@ def settings_departments(request):
         
         elif action == 'toggle':
             dept = get_object_or_404(Department, pk=request.POST.get('dept_id'))
+            old_status = 'Active' if dept.is_active else 'Inactive'
             dept.is_active = not dept.is_active
             dept.save()
+            new_status = 'Active' if dept.is_active else 'Inactive'
+            
             messages.success(request, f"Department '{dept.name}' {'activated' if dept.is_active else 'deactivated'}.")
+            
+            log_settings_change(
+                request,
+                action_type='TOGGLE',
+                setting_type='DEPARTMENT',
+                setting_name=f"Department: {dept.name}",
+                old_value=f"Status: {old_status}",
+                new_value=f"Status: {new_status}",
+                change_summary=f"Status changed from {old_status} to {new_status}",
+                remarks=f"Department toggled by {request.user.username}"
+            )
     
     return redirect('settings_units_departments')
 
@@ -168,8 +316,9 @@ def settings_departments(request):
 # ============================================================
 # EMAIL SETTINGS
 # ============================================================
+
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def settings_emails(request):
     """
     Manage Notification Emails: Add, Delete
@@ -184,6 +333,16 @@ def settings_emails(request):
             if form.is_valid(): 
                 email = form.save()
                 messages.success(request, f"Email '{email.email}' added.")
+                
+                log_settings_change(
+                    request,
+                    action_type='CREATE',
+                    setting_type='EMAIL',
+                    setting_name=f"Email: {email.email}",
+                    new_value=email.email,
+                    change_summary=f"Added notification email: {email.email}",
+                    remarks=f"Email added by {request.user.username}"
+                )
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
@@ -194,6 +353,16 @@ def settings_emails(request):
             email_str = email_obj.email
             email_obj.delete()
             messages.success(request, f"Email '{email_str}' deleted.")
+            
+            log_settings_change(
+                request,
+                action_type='DELETE',
+                setting_type='EMAIL',
+                setting_name=f"Email: {email_str}",
+                old_value=email_str,
+                change_summary=f"Deleted notification email: {email_str}",
+                remarks=f"Email deleted by {request.user.username}"
+            )
     
     return redirect('settings_communication')
 
@@ -201,8 +370,9 @@ def settings_emails(request):
 # ============================================================
 # PASSWORD SETTINGS
 # ============================================================
+
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def settings_passwords(request):
     """
     Change Admin Password and Reset Employee Password
@@ -218,6 +388,15 @@ def settings_passwords(request):
                 user = form.save()
                 update_session_auth_hash(request, user)
                 messages.success(request, 'Password updated!')
+                
+                log_settings_change(
+                    request,
+                    action_type='UPDATE',
+                    setting_type='PASSWORD',
+                    setting_name=f"Admin: {request.user.username}",
+                    change_summary="Admin password changed",
+                    remarks=f"Admin password changed by {request.user.username}"
+                )
             else:
                 for e in form.errors.values():
                     for err in e: 
@@ -234,6 +413,15 @@ def settings_passwords(request):
             if form.is_valid(): 
                 form.save()
                 messages.success(request, f"Password reset for '{selected_user.username}'.")
+                
+                log_settings_change(
+                    request,
+                    action_type='UPDATE',
+                    setting_type='PASSWORD',
+                    setting_name=f"Employee: {selected_user.username}",
+                    change_summary=f"Password reset for {selected_user.username}",
+                    remarks=f"Employee password reset by {request.user.username}"
+                )
             else:
                 for e in form.errors.values():
                     for err in e: 
@@ -245,8 +433,9 @@ def settings_passwords(request):
 # ============================================================
 # EMPLOYEE MANAGEMENT (ALL ACTIONS)
 # ============================================================
+
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def settings_employees(request):
     """
     Complete Employee Management Actions:
@@ -254,7 +443,7 @@ def settings_employees(request):
     - Edit Employee
     - Toggle Active/Inactive
     - Toggle Can Assign
-    - Delete Employee
+    - Delete Employee (Must be deactivated first)
     - Bulk Upload (AJAX)
     POST: action, employee_id, employee_name, mobile, email, unit, department, can_assign_ticket
     Redirects to: settings_employees_page
@@ -276,15 +465,26 @@ def settings_employees(request):
                 return redirect('settings_employees_page')
             
             try:
-                EmployeeMaster.objects.create(
+                emp = EmployeeMaster.objects.create(
                     employee_id=eid,
                     employee_name=ename,
                     mobile=mob,
                     email=email,
                     unit_id=uid or None,
-                    department_id=did or None
+                    department_id=did or None,
+                    is_active=True
                 )
                 messages.success(request, f'Employee "{eid}" added.')
+                
+                log_settings_change(
+                    request,
+                    action_type='CREATE',
+                    setting_type='EMPLOYEE',
+                    setting_name=f"Employee: {eid} - {ename}",
+                    new_value=f"ID: {eid}, Name: {ename}, Mobile: {mob}, Email: {email}",
+                    change_summary=f"Added employee {eid} - {ename}",
+                    remarks=f"Employee added by {request.user.username}"
+                )
             except IntegrityError: 
                 messages.error(request, f'Employee ID "{eid}" already exists.')
         
@@ -474,6 +674,18 @@ def settings_employees(request):
                         error_count += 1
                         logger.error(f"Error processing row {idx+2}: {str(e)}")
                 
+                # Log bulk upload summary
+                if success_count > 0:
+                    log_settings_change(
+                        request,
+                        action_type='CREATE',
+                        setting_type='EMPLOYEE',
+                        setting_name=f"Bulk Upload: {success_count} employees",
+                        new_value=f"Successfully uploaded {success_count} employees",
+                        change_summary=f"Bulk uploaded {success_count} employees",
+                        remarks=f"Bulk upload by {request.user.username}"
+                    )
+                
                 if is_ajax:
                     return JsonResponse({
                         'success': True,
@@ -497,41 +709,129 @@ def settings_employees(request):
         # ========== EDIT EMPLOYEE ==========
         elif action == 'edit_employee':
             emp = get_object_or_404(EmployeeMaster, pk=request.POST.get('emp_id'))
+            
+            old_id = emp.employee_id
+            old_name = emp.employee_name
+            old_mobile = emp.mobile
+            old_email = emp.email
+            old_unit = emp.unit.code if emp.unit else 'None'
+            old_dept = emp.department.name if emp.department else 'None'
+            old_can_assign = 'Yes' if emp.can_assign_ticket else 'No'
+            
             emp.employee_id = request.POST.get('employee_id','').strip().upper()
             emp.employee_name = request.POST.get('employee_name','').strip().upper()
             emp.mobile = request.POST.get('mobile','').strip()
             emp.email = request.POST.get('email','').strip()
             emp.unit_id = request.POST.get('unit') or None
             emp.department_id = request.POST.get('department') or None
-            # Handle can_assign_ticket
             emp.can_assign_ticket = request.POST.get('can_assign_ticket') == 'on'
+            
             try: 
                 emp.save()
                 messages.success(request, 'Employee updated successfully.')
+                
+                change_details = []
+                if old_id != emp.employee_id:
+                    change_details.append(f"ID: {old_id} → {emp.employee_id}")
+                if old_name != emp.employee_name:
+                    change_details.append(f"Name: {old_name} → {emp.employee_name}")
+                if old_mobile != emp.mobile:
+                    change_details.append(f"Mobile: {old_mobile} → {emp.mobile}")
+                if old_email != emp.email:
+                    change_details.append(f"Email: {old_email} → {emp.email}")
+                if old_unit != (emp.unit.code if emp.unit else 'None'):
+                    change_details.append(f"Unit: {old_unit} → {emp.unit.code if emp.unit else 'None'}")
+                if old_dept != (emp.department.name if emp.department else 'None'):
+                    change_details.append(f"Department: {old_dept} → {emp.department.name if emp.department else 'None'}")
+                if old_can_assign != ('Yes' if emp.can_assign_ticket else 'No'):
+                    change_details.append(f"Can Assign: {old_can_assign} → {'Yes' if emp.can_assign_ticket else 'No'}")
+                
+                log_settings_change(
+                    request,
+                    action_type='UPDATE',
+                    setting_type='EMPLOYEE',
+                    setting_name=f"Employee: {emp.employee_id} - {emp.employee_name}",
+                    old_value=f"ID: {old_id}, Name: {old_name}, Mobile: {old_mobile}, Email: {old_email}",
+                    new_value=f"ID: {emp.employee_id}, Name: {emp.employee_name}, Mobile: {emp.mobile}, Email: {emp.email}",
+                    change_summary='; '.join(change_details) if change_details else 'Employee updated',
+                    remarks=f"Employee updated by {request.user.username}"
+                )
             except IntegrityError: 
                 messages.error(request, 'Employee ID already exists.')
         
         # ========== TOGGLE EMPLOYEE ACTIVE/INACTIVE ==========
         elif action == 'toggle_employee':
             emp = get_object_or_404(EmployeeMaster, pk=request.POST.get('emp_id'))
+            old_status = 'Active' if emp.is_active else 'Inactive'
             emp.is_active = not emp.is_active
             emp.save()
+            new_status = 'Active' if emp.is_active else 'Inactive'
+            
             messages.success(request, f'Employee {"activated" if emp.is_active else "deactivated"}.')
+            
+            log_settings_change(
+                request,
+                action_type='TOGGLE',
+                setting_type='EMPLOYEE',
+                setting_name=f"Employee: {emp.employee_id} - {emp.employee_name}",
+                old_value=f"Status: {old_status}",
+                new_value=f"Status: {new_status}",
+                change_summary=f"Status changed from {old_status} to {new_status}",
+                remarks=f"Employee toggled by {request.user.username}"
+            )
         
         # ========== TOGGLE CAN ASSIGN ==========
         elif action == 'toggle_can_assign':
             emp = get_object_or_404(EmployeeMaster, pk=request.POST.get('emp_id'))
+            old_value = 'Yes' if emp.can_assign_ticket else 'No'
             emp.can_assign_ticket = not emp.can_assign_ticket
             emp.save()
+            new_value = 'Yes' if emp.can_assign_ticket else 'No'
+            
             status = "enabled" if emp.can_assign_ticket else "disabled"
             messages.success(request, f'Employee "{emp.employee_id}" assignment {status}.')
+            
+            log_settings_change(
+                request,
+                action_type='UPDATE',
+                setting_type='EMPLOYEE',
+                setting_name=f"Employee: {emp.employee_id} - {emp.employee_name}",
+                old_value=f"Can Assign: {old_value}",
+                new_value=f"Can Assign: {new_value}",
+                change_summary=f"Can Assign changed from {old_value} to {new_value}",
+                remarks=f"Assignment toggled by {request.user.username}"
+            )
         
-        # ========== DELETE EMPLOYEE ==========
+        # ========== DELETE EMPLOYEE - MUST BE DEACTIVATED FIRST ==========
         elif action == 'delete_employee':
             emp = get_object_or_404(EmployeeMaster, pk=request.POST.get('emp_id'))
             eid = emp.employee_id
+            ename = emp.employee_name
+            
+            # ✅ Check if employee is active
+            if emp.is_active:
+                messages.error(request, f'❌ Cannot delete "{eid}" because they are still ACTIVE. Please deactivate the employee first, then try deleting again.')
+                return redirect('settings_employees_page')
+            
+            # ✅ Employee is inactive, proceed with deletion
+            emp_mobile = emp.mobile
+            emp_email = emp.email
+            
+            # ✅ Log before deleting
+            log_settings_change(
+                request,
+                action_type='DELETE',
+                setting_type='EMPLOYEE',
+                setting_name=f"Employee: {eid} - {ename}",
+                old_value=f"ID: {eid}, Name: {ename}, Mobile: {emp_mobile}, Email: {emp_email}, Status: Inactive",
+                change_summary=f"Permanently deleted employee {eid} - {ename}",
+                remarks=f"Employee permanently deleted by {request.user.username} (was already deactivated)"
+            )
+            
+            # ✅ Hard delete from database
             emp.delete()
-            messages.success(request, f'Employee "{eid}" deleted.')
+            
+            messages.success(request, f'✅ Employee "{eid}" has been permanently deleted from the database.')
     
     return redirect('settings_employees_page')
 
@@ -539,8 +839,9 @@ def settings_employees(request):
 # ============================================================
 # DOWNLOAD EMPLOYEE LIST
 # ============================================================
+
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def download_employee_list(request):
     """
     Download complete employee list as Excel with all fields
@@ -602,8 +903,9 @@ def download_employee_list(request):
 # ============================================================
 # DOWNLOAD EMPLOYEE TEMPLATE
 # ============================================================
+
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def download_employee_template(request):
     """
     Download Excel template for bulk employee upload
@@ -664,8 +966,9 @@ def download_employee_template(request):
 # ============================================================
 # CREDENTIALS MANAGEMENT (ALL ACTIONS)
 # ============================================================
+
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def settings_credentials(request):
     """
     Manage Department Credentials:
@@ -706,6 +1009,16 @@ def settings_credentials(request):
                 u = Unit.objects.get(pk=uid)
                 d = Department.objects.get(pk=did)
                 messages.success(request, f'Credential for {u.code}-{d.name} added successfully!')
+                
+                log_settings_change(
+                    request,
+                    action_type='CREATE',
+                    setting_type='CREDENTIAL',
+                    setting_name=f"Credential: {u.code} - {d.name}",
+                    new_value=f"Username: {uname}, Unit: {u.code}, Department: {d.name}",
+                    change_summary=f"Added credential for {u.code} - {d.name}",
+                    remarks=f"Credential added by {request.user.username}"
+                )
             except Exception as ex: 
                 messages.error(request, f'Error: {ex}')
         
@@ -715,6 +1028,10 @@ def settings_credentials(request):
             ou = cred.username
             nu = request.POST.get('username','').strip()
             np = request.POST.get('password','').strip()
+            
+            old_username = cred.username
+            old_password = cred.password
+            
             cred.username = nu
             if np: 
                 cred.password = np
@@ -730,31 +1047,73 @@ def settings_credentials(request):
                 elif not User.objects.filter(username=nu).exists():
                     User.objects.create_user(username=nu, password=np or cred.password, is_staff=False)
                 messages.success(request, 'Credential updated successfully!')
+                
+                change_details = []
+                if old_username != nu:
+                    change_details.append(f"Username: {old_username} → {nu}")
+                if np:
+                    change_details.append("Password changed")
+                
+                log_settings_change(
+                    request,
+                    action_type='UPDATE',
+                    setting_type='CREDENTIAL',
+                    setting_name=f"Credential: {cred.unit.code} - {cred.department.name}",
+                    old_value=f"Username: {old_username}",
+                    new_value=f"Username: {nu}",
+                    change_summary='; '.join(change_details) if change_details else 'Credential updated',
+                    remarks=f"Credential updated by {request.user.username}"
+                )
             except Exception as ex: 
                 messages.error(request, f'Error: {ex}')
         
         # ========== TOGGLE CREDENTIAL ==========
         elif action == 'toggle_credential':
             cred = get_object_or_404(DepartmentCredential, pk=request.POST.get('cred_id'))
+            old_status = 'Active' if cred.is_active else 'Inactive'
             cred.is_active = not cred.is_active
             cred.save()
+            new_status = 'Active' if cred.is_active else 'Inactive'
+            
             user = User.objects.filter(username=cred.username).first()
             if user:
                 user.is_active = cred.is_active
                 user.save()
             messages.success(request, f'Credential {"activated" if cred.is_active else "deactivated"}.')
+            
+            log_settings_change(
+                request,
+                action_type='TOGGLE',
+                setting_type='CREDENTIAL',
+                setting_name=f"Credential: {cred.unit.code} - {cred.department.name}",
+                old_value=f"Status: {old_status}",
+                new_value=f"Status: {new_status}",
+                change_summary=f"Status changed from {old_status} to {new_status}",
+                remarks=f"Credential toggled by {request.user.username}"
+            )
         
         # ========== DELETE CREDENTIAL ==========
         elif action == 'delete_credential':
             cred = get_object_or_404(DepartmentCredential, pk=request.POST.get('cred_id'))
             info = f'{cred.unit.code}-{cred.department.name}'
             uname = cred.username
+            
             user = User.objects.filter(username=uname).first()
             if user:
                 user.is_active = False
                 user.save()
             cred.delete()
             messages.success(request, f'Credential for {info} deleted.')
+            
+            log_settings_change(
+                request,
+                action_type='DELETE',
+                setting_type='CREDENTIAL',
+                setting_name=f"Credential: {info}",
+                old_value=f"Username: {uname}",
+                change_summary=f"Deleted credential for {info}",
+                remarks=f"Credential deleted by {request.user.username}"
+            )
     
     return redirect('settings_credentials_page')
 
@@ -762,8 +1121,9 @@ def settings_credentials(request):
 # ============================================================
 # DOWNLOAD CREDENTIALS
 # ============================================================
+
 @login_required
-@user_passes_test(is_admin, login_url='admin_dashboard')
+@user_passes_test(is_admin, login_url='tickets:login')
 def download_credentials(request):
     """
     Download all department credentials as Excel

@@ -5,32 +5,42 @@
 
 {% block extra_head %}
 <style>
+    /* ===== ROOT VARIABLES ===== */
     :root {
-        --text-primary: #1A2A6C;
-        --text-secondary: #4A5A7A;
-        --text-muted: #8A9AB8;
-        --bg-card: #FFFFFF;
-        --border-color: #E8EDF5;
-        --brand-orange: #FF6B00;
-        --brand-gradient: linear-gradient(135deg, #FF6B00, #FF8C38);
-        --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
-        --shadow-md: 0 4px 24px rgba(0,0,0,0.10);
+        --settings-text-primary: #1A2A6C;
+        --settings-text-secondary: #4A5A7A;
+        --settings-text-muted: #8A9AB8;
+        --settings-bg-card: #FFFFFF;
+        --settings-bg-hover: rgba(255, 107, 0, 0.03);
+        --settings-border-color: #E8EDF5;
+        --settings-brand-orange: #FF6B00;
+        --settings-brand-gradient: linear-gradient(135deg, #FF6B00 0%, #FF8C38 100%);
+        --settings-shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+        --settings-shadow-md: 0 8px 30px rgba(0,0,0,0.10);
+        --settings-radius: 12px;
+        --settings-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --settings-row-hover: rgba(255, 107, 0, 0.04);
+        --settings-icon-bg: rgba(255, 107, 0, 0.08);
     }
 
     [data-theme="dark"] {
-        --text-primary: #E8EDF5;
-        --text-secondary: #A8B8D8;
-        --text-muted: #6A7A9A;
-        --bg-card: #1A1A2E;
-        --border-color: rgba(255, 255, 255, 0.08);
-        --shadow-sm: 0 2px 12px rgba(0,0,0,0.3);
-        --shadow-md: 0 4px 24px rgba(0,0,0,0.4);
+        --settings-text-primary: #E8EDF5;
+        --settings-text-secondary: #A8B8D8;
+        --settings-text-muted: #6A7A9A;
+        --settings-bg-card: #12121F;
+        --settings-bg-hover: rgba(255, 107, 0, 0.06);
+        --settings-border-color: rgba(255, 255, 255, 0.06);
+        --settings-shadow-sm: 0 2px 12px rgba(0,0,0,0.3);
+        --settings-shadow-md: 0 8px 30px rgba(0,0,0,0.4);
+        --settings-row-hover: rgba(255, 107, 0, 0.08);
+        --settings-icon-bg: rgba(255, 107, 0, 0.12);
     }
 
+    /* ===== CONTAINER ===== */
     .settings-container {
         animation: fadeInUp 0.6s ease;
         padding: 0 0.5rem;
-        max-width: 1200px;
+        max-width: 1000px;
         margin: 0 auto;
     }
 
@@ -39,297 +49,630 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
+    /* ===== HEADER ===== */
     .settings-header {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
+        background: var(--settings-bg-card);
+        border: 1px solid var(--settings-border-color);
+        border-radius: var(--settings-radius);
         padding: 1.25rem 1.5rem;
         margin-bottom: 1.5rem;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease;
-    }
-
-    .settings-header:hover {
-        box-shadow: var(--shadow-md);
-    }
-
-    .header-title {
-        font-size: clamp(1.2rem, 2.5vw, 1.8rem);
-        font-weight: 700;
-        color: var(--text-primary);
-        font-family: 'Fraunces', serif;
-    }
-
-    .header-subtitle {
-        font-size: clamp(0.75rem, 1.5vw, 0.9rem);
-        color: var(--text-secondary);
-    }
-
-    .settings-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .settings-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.4s ease;
-        text-decoration: none;
-        color: var(--text-primary);
-        display: block;
+        box-shadow: var(--settings-shadow-sm);
+        transition: var(--settings-transition);
         position: relative;
         overflow: hidden;
     }
 
-    .settings-card::before {
+    .settings-header::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         height: 3px;
-        background: var(--brand-gradient);
-        opacity: 0;
-        transition: all 0.4s ease;
+        background: var(--settings-brand-gradient);
+        background-size: 200% 100%;
+        animation: shimmerMove 3s ease infinite;
     }
 
-    .settings-card:hover::before {
-        opacity: 1;
+    @keyframes shimmerMove {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
     }
 
-    .settings-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-md);
-        border-color: rgba(255, 107, 0, 0.2) !important;
+    .settings-header:hover {
+        box-shadow: var(--settings-shadow-md);
     }
 
-    .settings-card .icon-wrapper {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
-        background: rgba(255, 107, 0, 0.08);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 0.75rem;
-    }
-
-    .settings-card .icon-wrapper i {
-        font-size: 1.5rem;
-        color: var(--brand-orange);
-    }
-
-    .settings-card h5 {
+    .settings-header h1 {
+        font-size: clamp(1.2rem, 2.5vw, 1.8rem);
         font-weight: 700;
-        font-size: 1rem;
-        margin-bottom: 0.25rem;
-        color: var(--text-primary);
+        color: var(--settings-text-primary);
         font-family: 'Fraunces', serif;
+        margin: 0;
     }
 
-    .settings-card p {
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        margin-bottom: 0.5rem;
+    .settings-header .subtitle {
+        font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+        color: var(--settings-text-secondary);
+        margin: 0.1rem 0 0 0;
+    }
+
+    .badge-admin {
+        display: inline-block;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        background: rgba(255, 107, 0, 0.08);
+        color: var(--settings-brand-orange);
+        border: 1px solid rgba(255, 107, 0, 0.1);
         font-family: 'Inter', sans-serif;
     }
 
-    .settings-card .arrow {
-        position: absolute;
-        bottom: 1rem;
-        right: 1rem;
-        color: var(--brand-orange);
-        opacity: 0.3;
-        transition: all 0.3s ease;
+    .btn-back-settings {
+        border: 2px solid var(--settings-border-color);
+        color: var(--settings-text-secondary);
+        border-radius: 50px;
+        padding: 0.4rem 1.2rem;
+        font-size: 0.8rem;
+        transition: var(--settings-transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: transparent;
+        min-height: 40px;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        white-space: nowrap;
+    }
+
+    .btn-back-settings:hover {
+        border-color: var(--settings-brand-orange);
+        color: var(--settings-text-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.15);
+        background: var(--settings-bg-hover);
+    }
+
+    /* ===== SETTINGS LIST ===== */
+    .settings-list-wrapper {
+        background: var(--settings-bg-card);
+        border: 1px solid var(--settings-border-color);
+        border-radius: var(--settings-radius);
+        overflow: hidden;
+        box-shadow: var(--settings-shadow-sm);
+        transition: var(--settings-transition);
+    }
+
+    .settings-list-wrapper:hover {
+        box-shadow: var(--settings-shadow-md);
+    }
+
+    /* ===== SETTINGS ROW ===== */
+    .settings-row {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--settings-border-color);
+        transition: var(--settings-transition);
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--settings-text-primary);
+        position: relative;
+        animation: rowFadeIn 0.5s ease forwards;
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    @keyframes rowFadeIn {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    .settings-row:nth-child(1) { animation-delay: 0.05s; }
+    .settings-row:nth-child(2) { animation-delay: 0.10s; }
+    .settings-row:nth-child(3) { animation-delay: 0.15s; }
+    .settings-row:nth-child(4) { animation-delay: 0.20s; }
+    .settings-row:nth-child(5) { animation-delay: 0.25s; }
+    .settings-row:nth-child(6) { animation-delay: 0.30s; }
+
+    .settings-row:last-child {
+        border-bottom: none;
+    }
+
+    .settings-row:hover {
+        background: var(--settings-row-hover);
+        transform: translateX(6px);
+    }
+
+    .settings-row:active {
+        transform: scale(0.99);
+    }
+
+    /* Row Icon */
+    .settings-row .row-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-right: 1rem;
+        transition: var(--settings-transition);
+        background: var(--settings-icon-bg);
+    }
+
+    .settings-row:hover .row-icon {
+        transform: scale(1.05) rotate(-3deg);
+    }
+
+    .settings-row .row-icon i {
+        font-size: 1.2rem;
+        transition: var(--settings-transition);
+    }
+
+    .settings-row:hover .row-icon i {
+        transform: scale(1.1);
+    }
+
+    /* Row Content */
+    .settings-row .row-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .settings-row .row-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--settings-text-primary);
+        font-family: 'Inter', sans-serif;
+        transition: var(--settings-transition);
+        margin-bottom: 0.1rem;
+    }
+
+    .settings-row:hover .row-title {
+        color: var(--settings-brand-orange);
+    }
+
+    .settings-row .row-description {
+        font-size: 0.75rem;
+        color: var(--settings-text-muted);
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Row Action */
+    .settings-row .row-action {
+        flex-shrink: 0;
+        margin-left: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-row-action {
+        padding: 0.3rem 1.2rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: none;
+        background: var(--settings-brand-gradient);
+        color: #FFFFFF;
+        transition: var(--settings-transition);
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        white-space: nowrap;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 2px 12px rgba(255, 107, 0, 0.2);
+    }
+
+    .btn-row-action:hover {
+        transform: translateY(-2px) scale(1.03);
+        box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
+        color: #FFFFFF;
+    }
+
+    .btn-row-action:active {
+        transform: scale(0.95);
+    }
+
+    .btn-row-action-outline {
+        padding: 0.3rem 1.2rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: 2px solid var(--settings-border-color);
+        background: transparent;
+        color: var(--settings-text-secondary);
+        transition: var(--settings-transition);
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        white-space: nowrap;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-row-action-outline:hover {
+        border-color: var(--settings-brand-orange);
+        color: var(--settings-text-primary);
+        background: var(--settings-bg-hover);
+        transform: translateY(-2px);
+    }
+
+    .row-arrow-icon {
+        color: var(--settings-text-muted);
+        transition: var(--settings-transition);
         font-size: 0.8rem;
     }
 
-    .settings-card:hover .arrow {
-        opacity: 1;
+    .settings-row:hover .row-arrow-icon {
+        color: var(--settings-brand-orange);
         transform: translateX(4px);
     }
 
-    .badge-custom {
+    /* Row Color Variants */
+    .row-units .row-icon { background: rgba(59, 130, 246, 0.10); color: #3B82F6; }
+    .row-units:hover .row-icon { background: rgba(59, 130, 246, 0.15); }
+
+    .row-communication .row-icon { background: rgba(34, 197, 94, 0.10); color: #22C55E; }
+    .row-communication:hover .row-icon { background: rgba(34, 197, 94, 0.15); }
+
+    .row-employees .row-icon { background: rgba(139, 92, 246, 0.10); color: #8B5CF6; }
+    .row-employees:hover .row-icon { background: rgba(139, 92, 246, 0.15); }
+
+    .row-credentials .row-icon { background: rgba(239, 68, 68, 0.10); color: #EF4444; }
+    .row-credentials:hover .row-icon { background: rgba(239, 68, 68, 0.15); }
+
+    .row-dept-employees .row-icon { background: rgba(6, 182, 212, 0.10); color: #06B6D4; }
+    .row-dept-employees:hover .row-icon { background: rgba(6, 182, 212, 0.15); }
+
+    .row-audit .row-icon { background: rgba(99, 102, 241, 0.10); color: #6366F1; }
+    .row-audit:hover .row-icon { background: rgba(99, 102, 241, 0.15); }
+
+    /* ===== FOOTER ===== */
+    .settings-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+        padding: 0.75rem;
+        color: var(--settings-text-muted);
+        font-size: 0.7rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .settings-footer .live-badge {
         display: inline-block;
-        padding: 0.15rem 0.5rem;
+        padding: 0.15rem 0.6rem;
         border-radius: 50px;
-        font-size: 0.55rem;
-        font-weight: 600;
         background: rgba(255, 107, 0, 0.08);
-        color: var(--brand-orange);
+        color: var(--settings-text-secondary);
         border: 1px solid rgba(255, 107, 0, 0.1);
+        font-size: 0.6rem;
+        font-weight: 500;
+    }
+
+    .settings-footer .live-badge .dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #22C55E;
+        margin-right: 4px;
+        animation: pulseDot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulseDot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 992px) {
+        .settings-row {
+            padding: 0.85rem 1.25rem;
+        }
+        .settings-row .row-title {
+            font-size: 0.9rem;
+        }
     }
 
     @media (max-width: 768px) {
         .settings-container { padding: 0 0.25rem; }
         .settings-header { padding: 1rem; }
-        .settings-grid { grid-template-columns: 1fr; }
-        .settings-card { padding: 1.25rem; }
+        .settings-header .d-flex { flex-direction: column; align-items: stretch !important; gap: 0.75rem !important; }
+        .btn-back-settings { width: 100%; justify-content: center; }
+        .settings-row {
+            padding: 0.75rem 1rem;
+            flex-wrap: wrap;
+        }
+        .settings-row .row-icon {
+            width: 38px;
+            height: 38px;
+            margin-right: 0.75rem;
+        }
+        .settings-row .row-icon i {
+            font-size: 1rem;
+        }
+        .settings-row .row-title {
+            font-size: 0.85rem;
+        }
+        .settings-row .row-description {
+            font-size: 0.7rem;
+        }
+        .settings-row .row-action {
+            width: 100%;
+            margin-left: 0;
+            margin-top: 0.5rem;
+            justify-content: flex-end;
+        }
+        .btn-row-action,
+        .btn-row-action-outline {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.8rem;
+        }
     }
 
     @media (max-width: 576px) {
-        .header-title { font-size: 1rem; }
-        .header-subtitle { font-size: 0.7rem; }
-        .settings-card .icon-wrapper { width: 40px; height: 40px; }
-        .settings-card .icon-wrapper i { font-size: 1.2rem; }
-        .settings-card h5 { font-size: 0.9rem; }
-        .settings-card p { font-size: 0.7rem; }
+        .settings-header h1 { font-size: 1rem; }
+        .settings-header .subtitle { font-size: 0.65rem; }
+        .badge-admin { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
+        .btn-back-settings { font-size: 0.7rem; padding: 0.3rem 0.8rem; min-height: 34px; }
+        .settings-row {
+            padding: 0.6rem 0.75rem;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .settings-row .row-icon {
+            width: 34px;
+            height: 34px;
+            margin-right: 0.5rem;
+        }
+        .settings-row .row-icon i {
+            font-size: 0.9rem;
+        }
+        .settings-row .row-title {
+            font-size: 0.8rem;
+        }
+        .settings-row .row-description {
+            font-size: 0.65rem;
+        }
+        .settings-row .row-action {
+            width: 100%;
+            margin-left: 0;
+            margin-top: 0.4rem;
+            justify-content: flex-start;
+            gap: 6px;
+        }
+        .btn-row-action,
+        .btn-row-action-outline {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.6rem;
+            flex: 1;
+            justify-content: center;
+        }
+        .settings-footer {
+            font-size: 0.6rem;
+        }
+        .settings-footer .live-badge {
+            font-size: 0.55rem;
+            padding: 0.1rem 0.4rem;
+        }
     }
+
+    @media (max-width: 400px) {
+        .settings-row .row-title {
+            font-size: 0.75rem;
+        }
+        .settings-row .row-description {
+            font-size: 0.6rem;
+        }
+        .settings-row .row-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 0.4rem;
+        }
+        .settings-row .row-icon i {
+            font-size: 0.8rem;
+        }
+        .settings-row .row-action {
+            flex-wrap: wrap;
+        }
+        .btn-row-action,
+        .btn-row-action-outline {
+            font-size: 0.6rem;
+            padding: 0.15rem 0.5rem;
+            flex: 1 1 100%;
+        }
+    }
+
+    /* ===== DARK MODE ===== */
+    [data-theme="dark"] .settings-row {
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .settings-row:hover {
+        background: rgba(255, 107, 0, 0.06);
+    }
+
+    [data-theme="dark"] .settings-list-wrapper {
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    [data-theme="dark"] .btn-row-action-outline {
+        border-color: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    [data-theme="dark"] .btn-row-action-outline:hover {
+        border-color: var(--settings-brand-orange);
+        color: #FFFFFF;
+        background: rgba(255, 107, 0, 0.08);
+    }
+
+    [data-theme="dark"] .row-units .row-icon { background: rgba(59, 130, 246, 0.15); }
+    [data-theme="dark"] .row-communication .row-icon { background: rgba(34, 197, 94, 0.15); }
+    [data-theme="dark"] .row-employees .row-icon { background: rgba(139, 92, 246, 0.15); }
+    [data-theme="dark"] .row-credentials .row-icon { background: rgba(239, 68, 68, 0.15); }
+    [data-theme="dark"] .row-dept-employees .row-icon { background: rgba(6, 182, 212, 0.15); }
+    [data-theme="dark"] .row-audit .row-icon { background: rgba(99, 102, 241, 0.15); }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--settings-bg-card); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: var(--settings-brand-orange); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #E05A00; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="settings-container">
 
-    <!-- Header -->
+    <!-- ===== HEADER ===== -->
     <div class="settings-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h1 class="header-title">
-                    <i class="fa-solid fa-gear me-2" style="color: var(--brand-orange);"></i>
+                <h1>
+                    <i class="fa-solid fa-gear me-2" style="color: var(--settings-brand-orange);"></i>
                     System Settings
                 </h1>
-                <p class="header-subtitle">
+                <p class="subtitle">
                     <i class="fa-regular fa-sliders me-1"></i>
                     Manage GPLAST ERP Support System configuration
-                    <span class="badge-custom ms-2">
+                    <span class="badge-admin ms-2">
                         <i class="fa-regular fa-shield me-1"></i>Admin Only
                     </span>
                 </p>
             </div>
-            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-custom btn-sm">
+            <a href="{% url 'admin_dashboard' %}" class="btn-back-settings">
                 <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
             </a>
         </div>
     </div>
 
-    <!-- Settings Grid -->
-    <div class="settings-grid">
-        
-        <!-- Unit & Department -->
-        <a href="{% url 'settings_units_departments' %}" class="settings-card">
-            <div class="icon-wrapper">
+    <!-- ===== SETTINGS LIST ===== -->
+    <div class="settings-list-wrapper">
+
+        <!-- 1. Units & Departments - Blue -->
+        <a href="{% url 'settings_units_departments' %}" class="settings-row row-units">
+            <div class="row-icon">
                 <i class="fa-solid fa-building"></i>
             </div>
-            <h5>Units & Departments</h5>
-            <p>Manage organizational units and departments structure</p>
-            <span class="badge-custom"><i class="fa-regular fa-circle me-1"></i>Configure</span>
-            <span class="arrow"><i class="fa-solid fa-arrow-right"></i></span>
+            <div class="row-content">
+                <div class="row-title">Units & Departments</div>
+                <div class="row-description">Manage organizational units and departments structure</div>
+            </div>
+            <div class="row-action">
+                <span class="btn-row-action">
+                    Configure <i class="fa-solid fa-arrow-right"></i>
+                </span>
+                <span class="row-arrow-icon"><i class="fa-solid fa-chevron-right"></i></span>
+            </div>
         </a>
 
-        <!-- Communication -->
-        <a href="{% url 'settings_communication' %}" class="settings-card">
-            <div class="icon-wrapper">
+        <!-- 2. Communication - Green -->
+        <a href="{% url 'settings_communication' %}" class="settings-row row-communication">
+            <div class="row-icon">
                 <i class="fa-solid fa-envelope"></i>
             </div>
-            <h5>Communication</h5>
-            <p>Manage admin contacts and notification email settings</p>
-            <span class="badge-custom"><i class="fa-regular fa-circle me-1"></i>Configure</span>
-            <span class="arrow"><i class="fa-solid fa-arrow-right"></i></span>
+            <div class="row-content">
+                <div class="row-title">Communication</div>
+                <div class="row-description">Manage admin contacts and notification email settings</div>
+            </div>
+            <div class="row-action">
+                <span class="btn-row-action">
+                    Configure <i class="fa-solid fa-arrow-right"></i>
+                </span>
+                <span class="row-arrow-icon"><i class="fa-solid fa-chevron-right"></i></span>
+            </div>
         </a>
 
-        <!-- Employees -->
-        <a href="{% url 'settings_employees_page' %}" class="settings-card">
-            <div class="icon-wrapper">
+        <!-- 3. Employee Master - Purple -->
+        <a href="{% url 'settings_employees_page' %}" class="settings-row row-employees">
+            <div class="row-icon">
                 <i class="fa-solid fa-users"></i>
             </div>
-            <h5>Employee Master</h5>
-            <p>Manage employee directory and assignment permissions</p>
-            <span class="badge-custom"><i class="fa-regular fa-circle me-1"></i>Configure</span>
-            <span class="arrow"><i class="fa-solid fa-arrow-right"></i></span>
+            <div class="row-content">
+                <div class="row-title">Employee Master</div>
+                <div class="row-description">Manage employee directory and assignment permissions</div>
+            </div>
+            <div class="row-action">
+                <span class="btn-row-action">
+                    Configure <i class="fa-solid fa-arrow-right"></i>
+                </span>
+                <span class="row-arrow-icon"><i class="fa-solid fa-chevron-right"></i></span>
+            </div>
         </a>
 
-        <!-- Credentials -->
-        <a href="{% url 'settings_credentials_page' %}" class="settings-card">
-            <div class="icon-wrapper">
+        <!-- 4. Department Credentials - Red -->
+        <a href="{% url 'settings_credentials_page' %}" class="settings-row row-credentials">
+            <div class="row-icon">
                 <i class="fa-solid fa-key"></i>
             </div>
-            <h5>Department Credentials</h5>
-            <p>Manage department-level login credentials and access</p>
-            <span class="badge-custom"><i class="fa-regular fa-circle me-1"></i>Configure</span>
-            <span class="arrow"><i class="fa-solid fa-arrow-right"></i></span>
+            <div class="row-content">
+                <div class="row-title">Department Credentials</div>
+                <div class="row-description">Manage department-level login credentials and access</div>
+            </div>
+            <div class="row-action">
+                <span class="btn-row-action">
+                    Configure <i class="fa-solid fa-arrow-right"></i>
+                </span>
+                <span class="row-arrow-icon"><i class="fa-solid fa-chevron-right"></i></span>
+            </div>
         </a>
 
-        <!-- Department Employees -->
-        <a href="{% url 'settings_dept_employees' %}" class="settings-card">
-            <div class="icon-wrapper">
+        <!-- 5. Department Employees - Teal -->
+        <a href="{% url 'settings_dept_employees' %}" class="settings-row row-dept-employees">
+            <div class="row-icon">
                 <i class="fa-solid fa-user-tie"></i>
             </div>
-            <h5>Department Employees</h5>
-            <p>Assign employees to departments and manage department users</p>
-            <span class="badge-custom"><i class="fa-regular fa-circle me-1"></i>Configure</span>
-            <span class="arrow"><i class="fa-solid fa-arrow-right"></i></span>
+            <div class="row-content">
+                <div class="row-title">Department Employees</div>
+                <div class="row-description">Assign employees to departments and manage department users</div>
+            </div>
+            <div class="row-action">
+                <span class="btn-row-action">
+                    Configure <i class="fa-solid fa-arrow-right"></i>
+                </span>
+                <span class="row-arrow-icon"><i class="fa-solid fa-chevron-right"></i></span>
+            </div>
         </a>
 
-        <!-- Password Management -->
-        <a href="{% url 'settings_passwords' %}" class="settings-card">
-            <div class="icon-wrapper">
-                <i class="fa-solid fa-lock"></i>
+        <!-- 6. Audit Logs - Indigo -->
+        <a href="{% url 'settings_audit_log' %}" class="settings-row row-audit">
+            <div class="row-icon">
+                <i class="fa-solid fa-clock-rotate-left"></i>
             </div>
-            <h5>Password Management</h5>
-            <p>Change admin passwords and manage user authentication</p>
-            <span class="badge-custom"><i class="fa-regular fa-circle me-1"></i>Configure</span>
-            <span class="arrow"><i class="fa-solid fa-arrow-right"></i></span>
+            <div class="row-content">
+                <div class="row-title">Audit Logs</div>
+                <div class="row-description">View all settings changes and administrator activities</div>
+            </div>
+            <div class="row-action">
+                <span class="btn-row-action">
+                    <i class="fa-solid fa-eye me-1"></i> View Logs
+                </span>
+                <span class="row-arrow-icon"><i class="fa-solid fa-chevron-right"></i></span>
+            </div>
         </a>
 
     </div>
 
-    <!-- Footer -->
-    <div class="text-center mt-4">
-        <p style="color: var(--text-muted); font-size: 0.7rem;">
+    <!-- ===== FOOTER ===== -->
+    <div class="settings-footer">
+        <span class="live-badge">
+            <span class="dot"></span>
+            Settings are applied immediately
+        </span>
+        <span style="margin: 0 0.5rem; opacity: 0.3;">•</span>
+        <span>
             <i class="fa-regular fa-clock me-1"></i>
-            Settings are applied immediately • 
-            <span class="badge rounded-pill px-2 py-1" style="background: rgba(255, 107, 0, 0.08); color: var(--text-secondary); border: 1px solid rgba(255, 107, 0, 0.1);">
-                <i class="fa-regular fa-circle me-1" style="color: var(--brand-orange); font-size: 0.4rem;"></i>
-                {% now "d-m-Y H:i:s" %}
-            </span>
-        </p>
+            {% now "d-m-Y H:i:s" %}
+        </span>
     </div>
 
 </div>
-
-<style>
-    .btn-outline-custom {
-        background: transparent !important;
-        border: 2px solid var(--brand-orange) !important;
-        color: var(--brand-orange) !important;
-        border-radius: 50px !important;
-        padding: 0.3rem 1rem !important;
-        font-size: 0.75rem !important;
-        font-weight: 500 !important;
-        transition: all 0.4s ease;
-        font-family: 'Inter', sans-serif;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        text-decoration: none !important;
-    }
-
-    .btn-outline-custom:hover {
-        background: var(--brand-gradient) !important;
-        color: #FFFFFF !important;
-        border-color: transparent !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.25) !important;
-    }
-
-    .btn-outline-custom:hover i { color: #FFFFFF !important; }
-    .btn-outline-custom i { color: var(--brand-orange) !important; transition: color 0.3s ease; }
-
-    [data-theme="dark"] .settings-card {
-        border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-
-    [data-theme="dark"] .settings-card:hover {
-        border-color: rgba(255, 107, 0, 0.3) !important;
-    }
-
-    [data-theme="dark"] .settings-header {
-        border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-</style>
 {% endblock %}

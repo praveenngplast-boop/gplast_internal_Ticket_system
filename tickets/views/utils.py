@@ -1,3 +1,5 @@
+# tickets/views/utils.py
+
 """
 Utility functions used across multiple views
 """
@@ -5,9 +7,8 @@ from datetime import timedelta
 from django.db import transaction
 from django.utils import timezone
 from django.contrib import messages
-from tickets.models import Ticket, TicketHistory
-# REMOVE THIS LINE - CAUSES CIRCULAR IMPORT
-# from tickets.utils import send_ticket_email
+from django.db.models import Q
+from tickets.models import Ticket, TicketHistory, Unit, DepartmentCredential, EmployeeMaster, AdminContact
 import logging
 
 logger = logging.getLogger(__name__)
@@ -234,20 +235,26 @@ def generate_admin_ticket_list_html(tickets, status):
     return html
 
 
-def _get_contact_data():
+def get_contact_data():
     """Get or create admin contact data"""
-    from tickets.models import AdminContact
-    contact_obj, _ = AdminContact.objects.get_or_create(
+    contact_obj, created = AdminContact.objects.get_or_create(
         id=1,
-        defaults={'admin_name': "IT ADMIN", 'admin_phone': "9999999999", 'admin_email': "admin@gplast.com"}
+        defaults={
+            'name': "IT ADMIN",
+            'phone': "9999999999",
+            'email': "admin@gplast.com",
+            'designation': "IT Administrator"
+        }
     )
     return contact_obj
 
 
-def _get_employee_directory_data(request):
+# ✅ Alias for backward compatibility
+_get_contact_data = get_contact_data
+
+
+def get_employee_directory_data(request):
     """Get employee directory data with search"""
-    from tickets.models import EmployeeMaster
-    from django.db.models import Q
     emp_search = request.GET.get('emp_search', '').strip()
     employees_qs = EmployeeMaster.objects.all().order_by('employee_id')
     if emp_search:
@@ -259,9 +266,12 @@ def _get_employee_directory_data(request):
     return employees_qs, emp_search
 
 
-def _get_credentials_data():
+# ✅ Alias for backward compatibility
+_get_employee_directory_data = get_employee_directory_data
+
+
+def get_credentials_data():
     """Get department credentials grouped by unit"""
-    from tickets.models import Unit, DepartmentCredential
     all_credentials = DepartmentCredential.objects.select_related('unit', 'department').order_by('unit__code', 'department__name')
     credentials_by_unit = []
     
@@ -282,3 +292,52 @@ def _get_credentials_data():
             })
     
     return all_credentials, credentials_by_unit
+
+
+# ✅ Alias for backward compatibility
+_get_credentials_data = get_credentials_data
+
+
+def is_ajax(request):
+    """Check if request is AJAX"""
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.GET.get('ajax', False)
+
+
+def get_paginated_queryset(queryset, page_number, per_page=20):
+    """
+    Get paginated queryset with proper error handling
+    """
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    
+    paginator = Paginator(queryset, per_page)
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+    
+    return page_obj
+
+
+def get_ticket_status_color(status):
+    """Get color class for ticket status"""
+    color_map = {
+        'Open': 'success',
+        'Assigned': 'info',
+        'Hold': 'warning',
+        'Escalated': 'danger',
+        'Closed': 'secondary',
+    }
+    return color_map.get(status, 'secondary')
+
+
+def get_ticket_priority_color(priority):
+    """Get color class for ticket priority"""
+    color_map = {
+        'Critical': 'danger',
+        'High': 'warning',
+        'Medium': 'info',
+        'Low': 'secondary',
+    }
+    return color_map.get(priority, 'secondary')

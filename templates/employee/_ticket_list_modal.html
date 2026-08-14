@@ -28,7 +28,7 @@
                 </td>
                 <td>{{ ticket.created_at|date:"d M Y H:i" }}</td>
                 <td>
-                    <a href="{% url 'ticket_detail' ticket.id %}" class="btn-view btn-sm">
+                    <a href="{% url 'admin_ticket_detail' ticket.id %}" class="btn-view btn-sm">
                         <i class="fa-solid fa-eye"></i> View
                     </a>
                 </td>

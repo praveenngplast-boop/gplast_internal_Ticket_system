@@ -1,7 +1,10 @@
 Django>=4.2,<5.1
+gunicorn  # For Linux production server
 mysqlclient
 openpyxl
+pandas
 Pillow
 python-decouple
 whitenoise
 PyMySQL
+waitress  # For Windows production server

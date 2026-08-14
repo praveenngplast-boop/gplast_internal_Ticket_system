@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}All Tickets - GPLAST{% endblock %}
 
 {% block extra_head %}
@@ -31,6 +32,137 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
+    /* ====== 30-DAY CLOSED TICKETS BANNER ====== */
+    .thirty-day-banner {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02));
+        border: 1px solid rgba(16, 185, 129, 0.15);
+        border-radius: var(--ticket-radius);
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        transition: var(--ticket-transition);
+    }
+
+    .thirty-day-banner:hover {
+        border-color: rgba(16, 185, 129, 0.3);
+        box-shadow: 0 2px 12px rgba(16, 185, 129, 0.06);
+    }
+
+    .thirty-day-banner .banner-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .thirty-day-banner .banner-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(16, 185, 129, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ticket-success);
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .thirty-day-banner .banner-text {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .thirty-day-banner .banner-text .count-badge {
+        background: var(--ticket-success);
+        color: white;
+        padding: 0.1rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .thirty-day-banner .banner-text .info-text {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    .thirty-day-banner .banner-text .info-text i {
+        color: var(--ticket-primary);
+        margin-right: 0.2rem;
+    }
+
+    .thirty-day-banner .banner-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .thirty-day-banner .banner-right .view-all-btn {
+        padding: 0.2rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        background: transparent;
+        border: 2px solid var(--border-color);
+        color: var(--text-secondary);
+        transition: var(--ticket-transition);
+        text-decoration: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        min-height: 28px;
+    }
+
+    .thirty-day-banner .banner-right .view-all-btn:hover {
+        border-color: var(--ticket-primary);
+        color: var(--ticket-primary);
+        transform: translateY(-1px);
+    }
+
+    .thirty-day-banner .banner-right .view-all-btn i {
+        font-size: 0.5rem;
+    }
+
+    .thirty-day-banner .banner-right .export-btn {
+        padding: 0.2rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--ticket-success), #059669);
+        color: white;
+        border: none;
+        transition: var(--ticket-transition);
+        text-decoration: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        min-height: 28px;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+    }
+
+    .thirty-day-banner .banner-right .export-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
+    }
+
+    .thirty-day-banner .banner-right .export-btn i {
+        font-size: 0.65rem;
+    }
+
+    /* ====== PAGE HEADER ====== */
     .page-header {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -127,6 +259,7 @@
         flex-wrap: wrap;
     }
 
+    /* ====== SEARCH ====== */
     .search-wrapper {
         display: flex;
         align-items: center;
@@ -226,6 +359,7 @@
         box-shadow: 0 4px 16px rgba(255, 107, 0, 0.25);
     }
 
+    /* ====== BUTTONS ====== */
     .btn-primary-solid {
         background: linear-gradient(135deg, var(--ticket-primary), var(--ticket-primary-dark));
         border: none;
@@ -334,6 +468,7 @@
         box-shadow: 0 4px 20px rgba(255, 107, 0, 0.25);
     }
 
+    /* ====== FILTER SECTION ====== */
     .filter-section {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -458,6 +593,7 @@
         border-top: 1px solid var(--border-color);
     }
 
+    /* ====== TABLE SECTION ====== */
     .table-section {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -796,6 +932,32 @@
         margin-bottom: 1.25rem;
     }
 
+    .no-results {
+        text-align: center;
+        padding: 2rem 1rem;
+        display: none;
+    }
+
+    .no-results i {
+        font-size: 2.5rem;
+        color: var(--ticket-primary);
+        opacity: 0.15;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .no-results h4 {
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        font-family: 'Fraunces', serif;
+        font-size: 1rem;
+    }
+
+    .no-results p {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+
     .pagination-bar {
         padding: 0.85rem 1.5rem;
         border-top: 1px solid var(--border-color);
@@ -856,6 +1018,7 @@
         font-size: 0.6rem;
     }
 
+    /* ====== RESPONSIVE ====== */
     @media (max-width: 768px) {
         .tickets-container { padding: 0 0.75rem; }
         .page-header { padding: 1rem 1.25rem; }
@@ -885,6 +1048,23 @@
         .empty-state h4 { font-size: 1rem; }
         .empty-state p { font-size: 0.75rem; }
         .empty-state .btn-primary-solid { padding: 0.25rem 0.8rem; font-size: 0.65rem; min-height: 28px; width: auto; }
+
+        .thirty-day-banner {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 0.6rem 1rem;
+        }
+        .thirty-day-banner .banner-left {
+            flex-wrap: wrap;
+        }
+        .thirty-day-banner .banner-right {
+            justify-content: stretch;
+        }
+        .thirty-day-banner .banner-right .view-all-btn,
+        .thirty-day-banner .banner-right .export-btn {
+            flex: 1;
+            justify-content: center;
+        }
     }
 
     @media (max-width: 480px) {
@@ -912,6 +1092,9 @@
         .search-box .clear-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
         .header-right .btn-primary-solid { padding: 0.2rem 0.6rem; font-size: 0.6rem; min-height: 24px; }
         .empty-state .btn-primary-solid { padding: 0.2rem 0.6rem; font-size: 0.6rem; min-height: 24px; width: auto; }
+        .thirty-day-banner .banner-text .info-text { font-size: 0.6rem; }
+        .thirty-day-banner .banner-text .count-badge { font-size: 0.6rem; }
+        .thirty-day-banner .banner-icon { width: 28px; height: 28px; font-size: 0.8rem; }
     }
 
     @media (max-width: 360px) {
@@ -919,6 +1102,9 @@
         .cell-subject { max-width: 35px; }
         .badge-unit { font-size: 0.4rem; padding: 0.02rem 0.3rem; }
         .badge-role-admin, .badge-role-employee { font-size: 0.4rem; padding: 0.05rem 0.3rem; }
+        .thirty-day-banner { padding: 0.4rem 0.6rem; }
+        .thirty-day-banner .banner-right .view-all-btn,
+        .thirty-day-banner .banner-right .export-btn { font-size: 0.5rem; padding: 0.15rem 0.5rem; min-height: 22px; }
     }
 
     @media (min-width: 769px) and (max-width: 1024px) {
@@ -946,6 +1132,10 @@
     [data-theme="dark"] .filter-item .select-field:focus { background: rgba(255,255,255,0.06); border-color: var(--ticket-primary); box-shadow: 0 0 0 3px rgba(255,107,0,0.08); }
     [data-theme="dark"] .filter-item .select-field option { background: #1A1A2E; color: #E8EDF5; }
     [data-theme="dark"] .badge-role-employee { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.06); }
+    [data-theme="dark"] .thirty-day-banner {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.06), rgba(16, 185, 129, 0.01));
+        border-color: rgba(16, 185, 129, 0.12);
+    }
 
     .text-muted-extra { color: var(--text-muted); }
     .fw-600 { font-weight: 600; }
@@ -957,6 +1147,7 @@
 {% block content %}
 <div class="tickets-container">
 
+    <!-- ====== HEADER ====== -->
     <header class="page-header">
         <div class="header-inner">
             <div class="header-left">
@@ -969,7 +1160,7 @@
                         <span><i class="fa-regular fa-clock"></i> System-wide support log</span>
                         <span class="ticket-count-badge">
                             <i class="fa-regular fa-circle-check"></i>
-                            {{ tickets.paginator.count }} Total
+                            {{ page_obj.paginator.count }} Total
                         </span>
                     </div>
                 </div>
@@ -994,6 +1185,40 @@
         </div>
     </header>
 
+    <!-- ====== 30-DAY CLOSED TICKETS BANNER ====== -->
+    {% if not selected_status or selected_status == 'Closed' %}
+    <div class="thirty-day-banner">
+        <div class="banner-left">
+            <div class="banner-icon">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div class="banner-text">
+                <span class="count-badge">
+                    <i class="fa-regular fa-circle-check"></i>
+                    {{ closed_count_30_days|default:0 }}
+                </span>
+                <span class="info-text">
+                    <i class="fa-regular fa-clock"></i>
+                    Closed tickets in last 30 days
+                </span>
+                <span class="info-text" style="font-size: 0.6rem; color: var(--text-muted);">
+                    <i class="fa-regular fa-circle-question"></i>
+                    Older closed tickets are archived
+                </span>
+            </div>
+        </div>
+        <div class="banner-right">
+            <a href="?status=Closed" class="view-all-btn">
+                <i class="fa-solid fa-eye"></i> View All Closed
+            </a>
+            <a href="{% url 'export_closed_30_days' %}" class="export-btn" target="_blank">
+                <i class="fa-solid fa-file-excel"></i> Export
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ====== FILTER SECTION ====== -->
     <section class="filter-section">
         <div class="filter-header">
             <h3><i class="fa-solid fa-sliders"></i> Filter Tickets</h3>
@@ -1043,7 +1268,6 @@
                         </select>
                     </div>
 
-                    <!-- CHANGED: Assigned To filter - Now a dropdown instead of input -->
                     <div class="filter-item">
                         <label for="id_assigned_person"><i class="fa-solid fa-user"></i> Assigned To</label>
                         <select class="select-field" name="assigned_person" id="id_assigned_person">
@@ -1102,6 +1326,7 @@
         </div>
     </section>
 
+    <!-- ====== TABLE SECTION ====== -->
     <section class="table-section">
         <div class="table-header-bar">
             <h3><i class="fa-solid fa-table-cells"></i> Ticket Log</h3>
@@ -1137,7 +1362,7 @@
                     </tr>
                 </thead>
                 <tbody id="ticketsBody">
-                    {% for ticket in tickets %}
+                    {% for ticket in page_obj %}
                         <tr data-search="{{ ticket.ticket_number }} {{ ticket.subject }} {{ ticket.unit.code }} {{ ticket.department.name }}"
                             data-unit="{{ ticket.unit.code }}"
                             data-status="{{ ticket.status }}"
@@ -1240,27 +1465,27 @@
             <p style="color: var(--text-muted); font-size: 0.8rem;">Try adjusting your search terms or filters.</p>
         </div>
 
-        {% if tickets.has_other_pages %}
+        {% if page_obj.has_other_pages %}
         <div class="pagination-bar">
             <div class="pagination-group">
-                {% if tickets.has_previous %}
-                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ tickets.previous_page_number }}" class="pagination-btn">
+                {% if page_obj.has_previous %}
+                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" class="pagination-btn">
                         <i class="fa-solid fa-chevron-left"></i> Prev
                     </a>
                 {% else %}
                     <span class="pagination-btn disabled"><i class="fa-solid fa-chevron-left"></i> Prev</span>
                 {% endif %}
 
-                {% for num in tickets.paginator.page_range %}
-                    {% if tickets.number == num %}
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
                         <span class="pagination-btn active">{{ num }}</span>
-                    {% elif num > tickets.number|add:'-3' and num < tickets.number|add:'3' %}
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                         <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}" class="pagination-btn">{{ num }}</a>
                     {% endif %}
                 {% endfor %}
 
-                {% if tickets.has_next %}
-                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ tickets.next_page_number }}" class="pagination-btn">
+                {% if page_obj.has_next %}
+                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" class="pagination-btn">
                         Next <i class="fa-solid fa-chevron-right"></i>
                     </a>
                 {% else %}
@@ -1268,8 +1493,8 @@
                 {% endif %}
             </div>
             <span class="pagination-info">
-                Page {{ tickets.number }} of {{ tickets.paginator.num_pages }}
-                ({{ tickets.paginator.count }} total)
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                ({{ page_obj.paginator.count }} total)
             </span>
         </div>
         {% endif %}

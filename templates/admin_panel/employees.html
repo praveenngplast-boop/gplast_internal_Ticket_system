@@ -687,6 +687,43 @@
         color: var(--settings-primary);
     }
 
+    /* ============================================================
+       DELETE BUTTON DISABLED STYLES
+    ============================================================ */
+    .btn-delete-disabled {
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        font-size: 0.5rem;
+        font-weight: 500;
+        border: 2px solid #F59E0B;
+        background: rgba(245, 158, 11, 0.05);
+        color: #F59E0B;
+        cursor: not-allowed;
+        opacity: 0.6;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        min-height: 22px;
+        pointer-events: none;
+    }
+
+    .btn-delete-disabled i {
+        font-size: 0.45rem;
+    }
+
+    .btn-delete-disabled .tooltip-text {
+        font-size: 0.4rem;
+        margin-left: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    [data-theme="dark"] .btn-delete-disabled {
+        border-color: rgba(245, 158, 11, 0.3);
+        color: #F59E0B;
+        background: rgba(245, 158, 11, 0.08);
+    }
+
     .btn-toggle-assign {
         padding: 0.1rem 0.4rem;
         font-size: 0.45rem;
@@ -1084,6 +1121,8 @@
         .btn-action i { display: none; }
         .btn-toggle-assign { font-size: 0.4rem; padding: 0.05rem 0.25rem; min-height: 18px; }
         .badge-status, .badge-can-assign { font-size: 0.4rem; padding: 0.05rem 0.25rem; }
+        .btn-delete-disabled { font-size: 0.4rem; padding: 0.05rem 0.2rem; min-height: 18px; }
+        .btn-delete-disabled .tooltip-text { display: none; }
     }
 
     @media (max-width: 480px) {
@@ -1102,6 +1141,7 @@
         .form-control, .form-select { font-size: 0.7rem !important; padding: 0.3rem 0.5rem !important; }
         .btn-modal-submit, .btn-modal-close { font-size: 0.65rem !important; padding: 0.2rem 0.7rem !important; min-height: 28px; }
         .btn-primary-gradient, .btn-success-custom, .btn-purple-custom { font-size: 0.65rem; padding: 0.2rem 0.6rem; min-height: 28px; }
+        .btn-delete-disabled { font-size: 0.35rem; padding: 0.05rem 0.15rem; min-height: 16px; }
     }
 
     @media (max-width: 360px) {
@@ -1111,6 +1151,7 @@
         .table td, .table th { padding: 0.1rem 0.15rem; font-size: 0.45rem; }
         .btn-action { font-size: 0.35rem; padding: 0.05rem 0.15rem; min-height: 14px; }
         .badge-status, .badge-can-assign { font-size: 0.3rem; padding: 0.05rem 0.15rem; }
+        .btn-delete-disabled { font-size: 0.3rem; padding: 0.05rem 0.1rem; min-height: 14px; }
     }
 
     /* ============================================================
@@ -1266,7 +1307,7 @@
                                 </span>
                             </td>
                             <td class="text-center" style="white-space: nowrap;">
-                                <!-- Edit -->
+                                <!-- ✅ Edit Button -->
                                 <button type="button" class="btn-action" data-bs-toggle="modal" data-bs-target="#editEmployeeModal"
                                         data-id="{{ emp.id }}"
                                         data-empid="{{ emp.employee_id }}"
@@ -1279,18 +1320,7 @@
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
 
-                                <!-- Toggle Active/Inactive -->
-                                <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Toggle {{ emp.employee_id }} status?">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action" value="toggle_employee">
-                                    <input type="hidden" name="emp_id" value="{{ emp.id }}">
-                                    <button type="submit" class="btn-action {% if emp.is_active %}btn-action-danger{% else %}btn-action-success{% endif %}" style="border-color: {% if emp.is_active %}#EF4444{% else %}#22C55E{% endif %}; color: {% if emp.is_active %}#EF4444{% else %}#22C55E{% endif %};">
-                                        <i class="fa-solid {% if emp.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
-                                        {% if emp.is_active %}Off{% else %}On{% endif %}
-                                    </button>
-                                </form>
-
-                                <!-- Toggle Can Assign -->
+                                <!-- ✅ Toggle Can Assign (Enable/Disable) -->
                                 <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Toggle assignment permission for {{ emp.employee_id }}?">
                                     {% csrf_token %}
                                     <input type="hidden" name="action" value="toggle_can_assign">
@@ -1300,15 +1330,22 @@
                                     </button>
                                 </form>
 
-                                <!-- Delete -->
-                                <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="Delete {{ emp.employee_id }}?">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action" value="delete_employee">
-                                    <input type="hidden" name="emp_id" value="{{ emp.id }}">
-                                    <button type="submit" class="btn-action btn-action-danger" style="border-color: #EF4444; color: #EF4444;">
+                                <!-- ✅ Delete - Only enabled if employee is INACTIVE -->
+                                {% if emp.is_active %}
+                                    <span class="btn-delete-disabled" title="Must deactivate first before deleting">
                                         <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </form>
+                                        <span class="tooltip-text">Deactivate first</span>
+                                    </span>
+                                {% else %}
+                                    <form method="POST" action="{% url 'settings_employees' %}" class="d-inline confirm-form" data-confirm="⚠️ Permanently delete {{ emp.employee_id }}? This action cannot be undone!">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete_employee">
+                                        <input type="hidden" name="emp_id" value="{{ emp.id }}">
+                                        <button type="submit" class="btn-action btn-action-danger" style="border-color: #EF4444; color: #EF4444;">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}
@@ -1827,7 +1864,6 @@
             attributes: true,
             attributeFilter: ['data-theme']
         });
-
         setTimeout(updateTheme, 200);
     });
 </script>

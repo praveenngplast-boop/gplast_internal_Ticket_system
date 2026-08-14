@@ -182,7 +182,9 @@ class Ticket(models.Model):
     description = models.TextField()
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
     error_type = models.CharField(max_length=50, choices=ERROR_TYPE_CHOICES)
-    attachment = models.FileField(upload_to='attachments/', blank=True, null=True)
+    attachment_1 = models.FileField(upload_to='attachments/', blank=True, null=True)
+    attachment_2 = models.FileField(upload_to='attachments/', blank=True, null=True)
+    attachment_3 = models.FileField(upload_to='attachments/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
     created_by_role = models.CharField(max_length=10, choices=CREATED_BY_CHOICES, default='Employee')
     admin_creation_reason = models.CharField(max_length=50, choices=ADMIN_REASON_CHOICES, blank=True, null=True)
@@ -197,7 +199,9 @@ class Ticket(models.Model):
     escalated_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # ✅ NOTIFICATION FIELDS - Add these for the bell notification system
+    # ============================================================
+    # ✅ NOTIFICATION FIELDS - Bell notification system
+    # ============================================================
     is_viewed = models.BooleanField(
         default=False,
         help_text="Admin has viewed this ticket"
@@ -230,3 +234,50 @@ class TicketHistory(models.Model):
 
     def __str__(self):
         return f"{self.ticket.ticket_number} - {self.action} ({self.timestamp})"
+
+
+# ============================================================
+# SETTINGS AUDIT LOG MODEL
+# ============================================================
+
+class SettingsAuditLog(models.Model):
+    ACTION_TYPES = [
+        ('CREATE', 'Created'),
+        ('UPDATE', 'Updated'),
+        ('DELETE', 'Deleted'),
+        ('TOGGLE', 'Toggled'),
+        ('LOGIN', 'Login'),
+        ('LOGOUT', 'Logout'),
+    ]
+    
+    SETTING_TYPES = [
+        ('UNIT', 'Unit'),
+        ('DEPARTMENT', 'Department'),
+        ('EMPLOYEE', 'Employee'),
+        ('CREDENTIAL', 'Credential'),
+        ('CONTACT', 'Contact'),
+        ('EMAIL', 'Email'),
+        ('PASSWORD', 'Password'),
+        ('GENERAL', 'General'),
+    ]
+    
+    performed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    performed_by_name = models.CharField(max_length=150)
+    action_type = models.CharField(max_length=20, choices=ACTION_TYPES)
+    setting_type = models.CharField(max_length=20, choices=SETTING_TYPES)
+    setting_name = models.CharField(max_length=200)
+    old_value = models.TextField(blank=True, null=True)
+    new_value = models.TextField(blank=True, null=True)
+    change_summary = models.CharField(max_length=500, blank=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    remarks = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Settings Audit Log'
+        verbose_name_plural = 'Settings Audit Logs'
+    
+    def __str__(self):
+        return f"{self.performed_by_name} - {self.action_type} - {self.setting_name} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"

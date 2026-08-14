@@ -3,14 +3,18 @@
 AJAX Endpoints for dynamic content loading
 - Get Units
 - Get Departments by Unit
-- Get Employee Details
+- Get Employee Details (with department validation)
 - Get Employees by Department
+- Get Ticket Statistics (for 30-day dashboard)
+- Get Closed Tickets (for AJAX loading)
 """
 from django.http import JsonResponse
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.utils import timezone
+from datetime import timedelta
 import logging
 
-from tickets.models import Unit, Department, EmployeeMaster
+from tickets.models import Unit, Department, EmployeeMaster, Ticket
 
 logger = logging.getLogger(__name__)
 
@@ -80,11 +84,18 @@ def get_departments_by_unit(request):
         })
 
 
+# ============================================================
+# ✅ UPDATED: EMPLOYEE DETAILS WITH DEPARTMENT VALIDATION
+# ============================================================
 def get_employee_details(request):
     """
-    AJAX: Get employee details by Employee ID
-    Query params: employee_id, unit_id, department_id (for validation)
-    Returns: JSON with employee data or error message
+    AJAX: Get employee details by Employee ID with department/unit validation
+    Query params: employee_id (required), unit_id (optional), department_id (optional)
+    Returns: JSON with:
+        - found: boolean - if employee exists
+        - mismatch: boolean - if employee exists but belongs to different dept/unit
+        - employee: dict with employee details
+        - message: string message
     """
     eid = request.GET.get('employee_id', '').strip().upper()
     u_uid = request.GET.get('unit_id', '')
@@ -93,57 +104,71 @@ def get_employee_details(request):
     if not eid: 
         return JsonResponse({
             'found': False, 
+            'mismatch': False,
             'message': 'Please enter an Employee ID.'
         })
     
     try:
+        # Find the employee
         emp = EmployeeMaster.objects.get(employee_id=eid, is_active=True)
         
-        mismatches = []
-        if u_uid and emp.unit_id and str(emp.unit_id) != str(u_uid):
-            mismatches.append(f'Unit: {emp.unit.code if emp.unit else "Unknown"} (expected: {u_uid})')
-        if u_did and emp.department_id and str(emp.department_id) != str(u_did):
-            mismatches.append(f'Department: {emp.department.name if emp.department else "Unknown"} (expected: {u_did})')
+        # Prepare employee data
+        emp_data = {
+            'employee_id': emp.employee_id,
+            'employee_name': emp.employee_name,
+            'mobile': emp.mobile,
+            'email': emp.email,
+            'unit_id': emp.unit_id or None,
+            'unit_code': emp.unit.code if emp.unit else None,
+            'department_id': emp.department_id or None,
+            'department_name': emp.department.name if emp.department else None
+        }
         
-        if mismatches:
-            return JsonResponse({
-                'found': False, 
-                'message': f'Employee belongs to different department/unit: {", ".join(mismatches)}',
-                'mismatch': True,
-                'employee': {
-                    'employee_id': emp.employee_id,
-                    'employee_name': emp.employee_name,
-                    'mobile': emp.mobile,
-                    'email': emp.email,
-                    'unit_id': emp.unit_id or None,
-                    'unit_code': emp.unit.code if emp.unit else None,
-                    'department_id': emp.department_id or None,
-                    'department_name': emp.department.name if emp.department else None
-                }
-            })
+        # ✅ Check if unit/department validation is required
+        if u_uid and u_did:
+            try:
+                u_uid = int(u_uid)
+                u_did = int(u_did)
+            except (ValueError, TypeError):
+                pass
+            
+            unit_match = (emp.unit_id == u_uid) if emp.unit_id else False
+            dept_match = (emp.department_id == u_did) if emp.department_id else False
+            
+            mismatches = []
+            
+            if not unit_match:
+                mismatches.append(f'Unit: {emp.unit.code if emp.unit else "None"}')
+            if not dept_match:
+                mismatches.append(f'Department: {emp.department.name if emp.department else "None"}')
+            
+            if mismatches:
+                return JsonResponse({
+                    'found': True,
+                    'mismatch': True,
+                    'employee': emp_data,
+                    'message': f'⚠️ Employee belongs to different {", ".join(mismatches)}'
+                })
         
+        # ✅ Employee found and matches (or no validation required)
         return JsonResponse({
             'found': True,
-            'employee': {
-                'employee_id': emp.employee_id,
-                'employee_name': emp.employee_name,
-                'mobile': emp.mobile,
-                'email': emp.email,
-                'unit_id': emp.unit_id or None,
-                'unit_code': emp.unit.code if emp.unit else None,
-                'department_id': emp.department_id or None,
-                'department_name': emp.department.name if emp.department else None
-            }
+            'mismatch': False,
+            'employee': emp_data,
+            'message': '✅ Employee verified successfully!'
         })
+        
     except EmployeeMaster.DoesNotExist:
         return JsonResponse({
             'found': False, 
-            'message': f'Employee "{eid}" not found.'
+            'mismatch': False,
+            'message': f'❌ Employee "{eid}" not found. Please check and try again.'
         })
     except Exception as e:
         logger.error(f"Error in get_employee_details: {str(e)}")
         return JsonResponse({
             'found': False, 
+            'mismatch': False,
             'message': 'Error fetching employee details.'
         })
 
@@ -198,4 +223,227 @@ def get_employees_by_department(request):
         return JsonResponse({
             'success': False, 
             'message': str(e)
+        })
+
+
+# ============================================================
+# ✅ AJAX ENDPOINTS FOR 30-DAY CLOSED TICKETS FEATURE
+# ============================================================
+
+def get_ticket_statistics(request):
+    """
+    AJAX: Get ticket statistics for dashboard
+    Returns: JSON with ticket counts (total, open, closed, etc.)
+    """
+    try:
+        # Get all tickets
+        total = Ticket.objects.count()
+        
+        # Status counts
+        open_count = Ticket.objects.filter(status='Open').count()
+        assigned_count = Ticket.objects.filter(status='Assigned').count()
+        hold_count = Ticket.objects.filter(status='Hold').count()
+        escalated_count = Ticket.objects.filter(status='Escalated').count()
+        closed_count = Ticket.objects.filter(status='Closed').count()
+        
+        # Priority counts
+        critical_count = Ticket.objects.filter(priority='Critical').count()
+        high_count = Ticket.objects.filter(priority='High').count()
+        medium_count = Ticket.objects.filter(priority='Medium').count()
+        low_count = Ticket.objects.filter(priority='Low').count()
+        
+        # 30-day closed tickets
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        closed_30_days = Ticket.objects.filter(
+            status='Closed',
+            closed_at__gte=thirty_days_ago
+        ).count()
+        
+        # Today's tickets
+        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_count = Ticket.objects.filter(created_at__gte=today_start).count()
+        
+        return JsonResponse({
+            'success': True,
+            'statistics': {
+                'total': total,
+                'open': open_count,
+                'assigned': assigned_count,
+                'hold': hold_count,
+                'escalated': escalated_count,
+                'closed': closed_count,
+                'critical': critical_count,
+                'high': high_count,
+                'medium': medium_count,
+                'low': low_count,
+                'closed_30_days': closed_30_days,
+                'today': today_count,
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error in get_ticket_statistics: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+def get_closed_tickets_30_days(request):
+    """
+    AJAX: Get closed tickets from last 30 days
+    Query params: limit (optional, default 50)
+    Returns: JSON with ticket list
+    """
+    try:
+        limit = int(request.GET.get('limit', 50))
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        
+        tickets = Ticket.objects.filter(
+            status='Closed',
+            closed_at__gte=thirty_days_ago
+        ).order_by('-closed_at')[:limit]
+        
+        ticket_list = []
+        for ticket in tickets:
+            ticket_list.append({
+                'id': ticket.id,
+                'ticket_number': ticket.ticket_number,
+                'subject': ticket.subject,
+                'employee_name': ticket.employee_name,
+                'employee_id': ticket.employee_id,
+                'unit': ticket.unit.code if ticket.unit else '',
+                'department': ticket.department.name if ticket.department else '',
+                'priority': ticket.priority,
+                'closed_at': ticket.closed_at.strftime('%Y-%m-%d %H:%M:%S') if ticket.closed_at else '',
+                'closed_by': ticket.closed_by or '',
+                'closing_remarks': ticket.closing_remarks or '',
+                'url': f'/admin/ticket/{ticket.id}/'
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'tickets': ticket_list,
+            'count': len(ticket_list),
+            'total': Ticket.objects.filter(
+                status='Closed',
+                closed_at__gte=thirty_days_ago
+            ).count()
+        })
+    except Exception as e:
+        logger.error(f"Error in get_closed_tickets_30_days: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+def get_ticket_by_number(request):
+    """
+    AJAX: Get ticket details by ticket number
+    Query params: ticket_number
+    Returns: JSON with ticket data
+    """
+    ticket_number = request.GET.get('ticket_number', '').strip()
+    
+    if not ticket_number:
+        return JsonResponse({
+            'success': False,
+            'message': 'Ticket number is required'
+        })
+    
+    try:
+        ticket = Ticket.objects.get(ticket_number=ticket_number)
+        
+        return JsonResponse({
+            'success': True,
+            'ticket': {
+                'id': ticket.id,
+                'ticket_number': ticket.ticket_number,
+                'subject': ticket.subject,
+                'status': ticket.status,
+                'priority': ticket.priority,
+                'employee_name': ticket.employee_name,
+                'employee_id': ticket.employee_id,
+                'unit': ticket.unit.code if ticket.unit else '',
+                'department': ticket.department.name if ticket.department else '',
+                'created_at': ticket.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'closed_at': ticket.closed_at.strftime('%Y-%m-%d %H:%M:%S') if ticket.closed_at else '',
+                'url': f'/admin/ticket/{ticket.id}/'
+            }
+        })
+    except Ticket.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': f'Ticket #{ticket_number} not found'
+        })
+    except Exception as e:
+        logger.error(f"Error in get_ticket_by_number: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+def search_tickets_ajax(request):
+    """
+    AJAX: Search tickets across ALL history
+    Query params: query, limit (optional)
+    Returns: JSON with matching tickets
+    """
+    query = request.GET.get('query', '').strip()
+    limit = int(request.GET.get('limit', 20))
+    
+    if not query:
+        return JsonResponse({
+            'success': True,
+            'tickets': [],
+            'count': 0,
+            'message': 'No search query provided'
+        })
+    
+    try:
+        # Search across ALL tickets (no date restriction)
+        tickets = Ticket.objects.filter(
+            Q(ticket_number__icontains=query) |
+            Q(subject__icontains=query) |
+            Q(employee_name__icontains=query) |
+            Q(employee_id__icontains=query) |
+            Q(unit__code__icontains=query) |
+            Q(department__name__icontains=query) |
+            Q(description__icontains=query)
+        ).order_by('-created_at')[:limit]
+        
+        ticket_list = []
+        for ticket in tickets:
+            ticket_list.append({
+                'id': ticket.id,
+                'ticket_number': ticket.ticket_number,
+                'subject': ticket.subject,
+                'employee_name': ticket.employee_name,
+                'status': ticket.status,
+                'priority': ticket.priority,
+                'unit': ticket.unit.code if ticket.unit else '',
+                'created_at': ticket.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'url': f'/admin/ticket/{ticket.id}/'
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'tickets': ticket_list,
+            'count': len(ticket_list),
+            'total_matching': Ticket.objects.filter(
+                Q(ticket_number__icontains=query) |
+                Q(subject__icontains=query) |
+                Q(employee_name__icontains=query) |
+                Q(employee_id__icontains=query) |
+                Q(unit__code__icontains=query) |
+                Q(department__name__icontains=query) |
+                Q(description__icontains=query)
+            ).count()
+        })
+    except Exception as e:
+        logger.error(f"Error in search_tickets_ajax: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
         })

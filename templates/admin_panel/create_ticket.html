@@ -5,6 +5,11 @@
 {% block extra_head %}
 {{ block.super }}
 <style>
+    /* ============================================================
+       CREATE TICKET - ADMIN STYLES
+       ============================================================ */
+    
+    /* Theme variables - fallback if base.html doesn't have them */
     :root {
         --admin-primary: #FF6B00;
         --admin-primary-dark: #E55A00;
@@ -14,200 +19,224 @@
         --admin-warning: #F59E0B;
         --admin-info: #3B82F6;
         --admin-radius: 12px;
-        --admin-shadow: 0 4px 20px rgba(0,0,0,0.06);
         --admin-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        --admin-shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+        --admin-shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+        --admin-shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+        --dropdown-bg: #FFFFFF;
+        --dropdown-text: #1A2A6C;
+        --dropdown-border: #DCE3F0;
+        --dropdown-hover: rgba(255, 107, 0, 0.08);
+        --dropdown-selected: rgba(255, 107, 0, 0.12);
     }
 
+    [data-theme="dark"] {
+        --dropdown-bg: #1A1A2E;
+        --dropdown-text: #E8EDF5;
+        --dropdown-border: rgba(255, 255, 255, 0.08);
+        --dropdown-hover: rgba(255, 107, 0, 0.15);
+        --dropdown-selected: rgba(255, 107, 0, 0.2);
+    }
+
+    /* ============================================================
+       LAYOUT & CONTAINER
+       ============================================================ */
     .create-ticket-wrapper {
-        max-width: 1200px;
+        max-width: 1000px;
         margin: 0 auto;
-        padding: 0 0.5rem;
-        animation: fadeSlideUp 0.5s ease;
+        padding: 0.5rem 0.75rem;
+        animation: fadeSlideIn 0.5s ease;
     }
 
-    @keyframes fadeSlideUp {
-        from { opacity: 0; transform: translateY(24px); }
+    @keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
+    /* ============================================================
+       PAGE HEADER
+       ============================================================ */
     .page-header-bar {
+        background: var(--bg-card, #FFFFFF);
+        border: 1px solid var(--border-color, #E8EDF5);
+        border-radius: var(--admin-radius, 12px);
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 1rem;
-        margin-bottom: 1.25rem;
-        padding: 1rem 1.25rem;
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: var(--admin-radius);
-        box-shadow: var(--admin-shadow);
-        position: relative;
-        overflow: hidden;
+        gap: 0.75rem;
+        box-shadow: var(--admin-shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+        transition: var(--admin-transition, all 0.25s ease);
     }
 
-    .page-header-bar::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--admin-primary), var(--admin-primary-light), var(--admin-primary));
-        background-size: 200% 100%;
-        animation: shimmerMove 4s ease-in-out infinite;
-    }
-
-    @keyframes shimmerMove {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
+    .page-header-bar:hover {
+        box-shadow: var(--admin-shadow-md, 0 4px 20px rgba(0,0,0,0.08));
+        border-color: rgba(255, 107, 0, 0.12);
     }
 
     .header-left-group {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        position: relative;
-        z-index: 1;
     }
 
     .header-icon-box {
-        width: 42px;
-        height: 42px;
+        width: 40px;
+        height: 40px;
         border-radius: 10px;
         background: rgba(255, 107, 0, 0.10);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--admin-primary);
+        color: var(--admin-primary, #FF6B00);
         font-size: 1.2rem;
         flex-shrink: 0;
     }
 
     .header-title-group h4 {
-        font-size: clamp(1rem, 1.8vw, 1.25rem);
+        font-size: clamp(0.95rem, 1.5vw, 1.2rem);
         font-weight: 700;
-        color: var(--text-primary);
+        color: var(--text-primary, #1A2A6C);
         margin: 0;
         font-family: 'Fraunces', serif;
-        letter-spacing: -0.02em;
     }
 
     .header-title-group small {
-        color: var(--text-secondary);
-        font-size: clamp(0.6rem, 0.75vw, 0.7rem);
+        font-size: clamp(0.55rem, 0.7vw, 0.65rem);
+        color: var(--text-secondary, #4A5A7A);
         display: flex;
         align-items: center;
         gap: 0.3rem;
     }
 
-    .header-right-group {
+    .header-title-group small i {
+        color: var(--admin-primary, #FF6B00);
+        font-size: 0.5rem;
+    }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.9rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: transparent;
+        border: 2px solid var(--border-color, #E8EDF5);
+        color: var(--text-secondary, #4A5A7A);
+        transition: var(--admin-transition, all 0.25s ease);
+        text-decoration: none;
+        white-space: nowrap;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+    }
+
+    .btn-back:hover {
+        border-color: var(--admin-primary, #FF6B00);
+        color: var(--admin-primary, #FF6B00);
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    /* ============================================================
+       ADMIN BANNER
+       ============================================================ */
+    .admin-banner {
+        background: linear-gradient(135deg, rgba(255, 107, 0, 0.06), rgba(255, 107, 0, 0.02));
+        border: 1px solid rgba(255, 107, 0, 0.12);
+        border-radius: var(--admin-radius, 12px);
+        padding: 0.6rem 1.25rem;
+        margin-bottom: 1rem;
         display: flex;
         align-items: center;
         gap: 0.75rem;
         flex-wrap: wrap;
-        position: relative;
-        z-index: 1;
+        transition: var(--admin-transition, all 0.25s ease);
     }
 
-    .btn-back {
-        background: transparent;
-        color: var(--text-secondary);
-        border: 2px solid var(--border-color);
-        padding: 0.3rem 1rem;
-        border-radius: 50px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        transition: var(--admin-transition);
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        text-decoration: none;
-        min-height: 32px;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .btn-back:hover {
-        background: var(--bg-secondary);
-        border-color: var(--admin-primary);
-        color: var(--text-primary);
-        transform: translateY(-2px);
-    }
-
-    .admin-banner {
-        background: rgba(255, 107, 0, 0.06);
-        border: 1px solid rgba(255, 107, 0, 0.15);
-        border-radius: var(--admin-radius);
-        padding: 0.6rem 1rem;
-        margin-bottom: 1.25rem;
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        font-size: clamp(0.7rem, 0.8vw, 0.78rem);
-        color: var(--text-secondary);
+    .admin-banner:hover {
+        border-color: rgba(255, 107, 0, 0.2);
+        box-shadow: 0 2px 12px rgba(255, 107, 0, 0.04);
     }
 
     .admin-banner i {
-        color: var(--admin-primary);
-        font-size: 0.9rem;
+        color: var(--admin-primary, #FF6B00);
+        font-size: 1.1rem;
+        flex-shrink: 0;
     }
 
-    .admin-banner .badge-access {
-        background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark));
-        color: white;
+    .admin-banner span {
+        font-size: clamp(0.6rem, 0.8vw, 0.75rem);
+        color: var(--text-secondary, #4A5A7A);
+        flex: 1;
+    }
+
+    .admin-banner span strong {
+        color: var(--text-primary, #1A2A6C);
+    }
+
+    .badge-access {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
         padding: 0.15rem 0.6rem;
         border-radius: 50px;
         font-size: 0.55rem;
         font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
+        background: linear-gradient(135deg, var(--admin-primary, #FF6B00), var(--admin-primary-dark, #E55A00));
+        color: #FFFFFF;
         white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.15);
+        flex-shrink: 0;
     }
 
+    /* ============================================================
+       FORM CARD
+       ============================================================ */
     .form-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: var(--admin-radius);
+        background: var(--bg-card, #FFFFFF);
+        border: 1px solid var(--border-color, #E8EDF5);
+        border-radius: var(--admin-radius, 12px);
         overflow: hidden;
-        box-shadow: var(--admin-shadow);
-        transition: var(--admin-transition);
+        box-shadow: var(--admin-shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+        transition: var(--admin-transition, all 0.25s ease);
     }
 
     .form-card:hover {
+        box-shadow: var(--admin-shadow-md, 0 4px 20px rgba(0,0,0,0.08));
         border-color: rgba(255, 107, 0, 0.08);
-        box-shadow: 0 6px 28px rgba(0,0,0,0.08);
     }
 
     .form-card-body {
-        padding: 1.5rem;
+        padding: 1.25rem 1.5rem;
     }
 
+    /* ============================================================
+       FORM SECTIONS
+       ============================================================ */
     .form-section {
-        background: var(--bg-secondary);
-        border-radius: 10px;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        border: 1px solid var(--border-color);
-        transition: var(--admin-transition);
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--border-color, #E8EDF5);
     }
 
-    .form-section:hover {
-        border-color: rgba(255, 107, 0, 0.10);
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
     }
 
     .section-title {
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: var(--admin-primary);
-        margin-bottom: 0.75rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid rgba(255, 107, 0, 0.12);
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        font-size: clamp(0.75rem, 0.9vw, 0.85rem);
+        font-weight: 700;
+        color: var(--text-primary, #1A2A6C);
+        margin-bottom: 0.75rem;
         font-family: 'Fraunces', serif;
     }
 
@@ -218,468 +247,521 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark));
-        color: white;
+        background: linear-gradient(135deg, var(--admin-primary, #FF6B00), var(--admin-primary-dark, #E55A00));
+        color: #FFFFFF;
         font-size: 0.6rem;
         font-weight: 700;
         flex-shrink: 0;
     }
 
     .section-title i {
+        color: var(--admin-primary, #FF6B00);
         font-size: 0.85rem;
-        color: var(--admin-primary);
-        width: 20px;
-        text-align: center;
     }
 
+    /* ============================================================
+       FORM ELEMENTS - CSS only locking, NO disabled
+       ============================================================ */
     .form-label {
-        font-size: 0.7rem;
+        font-size: clamp(0.6rem, 0.7vw, 0.65rem);
         font-weight: 600;
-        color: var(--text-secondary);
+        color: var(--text-secondary, #4A5A7A);
         margin-bottom: 0.2rem;
         display: flex;
         align-items: center;
-        flex-wrap: wrap;
         gap: 0.3rem;
-    }
-
-    .form-label .required-star {
-        color: var(--admin-danger);
-        font-size: 0.8rem;
-    }
-
-    .form-control,
-    .form-select,
-    textarea,
-    input[type="text"],
-    input[type="email"],
-    input[type="tel"],
-    input[type="number"],
-    select {
-        background-color: var(--input-bg);
-        background: var(--input-bg);
-        border: 2px solid var(--border-color);
-        color: var(--text-primary);
-        border-radius: 8px;
-        padding: 0.4rem 0.7rem;
-        font-size: 0.78rem;
-        transition: var(--admin-transition);
-        -webkit-text-fill-color: var(--text-primary);
-        caret-color: var(--text-primary);
-        width: 100%;
+        flex-wrap: wrap;
         font-family: 'Inter', sans-serif;
     }
 
-    .form-control:focus,
-    .form-select:focus,
-    textarea:focus,
-    input[type="text"]:focus,
-    input[type="email"]:focus,
-    input[type="tel"]:focus,
-    input[type="number"]:focus,
-    select:focus {
-        border-color: var(--admin-primary);
-        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.10);
-        outline: none;
-        background-color: var(--input-bg);
-        background: var(--input-bg);
-        color: var(--text-primary);
-        -webkit-text-fill-color: var(--text-primary);
+    .form-label .required-star {
+        color: var(--admin-danger, #EF4444);
+        font-size: 0.8rem;
     }
 
-    .form-control::placeholder,
-    textarea::placeholder,
-    input[type="text"]::placeholder,
-    input[type="email"]::placeholder,
-    input[type="tel"]::placeholder,
-    input[type="number"]::placeholder {
-        color: var(--text-muted);
-        -webkit-text-fill-color: var(--text-muted);
-        opacity: 0.6;
+    .form-label .badge-auto-fill {
+        font-size: 0.45rem;
+        font-weight: 600;
+        color: var(--admin-success, #10B981);
+        background: rgba(16, 185, 129, 0.08);
+        padding: 0.05rem 0.4rem;
+        border-radius: 50px;
+        border: 1px solid rgba(16, 185, 129, 0.12);
+        animation: pulseBadge 2s ease-in-out infinite;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.15rem;
+        white-space: nowrap;
+    }
+
+    .form-label .badge-locked {
+        font-size: 0.45rem;
+        font-weight: 600;
+        color: #3B82F6;
+        background: rgba(59, 130, 246, 0.08);
+        padding: 0.05rem 0.4rem;
+        border-radius: 50px;
+        border: 1px solid rgba(59, 130, 246, 0.12);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.15rem;
+        white-space: nowrap;
+        margin-left: 4px;
+    }
+
+    @keyframes pulseBadge {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+
+    .form-control, .form-select, textarea, 
+    input[type="text"], input[type="email"], input[type="tel"], 
+    input[type="number"], select, input[type="file"] {
+        width: 100%;
+        padding: 0.4rem 0.7rem;
+        border: 2px solid var(--border-color, #DCE3F0);
+        border-radius: 8px;
+        background: var(--input-bg, #F8FAFF);
+        color: var(--text-primary, #1A2A6C);
+        font-size: clamp(0.7rem, 0.8vw, 0.8rem);
+        transition: var(--admin-transition, all 0.25s ease);
+        font-family: 'Inter', sans-serif;
+        min-height: 38px;
+    }
+
+    .form-control:focus, .form-select:focus, 
+    textarea:focus, input:focus {
+        border-color: var(--admin-primary, #FF6B00);
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.06);
+        outline: none;
+    }
+
+    .form-control::placeholder, input::placeholder {
+        color: var(--text-muted, #8A9AB8);
+        opacity: 0.5;
         font-size: 0.7rem;
     }
 
-    .form-select {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236B7A9E' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 0.7rem center;
-        background-size: 12px 10px;
-        -webkit-appearance: none;
-        appearance: none;
-        padding-right: 2rem;
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+        font-family: 'Inter', sans-serif;
     }
 
-    .form-select option,
-    select option {
-        background: var(--bg-secondary);
-        color: var(--text-primary);
-        padding: 6px 10px;
+    .form-control.field-auto-filled,
+    input.field-auto-filled,
+    select.field-auto-filled {
+        border-color: var(--admin-success, #10B981) !important;
+        background: rgba(16, 185, 129, 0.04) !important;
     }
 
+    .form-control.field-auto-filled:focus,
+    input.field-auto-filled:focus,
+    select.field-auto-filled:focus {
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.06) !important;
+    }
+
+    /* CSS-only locking - fields are enabled but look locked */
+    .field-locked {
+        pointer-events: none !important;
+        cursor: not-allowed !important;
+        opacity: 0.7 !important;
+        border-color: rgba(59, 130, 246, 0.15) !important;
+        background: var(--bg-secondary, #F8FAFF) !important;
+    }
+
+    /* Radio Group */
     .radio-group {
         display: flex;
-        gap: 1.25rem;
+        gap: 0.75rem;
         flex-wrap: wrap;
         padding-top: 0.2rem;
     }
 
-    .form-check {
+    .radio-group .form-check {
         display: flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.3rem;
+        font-size: clamp(0.65rem, 0.75vw, 0.7rem);
+        color: var(--text-secondary, #4A5A7A);
         cursor: pointer;
-        margin: 0;
     }
 
-    .form-check-input {
-        width: 17px;
-        height: 17px;
-        background-color: var(--input-bg);
-        border: 2px solid var(--border-color);
-        border-radius: 50%;
+    .radio-group .form-check input[type="radio"] {
+        accent-color: var(--admin-primary, #FF6B00);
+        width: 14px;
+        height: 14px;
         cursor: pointer;
-        transition: var(--admin-transition);
         flex-shrink: 0;
-        margin: 0;
-        -webkit-appearance: none;
-        appearance: none;
-        position: relative;
     }
 
-    .form-check-input:checked {
-        background-color: var(--admin-primary);
-        border-color: var(--admin-primary);
-        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
+    .radio-group .form-check input[type="radio"]:checked {
+        accent-color: var(--admin-primary, #FF6B00);
     }
 
-    .form-check-input:checked::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: white;
-    }
-
-    .form-check-label {
-        color: var(--text-primary);
-        font-size: 0.78rem;
-        font-weight: 500;
+    .radio-group .form-check-label {
         cursor: pointer;
+        font-weight: 500;
     }
 
+    /* ============================================================
+       EMPLOYEE FETCH
+       ============================================================ */
     .emp-id-wrapper {
         position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .emp-id-wrapper .form-control {
+        flex: 1;
+        padding-right: 2.2rem;
     }
 
     .emp-fetch-status {
         position: absolute;
-        right: 10px;
+        right: 8px;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 0.8rem;
-        pointer-events: none;
-        z-index: 5;
+        font-size: 0.9rem;
+        transition: var(--admin-transition, all 0.25s ease);
     }
 
-    .emp-fetch-status.found { color: var(--admin-success); }
-    .emp-fetch-status.not-found { color: var(--admin-danger); }
-    .emp-fetch-status.loading { color: var(--admin-primary); animation: spin 0.8s linear infinite; }
+    .emp-fetch-status.loading {
+        color: var(--admin-info, #3B82F6);
+        animation: spin 1s linear infinite;
+    }
 
     @keyframes spin {
-        0% { transform: translateY(-50%) rotate(0deg); }
         100% { transform: translateY(-50%) rotate(360deg); }
     }
 
-    .field-auto-filled {
-        border-color: var(--admin-success) !important;
-        background-color: rgba(16, 185, 129, 0.04) !important;
+    .emp-fetch-status.found {
+        color: var(--admin-success, #10B981);
     }
 
-    [data-theme="dark"] .field-auto-filled {
-        border-color: #34D399 !important;
-        background-color: rgba(52, 211, 153, 0.06) !important;
-    }
-
-    .badge-auto-fill {
-        display: inline-block;
-        font-size: 0.55rem;
-        padding: 0.08rem 0.45rem;
-        border-radius: 4px;
-        background: rgba(16, 185, 129, 0.12);
-        color: var(--admin-success);
-        font-weight: 500;
-    }
-
-    [data-theme="dark"] .badge-auto-fill {
-        background: rgba(52, 211, 153, 0.15);
-        color: #34D399;
-    }
-
-    .badge-validate {
-        display: none;
-        font-size: 0.5rem;
-        padding: 0.08rem 0.4rem;
-        border-radius: 4px;
-        font-weight: 600;
-    }
-
-    .badge-validate.show {
-        display: inline-block;
-    }
-
-    .badge-validate.success {
-        background: rgba(16, 185, 129, 0.12);
-        color: var(--admin-success);
-    }
-
-    .badge-validate.danger {
-        background: rgba(239, 68, 68, 0.12);
-        color: var(--admin-danger);
-    }
-
-    .badge-validate i {
-        margin-right: 0.15rem;
+    .emp-fetch-status.not-found {
+        color: var(--admin-danger, #EF4444);
     }
 
     .fetch-message {
-        font-size: 0.65rem;
+        font-size: 0.55rem;
         margin-top: 0.15rem;
+        min-height: 1.2rem;
         display: none;
+        font-family: 'Inter', sans-serif;
     }
 
     .fetch-message.show {
         display: block;
     }
 
-    .fetch-message.success { color: var(--admin-success); }
-    .fetch-message.error { color: var(--admin-danger); }
-    .fetch-message.warning { color: var(--admin-warning); }
-
-    .mismatch-warning {
-        background: rgba(239, 68, 68, 0.08);
-        border: 1px solid rgba(239, 68, 68, 0.2);
-        border-radius: 8px;
-        padding: 0.6rem 0.8rem;
-        margin-top: 0.4rem;
-        color: var(--admin-danger);
-        font-size: 0.72rem;
-        display: none;
-        animation: shakeWarning 0.5s ease;
+    .fetch-message.success {
+        color: var(--admin-success, #10B981);
     }
 
-    [data-theme="dark"] .mismatch-warning {
-        background: rgba(239, 68, 68, 0.12);
-        border-color: rgba(239, 68, 68, 0.3);
-        color: #F87171;
-    }
-
-    .mismatch-warning.show { display: block; }
-    .mismatch-warning i { margin-right: 0.4rem; font-size: 0.8rem; }
-    .mismatch-warning .emp-details {
-        font-size: 0.65rem;
-        opacity: 0.7;
-        margin-top: 0.2rem;
-    }
-
-    @keyframes shakeWarning {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-4px); }
-        75% { transform: translateX(4px); }
+    .fetch-message.error {
+        color: var(--admin-danger, #EF4444);
     }
 
     .employee-valid {
-        background: rgba(16, 185, 129, 0.06);
-        border: 2px solid rgba(16, 185, 129, 0.15);
-        border-radius: 8px;
-        padding: 0.4rem 0.7rem;
-        margin-top: 0.4rem;
-        color: var(--admin-success);
-        font-size: 0.7rem;
-        display: none;
-    }
-
-    [data-theme="dark"] .employee-valid {
-        background: rgba(52, 211, 153, 0.08);
-        border-color: rgba(52, 211, 153, 0.2);
-        color: #34D399;
-    }
-
-    .employee-valid.show { display: block; }
-    .employee-valid i { margin-right: 0.4rem; }
-
-    input[type="file"] {
-        background-color: var(--input-bg);
-        background: var(--input-bg);
-        color: var(--text-primary);
-        padding: 0.3rem;
-        border: 2px solid var(--border-color);
-        border-radius: 8px;
-        width: 100%;
-        font-size: 0.7rem;
-    }
-
-    input[type="file"]::file-selector-button,
-    input[type="file"]::-webkit-file-upload-button {
-        background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark));
-        border: none;
-        color: white;
-        padding: 0.3rem 0.7rem;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.65rem;
-        font-weight: 500;
-        margin-right: 0.5rem;
-        transition: var(--admin-transition);
-    }
-
-    input[type="file"]::file-selector-button:hover,
-    input[type="file"]::-webkit-file-upload-button:hover {
-        transform: scale(1.02);
-        box-shadow: 0 2px 12px rgba(255, 107, 0, 0.2);
-    }
-
-    .char-counter {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
         font-size: 0.6rem;
-        color: var(--text-muted);
-        text-align: right;
-        margin-top: 0.1rem;
-        transition: var(--admin-transition);
+        color: var(--admin-success, #10B981);
+        background: rgba(16, 185, 129, 0.06);
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        margin-top: 0.2rem;
+        border: 1px solid rgba(16, 185, 129, 0.1);
     }
 
-    .char-counter.warning { color: var(--admin-warning); }
-    .char-counter.danger { color: var(--admin-danger); }
-
-    .error-text {
+    .employee-valid i {
         font-size: 0.65rem;
-        color: var(--admin-danger);
+    }
+
+    /* ============================================================
+       CHAR COUNTER - Counts characters, not words
+       ============================================================ */
+    .char-counter {
+        font-size: 0.5rem;
+        color: var(--text-muted, #8A9AB8);
+        text-align: right;
+        padding: 0.1rem 0.2rem;
+        font-family: 'Inter', sans-serif;
+        transition: var(--admin-transition, all 0.25s ease);
+    }
+
+    .char-counter.danger {
+        color: var(--admin-danger, #EF4444);
+    }
+
+    .char-counter i {
+        font-size: 0.45rem;
+        margin-right: 0.15rem;
+    }
+
+    /* ============================================================
+       ATTACHMENTS
+       ============================================================ */
+    .attachment-wrapper {
+        background: var(--bg-secondary, #F8FAFF);
+        border: 1px solid var(--border-color, #DCE3F0);
+        border-radius: 8px;
+        padding: 0.6rem 0.8rem;
+        margin-bottom: 0.4rem;
+        transition: var(--admin-transition, all 0.25s ease);
+        position: relative;
+    }
+
+    .attachment-wrapper:hover {
+        border-color: rgba(255, 107, 0, 0.15);
+    }
+
+    .attachment-wrapper .attachment-number {
+        font-size: 0.55rem;
+        font-weight: 700;
+        color: var(--admin-primary, #FF6B00);
+        background: rgba(255, 107, 0, 0.08);
+        padding: 0.05rem 0.5rem;
+        border-radius: 50px;
+        display: inline-block;
+        margin-bottom: 0.2rem;
+    }
+
+    .attachment-wrapper .form-control,
+    .attachment-wrapper input[type="file"] {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+        min-height: 32px;
+        background: var(--bg-card, #FFFFFF);
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .attachment-wrapper .remove-attachment {
+        position: absolute;
+        top: 0.4rem;
+        right: 0.4rem;
+        background: transparent;
+        border: none;
+        color: var(--admin-danger, #EF4444);
+        font-size: 0.8rem;
+        cursor: pointer;
+        padding: 0.15rem 0.3rem;
+        border-radius: 4px;
+        transition: var(--admin-transition, all 0.25s ease);
+        line-height: 1;
+        opacity: 0.5;
+    }
+
+    .attachment-wrapper .remove-attachment:hover {
+        background: rgba(239, 68, 68, 0.08);
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .attachment-wrapper .attachment-status {
+        font-size: 0.5rem;
         margin-top: 0.15rem;
         display: flex;
         align-items: center;
         gap: 0.3rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .attachment-wrapper .attachment-status .status-icon {
+        font-size: 0.6rem;
+    }
+
+    .attachment-wrapper .attachment-status .status-text {
+        color: var(--text-muted);
+    }
+
+    .attachment-wrapper .attachment-status .status-text.has-file {
+        color: var(--admin-success);
+    }
+
+    .btn-add-attachment {
+        background: transparent;
+        border: 2px dashed var(--border-color, #DCE3F0);
+        border-radius: 8px;
+        padding: 0.4rem 0.5rem;
+        width: 100%;
+        color: var(--text-secondary, #4A5A7A);
+        font-size: 0.65rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--admin-transition, all 0.25s ease);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-add-attachment:hover {
+        border-color: var(--admin-primary, #FF6B00);
+        color: var(--admin-primary, #FF6B00);
+        background: rgba(255, 107, 0, 0.04);
+    }
+
+    .btn-add-attachment:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .btn-add-attachment i {
+        font-size: 0.75rem;
+    }
+
+    .attachment-counter {
+        font-size: 0.5rem;
+        color: var(--text-muted, #8A9AB8);
+        margin-top: 0.2rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .attachment-counter i {
+        font-size: 0.45rem;
+        margin-right: 0.15rem;
+    }
+
+    /* ============================================================
+       ALERT & ERROR
+       ============================================================ */
+    .alert-error {
+        background: rgba(239, 68, 68, 0.06);
+        border: 1px solid rgba(239, 68, 68, 0.12);
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--admin-danger, #EF4444);
+        font-family: 'Inter', sans-serif;
+    }
+
+    .alert-error i {
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .error-text {
+        font-size: 0.55rem;
+        color: var(--admin-danger, #EF4444);
+        margin-top: 0.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        font-family: 'Inter', sans-serif;
     }
 
     .error-text i {
         font-size: 0.6rem;
     }
 
-    .alert-error {
-        background: rgba(239, 68, 68, 0.06);
-        border: 1px solid rgba(239, 68, 68, 0.15);
-        color: var(--admin-danger);
-        border-radius: 8px;
-        padding: 0.5rem 0.8rem;
-        font-size: 0.75rem;
-        margin-bottom: 0.75rem;
-    }
-
-    [data-theme="dark"] .alert-error {
-        background: rgba(239, 68, 68, 0.10);
-        border-color: rgba(239, 68, 68, 0.25);
-        color: #F87171;
-    }
-
-    .alert-error i {
-        margin-right: 0.4rem;
-    }
-
-    .btn-submit {
-        background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark));
-        color: white;
-        border: none;
-        border-radius: 50px;
-        padding: 0.45rem 2rem;
-        font-weight: 600;
-        font-size: 0.8rem;
-        transition: var(--admin-transition);
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        cursor: pointer;
-        min-height: 38px;
-        box-shadow: 0 2px 16px rgba(255, 107, 0, 0.2);
-    }
-
-    .btn-submit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 28px rgba(255, 107, 0, 0.3);
-        color: white;
-    }
-
-    .btn-submit:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .btn-submit i {
-        font-size: 0.85rem;
-    }
-
-    .btn-cancel {
-        border: 2px solid var(--border-color);
-        color: var(--text-secondary);
-        border-radius: 50px;
-        padding: 0.45rem 1.5rem;
-        font-weight: 500;
-        font-size: 0.8rem;
-        background: transparent;
-        transition: var(--admin-transition);
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        text-decoration: none;
-        min-height: 38px;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .btn-cancel:hover {
-        background: var(--border-color);
-        color: var(--text-primary);
-    }
-
+    /* ============================================================
+       FORM ACTIONS
+       ============================================================ */
     .form-actions {
         display: flex;
         justify-content: flex-end;
         gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border-color, #E8EDF5);
         flex-wrap: wrap;
-        margin-top: 1.25rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border-color);
     }
 
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    input:-webkit-autofill:active,
-    textarea:-webkit-autofill,
-    select:-webkit-autofill {
-        -webkit-text-fill-color: var(--text-primary) !important;
-        -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-        box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
-        caret-color: var(--text-primary) !important;
-        border-color: var(--border-color) !important;
-        background-color: var(--input-bg) !important;
-        background: var(--input-bg) !important;
-        transition: background-color 5000s ease-in-out 0s !important;
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.4rem 1.2rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: transparent;
+        border: 2px solid var(--border-color, #DCE3F0);
+        color: var(--text-secondary, #4A5A7A);
+        transition: var(--admin-transition, all 0.25s ease);
+        text-decoration: none;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        min-height: 38px;
     }
 
-    [data-theme="dark"] input:-webkit-autofill,
-    [data-theme="dark"] input:-webkit-autofill:hover,
-    [data-theme="dark"] input:-webkit-autofill:focus,
-    [data-theme="dark"] textarea:-webkit-autofill,
-    [data-theme="dark"] select:-webkit-autofill {
-        -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.05) inset !important;
-        box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.05) inset !important;
-        background-color: rgba(255, 255, 255, 0.05) !important;
-        background: rgba(255, 255, 255, 0.05) !important;
-        -webkit-text-fill-color: #E8EDF5 !important;
+    .btn-cancel:hover {
+        border-color: var(--admin-danger, #EF4444);
+        color: var(--admin-danger, #EF4444);
+        transform: translateY(-2px);
+        text-decoration: none;
     }
 
+    .btn-submit {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 1.5rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--admin-primary, #FF6B00), var(--admin-primary-dark, #E55A00));
+        color: #FFFFFF;
+        border: none;
+        transition: var(--admin-transition, all 0.25s ease);
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        min-height: 38px;
+        box-shadow: 0 2px 12px rgba(255, 107, 0, 0.2);
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
+    }
+
+    .btn-submit:active {
+        transform: scale(0.96);
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .btn-submit i {
+        font-size: 0.8rem;
+    }
+
+    /* ============================================================
+       DARK THEME SUPPORT - COMPLETE FIX FOR DROPDOWNS
+       ============================================================ */
+    [data-theme="dark"] {
+        --bg-card: #1A1A2E;
+        --bg-secondary: rgba(255, 255, 255, 0.03);
+        --border-color: rgba(255, 255, 255, 0.06);
+        --text-primary: #E8EDF5;
+        --text-secondary: rgba(255, 255, 255, 0.6);
+        --text-muted: rgba(255, 255, 255, 0.3);
+        --input-bg: rgba(255, 255, 255, 0.04);
+    }
+
+    /* Dark mode - Form containers */
+    [data-theme="dark"] .page-header-bar,
+    [data-theme="dark"] .form-card {
+        background: var(--bg-card);
+        border-color: var(--border-color);
+    }
+
+    /* Dark mode - All inputs including selects */
     [data-theme="dark"] .form-control,
     [data-theme="dark"] .form-select,
     [data-theme="dark"] textarea,
@@ -687,131 +769,302 @@
     [data-theme="dark"] input[type="email"],
     [data-theme="dark"] input[type="tel"],
     [data-theme="dark"] input[type="number"],
-    [data-theme="dark"] select {
-        background-color: rgba(255, 255, 255, 0.04);
-        background: rgba(255, 255, 255, 0.04);
-        border-color: rgba(255, 255, 255, 0.08);
-        color: #E8EDF5;
-        -webkit-text-fill-color: #E8EDF5;
+    [data-theme="dark"] select,
+    [data-theme="dark"] input[type="file"] {
+        background: var(--input-bg) !important;
+        border-color: var(--border-color) !important;
+        color: var(--text-primary) !important;
     }
 
+    /* ✅ FIXED: Dark mode dropdown - proper styling with visible arrow */
+    [data-theme="dark"] select,
+    [data-theme="dark"] .form-select {
+        background-color: #1A1A2E !important;
+        color: #E8EDF5 !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238A9AB8' d='M6 8L0 0h12z'/%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 12px center !important;
+        background-size: 12px 8px !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+        padding-right: 35px !important;
+        cursor: pointer !important;
+    }
+
+    /* ✅ FIXED: Dark mode dropdown options - fully visible */
+    [data-theme="dark"] select option,
+    [data-theme="dark"] .form-select option {
+        background-color: #1A1A2E !important;
+        color: #E8EDF5 !important;
+        padding: 8px 12px !important;
+        border: none !important;
+        min-height: 30px !important;
+    }
+
+    /* ✅ FIXED: Dark mode dropdown option hover */
+    [data-theme="dark"] select option:hover,
+    [data-theme="dark"] .form-select option:hover,
+    [data-theme="dark"] select option:focus,
+    [data-theme="dark"] .form-select option:focus {
+        background-color: rgba(255, 107, 0, 0.2) !important;
+        color: #FFFFFF !important;
+    }
+
+    /* ✅ FIXED: Dark mode dropdown option selected */
+    [data-theme="dark"] select option:checked,
+    [data-theme="dark"] .form-select option:checked,
+    [data-theme="dark"] select option:selected,
+    [data-theme="dark"] .form-select option:selected {
+        background-color: rgba(255, 107, 0, 0.25) !important;
+        color: #FFFFFF !important;
+    }
+
+    /* ✅ FIXED: Dark mode - Firefox specific dropdown fix */
+    [data-theme="dark"] select,
+    [data-theme="dark"] .form-select {
+        color-scheme: dark !important;
+    }
+
+    /* ✅ FIXED: Dark mode - Select focus state */
+    [data-theme="dark"] select:focus,
+    [data-theme="dark"] .form-select:focus {
+        border-color: var(--admin-primary, #FF6B00) !important;
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.08) !important;
+        outline: none !important;
+    }
+
+    /* ✅ FIXED: Dark mode - Select disabled state */
+    [data-theme="dark"] select:disabled,
+    [data-theme="dark"] .form-select:disabled {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+    }
+
+    /* Dark mode - Form control focus */
     [data-theme="dark"] .form-control:focus,
-    [data-theme="dark"] .form-select:focus,
     [data-theme="dark"] textarea:focus,
-    [data-theme="dark"] input[type="text"]:focus,
-    [data-theme="dark"] input[type="email"]:focus,
-    [data-theme="dark"] input[type="tel"]:focus,
-    [data-theme="dark"] input[type="number"]:focus,
-    [data-theme="dark"] select:focus {
-        border-color: var(--admin-primary);
-        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
-        background-color: rgba(255, 255, 255, 0.07);
-        background: rgba(255, 255, 255, 0.07);
-        color: #E8EDF5;
-        -webkit-text-fill-color: #E8EDF5;
+    [data-theme="dark"] input:focus {
+        border-color: var(--admin-primary, #FF6B00) !important;
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.08) !important;
     }
 
     [data-theme="dark"] .form-control::placeholder,
-    [data-theme="dark"] textarea::placeholder,
-    [data-theme="dark"] input[type="text"]::placeholder,
-    [data-theme="dark"] input[type="email"]::placeholder,
-    [data-theme="dark"] input[type="tel"]::placeholder,
-    [data-theme="dark"] input[type="number"]::placeholder {
-        color: rgba(255, 255, 255, 0.3);
-        -webkit-text-fill-color: rgba(255, 255, 255, 0.3);
+    [data-theme="dark"] input::placeholder {
+        color: rgba(255, 255, 255, 0.2) !important;
     }
 
-    [data-theme="dark"] .form-select option,
-    [data-theme="dark"] select option {
-        background: #1a2440;
-        color: #E8EDF5;
+    /* Dark mode - Auto-filled fields */
+    [data-theme="dark"] .form-control.field-auto-filled,
+    [data-theme="dark"] input.field-auto-filled,
+    [data-theme="dark"] select.field-auto-filled {
+        background: rgba(16, 185, 129, 0.06) !important;
+        border-color: rgba(16, 185, 129, 0.2) !important;
     }
 
-    [data-theme="dark"] .form-check-input {
-        background-color: rgba(255, 255, 255, 0.06);
-        border-color: rgba(255, 255, 255, 0.15);
+    /* Dark mode - Locked fields */
+    [data-theme="dark"] .field-locked {
+        background: rgba(255, 255, 255, 0.02) !important;
+        border-color: rgba(59, 130, 246, 0.15) !important;
+        color: rgba(255, 255, 255, 0.4) !important;
     }
 
-    [data-theme="dark"] .form-check-input:checked {
-        background-color: var(--admin-primary);
-        border-color: var(--admin-primary);
+    /* Dark mode - Radio group */
+    [data-theme="dark"] .radio-group .form-check {
+        color: rgba(255, 255, 255, 0.6);
     }
 
-    [data-theme="dark"] .form-check-label {
-        color: #E8EDF5;
+    [data-theme="dark"] .radio-group .form-check input[type="radio"] {
+        accent-color: var(--admin-primary, #FF6B00);
     }
 
-    [data-theme="dark"] .form-section {
-        background: rgba(255, 255, 255, 0.02);
+    /* Dark mode - Attachments */
+    [data-theme="dark"] .attachment-wrapper {
+        background: rgba(255, 255, 255, 0.03);
         border-color: rgba(255, 255, 255, 0.06);
     }
 
+    [data-theme="dark"] .attachment-wrapper .attachment-number {
+        background: rgba(255, 107, 0, 0.12);
+    }
+
+    /* Dark mode - Admin banner */
+    [data-theme="dark"] .admin-banner {
+        background: linear-gradient(135deg, rgba(255, 107, 0, 0.04), rgba(255, 107, 0, 0.01));
+        border-color: rgba(255, 107, 0, 0.08);
+    }
+
+    [data-theme="dark"] .admin-banner span {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    [data-theme="dark"] .admin-banner span strong {
+        color: #E8EDF5;
+    }
+
+    /* Dark mode - Section dividers */
+    [data-theme="dark"] .form-section {
+        border-bottom-color: rgba(255, 255, 255, 0.04);
+    }
+
+    [data-theme="dark"] .form-actions {
+        border-top-color: rgba(255, 255, 255, 0.04);
+    }
+
+    /* Dark mode - Buttons */
+    [data-theme="dark"] .btn-back {
+        border-color: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    [data-theme="dark"] .btn-back:hover {
+        border-color: var(--admin-primary, #FF6B00);
+        color: var(--admin-primary, #FF6B00);
+    }
+
+    [data-theme="dark"] .btn-cancel {
+        border-color: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    [data-theme="dark"] .btn-cancel:hover {
+        border-color: var(--admin-danger, #EF4444);
+        color: var(--admin-danger, #EF4444);
+    }
+
+    /* Dark mode - Character counter */
+    [data-theme="dark"] .char-counter {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    [data-theme="dark"] .char-counter.danger {
+        color: var(--admin-danger, #EF4444);
+    }
+
+    /* Dark mode - Employee valid */
+    [data-theme="dark"] .employee-valid {
+        background: rgba(16, 185, 129, 0.06);
+        color: var(--admin-success, #10B981);
+        border-color: rgba(16, 185, 129, 0.1);
+    }
+
+    /* Dark mode - Alert error */
+    [data-theme="dark"] .alert-error {
+        background: rgba(239, 68, 68, 0.06);
+        border-color: rgba(239, 68, 68, 0.12);
+        color: #EF4444;
+    }
+
+    /* Dark mode - Badges */
+    [data-theme="dark"] .form-label .badge-auto-fill {
+        background: rgba(16, 185, 129, 0.12);
+        border-color: rgba(16, 185, 129, 0.15);
+        color: #34D399;
+    }
+
+    [data-theme="dark"] .form-label .badge-locked {
+        background: rgba(59, 130, 246, 0.12);
+        border-color: rgba(59, 130, 246, 0.15);
+        color: #60A5FA;
+    }
+
+    /* Dark mode - File input button */
+    [data-theme="dark"] input[type="file"]::file-selector-button,
+    [data-theme="dark"] input[type="file"]::-webkit-file-upload-button {
+        background: var(--admin-primary) !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Dark mode - Attachment status */
+    [data-theme="dark"] .attachment-wrapper .attachment-status .status-text {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    [data-theme="dark"] .attachment-wrapper .attachment-status .status-text.has-file {
+        color: var(--admin-success);
+    }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
     @media (max-width: 768px) {
+        .create-ticket-wrapper {
+            padding: 0 0.5rem;
+        }
+
         .page-header-bar {
-            padding: 0.75rem 1rem;
+            padding: 0.6rem 1rem;
             flex-direction: column;
             align-items: stretch;
+            gap: 0.5rem;
+        }
+
+        .header-left-group {
+            gap: 0.5rem;
+        }
+
+        .header-icon-box {
+            width: 34px;
+            height: 34px;
+            font-size: 1rem;
         }
 
         .header-right-group {
+            display: flex;
             justify-content: stretch;
         }
 
         .header-right-group .btn-back {
-            flex: 1;
+            width: 100%;
             justify-content: center;
         }
 
         .form-card-body {
-            padding: 1rem;
+            padding: 0.75rem 1rem;
         }
 
         .form-section {
-            padding: 0.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
         }
 
-        .section-title {
-            font-size: 0.75rem;
+        .admin-banner {
+            padding: 0.5rem 1rem;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.4rem;
         }
 
-        .form-label {
-            font-size: 0.65rem;
+        .admin-banner i {
+            display: none;
         }
 
-        .form-control,
-        .form-select,
-        textarea,
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="number"],
-        select {
-            font-size: 0.75rem;
-            padding: 0.35rem 0.6rem;
+        .badge-access {
+            align-self: flex-start;
         }
 
         .radio-group {
-            gap: 0.75rem;
+            gap: 0.4rem;
+        }
+
+        .radio-group .form-check {
+            font-size: 0.6rem;
         }
 
         .form-actions {
             flex-direction: column;
         }
 
-        .form-actions .btn-submit,
-        .form-actions .btn-cancel {
+        .form-actions .btn-cancel,
+        .form-actions .btn-submit {
             width: 100%;
             justify-content: center;
         }
 
-        .admin-banner {
-            font-size: 0.7rem;
-            padding: 0.5rem 0.75rem;
-        }
-
-        .admin-banner .badge-access {
-            font-size: 0.5rem;
-            padding: 0.1rem 0.4rem;
+        .form-label .badge-auto-fill {
+            font-size: 0.4rem;
+            padding: 0.03rem 0.3rem;
         }
     }
 
@@ -821,34 +1074,31 @@
         }
 
         .page-header-bar {
-            padding: 0.5rem 0.75rem;
+            padding: 0.4rem 0.6rem;
         }
 
-        .header-left-group .header-icon-box {
-            width: 32px;
-            height: 32px;
-            font-size: 0.9rem;
+        .header-icon-box {
+            width: 28px;
+            height: 28px;
+            font-size: 0.8rem;
+            border-radius: 8px;
         }
 
         .header-title-group h4 {
-            font-size: 0.95rem;
+            font-size: 0.85rem;
         }
 
         .header-title-group small {
-            font-size: 0.6rem;
+            font-size: 0.5rem;
         }
 
         .form-card-body {
-            padding: 0.75rem;
-        }
-
-        .form-section {
-            padding: 0.6rem;
-            margin-bottom: 0.6rem;
+            padding: 0.5rem 0.6rem;
         }
 
         .section-title {
             font-size: 0.7rem;
+            gap: 0.3rem;
         }
 
         .section-title .step-num {
@@ -857,87 +1107,142 @@
             font-size: 0.5rem;
         }
 
-        .form-control,
-        .form-select,
-        textarea,
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="number"],
-        select {
-            font-size: 0.7rem;
+        .form-label {
+            font-size: 0.55rem;
+        }
+
+        .form-control, .form-select, textarea, 
+        input[type="text"], input[type="email"], input[type="tel"], 
+        input[type="number"], select, input[type="file"] {
+            font-size: 0.65rem;
             padding: 0.3rem 0.5rem;
-            border-radius: 6px;
+            min-height: 32px;
         }
 
-        .form-check-label {
-            font-size: 0.72rem;
+        .char-counter {
+            font-size: 0.45rem;
         }
 
-        .form-check-input {
-            width: 15px;
-            height: 15px;
+        .admin-banner span {
+            font-size: 0.55rem;
         }
 
-        .btn-submit {
-            font-size: 0.75rem;
-            padding: 0.35rem 1.5rem;
-            min-height: 34px;
-        }
-
-        .btn-cancel {
-            font-size: 0.75rem;
-            padding: 0.35rem 1.25rem;
-            min-height: 34px;
+        .badge-access {
+            font-size: 0.5rem;
+            padding: 0.1rem 0.4rem;
         }
 
         .btn-back {
+            font-size: 0.6rem;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .btn-cancel, .btn-submit {
             font-size: 0.65rem;
-            padding: 0.25rem 0.75rem;
+            padding: 0.3rem 0.8rem;
+            min-height: 32px;
+        }
+
+        .attachment-wrapper {
+            padding: 0.4rem 0.5rem;
+        }
+
+        .attachment-wrapper .attachment-number {
+            font-size: 0.5rem;
+        }
+
+        .attachment-wrapper .form-control,
+        .attachment-wrapper input[type="file"] {
+            font-size: 0.6rem;
+            padding: 0.2rem 0.4rem;
             min-height: 28px;
+        }
+
+        .btn-add-attachment {
+            font-size: 0.6rem;
+            padding: 0.3rem 0.4rem;
+        }
+
+        .attachment-counter {
+            font-size: 0.45rem;
+        }
+
+        .alert-error {
+            font-size: 0.65rem;
+            padding: 0.4rem 0.6rem;
+        }
+
+        .form-label .badge-auto-fill {
+            font-size: 0.35rem;
+            padding: 0.02rem 0.25rem;
         }
     }
 
     @media (max-width: 360px) {
-        .form-section {
-            padding: 0.4rem;
+        .header-title-group h4 {
+            font-size: 0.75rem;
         }
-
-        .form-label {
+        .form-control, .form-select, textarea, input {
             font-size: 0.6rem;
+            padding: 0.2rem 0.4rem;
+            min-height: 28px;
         }
-
-        .form-control,
-        .form-select,
-        textarea,
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="number"],
-        select {
+        .section-title {
             font-size: 0.65rem;
-            padding: 0.25rem 0.4rem;
         }
-
-        .radio-group {
-            gap: 0.5rem;
+        .badge-access {
+            font-size: 0.45rem;
         }
-
-        .form-check-label {
-            font-size: 0.65rem;
+        .form-label .badge-auto-fill {
+            font-size: 0.3rem;
+            padding: 0.02rem 0.2rem;
         }
     }
 
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
-    ::-webkit-scrollbar-thumb { background: var(--admin-primary); border-radius: 8px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--admin-primary-dark); }
+    /* Dark mode responsive fixes */
+    [data-theme="dark"] .form-select option,
+    [data-theme="dark"] select option {
+        background-color: #1A1A2E !important;
+        color: #E8EDF5 !important;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        /* Fallback for system dark mode if data-theme is not set */
+        select,
+        .form-select {
+            background-color: #1A1A2E !important;
+            color: #E8EDF5 !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238A9AB8' d='M6 8L0 0h12z'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 12px center !important;
+            background-size: 12px 8px !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            padding-right: 35px !important;
+        }
+        select option,
+        .form-select option {
+            background-color: #1A1A2E !important;
+            color: #E8EDF5 !important;
+        }
+        select option:hover,
+        .form-select option:hover {
+            background-color: rgba(255, 107, 0, 0.2) !important;
+            color: #FFFFFF !important;
+        }
+        select option:checked,
+        .form-select option:checked {
+            background-color: rgba(255, 107, 0, 0.25) !important;
+            color: #FFFFFF !important;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="create-ticket-wrapper">
-
+    <!-- Header -->
     <header class="page-header-bar">
         <div class="header-left-group">
             <div class="header-icon-box">
@@ -980,6 +1285,7 @@
                 </div>
                 {% endif %}
 
+                <!-- SECTION 1: Source & Location -->
                 <div class="form-section">
                     <div class="section-title">
                         <span class="step-num">1</span>
@@ -1036,6 +1342,7 @@
                     </div>
                 </div>
 
+                <!-- SECTION 2: Employee Details -->
                 <div class="form-section">
                     <div class="section-title">
                         <span class="step-num">2</span>
@@ -1049,27 +1356,16 @@
                                 <span class="badge-auto-fill" id="autoFillBadge" style="display:none;">
                                     <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-fill
                                 </span>
-                                <span class="badge-validate" id="validationBadge">
-                                    <i class="fa-solid fa-check-circle"></i> Valid
-                                </span>
                             </label>
                             <div class="emp-id-wrapper">
                                 {{ form.employee_id }}
                                 <span class="emp-fetch-status" id="empFetchStatus"></span>
                             </div>
                             <div class="fetch-message" id="empFetchMessage"></div>
-
-                            <div class="mismatch-warning" id="mismatchWarning">
-                                <i class="fa-solid fa-triangle-exclamation"></i>
-                                <span id="mismatchMessage">Employee belongs to a different department or unit.</span>
-                                <div class="emp-details" id="mismatchDetails"></div>
-                            </div>
-
-                            <div class="employee-valid" id="employeeValid">
+                            <div class="employee-valid" id="employeeValid" style="display:none;">
                                 <i class="fa-solid fa-circle-check"></i>
                                 Employee verified. Details auto-filled.
                             </div>
-
                             {% if form.employee_id.errors %}
                             <div class="error-text"><i class="fa-solid fa-circle-exclamation"></i> {{ form.employee_id.errors }}</div>
                             {% endif %}
@@ -1105,6 +1401,7 @@
                     </div>
                 </div>
 
+                <!-- SECTION 3: Issue Details -->
                 <div class="form-section">
                     <div class="section-title">
                         <span class="step-num">3</span>
@@ -1135,6 +1432,9 @@
                         <div class="col-12">
                             <label class="form-label">
                                 Description <span class="required-star">*</span>
+                                <span style="font-size:0.55rem;color:var(--text-muted);font-weight:400;">
+                                    (Minimum 10 characters)
+                                </span>
                             </label>
                             {{ form.description }}
                             <div class="char-counter" id="desc_counter">0 characters (minimum 10)</div>
@@ -1145,11 +1445,12 @@
                     </div>
                 </div>
 
+                <!-- SECTION 4: Classification & Attachments -->
                 <div class="form-section">
                     <div class="section-title">
                         <span class="step-num">4</span>
                         <i class="fa-solid fa-tags"></i>
-                        Classification &amp; Attachment
+                        Classification &amp; Attachments
                     </div>
                     <div class="row g-2">
                         <div class="col-12 col-sm-6 col-md-4">
@@ -1169,20 +1470,84 @@
                             <label class="form-label">
                                 Error Type <span class="required-star">*</span>
                             </label>
-                            {{ form.error_type }}
+                            <select class="form-select" name="error_type" id="id_error_type" required>
+                                <option value="">Select Error Type</option>
+                                <option value="New">New</option>
+                                <option value="Repeated">Repeated</option>
+                            </select>
                             {% if form.error_type.errors %}
                             <div class="error-text"><i class="fa-solid fa-circle-exclamation"></i> {{ form.error_type.errors }}</div>
                             {% endif %}
                         </div>
                         <div class="col-12 col-md-4">
-                            <label class="form-label">Attachment</label>
-                            {{ form.attachment }}
-                            <div class="char-counter" style="text-align:left;">
-                                <i class="fa-regular fa-file"></i> Max 3MB (PDF, DOC, XLS, PNG, JPG)
+                            <label class="form-label">
+                                <i class="fa-solid fa-paperclip"></i> Attachments
+                                <span style="font-size:0.55rem;color:var(--text-muted);font-weight:400;">
+                                    (Max 3 files, 3MB each)
+                                </span>
+                            </label>
+                            
+                            <!-- Attachment Container -->
+                            <div id="attachmentContainer">
+                                <!-- Attachment 1 - Always visible -->
+                                <div class="attachment-wrapper" id="attachmentWrapper1" data-attachment-num="1">
+                                    <span class="attachment-number">Attachment 1 <span class="required-star">*</span></span>
+                                    {{ form.attachment_1 }}
+                                    <div class="char-counter" style="text-align:left;font-size:0.55rem;">
+                                        <i class="fa-regular fa-file"></i> Max 3MB (PDF, DOC, XLS, PNG, JPG, TXT)
+                                    </div>
+                                    <div class="attachment-status" id="status1">
+                                        <span class="status-icon">⏳</span>
+                                        <span class="status-text">No file selected</span>
+                                    </div>
+                                    {% if form.attachment_1.errors %}
+                                    <div class="error-text"><i class="fa-solid fa-circle-exclamation"></i> {{ form.attachment_1.errors }}</div>
+                                    {% endif %}
+                                    <button type="button" class="remove-attachment" data-attachment-num="1" title="Remove this attachment" style="display:none;">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Attachment 2 - Hidden by default -->
+                                <div class="attachment-wrapper" id="attachmentWrapper2" data-attachment-num="2" style="display:none;">
+                                    <span class="attachment-number">Attachment 2</span>
+                                    <input type="file" name="attachment_2" id="id_attachment_2" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt">
+                                    <div class="char-counter" style="text-align:left;font-size:0.55rem;">
+                                        <i class="fa-regular fa-file"></i> Max 3MB (PDF, DOC, XLS, PNG, JPG, TXT)
+                                    </div>
+                                    <div class="attachment-status" id="status2">
+                                        <span class="status-icon">⏳</span>
+                                        <span class="status-text">No file selected</span>
+                                    </div>
+                                    <button type="button" class="remove-attachment" data-attachment-num="2" title="Remove this attachment" style="display:block;">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Attachment 3 - Hidden by default -->
+                                <div class="attachment-wrapper" id="attachmentWrapper3" data-attachment-num="3" style="display:none;">
+                                    <span class="attachment-number">Attachment 3</span>
+                                    <input type="file" name="attachment_3" id="id_attachment_3" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt">
+                                    <div class="char-counter" style="text-align:left;font-size:0.55rem;">
+                                        <i class="fa-regular fa-file"></i> Max 3MB (PDF, DOC, XLS, PNG, JPG, TXT)
+                                    </div>
+                                    <div class="attachment-status" id="status3">
+                                        <span class="status-icon">⏳</span>
+                                        <span class="status-text">No file selected</span>
+                                    </div>
+                                    <button type="button" class="remove-attachment" data-attachment-num="3" title="Remove this attachment" style="display:block;">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
                             </div>
-                            {% if form.attachment.errors %}
-                            <div class="error-text"><i class="fa-solid fa-circle-exclamation"></i> {{ form.attachment.errors }}</div>
-                            {% endif %}
+                            
+                            <!-- Add Attachment Button -->
+                            <button type="button" class="btn-add-attachment" id="addAttachmentBtn">
+                                <i class="fa-solid fa-plus-circle"></i> Add Attachment
+                            </button>
+                            <div class="attachment-counter" id="attachmentCounter">
+                                <i class="fa-regular fa-circle-info"></i> 1 of 3 attachments used
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1205,147 +1570,448 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ============================================================
+        // FIX: Notification URL - Use correct custom-admin path
+        // ============================================================
+        function fixNotificationUrl() {
+            var originalFetch = window.fetch;
+            window.fetch = function(url, options) {
+                if (typeof url === 'string' && url.includes('/admin/notifications/')) {
+                    url = url.replace('/admin/notifications/', '/custom-admin/notifications/');
+                }
+                return originalFetch.call(this, url, options);
+            };
+            
+            var originalOpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+                if (typeof url === 'string' && url.includes('/admin/notifications/')) {
+                    url = url.replace('/admin/notifications/', '/custom-admin/notifications/');
+                }
+                return originalOpen.call(this, method, url, async !== false, user, password);
+            };
+        }
+        fixNotificationUrl();
 
-        function syncInputTheme() {
-            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            var inputs = document.querySelectorAll('.form-control, .form-select, textarea, input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select');
-
-            inputs.forEach(function(input) {
-                input.style.display = 'none';
-                void input.offsetHeight;
-                input.style.display = '';
-
-                if (isDark) {
-                    input.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
-                    input.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                    input.style.color = '#E8EDF5';
-                } else {
-                    input.style.backgroundColor = '';
-                    input.style.borderColor = '';
-                    input.style.color = '';
+        // ============================================================
+        // ATTACHMENT MANAGEMENT - WITH VALIDATION
+        // ============================================================
+        const MAX_ATTACHMENTS = 3;
+        
+        const attachmentContainer = document.getElementById('attachmentContainer');
+        const addAttachmentBtn = document.getElementById('addAttachmentBtn');
+        const attachmentCounter = document.getElementById('attachmentCounter');
+        
+        // Get all three wrappers and their file inputs
+        const wrapper1 = document.getElementById('attachmentWrapper1');
+        const wrapper2 = document.getElementById('attachmentWrapper2');
+        const wrapper3 = document.getElementById('attachmentWrapper3');
+        
+        const fileInput1 = document.getElementById('id_attachment_1');
+        const fileInput2 = document.getElementById('id_attachment_2');
+        const fileInput3 = document.getElementById('id_attachment_3');
+        
+        // Status elements
+        const status1 = document.getElementById('status1');
+        const status2 = document.getElementById('status2');
+        const status3 = document.getElementById('status3');
+        
+        // Get remove buttons
+        const removeBtn1 = wrapper1.querySelector('.remove-attachment');
+        const removeBtn2 = wrapper2.querySelector('.remove-attachment');
+        const removeBtn3 = wrapper3.querySelector('.remove-attachment');
+        
+        // Explicitly set initial visibility
+        if (wrapper1) wrapper1.style.display = 'block';
+        if (wrapper2) wrapper2.style.display = 'none';
+        if (wrapper3) wrapper3.style.display = 'none';
+        
+        // Function to update attachment status
+        function updateAttachmentStatus(wrapper, fileInput, statusEl, num) {
+            if (!wrapper || !fileInput || !statusEl) return;
+            
+            var hasFile = fileInput.files && fileInput.files.length > 0;
+            var statusIcon = statusEl.querySelector('.status-icon');
+            var statusText = statusEl.querySelector('.status-text');
+            
+            if (hasFile) {
+                var fileName = fileInput.files[0].name;
+                var fileSize = (fileInput.files[0].size / 1024).toFixed(1);
+                statusIcon.textContent = '✅';
+                statusText.textContent = fileName + ' (' + fileSize + ' KB)';
+                statusText.className = 'status-text has-file';
+                
+                // Show remove button for this attachment
+                var removeBtn = wrapper.querySelector('.remove-attachment');
+                if (removeBtn) removeBtn.style.display = 'block';
+                
+                // Check if this attachment now has a file, and enable next if needed
+                if (num === 1 && wrapper2.style.display === 'none') {
+                    // Attachment 1 has file, allow adding Attachment 2
+                    checkAndEnableAddButton();
+                }
+                if (num === 2 && wrapper3.style.display === 'none') {
+                    // Attachment 2 has file, allow adding Attachment 3
+                    checkAndEnableAddButton();
+                }
+            } else {
+                statusIcon.textContent = '⏳';
+                statusText.textContent = 'No file selected';
+                statusText.className = 'status-text';
+                
+                // If this attachment is empty, hide all subsequent attachments
+                if (num === 1) {
+                    // Hide attachment 2 and 3, clear their files
+                    if (wrapper2.style.display !== 'none') {
+                        wrapper2.style.display = 'none';
+                        if (fileInput2) {
+                            fileInput2.value = '';
+                            updateAttachmentStatus(wrapper2, fileInput2, status2, 2);
+                        }
+                    }
+                    if (wrapper3.style.display !== 'none') {
+                        wrapper3.style.display = 'none';
+                        if (fileInput3) {
+                            fileInput3.value = '';
+                            updateAttachmentStatus(wrapper3, fileInput3, status3, 3);
+                        }
+                    }
+                } else if (num === 2) {
+                    // Hide attachment 3, clear its file
+                    if (wrapper3.style.display !== 'none') {
+                        wrapper3.style.display = 'none';
+                        if (fileInput3) {
+                            fileInput3.value = '';
+                            updateAttachmentStatus(wrapper3, fileInput3, status3, 3);
+                        }
+                    }
+                }
+                
+                checkAndEnableAddButton();
+            }
+        }
+        
+        // Function to check and enable/disable add button
+        function checkAndEnableAddButton() {
+            // Count visible attachments
+            var visibleCount = 0;
+            var wrappers = [wrapper1, wrapper2, wrapper3];
+            wrappers.forEach(function(w) {
+                if (w && w.style.display !== 'none') {
+                    visibleCount++;
                 }
             });
+            
+            // Check if last visible attachment has a file
+            var canAdd = false;
+            if (visibleCount < MAX_ATTACHMENTS) {
+                // Find the last visible attachment
+                var lastVisibleNum = 0;
+                for (var i = 1; i <= MAX_ATTACHMENTS; i++) {
+                    var w = document.getElementById('attachmentWrapper' + i);
+                    if (w && w.style.display !== 'none') {
+                        lastVisibleNum = i;
+                    }
+                }
+                // Check if that attachment has a file
+                var fileInput = document.getElementById('id_attachment_' + lastVisibleNum);
+                if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                    canAdd = true;
+                }
+            }
+            
+            if (visibleCount >= MAX_ATTACHMENTS) {
+                addAttachmentBtn.disabled = true;
+                addAttachmentBtn.innerHTML = '<i class="fa-solid fa-ban"></i> Maximum 3 attachments reached';
+                addAttachmentBtn.style.borderColor = '#EF4444';
+                addAttachmentBtn.style.color = '#EF4444';
+                addAttachmentBtn.style.opacity = '0.6';
+                addAttachmentBtn.style.cursor = 'not-allowed';
+            } else if (!canAdd) {
+                addAttachmentBtn.disabled = true;
+                var lastNum = visibleCount;
+                addAttachmentBtn.innerHTML = '<i class="fa-solid fa-clock"></i> Add file to Attachment ' + lastNum + ' first';
+                addAttachmentBtn.style.borderColor = '#F59E0B';
+                addAttachmentBtn.style.color = '#F59E0B';
+                addAttachmentBtn.style.opacity = '0.7';
+                addAttachmentBtn.style.cursor = 'not-allowed';
+            } else {
+                addAttachmentBtn.disabled = false;
+                addAttachmentBtn.innerHTML = '<i class="fa-solid fa-plus-circle"></i> Add Attachment';
+                addAttachmentBtn.style.borderColor = '';
+                addAttachmentBtn.style.color = '';
+                addAttachmentBtn.style.opacity = '1';
+                addAttachmentBtn.style.cursor = 'pointer';
+            }
+            
+            // Update counter
+            var fileCount = 0;
+            for (var i = 1; i <= MAX_ATTACHMENTS; i++) {
+                var fi = document.getElementById('id_attachment_' + i);
+                if (fi && fi.files && fi.files.length > 0) {
+                    fileCount++;
+                }
+            }
+            attachmentCounter.innerHTML = '<i class="fa-regular fa-circle-info"></i> ' + fileCount + ' of ' + MAX_ATTACHMENTS + ' attachments selected';
         }
-
-        var themeToggleBtn = document.getElementById('themeToggleFloating');
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', function() {
-                setTimeout(syncInputTheme, 100);
-            });
-        }
-
-        var themeObserver = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.attributeName === 'data-theme') {
-                    syncInputTheme();
+        
+        // File input change handlers
+        fileInput1.addEventListener('change', function() {
+            updateAttachmentStatus(wrapper1, fileInput1, status1, 1);
+            checkAndEnableAddButton();
+        });
+        
+        fileInput2.addEventListener('change', function() {
+            updateAttachmentStatus(wrapper2, fileInput2, status2, 2);
+            checkAndEnableAddButton();
+        });
+        
+        fileInput3.addEventListener('change', function() {
+            updateAttachmentStatus(wrapper3, fileInput3, status3, 3);
+            checkAndEnableAddButton();
+        });
+        
+        // Add attachment button click handler
+        addAttachmentBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Find the first hidden wrapper
+            var firstHidden = null;
+            var wrappers = [wrapper1, wrapper2, wrapper3];
+            
+            wrappers.forEach(function(w) {
+                if (w && w.style.display === 'none' && firstHidden === null) {
+                    firstHidden = w;
                 }
             });
+            
+            if (!firstHidden) {
+                alert('Maximum 3 attachments allowed.');
+                return;
+            }
+            
+            // Show the hidden wrapper
+            firstHidden.style.display = 'block';
+            
+            // Find and clear the file input inside
+            var fileInput = firstHidden.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput.style.display = 'block';
+                fileInput.style.width = '100%';
+            }
+            
+            // Update status
+            var num = firstHidden.getAttribute('data-attachment-num');
+            var statusEl = document.getElementById('status' + num);
+            if (statusEl) {
+                var icon = statusEl.querySelector('.status-icon');
+                var text = statusEl.querySelector('.status-text');
+                if (icon) icon.textContent = '⏳';
+                if (text) {
+                    text.textContent = 'No file selected';
+                    text.className = 'status-text';
+                }
+            }
+            
+            checkAndEnableAddButton();
         });
-        themeObserver.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-theme']
+        
+        // Remove attachment - Event delegation
+        attachmentContainer.addEventListener('click', function(e) {
+            var removeBtn = e.target.closest('.remove-attachment');
+            if (!removeBtn) return;
+            
+            var num = removeBtn.getAttribute('data-attachment-num');
+            var wrapper = document.getElementById('attachmentWrapper' + num);
+            if (!wrapper) return;
+            
+            // Don't remove if it's the last visible one or if it's attachment 1 (always visible)
+            var wrappers = [wrapper1, wrapper2, wrapper3];
+            var visibleCount = 0;
+            wrappers.forEach(function(w) {
+                if (w && w.style.display !== 'none') {
+                    visibleCount++;
+                }
+            });
+            
+            // Always keep attachment 1 visible
+            if (num == 1) {
+                // Just clear the file, don't hide
+                var fileInput = document.getElementById('id_attachment_' + num);
+                if (fileInput) {
+                    fileInput.value = '';
+                    updateAttachmentStatus(wrapper, fileInput, document.getElementById('status' + num), parseInt(num));
+                }
+                checkAndEnableAddButton();
+                return;
+            }
+            
+            if (visibleCount <= 1) {
+                alert('You must keep at least one attachment field.');
+                return;
+            }
+            
+            // Hide the wrapper
+            wrapper.style.display = 'none';
+            
+            // Clear the file input
+            var fileInput = wrapper.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput.style.display = 'none';
+                fileInput.style.width = '100%';
+            }
+            
+            // Update status
+            var statusEl = document.getElementById('status' + num);
+            if (statusEl) {
+                var icon = statusEl.querySelector('.status-icon');
+                var text = statusEl.querySelector('.status-text');
+                if (icon) icon.textContent = '⏳';
+                if (text) {
+                    text.textContent = 'No file selected';
+                    text.className = 'status-text';
+                }
+            }
+            
+            checkAndEnableAddButton();
         });
+        
+        // Initial check
+        updateAttachmentStatus(wrapper1, fileInput1, status1, 1);
+        checkAndEnableAddButton();
 
-        setTimeout(syncInputTheme, 200);
-
+        // ============================================================
+        // EMPLOYEE AUTO-FETCH
+        // ============================================================
         var empIdInput = document.getElementById('id_employee_id');
         var empNameInput = document.getElementById('id_employee_name');
         var empMobileInput = document.getElementById('id_mobile');
         var empEmailInput = document.getElementById('id_email');
-        var unitSelect = document.getElementById('id_unit');
-        var departmentSelect = document.getElementById('id_department');
-        var deptLoading = document.getElementById('dept_loading');
         var empFetchStatus = document.getElementById('empFetchStatus');
         var empFetchMessage = document.getElementById('empFetchMessage');
         var autoFillBadge = document.getElementById('autoFillBadge');
-        var mismatchWarning = document.getElementById('mismatchWarning');
-        var mismatchMessage = document.getElementById('mismatchMessage');
-        var mismatchDetails = document.getElementById('mismatchDetails');
         var employeeValid = document.getElementById('employeeValid');
-        var validationBadge = document.getElementById('validationBadge');
-        var submitBtn = document.getElementById('submitBtn');
-        var form = document.getElementById('ticketForm');
-
+        var departmentSelect = document.getElementById('id_department');
+        var unitSelect = document.getElementById('id_unit');
+        var errorTypeSelect = document.getElementById('id_error_type');
+        
         var fetchTimeout = null;
-        var isAutoFilled = false;
-        var employeeMismatch = false;
-        var employeeValidated = false;
-
-        function showFetchStatus(status, message, details) {
-            message = message || '';
-            details = details || '';
-
+        var isEmployeeFetched = false;
+        
+        // CSS-only locking - fields remain enabled for submission
+        function lockUnitDepartment(lock) {
+            if (lock) {
+                // Lock Unit - CSS only, NOT disabled
+                if (unitSelect) {
+                    unitSelect.classList.add('field-locked');
+                }
+                // Lock Department - CSS only, NOT disabled
+                if (departmentSelect) {
+                    departmentSelect.classList.add('field-locked');
+                }
+                // Error Type - DO NOT LOCK (always selectable)
+                if (errorTypeSelect) {
+                    errorTypeSelect.classList.remove('field-locked');
+                    errorTypeSelect.disabled = false;
+                }
+                // Show locked badge on labels (only for Unit and Department)
+                var unitLabel = document.querySelector('label[for="id_unit"]');
+                var deptLabel = document.querySelector('label[for="id_department"]');
+                
+                if (unitLabel && !unitLabel.querySelector('.badge-locked')) {
+                    var lockBadge = document.createElement('span');
+                    lockBadge.className = 'badge-locked';
+                    lockBadge.innerHTML = '<i class="fa-solid fa-lock me-1"></i>Locked';
+                    unitLabel.appendChild(lockBadge);
+                }
+                if (deptLabel && !deptLabel.querySelector('.badge-locked')) {
+                    var lockBadge2 = document.createElement('span');
+                    lockBadge2.className = 'badge-locked';
+                    lockBadge2.innerHTML = '<i class="fa-solid fa-lock me-1"></i>Locked';
+                    deptLabel.appendChild(lockBadge2);
+                }
+                // Remove any lock badge from Error Type label
+                var errorLabel = document.querySelector('label[for="id_error_type"]');
+                if (errorLabel) {
+                    var badge = errorLabel.querySelector('.badge-locked');
+                    if (badge) badge.remove();
+                }
+            } else {
+                // Unlock Unit - CSS only
+                if (unitSelect) {
+                    unitSelect.classList.remove('field-locked');
+                }
+                // Unlock Department - CSS only
+                if (departmentSelect) {
+                    departmentSelect.classList.remove('field-locked');
+                }
+                // Remove locked badges
+                var unitLabel = document.querySelector('label[for="id_unit"]');
+                var deptLabel = document.querySelector('label[for="id_department"]');
+                if (unitLabel) {
+                    var badge = unitLabel.querySelector('.badge-locked');
+                    if (badge) badge.remove();
+                }
+                if (deptLabel) {
+                    var badge = deptLabel.querySelector('.badge-locked');
+                    if (badge) badge.remove();
+                }
+                // Ensure Error Type is always enabled
+                if (errorTypeSelect) {
+                    errorTypeSelect.classList.remove('field-locked');
+                    errorTypeSelect.disabled = false;
+                }
+            }
+        }
+        
+        function showFetchStatus(status, message) {
             empFetchStatus.className = 'emp-fetch-status';
             empFetchMessage.className = 'fetch-message';
             empFetchMessage.style.display = 'none';
-            mismatchWarning.classList.remove('show');
-            employeeValid.classList.remove('show');
-            validationBadge.className = 'badge-validate';
-            validationBadge.style.display = 'none';
-
+            employeeValid.style.display = 'none';
+            
             if (status === 'loading') {
                 empFetchStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                 empFetchStatus.classList.add('loading');
-                employeeMismatch = false;
-                employeeValidated = false;
+                autoFillBadge.style.display = 'none';
+                // Unlock fields while loading (will lock if found)
+                lockUnitDepartment(false);
             } else if (status === 'found') {
-                employeeMismatch = false;
-                employeeValidated = true;
                 empFetchStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
                 empFetchStatus.classList.add('found');
-                empFetchMessage.textContent = message || 'Employee verified.';
+                empFetchMessage.textContent = message || 'Employee verified. Details auto-filled.';
                 empFetchMessage.className = 'fetch-message show success';
-                autoFillBadge.style.display = 'inline-block';
-                validationBadge.style.display = 'inline-block';
-                validationBadge.className = 'badge-validate show success';
-                validationBadge.innerHTML = '<i class="fa-solid fa-check-circle"></i> Valid';
-                employeeValid.classList.add('show');
-                mismatchWarning.classList.remove('show');
-            } else if (status === 'mismatch') {
-                employeeMismatch = true;
-                employeeValidated = false;
-                empFetchStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                empFetchStatus.classList.add('not-found');
-                empFetchMessage.textContent = message || 'Employee belongs to different department or unit.';
-                empFetchMessage.className = 'fetch-message show warning';
-                autoFillBadge.style.display = 'none';
-                validationBadge.style.display = 'inline-block';
-                validationBadge.className = 'badge-validate show danger';
-                validationBadge.innerHTML = '<i class="fa-solid fa-times-circle"></i> Mismatch';
-                mismatchWarning.classList.add('show');
-                mismatchMessage.textContent = message || 'Employee belongs to different department or unit.';
-                if (details) {
-                    mismatchDetails.textContent = details;
-                } else {
-                    mismatchDetails.textContent = 'As an Admin, you can manually select the correct Unit and Department.';
-                }
-                employeeValid.classList.remove('show');
-                clearAutoFilledFields();
+                autoFillBadge.style.display = 'inline-flex';
+                employeeValid.style.display = 'block';
+                isEmployeeFetched = true;
+                
+                // LOCK Unit and Department only - Error Type stays unlocked
+                lockUnitDepartment(true);
+                
             } else if (status === 'not-found') {
-                employeeMismatch = true;
-                employeeValidated = false;
                 empFetchStatus.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
                 empFetchStatus.classList.add('not-found');
                 empFetchMessage.textContent = message || 'Employee not found.';
                 empFetchMessage.className = 'fetch-message show error';
                 autoFillBadge.style.display = 'none';
-                validationBadge.style.display = 'inline-block';
-                validationBadge.className = 'badge-validate show danger';
-                validationBadge.innerHTML = '<i class="fa-solid fa-times-circle"></i> Not Found';
-                mismatchWarning.classList.remove('show');
-                employeeValid.classList.remove('show');
-                clearAutoFilledFields();
+                isEmployeeFetched = false;
+                
+                // UNLOCK Unit, Department on not found
+                lockUnitDepartment(false);
+                
             } else {
                 empFetchStatus.innerHTML = '';
                 empFetchMessage.className = 'fetch-message';
                 empFetchMessage.style.display = 'none';
                 autoFillBadge.style.display = 'none';
-                validationBadge.style.display = 'none';
-                mismatchWarning.classList.remove('show');
-                employeeValid.classList.remove('show');
+                isEmployeeFetched = false;
+                
+                // UNLOCK on clear
+                lockUnitDepartment(false);
             }
         }
-
+        
         function markAutoFilled(field, isAuto) {
             if (!field) return;
             if (isAuto) {
@@ -1356,7 +2022,7 @@
                 field.removeAttribute('data-auto-filled');
             }
         }
-
+        
         function clearAutoFilledFields() {
             [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
                 if (field && field.getAttribute('data-auto-filled') === 'true') {
@@ -1372,37 +2038,19 @@
                 departmentSelect.value = '';
                 markAutoFilled(departmentSelect, false);
             }
-            isAutoFilled = false;
+            // Error Type - don't clear auto-filled, user should choose
         }
-
-        function clearFetchStatus() {
-            empFetchStatus.className = 'emp-fetch-status';
-            empFetchStatus.innerHTML = '';
-            empFetchMessage.className = 'fetch-message';
-            empFetchMessage.style.display = 'none';
-            empFetchMessage.textContent = '';
-            autoFillBadge.style.display = 'none';
-            validationBadge.className = 'badge-validate';
-            validationBadge.style.display = 'none';
-            mismatchWarning.classList.remove('show');
-            employeeValid.classList.remove('show');
-            employeeMismatch = false;
-            employeeValidated = false;
-        }
-
+        
         function fetchEmployeeDetails(employeeId) {
             if (!employeeId || employeeId.length < 2) {
-                clearFetchStatus();
+                showFetchStatus('');
                 clearAutoFilledFields();
-                employeeMismatch = false;
                 return;
             }
-
+            
             showFetchStatus('loading');
-
-            var url = '/ajax/get-employee/?employee_id=' + encodeURIComponent(employeeId);
-
-            fetch(url, {
+            
+            fetch('/ajax/get-employee/?employee_id=' + encodeURIComponent(employeeId), {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
@@ -1410,125 +2058,54 @@
             })
             .then(function(res) { return res.json(); })
             .then(function(data) {
-                if (data.found) {
-                    var details = '';
-                    if (data.employee) {
-                        details = 'Unit: ' + (data.employee.unit_code || 'N/A') + ' | Department: ' + (data.employee.department_name || 'N/A');
+                if (data.found && data.employee) {
+                    showFetchStatus('found', 'Employee verified. Details auto-filled.');
+                    
+                    if (data.employee.employee_name) {
+                        empNameInput.value = data.employee.employee_name;
+                        markAutoFilled(empNameInput, true);
                     }
-                    showFetchStatus('found', 'Employee verified. Details auto-filled.', details);
-                    autoFillEmployeeDetails(data.employee);
-                } else if (data.mismatch) {
-                    var details = '';
-                    if (data.employee) {
-                        details = 'Employee belongs to: Unit: ' + (data.employee.unit_code || 'N/A') + ' | Department: ' + (data.employee.department_name || 'N/A');
+                    if (data.employee.mobile) {
+                        empMobileInput.value = data.employee.mobile;
+                        markAutoFilled(empMobileInput, true);
                     }
-                    showFetchStatus('mismatch', data.message || 'Employee belongs to different department or unit.', details);
-                    clearAutoFilledFields();
+                    if (data.employee.email) {
+                        empEmailInput.value = data.employee.email;
+                        markAutoFilled(empEmailInput, true);
+                    }
+                    if (data.employee.unit_id && unitSelect) {
+                        unitSelect.value = data.employee.unit_id;
+                        markAutoFilled(unitSelect, true);
+                        loadDepartments(data.employee.unit_id, data.employee.department_id, true);
+                    }
+                    // Auto-fill Error Type if available (but user can change it)
+                    if (data.employee.error_type && errorTypeSelect) {
+                        errorTypeSelect.value = data.employee.error_type;
+                        // Don't mark as auto-filled - user can change it
+                    }
                 } else {
                     showFetchStatus('not-found', data.message || 'Employee not found.');
                     clearAutoFilledFields();
                 }
             })
             .catch(function() {
-                showFetchStatus('not-found', 'Error fetching employee. Please try again.');
+                showFetchStatus('not-found', 'Error fetching employee.');
                 clearAutoFilledFields();
             });
         }
-
-        function autoFillEmployeeDetails(data) {
-            if (!data || employeeMismatch) return;
-
-            if (data.employee_name) {
-                empNameInput.value = data.employee_name;
-                markAutoFilled(empNameInput, true);
-            }
-            if (data.mobile) {
-                empMobileInput.value = data.mobile;
-                markAutoFilled(empMobileInput, true);
-            }
-            if (data.email) {
-                empEmailInput.value = data.email;
-                markAutoFilled(empEmailInput, true);
-            }
-            if (data.unit_id && unitSelect) {
-                unitSelect.value = data.unit_id;
-                markAutoFilled(unitSelect, true);
-                loadDepartments(data.unit_id, data.department_id);
-            }
-            isAutoFilled = true;
-        }
-
-        if (empIdInput) {
-            empIdInput.addEventListener('input', function() {
-                clearTimeout(fetchTimeout);
-                var value = this.value.trim();
-                if (value.length >= 2) {
-                    fetchTimeout = setTimeout(function() {
-                        fetchEmployeeDetails(value);
-                    }, 500);
-                } else {
-                    clearFetchStatus();
-                    clearAutoFilledFields();
-                    employeeMismatch = false;
-                }
-            });
-
-            empIdInput.addEventListener('blur', function() {
-                var value = this.value.trim();
-                if (value.length >= 2 && !isAutoFilled && !employeeValidated) {
-                    fetchEmployeeDetails(value);
-                }
-            });
-
-            empIdInput.addEventListener('paste', function() {
-                setTimeout(function() {
-                    var value = empIdInput.value.trim();
-                    if (value.length >= 2) {
-                        fetchEmployeeDetails(value);
-                    }
-                }, 100);
-            });
-        }
-
-        [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
-            if (field) {
-                field.addEventListener('input', function() {
-                    if (this.getAttribute('data-auto-filled') === 'true') {
-                        markAutoFilled(this, false);
-                        employeeValidated = false;
-                        validationBadge.className = 'badge-validate';
-                        validationBadge.style.display = 'none';
-                        employeeValid.classList.remove('show');
-                    }
-                });
-            }
-        });
-
-        if (unitSelect) {
-            unitSelect.addEventListener('change', function() {
-                markAutoFilled(this, false);
-                employeeValidated = false;
-                employeeMismatch = false;
-                clearFetchStatus();
-                clearAutoFilledFields();
-                if (empIdInput) empIdInput.value = '';
-            });
-        }
-
-        function loadDepartments(unitId, selectedDeptId) {
-            selectedDeptId = selectedDeptId || null;
-            if (!departmentSelect) return;
-
+        
+        function loadDepartments(unitId, selectedDeptId, lockAfterLoad) {
+            lockAfterLoad = lockAfterLoad || false;
+            var deptLoading = document.getElementById('dept_loading');
+            
             if (!unitId) {
                 departmentSelect.innerHTML = '<option value="">Select Unit First</option>';
-                departmentSelect.disabled = true;
                 return;
             }
-
+            
             if (deptLoading) deptLoading.style.display = 'block';
-            departmentSelect.disabled = true;
             departmentSelect.innerHTML = '<option value="">Loading...</option>';
-
+            
             fetch('/ajax/get-departments/?unit_id=' + unitId, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
@@ -1548,8 +2125,6 @@
                         }
                         departmentSelect.appendChild(opt);
                     });
-                    departmentSelect.disabled = false;
-                    if (selectedDeptId) markAutoFilled(departmentSelect, true);
                 } else {
                     departmentSelect.innerHTML += '<option value="">No departments available</option>';
                 }
@@ -1560,46 +2135,80 @@
                 if (deptLoading) deptLoading.style.display = 'none';
             });
         }
-
+        
         if (unitSelect) {
             unitSelect.addEventListener('change', function() {
-                loadDepartments(this.value);
+                if (!isEmployeeFetched) {
+                    loadDepartments(this.value, null, false);
+                } else {
+                    loadDepartments(this.value, departmentSelect.value, true);
+                }
             });
-
-            if (unitSelect.value) {
-                loadDepartments(unitSelect.value, departmentSelect ? departmentSelect.value : null);
-            }
         }
-
+        
+        if (empIdInput) {
+            empIdInput.addEventListener('input', function() {
+                clearTimeout(fetchTimeout);
+                var value = this.value.trim();
+                if (value.length >= 2) {
+                    fetchTimeout = setTimeout(function() {
+                        fetchEmployeeDetails(value);
+                    }, 500);
+                } else {
+                    showFetchStatus('');
+                    clearAutoFilledFields();
+                    lockUnitDepartment(false);
+                    isEmployeeFetched = false;
+                }
+            });
+            
+            empIdInput.addEventListener('blur', function() {
+                var value = this.value.trim();
+                if (value.length >= 2) {
+                    fetchEmployeeDetails(value);
+                }
+            });
+        }
+        
+        // ============================================================
+        // COUNTERS - Counts characters, NOT words
+        // ============================================================
         function setupCounter(inputId, counterId, maxLen) {
             maxLen = maxLen || null;
             var input = document.getElementById(inputId);
             var counter = document.getElementById(counterId);
             if (!input || !counter) return;
-
+            
             input.addEventListener('input', function() {
-                var count = this.value.length;
-                if (maxLen) {
-                    counter.textContent = count + ' / ' + maxLen;
-                    counter.className = count > maxLen * 0.85 ? 'char-counter danger' : 'char-counter';
-                } else if (inputId === 'id_description') {
-                    counter.textContent = count + ' characters (min 10)';
-                    counter.className = count < 10 ? 'char-counter danger' : 'char-counter';
+                var text = this.value;
+                
+                if (inputId === 'id_description') {
+                    var charCount = text.length;
+                    counter.textContent = charCount + ' characters (minimum 10)';
+                    counter.className = charCount < 10 ? 'char-counter danger' : 'char-counter';
                 } else {
-                    counter.textContent = count + ' characters';
-                    counter.className = count > 100 ? 'char-counter warning' : 'char-counter';
+                    var count = text.length;
+                    if (maxLen) {
+                        counter.textContent = count + ' / ' + maxLen;
+                        counter.className = count > maxLen * 0.85 ? 'char-counter danger' : 'char-counter';
+                    } else {
+                        counter.textContent = count + ' characters';
+                    }
                 }
             });
             input.dispatchEvent(new Event('input'));
         }
-
+        
         setupCounter('id_screen_number', 'screen_counter');
         setupCounter('id_subject', 'subject_counter', 150);
         setupCounter('id_description', 'desc_counter');
-
+        
+        // ============================================================
+        // ROLE TOGGLE - Show/Hide Admin Reason
+        // ============================================================
         var roleRadios = document.querySelectorAll('input[name="created_by_role"]');
         var reasonContainer = document.getElementById('admin_reason_container');
-
+        
         if (roleRadios.length && reasonContainer) {
             function toggleReason() {
                 var selected = document.querySelector('input[name="created_by_role"]:checked');
@@ -1610,51 +2219,143 @@
             });
             toggleReason();
         }
-
-        var attachmentInput = document.getElementById('id_attachment');
-        if (attachmentInput) {
-            attachmentInput.addEventListener('change', function() {
-                var file = this.files[0];
-                if (!file) return;
-
-                var maxSize = 3 * 1024 * 1024;
-                var validExtensions = /\.(pdf|doc|docx|xls|xlsx|png|jpg|jpeg)$/i;
-
-                if (file.size > maxSize) {
-                    alert('File size exceeds 3MB. Please select a smaller file.');
-                    this.value = '';
-                } else if (!validExtensions.test(file.name)) {
-                    alert('Unsupported file type. Please upload PDF, DOC, XLS, PNG, or JPG files.');
-                    this.value = '';
-                }
-            });
-        }
-
+        
+        // ============================================================
+        // FORM SUBMISSION VALIDATION - Minimum 10 characters
+        // ============================================================
+        var form = document.getElementById('ticketForm');
+        var submitBtn = document.getElementById('submitBtn');
+        
         if (form && submitBtn) {
             form.addEventListener('submit', function(e) {
-                if (employeeMismatch) {
-                    e.preventDefault();
-                    alert('Employee ID Mismatch! The Employee ID you entered belongs to a different Unit or Department. As an Admin, you can either enter a valid Employee ID from the selected Unit and Department, or manually select the correct Unit and Department for this employee.');
-                    return false;
-                }
-
-                if (!employeeValidated) {
-                    var empId = empIdInput ? empIdInput.value.trim() : '';
-                    if (empId) {
+                var description = document.getElementById('id_description');
+                if (description) {
+                    var charCount = description.value.length;
+                    if (charCount < 10) {
                         e.preventDefault();
-                        alert('Employee validation pending. Please wait for the employee validation to complete. If this issue persists, try re-entering the Employee ID.');
+                        alert('Description must contain at least 10 characters. Current: ' + charCount + ' characters.');
+                        description.focus();
                         return false;
                     }
                 }
-
-                if (this.checkValidity()) {
-                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
-                    submitBtn.disabled = true;
-                    submitBtn.style.opacity = '0.7';
+                
+                var roleSelect = document.querySelector('input[name="created_by_role"]:checked');
+                var adminReason = document.getElementById('id_admin_creation_reason');
+                if (roleSelect && roleSelect.value === 'Admin' && adminReason) {
+                    if (!adminReason.value.trim()) {
+                        e.preventDefault();
+                        alert('Admin Creation Reason is required when creating ticket as Admin.');
+                        adminReason.focus();
+                        return false;
+                    }
                 }
+                
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.7';
             });
         }
-
+        
+        // ============================================================
+        // THEME SYNC - FIXED for dropdown visibility
+        // ============================================================
+        function syncInputTheme() {
+            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            var inputs = document.querySelectorAll('.form-control, .form-select, textarea, input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select, input[type="file"]');
+            
+            inputs.forEach(function(input) {
+                input.style.display = 'none';
+                void input.offsetHeight;
+                input.style.display = '';
+                
+                if (isDark) {
+                    if (!input.classList.contains('field-auto-filled') && !input.classList.contains('field-locked')) {
+                        input.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
+                        input.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                        input.style.color = '#E8EDF5';
+                    }
+                    // Fix for select dropdown - ensure dark background and visible arrow
+                    if (input.tagName === 'SELECT') {
+                        input.style.backgroundColor = '#1A1A2E';
+                        input.style.color = '#E8EDF5';
+                        input.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238A9AB8' d='M6 8L0 0h12z'/%3E%3C/svg%3E\")";
+                        input.style.backgroundRepeat = 'no-repeat';
+                        input.style.backgroundPosition = 'right 12px center';
+                        input.style.backgroundSize = '12px 8px';
+                        input.style.paddingRight = '35px';
+                        input.style.webkitAppearance = 'none';
+                        input.style.mozAppearance = 'none';
+                        input.style.appearance = 'none';
+                    }
+                } else {
+                    if (!input.classList.contains('field-auto-filled') && !input.classList.contains('field-locked')) {
+                        input.style.backgroundColor = '';
+                        input.style.borderColor = '';
+                        input.style.color = '';
+                    }
+                    if (input.tagName === 'SELECT') {
+                        input.style.backgroundColor = '';
+                        input.style.color = '';
+                        input.style.backgroundImage = '';
+                        input.style.backgroundRepeat = '';
+                        input.style.backgroundPosition = '';
+                        input.style.backgroundSize = '';
+                        input.style.paddingRight = '';
+                        input.style.webkitAppearance = '';
+                        input.style.mozAppearance = '';
+                        input.style.appearance = '';
+                    }
+                }
+            });
+            
+            // Fix for select options in dark mode
+            if (isDark) {
+                var selectElements = document.querySelectorAll('select');
+                selectElements.forEach(function(select) {
+                    // Force dark mode for select element
+                    select.style.colorScheme = 'dark';
+                    // Style all options
+                    var options = select.querySelectorAll('option');
+                    options.forEach(function(opt) {
+                        opt.style.backgroundColor = '#1A1A2E';
+                        opt.style.color = '#E8EDF5';
+                    });
+                });
+            } else {
+                var selectElements = document.querySelectorAll('select');
+                selectElements.forEach(function(select) {
+                    select.style.colorScheme = 'light';
+                    var options = select.querySelectorAll('option');
+                    options.forEach(function(opt) {
+                        opt.style.backgroundColor = '';
+                        opt.style.color = '';
+                    });
+                });
+            }
+        }
+        
+        var themeToggleBtn = document.getElementById('themeToggleFloating');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', function() {
+                setTimeout(syncInputTheme, 150);
+            });
+        }
+        
+        var themeObserver = new MutationObserver(function() {
+            syncInputTheme();
+        });
+        themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
+        
+        // Also handle system preference changes
+        var mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        mediaQuery.addEventListener('change', function() {
+            setTimeout(syncInputTheme, 150);
+        });
+        
+        setTimeout(syncInputTheme, 300);
     });
 </script>
 {% endblock %}

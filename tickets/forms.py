@@ -5,13 +5,15 @@ from django.contrib.auth.models import User
 from tickets.models import Ticket, Unit, Department, AdminContact, AdminNotificationEmail, EmployeeMaster, DepartmentCredential
 from tickets.utils import validate_attachment
 
+
 class TicketForm(forms.ModelForm):
     class Meta:
         model = Ticket
         fields = [
             'unit', 'department', 'employee_id', 'employee_name',
             'mobile', 'email', 'screen_number', 'subject',
-            'description', 'priority', 'error_type', 'attachment'
+            'description', 'priority', 'error_type', 
+            'attachment_1', 'attachment_2', 'attachment_3'
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
@@ -32,10 +34,10 @@ class TicketForm(forms.ModelForm):
             else:
                 field.widget.attrs.update({'class': 'form-control'})
 
+        # ✅ FIXED: Only New and Repeated error types
         EMPLOYEE_ERROR_TYPE_CHOICES = [
             ('New', 'New'),
-            ('Regular', 'Regular'),
-            ('No Idea', 'No Idea'),
+            ('Repeated', 'Repeated'),  # ✅ Only these two options
         ]
         self.fields['error_type'].choices = EMPLOYEE_ERROR_TYPE_CHOICES
 
@@ -49,12 +51,24 @@ class TicketForm(forms.ModelForm):
 
     def clean_description(self):
         description = self.cleaned_data.get('description', '')
-        if len(description) < 20:
-            raise ValidationError("Detailed description must be at least 20 characters.")
+        if len(description) < 10:
+            raise ValidationError("Detailed description must be at least 10 characters.")
         return description
 
-    def clean_attachment(self):
-        attachment = self.cleaned_data.get('attachment')
+    def clean_attachment_1(self):
+        attachment = self.cleaned_data.get('attachment_1')
+        if attachment:
+            validate_attachment(attachment)
+        return attachment
+
+    def clean_attachment_2(self):
+        attachment = self.cleaned_data.get('attachment_2')
+        if attachment:
+            validate_attachment(attachment)
+        return attachment
+
+    def clean_attachment_3(self):
+        attachment = self.cleaned_data.get('attachment_3')
         if attachment:
             validate_attachment(attachment)
         return attachment
@@ -85,6 +99,13 @@ class AdminTicketForm(TicketForm):
         self.fields['created_by_role'].widget.attrs.update({'class': 'form-check-input'})
         self.fields['admin_creation_reason'].widget.attrs.update({'class': 'form-select'})
         self.initial['created_by_role'] = 'Admin'
+
+        # ✅ Also update error_type for AdminTicketForm to only New and Repeated
+        EMPLOYEE_ERROR_TYPE_CHOICES = [
+            ('New', 'New'),
+            ('Repeated', 'Repeated'),
+        ]
+        self.fields['error_type'].choices = EMPLOYEE_ERROR_TYPE_CHOICES
 
     def clean(self):
         cleaned_data = super().clean()

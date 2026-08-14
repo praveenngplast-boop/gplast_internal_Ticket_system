@@ -34,6 +34,30 @@
         --text-muted-light: #6A7A9A;
     }
 
+    /* ✅ DARK MODE FIX: Dropdown options */
+    [data-theme="dark"] .form-select option,
+    [data-theme="dark"] select option,
+    [data-theme="dark"] .form-select optgroup,
+    [data-theme="dark"] select optgroup {
+        background-color: #1A1A2E !important;
+        color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .form-select option:hover,
+    [data-theme="dark"] select option:hover,
+    [data-theme="dark"] .form-select option:focus,
+    [data-theme="dark"] select option:focus,
+    [data-theme="dark"] .form-select option:checked,
+    [data-theme="dark"] select option:checked {
+        background-color: rgba(255, 107, 0, 0.2) !important;
+        color: #E8EDF5 !important;
+    }
+
+    /* Fix for select dropdown arrow in dark mode */
+    [data-theme="dark"] .form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236A7A9A' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+    }
+
     .create-ticket-container {
         animation: fadeInUp 0.5s ease;
         max-width: 1100px;
@@ -130,6 +154,20 @@
         white-space: nowrap;
     }
 
+    .form-label .badge-locked {
+        background: rgba(59, 130, 246, 0.12);
+        color: #3B82F6;
+        font-size: 0.45rem;
+        padding: 0.05rem 0.4rem;
+        border-radius: 50px;
+        border: 1px solid rgba(59, 130, 246, 0.12);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.15rem;
+        white-space: nowrap;
+        margin-left: 4px;
+    }
+
     .form-control,
     .form-select,
     textarea,
@@ -159,6 +197,19 @@
         border-color: var(--brand-orange) !important;
         box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1) !important;
         outline: none !important;
+    }
+
+    /* CSS-only locking - fields are enabled but look locked */
+    .form-control.field-locked,
+    .form-select.field-locked,
+    select.field-locked {
+        cursor: not-allowed !important;
+        opacity: 0.7;
+        background-color: var(--input-bg-light) !important;
+        border-color: rgba(59, 130, 246, 0.15) !important;
+        pointer-events: none !important;
+        -webkit-user-select: none;
+        user-select: none;
     }
 
     textarea {
@@ -257,13 +308,6 @@
     .field-auto-filled {
         border-color: var(--success-color) !important;
         background-color: rgba(34, 197, 94, 0.03) !important;
-    }
-
-    .field-locked {
-        pointer-events: none;
-        opacity: 0.6;
-        background-color: rgba(0, 0, 0, 0.02) !important;
-        cursor: not-allowed !important;
     }
 
     .auto-fill-badge {
@@ -403,6 +447,160 @@
         color: #1A1A2E;
     }
 
+    /* ============================================================
+       ATTACHMENT STYLES
+    ============================================================ */
+    .attachment-wrapper {
+        background: var(--input-bg-light);
+        border: 2px solid var(--input-border-light);
+        border-radius: 10px;
+        padding: 0.6rem 0.8rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .attachment-wrapper:hover {
+        border-color: rgba(255, 107, 0, 0.2);
+    }
+
+    .attachment-wrapper .attachment-number {
+        font-size: 0.55rem;
+        font-weight: 700;
+        color: var(--brand-orange);
+        background: rgba(255, 107, 0, 0.08);
+        padding: 0.05rem 0.5rem;
+        border-radius: 50px;
+        display: inline-block;
+        margin-bottom: 0.2rem;
+    }
+
+    .attachment-wrapper .attachment-number .required-star {
+        color: var(--danger-color);
+    }
+
+    .attachment-wrapper input[type="file"] {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.7rem !important;
+        min-height: 32px;
+        background: var(--ticket-bg) !important;
+        display: block !important;
+        width: 100% !important;
+        border: none !important;
+    }
+
+    .attachment-wrapper input[type="file"]::file-selector-button,
+    .attachment-wrapper input[type="file"]::-webkit-file-upload-button {
+        background: var(--brand-gradient) !important;
+        border: none !important;
+        color: #FFFFFF !important;
+        padding: 0.3rem 0.8rem !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        font-size: 0.7rem !important;
+        font-weight: 500 !important;
+        margin-right: 0.5rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .attachment-wrapper input[type="file"]::file-selector-button:hover,
+    .attachment-wrapper input[type="file"]::-webkit-file-upload-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+    }
+
+    .attachment-wrapper .remove-attachment {
+        position: absolute;
+        top: 0.4rem;
+        right: 0.4rem;
+        background: transparent;
+        border: none;
+        color: var(--danger-color);
+        font-size: 0.8rem;
+        cursor: pointer;
+        padding: 0.15rem 0.3rem;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        line-height: 1;
+        opacity: 0.5;
+    }
+
+    .attachment-wrapper .remove-attachment:hover {
+        background: rgba(239, 68, 68, 0.08);
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .attachment-wrapper .attachment-status {
+        font-size: 0.5rem;
+        margin-top: 0.15rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .attachment-wrapper .attachment-status .status-icon {
+        font-size: 0.6rem;
+    }
+
+    .attachment-wrapper .attachment-status .status-text {
+        color: var(--text-muted-light);
+    }
+
+    .attachment-wrapper .attachment-status .status-text.has-file {
+        color: var(--success-color);
+    }
+
+    .btn-add-attachment {
+        background: transparent;
+        border: 2px dashed var(--input-border-light);
+        border-radius: 10px;
+        padding: 0.4rem 0.5rem;
+        width: 100%;
+        color: var(--text-secondary-light);
+        font-size: 0.65rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .btn-add-attachment:hover {
+        border-color: var(--brand-orange);
+        color: var(--brand-orange);
+        background: rgba(255, 107, 0, 0.04);
+    }
+
+    .btn-add-attachment:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .btn-add-attachment i {
+        font-size: 0.75rem;
+    }
+
+    .attachment-counter {
+        font-size: 0.5rem;
+        color: var(--text-muted-light);
+        margin-top: 0.2rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .attachment-counter i {
+        font-size: 0.45rem;
+        margin-right: 0.15rem;
+    }
+
+    /* ============================================================
+       BUTTONS
+    ============================================================ */
     .btn-submit {
         background: var(--brand-gradient) !important;
         color: #FFFFFF !important;
@@ -462,6 +660,9 @@
         color: var(--brand-orange) !important;
     }
 
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
     @media (max-width: 992px) {
         .form-section {
             padding: 1rem;
@@ -515,6 +716,21 @@
             font-size: 0.72rem;
             padding: 0.4rem 0.65rem;
         }
+        .attachment-wrapper {
+            padding: 0.4rem 0.5rem;
+        }
+        .attachment-wrapper input[type="file"] {
+            font-size: 0.6rem !important;
+            padding: 0.2rem 0.4rem !important;
+            min-height: 28px;
+        }
+        .btn-add-attachment {
+            font-size: 0.6rem;
+            padding: 0.3rem 0.4rem;
+        }
+        .attachment-counter {
+            font-size: 0.45rem;
+        }
     }
 
     @media (max-width: 576px) {
@@ -566,6 +782,21 @@
         }
         .d-flex.justify-content-end .btn {
             width: 100% !important;
+        }
+        .attachment-wrapper .attachment-number {
+            font-size: 0.5rem;
+        }
+        .attachment-wrapper input[type="file"] {
+            font-size: 0.55rem !important;
+            padding: 0.15rem 0.3rem !important;
+            min-height: 24px;
+        }
+        .btn-add-attachment {
+            font-size: 0.55rem;
+            padding: 0.25rem 0.3rem;
+        }
+        .attachment-counter {
+            font-size: 0.4rem;
         }
     }
 
@@ -710,6 +941,7 @@
                             {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
                         </div>
 
+                        <!-- Unit field - CSS locked, NOT disabled -->
                         <div class="col-12 col-sm-6">
                             <label for="{{ form.unit.id_for_label }}" class="form-label">
                                 <i class="fa-regular fa-building"></i>Unit / Plant
@@ -717,11 +949,15 @@
                                 {% if user_credential %}
                                 <span class="badge-assigned"><i class="fa-solid fa-lock me-1"></i>Assigned</span>
                                 {% endif %}
+                                <span class="badge-locked" id="unitLockBadge" style="display:none;">
+                                    <i class="fa-solid fa-lock me-1"></i>Locked
+                                </span>
                             </label>
                             {{ form.unit }}
                             {% if form.unit.errors %}<div class="text-danger small mt-1">{{ form.unit.errors }}</div>{% endif %}
                         </div>
 
+                        <!-- Department field - CSS locked, NOT disabled -->
                         <div class="col-12 col-sm-6">
                             <label for="{{ form.department.id_for_label }}" class="form-label">
                                 <i class="fa-regular fa-layer-group"></i>Department
@@ -729,6 +965,9 @@
                                 {% if user_credential %}
                                 <span class="badge-assigned"><i class="fa-solid fa-lock me-1"></i>Assigned</span>
                                 {% endif %}
+                                <span class="badge-locked" id="deptLockBadge" style="display:none;">
+                                    <i class="fa-solid fa-lock me-1"></i>Locked
+                                </span>
                             </label>
                             <div id="department-wrapper" style="position:relative;">
                                 {{ form.department }}
@@ -773,13 +1012,20 @@
                             {% if form.priority.errors %}<div class="text-danger small mt-1">{{ form.priority.errors }}</div>{% endif %}
                         </div>
 
+                        <!-- ✅ FIXED: Error Type - Only New and Repeated -->
                         <div class="col-12 col-sm-6">
                             <label for="{{ form.error_type.id_for_label }}" class="form-label">
                                 <i class="fa-solid fa-bug"></i>Error Type
                                 <span class="required-star">*</span>
                             </label>
-                            {{ form.error_type }}
-                            {% if form.error_type.errors %}<div class="text-danger small mt-1">{{ form.error_type.errors }}</div>{% endif %}
+                            <select class="form-select" name="error_type" id="id_error_type" required>
+                                <option value="">Select Error Type</option>
+                                <option value="New">New</option>
+                                <option value="Repeated">Repeated</option>
+                            </select>
+                            {% if form.error_type.errors %}
+                            <div class="text-danger small mt-1">{{ form.error_type.errors }}</div>
+                            {% endif %}
                         </div>
 
                         <div class="col-12 col-sm-6">
@@ -806,15 +1052,68 @@
                             {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
                         </div>
 
+                        <!-- ATTACHMENT SECTION -->
                         <div class="col-12">
-                            <label for="{{ form.attachment.id_for_label }}" class="form-label">
-                                <i class="fa-solid fa-paperclip"></i>Attachment
+                            <label class="form-label">
+                                <i class="fa-solid fa-paperclip"></i>Attachments
+                                <span style="font-size:0.55rem;color:var(--text-muted-light);font-weight:400;">
+                                    (Max 3 files, 3MB each)
+                                </span>
                             </label>
-                            {{ form.attachment }}
-                            <div class="char-counter" style="text-align:left;">
-                                Max 3MB &bull; PDF, DOC, XLS, PNG, JPG
+                            
+                            <div id="attachmentContainer">
+                                <div class="attachment-wrapper" id="attachmentWrapper1" data-attachment-num="1">
+                                    <span class="attachment-number">Attachment 1 <span class="required-star">*</span></span>
+                                    <input type="file" name="attachment_1" id="id_attachment_1" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt">
+                                    <div class="char-counter" style="text-align:left;font-size:0.55rem;">
+                                        <i class="fa-regular fa-file"></i> Max 3MB (PDF, DOC, XLS, PNG, JPG, TXT)
+                                    </div>
+                                    <div class="attachment-status" id="status1">
+                                        <span class="status-icon">⏳</span>
+                                        <span class="status-text">No file selected</span>
+                                    </div>
+                                    <button type="button" class="remove-attachment" data-attachment-num="1" title="Remove this attachment" style="display:none;">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+
+                                <div class="attachment-wrapper" id="attachmentWrapper2" data-attachment-num="2" style="display:none;">
+                                    <span class="attachment-number">Attachment 2</span>
+                                    <input type="file" name="attachment_2" id="id_attachment_2" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt">
+                                    <div class="char-counter" style="text-align:left;font-size:0.55rem;">
+                                        <i class="fa-regular fa-file"></i> Max 3MB (PDF, DOC, XLS, PNG, JPG, TXT)
+                                    </div>
+                                    <div class="attachment-status" id="status2">
+                                        <span class="status-icon">⏳</span>
+                                        <span class="status-text">No file selected</span>
+                                    </div>
+                                    <button type="button" class="remove-attachment" data-attachment-num="2" title="Remove this attachment" style="display:block;">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+
+                                <div class="attachment-wrapper" id="attachmentWrapper3" data-attachment-num="3" style="display:none;">
+                                    <span class="attachment-number">Attachment 3</span>
+                                    <input type="file" name="attachment_3" id="id_attachment_3" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt">
+                                    <div class="char-counter" style="text-align:left;font-size:0.55rem;">
+                                        <i class="fa-regular fa-file"></i> Max 3MB (PDF, DOC, XLS, PNG, JPG, TXT)
+                                    </div>
+                                    <div class="attachment-status" id="status3">
+                                        <span class="status-icon">⏳</span>
+                                        <span class="status-text">No file selected</span>
+                                    </div>
+                                    <button type="button" class="remove-attachment" data-attachment-num="3" title="Remove this attachment" style="display:block;">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
                             </div>
-                            {% if form.attachment.errors %}<div class="text-danger small mt-1">{{ form.attachment.errors }}</div>{% endif %}
+                            
+                            <button type="button" class="btn-add-attachment" id="addAttachmentBtn">
+                                <i class="fa-solid fa-plus-circle"></i> Add Attachment
+                            </button>
+                            <div class="attachment-counter" id="attachmentCounter">
+                                <i class="fa-regular fa-circle-info"></i> 0 of 3 attachments selected
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -835,562 +1134,955 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var empIdInput = document.getElementById('id_employee_id');
-        var empNameInput = document.getElementById('id_employee_name');
-        var empMobileInput = document.getElementById('id_mobile');
-        var empEmailInput = document.getElementById('id_email');
-        var unitSelect = document.getElementById('id_unit');
-        var deptSelect = document.getElementById('id_department');
-        var deptLoading = document.getElementById('dept-loading');
-        var empFetchStatus = document.getElementById('empFetchStatus');
-        var empFetchMessage = document.getElementById('empFetchMessage');
-        var autoFillBadge = document.getElementById('autoFillBadge');
-        var mismatchWarning = document.getElementById('mismatchWarning');
-        var mismatchMessage = document.getElementById('mismatchMessage');
-        var employeeValid = document.getElementById('employeeValid');
-        var empNotFound = document.getElementById('empNotFound');
-        var validationBadge = document.getElementById('validationBadge');
-        var form = document.getElementById('ticketForm');
-        var submitBtn = document.getElementById('submitBtn');
+document.addEventListener('DOMContentLoaded', function() {
+    // ============================================================
+    // DOM ELEMENTS
+    // ============================================================
+    var empIdInput = document.getElementById('id_employee_id');
+    var empNameInput = document.getElementById('id_employee_name');
+    var empMobileInput = document.getElementById('id_mobile');
+    var empEmailInput = document.getElementById('id_email');
+    var unitSelect = document.getElementById('id_unit');
+    var deptSelect = document.getElementById('id_department');
+    var deptLoading = document.getElementById('dept-loading');
+    var empFetchStatus = document.getElementById('empFetchStatus');
+    var empFetchMessage = document.getElementById('empFetchMessage');
+    var autoFillBadge = document.getElementById('autoFillBadge');
+    var mismatchWarning = document.getElementById('mismatchWarning');
+    var mismatchMessage = document.getElementById('mismatchMessage');
+    var employeeValid = document.getElementById('employeeValid');
+    var empNotFound = document.getElementById('empNotFound');
+    var validationBadge = document.getElementById('validationBadge');
+    var unitLockBadge = document.getElementById('unitLockBadge');
+    var deptLockBadge = document.getElementById('deptLockBadge');
+    var form = document.getElementById('ticketForm');
+    var submitBtn = document.getElementById('submitBtn');
 
-        var userUnitId = form.getAttribute('data-user-unit') || '';
-        var userDeptId = form.getAttribute('data-user-dept') || '';
-        var fetchTimeout = null;
-        var isAutoFilled = false;
-        var employeeMismatch = false;
-        var employeeValidated = false;
-        var isCredentialedUser = form.getAttribute('data-is-credentialed') === 'true';
-        var isFetching = false;
+    // ============================================================
+    // STATE VARIABLES
+    // ============================================================
+    var userUnitId = form.getAttribute('data-user-unit') || '';
+    var userDeptId = form.getAttribute('data-user-dept') || '';
+    var fetchTimeout = null;
+    var isAutoFilled = false;
+    var employeeMismatch = false;
+    var employeeValidated = false;
+    var isCredentialedUser = form.getAttribute('data-is-credentialed') === 'true';
+    var isFetching = false;
 
-        if (isCredentialedUser) {
-            if (unitSelect) unitSelect.classList.add('field-locked');
-            if (deptSelect) deptSelect.classList.add('field-locked');
+    // ============================================================
+    // INIT: LOCK FIELDS FOR CREDENTIALED USERS (CSS only, NOT disabled)
+    // ============================================================
+    if (isCredentialedUser) {
+        if (unitSelect) {
+            unitSelect.classList.add('field-locked');
         }
+        if (deptSelect) {
+            deptSelect.classList.add('field-locked');
+        }
+        if (unitLockBadge) unitLockBadge.style.display = 'inline-flex';
+        if (deptLockBadge) deptLockBadge.style.display = 'inline-flex';
+    }
 
-        function hideAllValidationMessages() {
-            [mismatchWarning, employeeValid, empNotFound].forEach(function(el) {
-                if (el) el.classList.remove('show');
-            });
+    // ============================================================
+    // LOCK/UNLOCK FUNCTIONS - CSS only, NOT disabled
+    // ============================================================
+    function lockUnitDepartment(lock) {
+        if (lock) {
+            if (unitSelect) {
+                unitSelect.classList.add('field-locked');
+            }
+            if (deptSelect) {
+                deptSelect.classList.add('field-locked');
+            }
+            if (unitLockBadge) unitLockBadge.style.display = 'inline-flex';
+            if (deptLockBadge) deptLockBadge.style.display = 'inline-flex';
+        } else {
+            if (!isCredentialedUser) {
+                if (unitSelect) {
+                    unitSelect.classList.remove('field-locked');
+                }
+                if (deptSelect) {
+                    deptSelect.classList.remove('field-locked');
+                }
+                if (unitLockBadge) unitLockBadge.style.display = 'none';
+                if (deptLockBadge) deptLockBadge.style.display = 'none';
+            }
+        }
+    }
+
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
+    function hideAllValidationMessages() {
+        [mismatchWarning, employeeValid, empNotFound].forEach(function(el) {
+            if (el) el.classList.remove('show');
+        });
+        if (empFetchMessage) {
+            empFetchMessage.style.display = 'none';
+            empFetchMessage.textContent = '';
+        }
+        if (autoFillBadge) autoFillBadge.style.display = 'none';
+        if (validationBadge) validationBadge.style.display = 'none';
+    }
+
+    function showFetchStatus(status, message) {
+        message = message || '';
+        if (!empFetchStatus) return;
+
+        hideAllValidationMessages();
+        empFetchStatus.className = 'emp-fetch-status';
+        employeeMismatch = false;
+        employeeValidated = false;
+
+        if (status === 'loading') {
+            empFetchStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            empFetchStatus.classList.add('loading');
             if (empFetchMessage) {
-                empFetchMessage.style.display = 'none';
-                empFetchMessage.textContent = '';
+                empFetchMessage.style.display = 'block';
+                empFetchMessage.textContent = '⏳ Validating employee ID...';
+                empFetchMessage.style.color = 'var(--text-muted-light)';
+                empFetchMessage.className = 'char-counter';
+                empFetchMessage.style.textAlign = 'left';
             }
-            if (autoFillBadge) autoFillBadge.style.display = 'none';
-            if (validationBadge) validationBadge.style.display = 'none';
-        }
-
-        function showFetchStatus(status, message) {
-            message = message || '';
-            if (!empFetchStatus) return;
-
-            hideAllValidationMessages();
-            empFetchStatus.className = 'emp-fetch-status';
-            employeeMismatch = false;
-            employeeValidated = false;
-
-            if (status === 'loading') {
-                empFetchStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-                empFetchStatus.classList.add('loading');
-                if (empFetchMessage) {
-                    empFetchMessage.style.display = 'block';
-                    empFetchMessage.textContent = '⏳ Validating employee ID...';
-                    empFetchMessage.style.color = 'var(--text-muted-light)';
-                    empFetchMessage.className = 'char-counter';
-                    empFetchMessage.style.textAlign = 'left';
-                }
-                isFetching = true;
-                clearAutoFilledFields();
-            } else if (status === 'found') {
-                employeeValidated = true;
-                empFetchStatus.innerHTML = '<i class="fa-regular fa-circle-check"></i>';
-                empFetchStatus.classList.add('found');
-                if (empFetchMessage) {
-                    empFetchMessage.style.display = 'block';
-                    empFetchMessage.textContent = '✅ ' + message;
-                    empFetchMessage.style.color = 'var(--success-color)';
-                    empFetchMessage.className = 'char-counter';
-                    empFetchMessage.style.textAlign = 'left';
-                }
-                if (autoFillBadge) {
-                    autoFillBadge.style.display = 'inline-block';
-                    autoFillBadge.innerHTML = '<i class="fa-solid fa-magic me-1"></i>Auto-filled';
-                }
-                if (validationBadge) {
-                    validationBadge.style.display = 'inline-block';
-                    validationBadge.className = 'validation-badge valid';
-                    validationBadge.innerHTML = '<i class="fa-regular fa-check-circle me-1"></i>Valid';
-                }
-                if (employeeValid) {
-                    employeeValid.classList.add('show');
-                    employeeValid.innerHTML = '<i class="fa-regular fa-circle-check"></i> Employee verified and belongs to your department.';
-                }
-                if (mismatchWarning) mismatchWarning.classList.remove('show');
-                if (empNotFound) empNotFound.classList.remove('show');
-                isFetching = false;
-            } else if (status === 'mismatch') {
-                employeeMismatch = true;
-                employeeValidated = false;
-                empFetchStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                empFetchStatus.classList.add('mismatch');
-                if (empFetchMessage) {
-                    empFetchMessage.style.display = 'block';
-                    empFetchMessage.textContent = '⚠️ ' + message;
-                    empFetchMessage.style.color = 'var(--warning-color)';
-                    empFetchMessage.className = 'char-counter';
-                    empFetchMessage.style.textAlign = 'left';
-                }
-                if (autoFillBadge) autoFillBadge.style.display = 'none';
-                if (validationBadge) {
-                    validationBadge.style.display = 'inline-block';
-                    validationBadge.className = 'validation-badge invalid';
-                    validationBadge.innerHTML = '<i class="fa-solid fa-times-circle me-1"></i>Invalid';
-                }
-                if (mismatchWarning) {
-                    mismatchWarning.classList.add('show');
-                    mismatchWarning.className = 'validation-message mismatch show';
-                    if (mismatchMessage) mismatchMessage.textContent = message;
-                }
-                if (employeeValid) employeeValid.classList.remove('show');
-                if (empNotFound) empNotFound.classList.remove('show');
-                clearAutoFilledFields();
-                if (empIdInput) {
-                    empIdInput.value = '';
-                    empIdInput.focus();
-                }
-                isFetching = false;
-            } else if (status === 'not-found') {
-                employeeMismatch = true;
-                employeeValidated = false;
-                empFetchStatus.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
-                empFetchStatus.classList.add('not-found');
-                if (empFetchMessage) {
-                    empFetchMessage.style.display = 'block';
-                    empFetchMessage.textContent = '❌ ' + message;
-                    empFetchMessage.style.color = 'var(--danger-color)';
-                    empFetchMessage.className = 'char-counter';
-                    empFetchMessage.style.textAlign = 'left';
-                }
-                if (autoFillBadge) autoFillBadge.style.display = 'none';
-                if (validationBadge) {
-                    validationBadge.style.display = 'inline-block';
-                    validationBadge.className = 'validation-badge invalid';
-                    validationBadge.innerHTML = '<i class="fa-solid fa-times-circle me-1"></i>Invalid';
-                }
-                if (mismatchWarning) mismatchWarning.classList.remove('show');
-                if (employeeValid) employeeValid.classList.remove('show');
-                if (empNotFound) {
-                    empNotFound.classList.add('show');
-                    empNotFound.className = 'validation-message not-found show';
-                }
-                clearAutoFilledFields();
-                if (empIdInput) {
-                    empIdInput.value = '';
-                    empIdInput.focus();
-                }
-                isFetching = false;
-            }
-        }
-
-        function markFieldAutoFilled(field, isAuto) {
-            if (!field) return;
-            if (isAuto) {
-                field.classList.add('field-auto-filled');
-                field.setAttribute('data-auto-filled', 'true');
-            } else {
-                field.classList.remove('field-auto-filled');
-                field.removeAttribute('data-auto-filled');
-            }
-        }
-
-        function clearFetchStatus() {
-            hideAllValidationMessages();
-            if (empFetchStatus) {
-                empFetchStatus.className = 'emp-fetch-status';
-                empFetchStatus.innerHTML = '';
-            }
+            isFetching = true;
+            clearAutoFilledFields();
+            lockUnitDepartment(false);
+        } else if (status === 'found') {
+            employeeValidated = true;
+            empFetchStatus.innerHTML = '<i class="fa-regular fa-circle-check"></i>';
+            empFetchStatus.classList.add('found');
             if (empFetchMessage) {
-                empFetchMessage.style.display = 'none';
-                empFetchMessage.textContent = '';
+                empFetchMessage.style.display = 'block';
+                empFetchMessage.textContent = '✅ Employee verified! Belongs to your department.';
+                empFetchMessage.style.color = 'var(--success-color)';
+                empFetchMessage.className = 'char-counter';
+                empFetchMessage.style.textAlign = 'left';
             }
-            if (autoFillBadge) autoFillBadge.style.display = 'none';
-            if (validationBadge) validationBadge.style.display = 'none';
+            if (autoFillBadge) {
+                autoFillBadge.style.display = 'inline-block';
+                autoFillBadge.innerHTML = '<i class="fa-solid fa-magic me-1"></i>Auto-filled';
+            }
+            if (validationBadge) {
+                validationBadge.style.display = 'inline-block';
+                validationBadge.className = 'validation-badge valid';
+                validationBadge.innerHTML = '<i class="fa-regular fa-check-circle me-1"></i>Valid';
+            }
+            if (employeeValid) {
+                employeeValid.classList.add('show');
+                employeeValid.innerHTML = '<i class="fa-regular fa-circle-check"></i> Employee verified and belongs to your department.';
+            }
             if (mismatchWarning) mismatchWarning.classList.remove('show');
+            if (empNotFound) empNotFound.classList.remove('show');
+            isFetching = false;
+            
+            lockUnitDepartment(true);
+            
+        } else if (status === 'mismatch') {
+            employeeMismatch = true;
+            employeeValidated = false;
+            empFetchStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            empFetchStatus.classList.add('mismatch');
+            
+            if (empFetchMessage) {
+                empFetchMessage.style.display = 'none';
+                empFetchMessage.textContent = '';
+            }
+            
+            if (autoFillBadge) autoFillBadge.style.display = 'none';
+            if (validationBadge) {
+                validationBadge.style.display = 'inline-block';
+                validationBadge.className = 'validation-badge invalid';
+                validationBadge.innerHTML = '<i class="fa-solid fa-times-circle me-1"></i>Invalid';
+            }
+            
+            if (mismatchWarning) {
+                mismatchWarning.classList.add('show');
+                mismatchWarning.className = 'validation-message mismatch show';
+                if (mismatchMessage) {
+                    mismatchMessage.textContent = '⚠️ Employee belongs to a different department/unit. You can only create tickets for employees in your department.';
+                }
+            }
+            
             if (employeeValid) employeeValid.classList.remove('show');
             if (empNotFound) empNotFound.classList.remove('show');
-            employeeMismatch = false;
-            employeeValidated = false;
+            clearAutoFilledFields();
+            if (empIdInput) {
+                empIdInput.value = '';
+                empIdInput.focus();
+            }
             isFetching = false;
-        }
-
-        function autoFillEmployeeDetails(data) {
-            if (employeeMismatch || !data) return;
-
-            isAutoFilled = true;
-
-            if (data.employee_name) {
-                empNameInput.value = data.employee_name;
-                markFieldAutoFilled(empNameInput, true);
+            lockUnitDepartment(false);
+            
+        } else if (status === 'not-found') {
+            employeeMismatch = true;
+            employeeValidated = false;
+            empFetchStatus.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+            empFetchStatus.classList.add('not-found');
+            
+            if (empFetchMessage) {
+                empFetchMessage.style.display = 'none';
+                empFetchMessage.textContent = '';
             }
-            if (data.mobile) {
-                empMobileInput.value = data.mobile;
-                markFieldAutoFilled(empMobileInput, true);
+            
+            if (autoFillBadge) autoFillBadge.style.display = 'none';
+            if (validationBadge) {
+                validationBadge.style.display = 'inline-block';
+                validationBadge.className = 'validation-badge invalid';
+                validationBadge.innerHTML = '<i class="fa-solid fa-times-circle me-1"></i>Invalid';
             }
-            if (data.email) {
-                empEmailInput.value = data.email;
-                markFieldAutoFilled(empEmailInput, true);
-            }
-            if (!isCredentialedUser) {
-                if (data.unit_id && unitSelect && !unitSelect.classList.contains('field-locked')) {
-                    unitSelect.value = data.unit_id;
-                    markFieldAutoFilled(unitSelect, true);
-                    loadDepartments(data.unit_id, data.department_id);
+            if (mismatchWarning) mismatchWarning.classList.remove('show');
+            if (employeeValid) employeeValid.classList.remove('show');
+            if (empNotFound) {
+                empNotFound.classList.add('show');
+                empNotFound.className = 'validation-message not-found show';
+                var notFoundSpan = empNotFound.querySelector('span');
+                if (notFoundSpan) {
+                    notFoundSpan.textContent = 'Employee ID not found. Please check and try again.';
                 }
             }
+            clearAutoFilledFields();
+            if (empIdInput) {
+                empIdInput.value = '';
+                empIdInput.focus();
+            }
+            isFetching = false;
+            lockUnitDepartment(false);
+        }
+    }
+
+    function markFieldAutoFilled(field, isAuto) {
+        if (!field) return;
+        if (isAuto) {
+            field.classList.add('field-auto-filled');
+            field.setAttribute('data-auto-filled', 'true');
+        } else {
+            field.classList.remove('field-auto-filled');
+            field.removeAttribute('data-auto-filled');
+        }
+    }
+
+    function clearFetchStatus() {
+        hideAllValidationMessages();
+        if (empFetchStatus) {
+            empFetchStatus.className = 'emp-fetch-status';
+            empFetchStatus.innerHTML = '';
+        }
+        if (empFetchMessage) {
+            empFetchMessage.style.display = 'none';
+            empFetchMessage.textContent = '';
+        }
+        if (autoFillBadge) autoFillBadge.style.display = 'none';
+        if (validationBadge) validationBadge.style.display = 'none';
+        if (mismatchWarning) mismatchWarning.classList.remove('show');
+        if (employeeValid) employeeValid.classList.remove('show');
+        if (empNotFound) empNotFound.classList.remove('show');
+        employeeMismatch = false;
+        employeeValidated = false;
+        isFetching = false;
+        lockUnitDepartment(false);
+    }
+
+    function autoFillEmployeeDetails(data) {
+        if (employeeMismatch || !data) return;
+
+        isAutoFilled = true;
+
+        if (data.employee_name) {
+            empNameInput.value = data.employee_name;
+            markFieldAutoFilled(empNameInput, true);
+        }
+        if (data.mobile) {
+            empMobileInput.value = data.mobile;
+            markFieldAutoFilled(empMobileInput, true);
+        }
+        if (data.email) {
+            empEmailInput.value = data.email;
+            markFieldAutoFilled(empEmailInput, true);
         }
 
-        function fetchEmployeeDetails(employeeId) {
+        if (data.unit_id && unitSelect) {
+            unitSelect.value = data.unit_id;
+            markFieldAutoFilled(unitSelect, true);
+            loadDepartments(data.unit_id, data.department_id, true);
+        }
+        
+        if (data.department_id && deptSelect) {
+            if (deptSelect.querySelector('option[value="' + data.department_id + '"]')) {
+                deptSelect.value = data.department_id;
+                markFieldAutoFilled(deptSelect, true);
+            }
+        }
+        
+        lockUnitDepartment(true);
+    }
+
+    function clearAutoFilledFields() {
+        [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
+            if (field && field.getAttribute('data-auto-filled') === 'true') {
+                field.value = '';
+                markFieldAutoFilled(field, false);
+            }
+        });
+        if (unitSelect && unitSelect.getAttribute('data-auto-filled') === 'true') {
+            unitSelect.value = '';
+            markFieldAutoFilled(unitSelect, false);
+        }
+        if (deptSelect && deptSelect.getAttribute('data-auto-filled') === 'true') {
+            deptSelect.value = '';
+            markFieldAutoFilled(deptSelect, false);
+        }
+        isAutoFilled = false;
+    }
+
+    // ============================================================
+    // EMPLOYEE FETCH FUNCTION
+    // ============================================================
+    function fetchEmployeeDetails(employeeId) {
+        if (fetchTimeout) {
+            clearTimeout(fetchTimeout);
+            fetchTimeout = null;
+        }
+
+        var trimmedId = employeeId.trim();
+
+        if (!trimmedId || trimmedId.length < 2) {
+            clearFetchStatus();
+            clearAutoFilledFields();
+            employeeMismatch = false;
+            return;
+        }
+
+        fetchTimeout = setTimeout(function() {
+            showFetchStatus('loading', 'Validating employee ID...');
+            
+            var url = '/ajax/get-employee/?employee_id=' + encodeURIComponent(trimmedId);
+            if (userUnitId) url += '&unit_id=' + encodeURIComponent(userUnitId);
+            if (userDeptId) url += '&department_id=' + encodeURIComponent(userDeptId);
+
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(function(res) { 
+                if (!res.ok) throw new Error('Network response was not ok');
+                return res.json(); 
+            })
+            .then(function(data) {
+                if (data.found) {
+                    if (data.mismatch) {
+                        var errorMsg = data.message || 'Employee belongs to a different department/unit.';
+                        showFetchStatus('mismatch', errorMsg);
+                        clearAutoFilledFields();
+                        if (empIdInput) {
+                            empIdInput.value = '';
+                            empIdInput.focus();
+                        }
+                    } else {
+                        showFetchStatus('found', 'Employee verified! Belongs to your department.');
+                        autoFillEmployeeDetails(data.employee);
+                    }
+                } else {
+                    showFetchStatus('not-found', data.message || 'Employee ID not found. Please check and try again.');
+                    clearAutoFilledFields();
+                    if (empIdInput) {
+                        empIdInput.value = '';
+                        empIdInput.focus();
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.error('Fetch error:', err);
+                showFetchStatus('not-found', 'Error fetching employee. Please try again.');
+                clearAutoFilledFields();
+            });
+        }, 800);
+    }
+
+    // ============================================================
+    // EMPLOYEE ID INPUT EVENTS
+    // ============================================================
+    if (empIdInput) {
+        empIdInput.addEventListener('input', function() {
             if (fetchTimeout) {
                 clearTimeout(fetchTimeout);
                 fetchTimeout = null;
             }
 
-            var trimmedId = employeeId.trim();
-
-            if (!trimmedId || trimmedId.length < 2) {
+            var value = this.value.trim();
+            
+            if (value.length < 2) {
                 clearFetchStatus();
                 clearAutoFilledFields();
                 employeeMismatch = false;
+                lockUnitDepartment(false);
                 return;
             }
 
-            fetchTimeout = setTimeout(function() {
-                showFetchStatus('loading', 'Validating employee ID...');
-                
-                var url = '/ajax/get-employee/?employee_id=' + encodeURIComponent(trimmedId);
-                if (userUnitId) url += '&unit_id=' + encodeURIComponent(userUnitId);
-                if (userDeptId) url += '&department_id=' + encodeURIComponent(userDeptId);
+            fetchEmployeeDetails(value);
+        });
 
-                fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(function(res) { 
-                    if (!res.ok) throw new Error('Network response was not ok');
-                    return res.json(); 
-                })
-                .then(function(data) {
-                    if (data.found) {
-                        showFetchStatus('found', 'Employee verified! Belongs to your department.');
-                        autoFillEmployeeDetails(data.employee);
-                    } else if (data.mismatch) {
-                        var errorMsg = 'Employee ID belongs to different ';
-                        var mismatchType = [];
-
-                        if (data.employee) {
-                            if (userUnitId && data.employee.unit_id && data.employee.unit_id.toString() !== userUnitId.toString()) {
-                                mismatchType.push('Unit');
-                            }
-                            if (userDeptId && data.employee.department_id && data.employee.department_id.toString() !== userDeptId.toString()) {
-                                mismatchType.push('Department');
-                            }
-                        }
-
-                        if (mismatchType.length > 0) {
-                            errorMsg += mismatchType.join(' and ');
-                        } else {
-                            errorMsg = 'Employee ID belongs to different department/unit';
-                        }
-
-                        showFetchStatus('mismatch', errorMsg);
-                    } else {
-                        showFetchStatus('not-found', 'Employee ID not found. Please check and try again.');
-                    }
-                })
-                .catch(function(err) {
-                    showFetchStatus('not-found', 'Error fetching employee. Please try again.');
-                    clearAutoFilledFields();
-                });
-            }, 2000);
-        }
-
-        function clearAutoFilledFields() {
-            [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
-                if (field && field.getAttribute('data-auto-filled') === 'true') {
-                    field.value = '';
-                    markFieldAutoFilled(field, false);
-                }
-            });
-            if (unitSelect && unitSelect.getAttribute('data-auto-filled') === 'true' && !unitSelect.classList.contains('field-locked')) {
-                unitSelect.value = '';
-                markFieldAutoFilled(unitSelect, false);
-            }
-            if (deptSelect && deptSelect.getAttribute('data-auto-filled') === 'true' && !deptSelect.classList.contains('field-locked')) {
-                deptSelect.value = '';
-                markFieldAutoFilled(deptSelect, false);
-            }
-            isAutoFilled = false;
-        }
-
-        if (empIdInput) {
-            empIdInput.addEventListener('input', function() {
+        empIdInput.addEventListener('blur', function() {
+            var value = this.value.trim();
+            if (value.length >= 2 && !isAutoFilled && !employeeValidated && !isFetching) {
                 if (fetchTimeout) {
                     clearTimeout(fetchTimeout);
                     fetchTimeout = null;
                 }
-
-                var value = this.value.trim();
-                
-                if (value.length < 2) {
-                    clearFetchStatus();
-                    clearAutoFilledFields();
-                    employeeMismatch = false;
-                    return;
-                }
-
                 fetchEmployeeDetails(value);
-            });
+            }
+        });
 
-            empIdInput.addEventListener('blur', function() {
-                var value = this.value.trim();
-                if (value.length >= 2 && !isAutoFilled && !employeeValidated && !isFetching) {
+        empIdInput.addEventListener('paste', function() {
+            setTimeout(function() {
+                var value = empIdInput.value.trim();
+                if (value.length >= 2) {
                     if (fetchTimeout) {
                         clearTimeout(fetchTimeout);
                         fetchTimeout = null;
                     }
                     fetchEmployeeDetails(value);
                 }
-            });
+            }, 150);
+        });
+    }
 
-            empIdInput.addEventListener('paste', function() {
-                setTimeout(function() {
-                    var value = empIdInput.value.trim();
-                    if (value.length >= 2) {
-                        if (fetchTimeout) {
-                            clearTimeout(fetchTimeout);
-                            fetchTimeout = null;
-                        }
-                        fetchEmployeeDetails(value);
-                    }
-                }, 100);
+    // ============================================================
+    // CLEAR AUTO-FILLED FIELDS WHEN USER TYPES OVER THEM
+    // ============================================================
+    [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
+        if (field) {
+            field.addEventListener('input', function() {
+                if (this.getAttribute('data-auto-filled') === 'true') {
+                    markFieldAutoFilled(this, false);
+                    employeeValidated = false;
+                    if (validationBadge) validationBadge.style.display = 'none';
+                    if (employeeValid) employeeValid.classList.remove('show');
+                    lockUnitDepartment(false);
+                }
             });
         }
+    });
 
-        [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
-            if (field) {
-                field.addEventListener('input', function() {
-                    if (this.getAttribute('data-auto-filled') === 'true') {
-                        markFieldAutoFilled(this, false);
-                        employeeValidated = false;
-                        if (validationBadge) validationBadge.style.display = 'none';
-                        if (employeeValid) employeeValid.classList.remove('show');
+    // ============================================================
+    // UNIT SELECT CHANGE - CLEAR EMPLOYEE VALIDATION
+    // ============================================================
+    if (unitSelect && !unitSelect.classList.contains('field-locked')) {
+        unitSelect.addEventListener('change', function() {
+            markFieldAutoFilled(this, false);
+            employeeValidated = false;
+            employeeMismatch = false;
+            clearFetchStatus();
+            clearAutoFilledFields();
+            if (empIdInput) empIdInput.value = '';
+            lockUnitDepartment(false);
+        });
+    }
+
+    // ============================================================
+    // LOAD DEPARTMENTS BY UNIT
+    // ============================================================
+    function loadDepartments(unitId, selectedDeptId, lockAfterLoad) {
+        lockAfterLoad = lockAfterLoad || false;
+        if (!deptSelect) return;
+        if (!unitId) {
+            deptSelect.innerHTML = '<option value="">Select Unit First</option>';
+            deptSelect.disabled = true;
+            return;
+        }
+        if (deptLoading) deptLoading.style.display = 'block';
+        deptSelect.disabled = true;
+        deptSelect.innerHTML = '<option value="">Loading departments...</option>';
+
+        fetch('/ajax/get-departments/?unit_id=' + unitId, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            deptSelect.innerHTML = '<option value="">Select Department</option>';
+            if (data.departments && data.departments.length) {
+                data.departments.forEach(function(d) {
+                    var opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.textContent = d.name;
+                    if (selectedDeptId && d.id == selectedDeptId) {
+                        opt.selected = true;
+                        markFieldAutoFilled(deptSelect, true);
                     }
+                    deptSelect.appendChild(opt);
                 });
+                if (selectedDeptId) {
+                    var found = false;
+                    for (var i = 0; i < deptSelect.options.length; i++) {
+                        if (deptSelect.options[i].value == selectedDeptId) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        deptSelect.value = selectedDeptId;
+                        markFieldAutoFilled(deptSelect, true);
+                    }
+                }
+                if (lockAfterLoad && employeeValidated) {
+                    deptSelect.classList.add('field-locked');
+                    deptSelect.style.opacity = '0.7';
+                } else {
+                    deptSelect.classList.remove('field-locked');
+                    deptSelect.style.opacity = '1';
+                }
+                deptSelect.disabled = false;
+            } else {
+                deptSelect.innerHTML += '<option value="">No departments available</option>';
+                deptSelect.disabled = false;
+            }
+            if (deptLoading) deptLoading.style.display = 'none';
+        })
+        .catch(function(err) {
+            deptSelect.innerHTML = '<option value="">Error loading departments</option>';
+            deptSelect.disabled = false;
+            if (deptLoading) deptLoading.style.display = 'none';
+        });
+    }
+
+    if (unitSelect && !unitSelect.classList.contains('field-locked')) {
+        unitSelect.addEventListener('change', function() {
+            loadDepartments(this.value);
+        });
+        if (unitSelect.value) {
+            loadDepartments(unitSelect.value, deptSelect ? deptSelect.value : null);
+        }
+    }
+
+    // ============================================================
+    // CHARACTER COUNTERS
+    // ============================================================
+    function setupCounter(inputId, counterId, maxLen, minLen) {
+        maxLen = maxLen || null;
+        minLen = minLen || null;
+        var input = document.getElementById(inputId);
+        var counter = document.getElementById(counterId);
+        if (!input || !counter) return;
+
+        var counterNumber = counter.querySelector('.counter-number');
+
+        function updateCounter() {
+            var count = input.value.length;
+            if (counterNumber) {
+                counterNumber.textContent = count;
+            } else {
+                var text = counter.textContent || counter.innerText;
+                var parts = text.split('/');
+                if (parts.length > 1) {
+                    counter.innerHTML = '<span class="counter-number">' + count + '</span>' + ' / ' + parts[1].trim();
+                } else if (text.includes('chars')) {
+                    counter.innerHTML = '<span class="counter-number">' + count + '</span> chars' + (minLen ? ' (min ' + minLen + ')' : '');
+                } else {
+                    counter.innerHTML = '<span class="counter-number">' + count + '</span> chars';
+                }
+            }
+
+            if (maxLen && count > maxLen) {
+                counter.className = 'char-counter danger';
+                counter.title = 'Maximum ' + maxLen + ' characters allowed';
+                input.style.borderColor = 'var(--danger-color)';
+            } else if (maxLen && count > maxLen * 0.85) {
+                counter.className = 'char-counter warning';
+                counter.title = 'Approaching character limit (' + count + '/' + maxLen + ')';
+                input.style.borderColor = '';
+            } else if (minLen && count < minLen && count > 0) {
+                counter.className = 'char-counter warning';
+                counter.title = 'Minimum ' + minLen + ' characters required';
+                input.style.borderColor = '';
+            } else {
+                counter.className = 'char-counter';
+                counter.title = '';
+                input.style.borderColor = '';
+            }
+        }
+
+        input.addEventListener('input', updateCounter);
+        input.addEventListener('focus', updateCounter);
+        setTimeout(updateCounter, 100);
+    }
+
+    setupCounter('id_screen_number', 'screen_counter');
+    setupCounter('id_subject', 'subject_counter', 150);
+    setupCounter('id_description', 'desc_counter', null, 10);
+
+    // ============================================================
+    // ATTACHMENT MANAGEMENT
+    // ============================================================
+    const MAX_ATTACHMENTS = 3;
+    
+    const attachmentContainer = document.getElementById('attachmentContainer');
+    const addAttachmentBtn = document.getElementById('addAttachmentBtn');
+    const attachmentCounter = document.getElementById('attachmentCounter');
+    
+    const wrapper1 = document.getElementById('attachmentWrapper1');
+    const wrapper2 = document.getElementById('attachmentWrapper2');
+    const wrapper3 = document.getElementById('attachmentWrapper3');
+    
+    const fileInput1 = document.getElementById('id_attachment_1');
+    const fileInput2 = document.getElementById('id_attachment_2');
+    const fileInput3 = document.getElementById('id_attachment_3');
+    
+    const status1 = document.getElementById('status1');
+    const status2 = document.getElementById('status2');
+    const status3 = document.getElementById('status3');
+    
+    if (wrapper1) wrapper1.style.display = 'block';
+    if (wrapper2) wrapper2.style.display = 'none';
+    if (wrapper3) wrapper3.style.display = 'none';
+    
+    function updateAttachmentStatus(wrapper, fileInput, statusEl, num) {
+        if (!wrapper || !fileInput || !statusEl) return;
+        
+        var hasFile = fileInput.files && fileInput.files.length > 0;
+        var statusIcon = statusEl.querySelector('.status-icon');
+        var statusText = statusEl.querySelector('.status-text');
+        
+        if (hasFile) {
+            var fileName = fileInput.files[0].name;
+            var fileSize = (fileInput.files[0].size / 1024).toFixed(1);
+            statusIcon.textContent = '✅';
+            statusText.textContent = fileName + ' (' + fileSize + ' KB)';
+            statusText.className = 'status-text has-file';
+            
+            var removeBtn = wrapper.querySelector('.remove-attachment');
+            if (removeBtn) removeBtn.style.display = 'block';
+            
+            if (num === 1 && wrapper2.style.display === 'none') {
+                checkAndEnableAddButton();
+            }
+            if (num === 2 && wrapper3.style.display === 'none') {
+                checkAndEnableAddButton();
+            }
+        } else {
+            statusIcon.textContent = '⏳';
+            statusText.textContent = 'No file selected';
+            statusText.className = 'status-text';
+            
+            if (num === 1) {
+                if (wrapper2.style.display !== 'none') {
+                    wrapper2.style.display = 'none';
+                    if (fileInput2) {
+                        fileInput2.value = '';
+                        updateAttachmentStatus(wrapper2, fileInput2, status2, 2);
+                    }
+                }
+                if (wrapper3.style.display !== 'none') {
+                    wrapper3.style.display = 'none';
+                    if (fileInput3) {
+                        fileInput3.value = '';
+                        updateAttachmentStatus(wrapper3, fileInput3, status3, 3);
+                    }
+                }
+            } else if (num === 2) {
+                if (wrapper3.style.display !== 'none') {
+                    wrapper3.style.display = 'none';
+                    if (fileInput3) {
+                        fileInput3.value = '';
+                        updateAttachmentStatus(wrapper3, fileInput3, status3, 3);
+                    }
+                }
+            }
+            
+            checkAndEnableAddButton();
+        }
+    }
+    
+    function checkAndEnableAddButton() {
+        var visibleCount = 0;
+        var wrappers = [wrapper1, wrapper2, wrapper3];
+        wrappers.forEach(function(w) {
+            if (w && w.style.display !== 'none') {
+                visibleCount++;
             }
         });
-
-        if (unitSelect && !unitSelect.classList.contains('field-locked')) {
-            unitSelect.addEventListener('change', function() {
-                markFieldAutoFilled(this, false);
-                employeeValidated = false;
-                employeeMismatch = false;
-                clearFetchStatus();
-                clearAutoFilledFields();
-                if (empIdInput) empIdInput.value = '';
-            });
+        
+        var canAdd = false;
+        if (visibleCount < MAX_ATTACHMENTS) {
+            var lastVisibleNum = 0;
+            for (var i = 1; i <= MAX_ATTACHMENTS; i++) {
+                var w = document.getElementById('attachmentWrapper' + i);
+                if (w && w.style.display !== 'none') {
+                    lastVisibleNum = i;
+                }
+            }
+            var fileInput = document.getElementById('id_attachment_' + lastVisibleNum);
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                canAdd = true;
+            }
         }
+        
+        if (visibleCount >= MAX_ATTACHMENTS) {
+            addAttachmentBtn.disabled = true;
+            addAttachmentBtn.innerHTML = '<i class="fa-solid fa-ban"></i> Maximum 3 attachments reached';
+            addAttachmentBtn.style.borderColor = '#EF4444';
+            addAttachmentBtn.style.color = '#EF4444';
+            addAttachmentBtn.style.opacity = '0.6';
+            addAttachmentBtn.style.cursor = 'not-allowed';
+        } else if (!canAdd) {
+            addAttachmentBtn.disabled = true;
+            var lastNum = visibleCount;
+            addAttachmentBtn.innerHTML = '<i class="fa-solid fa-clock"></i> Add file to Attachment ' + lastNum + ' first';
+            addAttachmentBtn.style.borderColor = '#F59E0B';
+            addAttachmentBtn.style.color = '#F59E0B';
+            addAttachmentBtn.style.opacity = '0.7';
+            addAttachmentBtn.style.cursor = 'not-allowed';
+        } else {
+            addAttachmentBtn.disabled = false;
+            addAttachmentBtn.innerHTML = '<i class="fa-solid fa-plus-circle"></i> Add Attachment';
+            addAttachmentBtn.style.borderColor = '';
+            addAttachmentBtn.style.color = '';
+            addAttachmentBtn.style.opacity = '1';
+            addAttachmentBtn.style.cursor = 'pointer';
+        }
+        
+        var fileCount = 0;
+        for (var i = 1; i <= MAX_ATTACHMENTS; i++) {
+            var fi = document.getElementById('id_attachment_' + i);
+            if (fi && fi.files && fi.files.length > 0) {
+                fileCount++;
+            }
+        }
+        attachmentCounter.innerHTML = '<i class="fa-regular fa-circle-info"></i> ' + fileCount + ' of ' + MAX_ATTACHMENTS + ' attachments selected';
+    }
+    
+    if (fileInput1) {
+        fileInput1.addEventListener('change', function() {
+            updateAttachmentStatus(wrapper1, fileInput1, status1, 1);
+            checkAndEnableAddButton();
+        });
+    }
+    if (fileInput2) {
+        fileInput2.addEventListener('change', function() {
+            updateAttachmentStatus(wrapper2, fileInput2, status2, 2);
+            checkAndEnableAddButton();
+        });
+    }
+    if (fileInput3) {
+        fileInput3.addEventListener('change', function() {
+            updateAttachmentStatus(wrapper3, fileInput3, status3, 3);
+            checkAndEnableAddButton();
+        });
+    }
+    
+    addAttachmentBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        var firstHidden = null;
+        var wrappers = [wrapper1, wrapper2, wrapper3];
+        
+        wrappers.forEach(function(w) {
+            if (w && w.style.display === 'none' && firstHidden === null) {
+                firstHidden = w;
+            }
+        });
+        
+        if (!firstHidden) {
+            alert('Maximum 3 attachments allowed.');
+            return;
+        }
+        
+        firstHidden.style.display = 'block';
+        
+        var fileInput = firstHidden.querySelector('input[type="file"]');
+        if (fileInput) {
+            fileInput.value = '';
+            fileInput.style.display = 'block';
+            fileInput.style.width = '100%';
+        }
+        
+        var num = firstHidden.getAttribute('data-attachment-num');
+        var statusEl = document.getElementById('status' + num);
+        if (statusEl) {
+            var icon = statusEl.querySelector('.status-icon');
+            var text = statusEl.querySelector('.status-text');
+            if (icon) icon.textContent = '⏳';
+            if (text) {
+                text.textContent = 'No file selected';
+                text.className = 'status-text';
+            }
+        }
+        
+        checkAndEnableAddButton();
+    });
+    
+    attachmentContainer.addEventListener('click', function(e) {
+        var removeBtn = e.target.closest('.remove-attachment');
+        if (!removeBtn) return;
+        
+        var num = removeBtn.getAttribute('data-attachment-num');
+        var wrapper = document.getElementById('attachmentWrapper' + num);
+        if (!wrapper) return;
+        
+        var wrappers = [wrapper1, wrapper2, wrapper3];
+        var visibleCount = 0;
+        wrappers.forEach(function(w) {
+            if (w && w.style.display !== 'none') {
+                visibleCount++;
+            }
+        });
+        
+        if (num == 1) {
+            var fileInput = document.getElementById('id_attachment_' + num);
+            if (fileInput) {
+                fileInput.value = '';
+                updateAttachmentStatus(wrapper, fileInput, document.getElementById('status' + num), parseInt(num));
+            }
+            checkAndEnableAddButton();
+            return;
+        }
+        
+        if (visibleCount <= 1) {
+            alert('You must keep at least one attachment field.');
+            return;
+        }
+        
+        wrapper.style.display = 'none';
+        
+        var fileInput = wrapper.querySelector('input[type="file"]');
+        if (fileInput) {
+            fileInput.value = '';
+            fileInput.style.display = 'none';
+            fileInput.style.width = '100%';
+        }
+        
+        var statusEl = document.getElementById('status' + num);
+        if (statusEl) {
+            var icon = statusEl.querySelector('.status-icon');
+            var text = statusEl.querySelector('.status-text');
+            if (icon) icon.textContent = '⏳';
+            if (text) {
+                text.textContent = 'No file selected';
+                text.className = 'status-text';
+            }
+        }
+        
+        checkAndEnableAddButton();
+    });
+    
+    if (fileInput1 && wrapper1 && status1) {
+        updateAttachmentStatus(wrapper1, fileInput1, status1, 1);
+    }
+    checkAndEnableAddButton();
 
-        function loadDepartments(unitId, selectedDeptId) {
-            selectedDeptId = selectedDeptId || null;
-            if (!deptSelect || deptSelect.classList.contains('field-locked')) return;
-            if (!unitId) {
-                deptSelect.innerHTML = '<option value="">Select Unit First</option>';
-                deptSelect.disabled = true;
+    function validateFileInput(fileInput) {
+        if (!fileInput) return;
+        fileInput.addEventListener('change', function() {
+            var file = this.files[0];
+            if (!file) return;
+            var maxSize = 3 * 1024 * 1024;
+            if (file.size > maxSize) {
+                alert('File size exceeds 3MB. Please select a smaller file.');
+                this.value = '';
                 return;
             }
-            if (deptLoading) deptLoading.style.display = 'block';
-            deptSelect.disabled = true;
-            deptSelect.innerHTML = '<option value="">Loading departments...</option>';
-
-            fetch('/ajax/get-departments/?unit_id=' + unitId, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                deptSelect.innerHTML = '<option value="">Select Department</option>';
-                if (data.departments && data.departments.length) {
-                    data.departments.forEach(function(d) {
-                        var opt = document.createElement('option');
-                        opt.value = d.id;
-                        opt.textContent = d.name;
-                        if (selectedDeptId && d.id == selectedDeptId) opt.selected = true;
-                        deptSelect.appendChild(opt);
-                    });
-                    deptSelect.disabled = false;
-                    if (selectedDeptId) markFieldAutoFilled(deptSelect, true);
-                } else {
-                    deptSelect.innerHTML += '<option value="">No departments available</option>';
-                }
-                if (deptLoading) deptLoading.style.display = 'none';
-            })
-            .catch(function(err) {
-                deptSelect.innerHTML = '<option value="">Error loading departments</option>';
-                if (deptLoading) deptLoading.style.display = 'none';
-            });
-        }
-
-        if (unitSelect && !unitSelect.classList.contains('field-locked')) {
-            unitSelect.addEventListener('change', function() {
-                loadDepartments(this.value);
-            });
-            if (unitSelect.value) {
-                loadDepartments(unitSelect.value, deptSelect ? deptSelect.value : null);
+            var validExtensions = /\.(pdf|doc|docx|xls|xlsx|png|jpg|jpeg|txt)$/i;
+            if (!validExtensions.test(file.name)) {
+                alert('Unsupported file type. Please upload PDF, DOC, XLS, PNG, JPG, or TXT files.');
+                this.value = '';
+                return;
             }
-        }
+        });
+    }
+    
+    validateFileInput(fileInput1);
+    validateFileInput(fileInput2);
+    validateFileInput(fileInput3);
 
-        function setupCounter(inputId, counterId, maxLen, minLen) {
-            maxLen = maxLen || null;
-            minLen = minLen || null;
-            var input = document.getElementById(inputId);
-            var counter = document.getElementById(counterId);
-            if (!input || !counter) return;
-
-            var counterNumber = counter.querySelector('.counter-number');
-
-            function updateCounter() {
-                var count = input.value.length;
-                if (counterNumber) {
-                    counterNumber.textContent = count;
-                } else {
-                    var text = counter.textContent || counter.innerText;
-                    var parts = text.split('/');
-                    if (parts.length > 1) {
-                        counter.innerHTML = '<span class="counter-number">' + count + '</span>' + ' / ' + parts[1].trim();
-                    } else if (text.includes('chars')) {
-                        counter.innerHTML = '<span class="counter-number">' + count + '</span> chars' + (minLen ? ' (min ' + minLen + ')' : '');
-                    } else {
-                        counter.innerHTML = '<span class="counter-number">' + count + '</span> chars';
-                    }
-                }
-
-                if (maxLen && count > maxLen) {
-                    counter.className = 'char-counter danger';
-                    counter.title = 'Maximum ' + maxLen + ' characters allowed';
-                    input.style.borderColor = 'var(--danger-color)';
-                } else if (maxLen && count > maxLen * 0.85) {
-                    counter.className = 'char-counter warning';
-                    counter.title = 'Approaching character limit (' + count + '/' + maxLen + ')';
-                    input.style.borderColor = '';
-                } else if (minLen && count < minLen && count > 0) {
-                    counter.className = 'char-counter warning';
-                    counter.title = 'Minimum ' + minLen + ' characters required';
-                    input.style.borderColor = '';
-                } else {
-                    counter.className = 'char-counter';
-                    counter.title = '';
-                    input.style.borderColor = '';
-                }
+    // ============================================================
+    // FORM SUBMISSION VALIDATION
+    // ============================================================
+    if (form && submitBtn) {
+        form.addEventListener('submit', function(e) {
+            if (employeeMismatch) {
+                e.preventDefault();
+                alert('❌ Cannot create ticket!\n\nThe Employee ID you entered does not belong to your assigned Unit/Department.\n\nPlease enter a valid Employee ID from your department.');
+                return false;
             }
 
-            input.addEventListener('input', updateCounter);
-            input.addEventListener('focus', updateCounter);
-            setTimeout(updateCounter, 100);
-        }
+            var empId = empIdInput ? empIdInput.value.trim() : '';
+            if (empId && !employeeValidated && !isFetching) {
+                e.preventDefault();
+                alert('⚠️ Employee validation pending.\n\nPlease wait for the employee validation to complete or enter a valid Employee ID.');
+                return false;
+            }
 
-        setupCounter('id_screen_number', 'screen_counter');
-        setupCounter('id_subject', 'subject_counter', 150);
-        setupCounter('id_description', 'desc_counter', null, 10);
+            if (!empId) {
+                e.preventDefault();
+                alert('⚠️ Please enter an Employee ID.');
+                empIdInput.focus();
+                return false;
+            }
 
-        var att = document.getElementById('id_attachment');
-        if (att) {
-            att.addEventListener('change', function() {
-                var file = this.files[0];
-                if (!file) return;
-                var maxSize = 3 * 1024 * 1024;
-                if (file.size > maxSize) {
-                    alert('File size exceeds 3MB. Please select a smaller file.');
-                    this.value = '';
-                    return;
-                }
-                var validExtensions = /\.(pdf|doc|docx|xls|xlsx|png|jpg|jpeg)$/i;
-                if (!validExtensions.test(file.name)) {
-                    alert('Unsupported file type. Please upload PDF, DOC, XLS, PNG, or JPG files.');
-                    this.value = '';
-                    return;
-                }
-            });
-        }
+            if (!employeeValidated) {
+                e.preventDefault();
+                alert('⚠️ Please enter a valid Employee ID from your department.');
+                empIdInput.focus();
+                return false;
+            }
 
-        if (form && submitBtn) {
-            form.addEventListener('submit', function(e) {
-                if (employeeMismatch) {
-                    e.preventDefault();
-                    alert('❌ Cannot create ticket!\n\nThe Employee ID you entered does not belong to your assigned Unit/Department.\n\nPlease enter a valid Employee ID from your department.');
-                    return false;
-                }
-
-                var empId = empIdInput ? empIdInput.value.trim() : '';
-                if (empId && !employeeValidated && !isFetching) {
-                    e.preventDefault();
-                    alert('⚠️ Employee validation pending.\n\nPlease wait for the employee validation to complete or enter a valid Employee ID.');
-                    return false;
-                }
-
-                if (this.checkValidity()) {
-                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Submitting...';
-                    submitBtn.disabled = true;
-                    submitBtn.style.opacity = '0.7';
-                }
-            });
-        }
-
-        function updateFormTheme() {
-            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            var inputs = document.querySelectorAll('.form-control, .form-select, textarea, input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select');
-
-            inputs.forEach(function(input) {
-                input.style.display = 'none';
-                void input.offsetHeight;
-                input.style.display = '';
-
-                if (isDark) {
-                    input.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-                    input.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                    input.style.color = '#E8EDF5';
-                } else {
-                    input.style.backgroundColor = '#F8FAFF';
-                    input.style.borderColor = '#DCE3F0';
-                    input.style.color = '#1A2A6C';
-                }
-            });
-        }
-
-        var themeToggleBtn = document.getElementById('themeToggleFloating');
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', function() {
-                setTimeout(updateFormTheme, 100);
-            });
-        }
-
-        var observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.attributeName === 'data-theme') {
-                    updateFormTheme();
-                }
-            });
+            if (this.checkValidity()) {
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Submitting...';
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.7';
+            }
         });
+    }
 
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-theme']
+    // ============================================================
+    // THEME SYNC
+    // ============================================================
+    function updateFormTheme() {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var inputs = document.querySelectorAll('.form-control, .form-select, textarea, input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select');
+
+        inputs.forEach(function(input) {
+            input.style.display = 'none';
+            void input.offsetHeight;
+            input.style.display = '';
+
+            if (isDark) {
+                input.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                input.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                input.style.color = '#E8EDF5';
+            } else {
+                input.style.backgroundColor = '#F8FAFF';
+                input.style.borderColor = '#DCE3F0';
+                input.style.color = '#1A2A6C';
+            }
         });
+    }
 
-        setTimeout(updateFormTheme, 200);
+    var themeToggleBtn = document.getElementById('themeToggleFloating');
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', function() {
+            setTimeout(updateFormTheme, 100);
+        });
+    }
+
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.attributeName === 'data-theme') {
+                updateFormTheme();
+            }
+        });
     });
+
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+
+    setTimeout(updateFormTheme, 200);
+});
 </script>
 {% endblock %}

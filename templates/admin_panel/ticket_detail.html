@@ -352,6 +352,8 @@
         border-radius: 8px;
         padding: 0.4rem 0.6rem;
         transition: all 0.3s ease;
+        overflow: hidden;
+        word-break: break-word;
     }
 
     .detail-item:hover {
@@ -365,6 +367,206 @@
     .detail-item.highlight {
         background: rgba(255, 107, 0, 0.04);
         border-color: rgba(255, 107, 0, 0.12);
+    }
+
+    /* ===== CLOSING DETAILS SPECIAL STYLING ===== */
+    .detail-item.closing-details {
+        background: rgba(34, 197, 94, 0.04);
+        border-color: rgba(34, 197, 94, 0.12);
+        grid-column: 1 / -1;
+    }
+
+    .detail-item.closing-details .detail-label {
+        color: var(--success-color);
+    }
+
+    .detail-item.closing-details .detail-value {
+        color: var(--text-primary);
+    }
+
+    .detail-item.closing-details .closing-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem 0.75rem;
+        padding: 0.1rem 0;
+        border-bottom: 1px solid rgba(34, 197, 94, 0.08);
+    }
+
+    .detail-item.closing-details .closing-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-item.closing-details .closing-row .closing-label {
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 0.6rem;
+        min-width: 80px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .detail-item.closing-details .closing-row .closing-value {
+        color: var(--text-primary);
+        font-size: 0.78rem;
+        word-break: break-word;
+        flex: 1;
+    }
+
+    /* ===== VENDOR TRACKING CARD ===== */
+    .vendor-tracking-card {
+        background: rgba(139, 92, 246, 0.04);
+        border: 1px solid rgba(139, 92, 246, 0.12);
+        border-radius: 10px;
+        padding: 0.6rem 0.8rem;
+        grid-column: 1 / -1;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .vendor-tracking-card .vendor-left {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .vendor-tracking-card .vendor-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(139, 92, 246, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #8B5CF6;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+    }
+
+    .vendor-tracking-card .vendor-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.05rem;
+    }
+
+    .vendor-tracking-card .vendor-info .vendor-label {
+        font-size: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+    }
+
+    .vendor-tracking-card .vendor-info .vendor-number {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #8B5CF6;
+        font-family: 'Courier New', monospace;
+        letter-spacing: 0.5px;
+    }
+
+    .vendor-tracking-card .vendor-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .vendor-tracking-card .vendor-right .vendor-badge {
+        background: rgba(139, 92, 246, 0.12);
+        color: #8B5CF6;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .vendor-tracking-card .vendor-right .vendor-date {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+    }
+
+    .vendor-tracking-card .vendor-right .vendor-date i {
+        color: #8B5CF6;
+        margin-right: 0.2rem;
+    }
+
+    /* ===== COMBINED TOP CARD ===== */
+    .top-status-card {
+        grid-column: 1 / -1;
+        border-radius: 10px;
+        padding: 0.6rem 0.8rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: stretch;
+        gap: 0.5rem;
+        background: var(--input-bg);
+        border: 1px solid var(--ticket-border);
+    }
+
+    .top-status-card .status-section {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .top-status-card .status-section .section-label {
+        font-size: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 0.15rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .top-status-card .status-section .section-label i {
+        font-size: 0.6rem;
+    }
+
+    .top-status-card .status-section .section-value {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        word-break: break-word;
+    }
+
+    .top-status-card .divider {
+        width: 1px;
+        background: var(--ticket-border);
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+        .top-status-card {
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .top-status-card .divider {
+            width: 100%;
+            height: 1px;
+        }
+        .top-status-card .status-section {
+            min-width: auto;
+        }
+        .vendor-tracking-card {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
+        .vendor-tracking-card .vendor-left {
+            justify-content: center;
+        }
+        .vendor-tracking-card .vendor-right {
+            justify-content: center;
+        }
     }
 
     .detail-label {
@@ -382,6 +584,7 @@
         font-weight: 500;
         color: var(--text-primary);
         word-break: break-word;
+        overflow-wrap: break-word;
     }
 
     .detail-value.highlight-text {
@@ -423,6 +626,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.3px;
+        white-space: nowrap;
     }
 
     .badge-status-open { background: var(--success-color); color: white; }
@@ -439,6 +643,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.3px;
+        white-space: nowrap;
     }
 
     .badge-priority-critical { background: var(--danger-color); color: white; animation: pulseCritical 2s ease-in-out infinite; }
@@ -457,6 +662,7 @@
         border-radius: 50px;
         font-size: 0.55rem;
         font-weight: 600;
+        white-space: nowrap;
     }
 
     .badge-origin-admin {
@@ -476,6 +682,10 @@
         border-radius: 8px;
         border-left: 3px solid;
         margin-top: 0.5rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .status-box-hold {
@@ -495,12 +705,22 @@
 
     .status-box strong {
         font-size: 0.8rem;
+        display: block;
+        margin-bottom: 0.2rem;
     }
 
     .status-box p {
         font-size: 0.78rem;
         color: var(--text-secondary);
         margin: 0.2rem 0 0 0;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.5;
+    }
+
+    .status-box p small {
+        display: inline-block;
+        margin-top: 0.1rem;
     }
 
     .btn-attachment {
@@ -515,6 +735,7 @@
         align-items: center;
         gap: 4px;
         background: transparent;
+        white-space: nowrap;
     }
 
     .btn-attachment:hover {
@@ -526,10 +747,8 @@
     }
 
     /* ========== TIMELINE ========== */
-    .timeline-scroll {
-        max-height: 380px;
-        overflow-y: auto;
-        padding-right: 4px;
+    .timeline-wrapper {
+        padding: 0;
     }
 
     .timeline {
@@ -584,6 +803,8 @@
         padding: 0.35rem 0.6rem;
         border: 1px solid var(--ticket-border);
         transition: all 0.3s ease;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
 
     .timeline-content:hover {
@@ -600,12 +821,15 @@
         font-size: 0.75rem;
         font-weight: 600;
         color: var(--brand-orange);
+        word-break: break-word;
     }
 
     .timeline-body {
         font-size: 0.7rem;
         color: var(--text-secondary);
         margin-top: 0.05rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
 
     .timeline-by {
@@ -816,14 +1040,53 @@
         .detail-label { font-size: 0.5rem; }
         .detail-description .detail-value { font-size: 0.72rem; padding: 0.3rem 0.4rem; }
         
-        .timeline-scroll { max-height: 280px; }
+        .detail-item.closing-details .closing-row {
+            flex-direction: column;
+            gap: 0.05rem;
+            padding: 0.2rem 0;
+        }
+        .detail-item.closing-details .closing-row .closing-label {
+            font-size: 0.55rem;
+            min-width: auto;
+        }
+        .detail-item.closing-details .closing-row .closing-value {
+            font-size: 0.7rem;
+            padding-left: 0;
+        }
+        
+        .vendor-tracking-card {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
+        .vendor-tracking-card .vendor-left {
+            justify-content: center;
+        }
+        .vendor-tracking-card .vendor-right {
+            justify-content: center;
+        }
+        
+        .top-status-card {
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .top-status-card .divider {
+            width: 100%;
+            height: 1px;
+        }
+        .top-status-card .status-section {
+            min-width: auto;
+        }
+        
         .timeline-item { padding-left: 28px; margin-bottom: 0.4rem; }
         .timeline::before { left: 10px; }
         .timeline-marker { left: 6px; width: 8px; height: 8px; }
         .timeline-title { font-size: 0.7rem; }
         .timeline-body { font-size: 0.65rem; }
-        .status-box p { font-size: 0.72rem; }
-        .status-box strong { font-size: 0.75rem; }
+        
+        .status-box { padding: 0.4rem 0.6rem; }
+        .status-box strong { font-size: 0.7rem; }
+        .status-box p { font-size: 0.68rem; }
         
         .modal-body { padding: 0.75rem !important; }
         .modal-header .modal-title { font-size: 0.85rem !important; }
@@ -833,29 +1096,57 @@
         
         .action-status-msg { font-size: 0.55rem; }
         .header-subtitle .time-badge { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
+        .badge-status, .badge-priority, .badge-origin { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
     }
 
     @media (max-width: 576px) {
         .ticket-header { padding: 0.5rem 0.6rem; }
         .header-title { font-size: 0.85rem; }
-        .header-subtitle { font-size: 0.6rem; }
+        .header-subtitle { font-size: 0.6rem; flex-wrap: wrap; }
         .header-actions { flex-wrap: wrap; justify-content: stretch; }
         .btn-back, .btn-download-excel { flex: 1; justify-content: center; font-size: 0.6rem !important; padding: 0.2rem 0.4rem !important; min-height: 28px; }
         
         .action-banner { padding: 0.4rem 0.5rem; }
         .action-banner .banner-title { font-size: 0.55rem; }
-        .action-btn { font-size: 0.55rem; padding: 0.15rem 0.4rem; min-height: 24px; flex: 1; justify-content: center; min-width: 70px; }
+        .action-btn { font-size: 0.55rem; padding: 0.15rem 0.4rem; min-height: 24px; flex: 1; justify-content: center; min-width: 60px; }
         .action-btn i { font-size: 0.5rem; }
         .action-buttons { gap: 0.2rem; }
         
         .glass-header h6 { font-size: 0.65rem; }
+        .glass-header { padding: 0.3rem 0.5rem; }
+        .card-body { padding: 0.4rem; }
         .detail-value { font-size: 0.68rem; }
         .detail-description .detail-value { font-size: 0.68rem; }
         .detail-item { padding: 0.2rem 0.3rem; }
         .badge-status, .badge-priority, .badge-origin { font-size: 0.45rem; padding: 0.08rem 0.3rem; }
         .btn-attachment { font-size: 0.5rem; padding: 0.08rem 0.3rem; }
         
-        .timeline-scroll { max-height: 200px; }
+        .detail-item.closing-details .closing-row {
+            flex-direction: column;
+            gap: 0.05rem;
+            padding: 0.15rem 0;
+        }
+        .detail-item.closing-details .closing-row .closing-label {
+            font-size: 0.5rem;
+            min-width: auto;
+        }
+        .detail-item.closing-details .closing-row .closing-value {
+            font-size: 0.65rem;
+        }
+        
+        .vendor-tracking-card .vendor-info .vendor-number {
+            font-size: 0.75rem;
+        }
+        .vendor-tracking-card .vendor-icon {
+            width: 26px;
+            height: 26px;
+            font-size: 0.65rem;
+        }
+        
+        .top-status-card .status-section .section-value {
+            font-size: 0.75rem;
+        }
+        
         .timeline-item { padding-left: 24px; margin-bottom: 0.3rem; }
         .timeline::before { left: 8px; }
         .timeline-marker { left: 4px; width: 6px; height: 6px; }
@@ -863,6 +1154,7 @@
         .timeline-body { font-size: 0.6rem; }
         .timeline-time { font-size: 0.5rem; }
         .timeline-by { font-size: 0.5rem; }
+        .timeline-content { padding: 0.25rem 0.4rem; }
         
         .modal-dialog { margin: 0.5rem; }
         .modal-body { padding: 0.5rem !important; }
@@ -870,8 +1162,10 @@
         .btn-modal-submit, .btn-modal-close { font-size: 0.6rem !important; padding: 0.15rem 0.5rem !important; min-height: 26px; }
         
         .status-box { padding: 0.3rem 0.5rem; }
-        .status-box p { font-size: 0.65rem; }
-        .status-box strong { font-size: 0.7rem; }
+        .status-box strong { font-size: 0.65rem; }
+        .status-box p { font-size: 0.6rem; }
+        .status-box p br { display: none; }
+        .status-box p small { font-size: 0.55rem; }
     }
 
     @media (max-width: 400px) {
@@ -882,7 +1176,7 @@
         .header-actions { flex-direction: column; width: 100%; }
         .btn-back, .btn-download-excel { width: 100%; justify-content: center; font-size: 0.55rem !important; min-height: 24px; }
         
-        .action-btn { font-size: 0.5rem; padding: 0.1rem 0.3rem; min-height: 22px; min-width: 50px; }
+        .action-btn { font-size: 0.5rem; padding: 0.1rem 0.3rem; min-height: 22px; min-width: 45px; }
         .action-btn i { font-size: 0.45rem; }
         
         .glass-header { padding: 0.3rem 0.4rem; flex-direction: column; align-items: stretch; text-align: center; }
@@ -893,17 +1187,43 @@
         .detail-label { font-size: 0.45rem; }
         .detail-description .detail-value { font-size: 0.6rem; padding: 0.2rem 0.3rem; }
         
+        .detail-item.closing-details .closing-row .closing-label {
+            font-size: 0.45rem;
+        }
+        .detail-item.closing-details .closing-row .closing-value {
+            font-size: 0.6rem;
+        }
+        
+        .vendor-tracking-card .vendor-info .vendor-number {
+            font-size: 0.65rem;
+        }
+        .vendor-tracking-card .vendor-icon {
+            width: 22px;
+            height: 22px;
+            font-size: 0.55rem;
+        }
+        
+        .top-status-card .status-section .section-value {
+            font-size: 0.65rem;
+        }
+        
         .badge-status, .badge-priority, .badge-origin { font-size: 0.4rem; padding: 0.05rem 0.2rem; }
         .badge-status i, .badge-priority i { display: none; }
         
-        .timeline-scroll { max-height: 160px; }
         .timeline-item { padding-left: 20px; }
         .timeline::before { left: 6px; }
         .timeline-marker { left: 2px; width: 5px; height: 5px; }
+        .timeline-title { font-size: 0.6rem; }
+        .timeline-body { font-size: 0.55rem; }
+        .timeline-content { padding: 0.2rem 0.3rem; }
         
         .modal-dialog { margin: 0.2rem; }
         .modal-body { padding: 0.3rem !important; }
         .btn-modal-submit, .btn-modal-close { font-size: 0.55rem !important; padding: 0.1rem 0.4rem !important; min-height: 22px; }
+        
+        .status-box { padding: 0.2rem 0.3rem; }
+        .status-box strong { font-size: 0.6rem; }
+        .status-box p { font-size: 0.55rem; margin: 0.1rem 0 0 0; }
     }
 
     /* ========== DARK THEME OVERRIDES ========== */
@@ -937,6 +1257,21 @@
 
     [data-theme="dark"] .status-box-closed {
         background: rgba(34, 197, 94, 0.08);
+    }
+
+    [data-theme="dark"] .detail-item.closing-details {
+        background: rgba(34, 197, 94, 0.06);
+        border-color: rgba(34, 197, 94, 0.15);
+    }
+
+    [data-theme="dark"] .vendor-tracking-card {
+        background: rgba(139, 92, 246, 0.06);
+        border-color: rgba(139, 92, 246, 0.15);
+    }
+
+    [data-theme="dark"] .top-status-card {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.06);
     }
 
     [data-theme="dark"] .btn-modal-close {
@@ -1067,7 +1402,7 @@
                 <a href="{% url 'all_tickets' %}" class="btn-back">
                     <i class="fa-solid fa-arrow-left me-1"></i>Back
                 </a>
-                <a href="{% url 'download_ticket_excel' ticket.id %}" class="btn-download-excel" target="_blank">
+                <a href="{% url 'admin_download_ticket_excel' ticket.id %}" class="btn-download-excel" target="_blank">
                     <i class="fa-solid fa-file-excel"></i>
                     <span>Download Excel</span>
                 </a>
@@ -1136,11 +1471,68 @@
                 </div>
                 <div class="card-body">
                     <div class="details-grid">
+                        <!-- ===== SUBJECT ===== -->
                         <div class="detail-item full-width highlight">
                             <span class="detail-label">Subject</span>
                             <div class="detail-value highlight-text">{{ ticket.subject }}</div>
                         </div>
 
+                        <!-- ===== TOP STATUS CARD (Combined: Closing Details + Vendor Tracking) ===== -->
+                        <div class="top-status-card">
+                            <!-- Closing Details Section -->
+                            <div class="status-section">
+                                <div class="section-label">
+                                    <i class="fa-solid fa-circle-check" style="color: var(--success-color);"></i>
+                                    Closing Details
+                                </div>
+                                {% if ticket.status == 'Closed' %}
+                                    <div class="section-value">
+                                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem;">
+                                            <span><strong>Closed by:</strong> {{ ticket.closed_by|default:"GPLERPADMIN" }}</span>
+                                            <span><strong>Date:</strong> {{ ticket.closed_at|date:"d M Y h:i A"|default:"N/A" }}</span>
+                                            <span><strong>Time to close:</strong> {{ time_to_close|default:"N/A" }}</span>
+                                            <span style="width: 100%;"><strong>Remarks:</strong> {{ ticket.closing_remarks|default:"N/A" }}</span>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="section-value" style="color: var(--text-muted); font-weight: 400; font-size: 0.75rem;">
+                                        <i class="fa-regular fa-clock me-1"></i>Ticket is not yet closed
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Divider -->
+                            <div class="divider"></div>
+
+                            <!-- Vendor Tracking Section -->
+                            <div class="status-section">
+                                <div class="section-label">
+                                    <i class="fa-solid fa-cloud-arrow-up" style="color: #8B5CF6;"></i>
+                                    Vendor Tracking
+                                </div>
+                                {% if ticket.vendor_ticket_number %}
+                                    <div class="section-value">
+                                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; align-items: center;">
+                                            <span style="background: rgba(139, 92, 246, 0.1); padding: 0.1rem 0.6rem; border-radius: 50px; font-weight: 700; color: #8B5CF6; font-family: 'Courier New', monospace;">
+                                                {{ ticket.vendor_ticket_number }}
+                                            </span>
+                                            {% if ticket.escalated_at %}
+                                                <span style="font-size: 0.65rem; color: var(--text-muted);">
+                                                    <i class="fa-regular fa-clock me-1"></i>
+                                                    Escalated: {{ ticket.escalated_at|date:"d M Y h:i A" }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="section-value" style="color: var(--text-muted); font-weight: 400; font-size: 0.75rem;">
+                                        <i class="fa-regular fa-circle-minus me-1"></i>Not escalated to vendor
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- ===== EMPLOYEE DETAILS ===== -->
                         <div class="detail-item">
                             <span class="detail-label">Employee</span>
                             <div class="detail-value">{{ ticket.employee_name }}</div>
@@ -1214,54 +1606,45 @@
                             <div class="detail-value">{{ ticket.updated_at|date:"d M Y h:i A" }}</div>
                         </div>
 
+                        <!-- ===== DESCRIPTION ===== -->
                         <div class="detail-item detail-description">
                             <span class="detail-label">Description</span>
                             <div class="detail-value">{{ ticket.description|default:"No description provided." }}</div>
                         </div>
 
-                        {% if ticket.attachment %}
+                        <!-- ===== ATTACHMENTS (3 files) ===== -->
                         <div class="detail-item full-width">
-                            <span class="detail-label">Attachment</span>
-                            <div class="detail-value">
-                                <a href="{{ ticket.attachment.url }}" target="_blank" class="btn-attachment">
-                                    <i class="fa-solid fa-paperclip me-1"></i>View Attachment
-                                </a>
+                            <span class="detail-label">Attachments</span>
+                            <div class="detail-value" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                {% if ticket.attachment_1 %}
+                                    <a href="{{ ticket.attachment_1.url }}" target="_blank" class="btn-attachment">
+                                        <i class="fa-solid fa-paperclip me-1"></i>Attachment 1
+                                    </a>
+                                {% endif %}
+                                {% if ticket.attachment_2 %}
+                                    <a href="{{ ticket.attachment_2.url }}" target="_blank" class="btn-attachment">
+                                        <i class="fa-solid fa-paperclip me-1"></i>Attachment 2
+                                    </a>
+                                {% endif %}
+                                {% if ticket.attachment_3 %}
+                                    <a href="{{ ticket.attachment_3.url }}" target="_blank" class="btn-attachment">
+                                        <i class="fa-solid fa-paperclip me-1"></i>Attachment 3
+                                    </a>
+                                {% endif %}
+                                {% if not ticket.attachment_1 and not ticket.attachment_2 and not ticket.attachment_3 %}
+                                    <span style="color: var(--text-muted); font-size: 0.75rem;">No attachments uploaded</span>
+                                {% endif %}
                             </div>
                         </div>
-                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- ========== STATUS BOXES ========== -->
+            <!-- ========== STATUS BOXES (Hold Reason - moved to bottom) ========== -->
             {% if ticket.status == 'Hold' and ticket.hold_reason %}
             <div class="status-box status-box-hold">
                 <strong style="color: var(--warning-color);"><i class="fa-solid fa-pause me-1"></i>Hold Reason</strong>
                 <p>{{ ticket.hold_reason }}</p>
-            </div>
-            {% endif %}
-
-            {% if ticket.vendor_ticket_number %}
-            <div class="status-box status-box-escalated">
-                <strong style="color: #8B5CF6;"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Vendor Tracking</strong>
-                <p>
-                    Vendor Ticket: <strong style="color: var(--text-primary);">{{ ticket.vendor_ticket_number }}</strong>
-                    {% if ticket.escalated_at %}
-                    <br><small style="color: var(--text-muted);">Escalated: {{ ticket.escalated_at|date:"d M Y h:i A" }}</small>
-                    {% endif %}
-                </p>
-            </div>
-            {% endif %}
-
-            {% if ticket.status == 'Closed' %}
-            <div class="status-box status-box-closed">
-                <strong style="color: var(--success-color);"><i class="fa-solid fa-circle-check me-1"></i>Closing Details</strong>
-                <p>
-                    Closed by: <strong style="color: var(--text-primary);">{{ ticket.closed_by }}</strong><br>
-                    Date: <strong style="color: var(--text-primary);">{{ ticket.closed_at|date:"d M Y h:i A" }}</strong><br>
-                    Time to close: <strong style="color: var(--text-primary);">{{ time_to_close }}</strong><br>
-                    Remarks: <span style="color: var(--text-primary);">{{ ticket.closing_remarks }}</span>
-                </p>
             </div>
             {% endif %}
         </div>
@@ -1274,7 +1657,7 @@
                     <span class="badge-count">{{ history|length }}</span>
                 </div>
                 <div class="card-body">
-                    <div class="timeline-scroll">
+                    <div class="timeline-wrapper">
                         <ul class="timeline">
                             {% for log in history %}
                             <li class="timeline-item">
@@ -1317,7 +1700,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> <!-- END ticket-container -->
 
 <!-- ============================================
      MODALS
