@@ -11,9 +11,10 @@ Settings Views (GET) - All settings page views
 - Audit Logs
 - Audit Log Excel Download
 """
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
+from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse
@@ -24,7 +25,8 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
 from tickets.models import (
     Unit, Department, AdminContact, AdminNotificationEmail, 
-    EmployeeMaster, DepartmentCredential, SettingsAuditLog
+    EmployeeMaster, DepartmentCredential, SettingsAuditLog,
+    ScreenMaster, ScreenMapping, ERPHolderMapping, EmailSchedule, UnitHead
 )
 from tickets.forms import UnitForm, DepartmentForm, AdminContactForm, AdminNotificationEmailForm
 
@@ -79,11 +81,19 @@ def settings_communication(request):
     URL: /admin/settings/communication/
     """
     contact_obj = _get_contact_data()
+    schedule, _ = EmailSchedule.objects.get_or_create(id=1)
     context = {
         'contact': contact_obj,
         'contact_form': AdminContactForm(instance=contact_obj),
         'email_form': AdminNotificationEmailForm(),
         'emails': AdminNotificationEmail.objects.all().order_by('-created_at'),
+        'schedule': schedule,
+        'selected_frequencies': schedule.frequency if isinstance(schedule.frequency, list) else [schedule.frequency],
+        'units': Unit.objects.filter(is_active=True).order_by('code'),
+        'unit_heads': UnitHead.objects.select_related('unit').order_by('unit__code'),
+        'report_choices': EmailSchedule.REPORT_CHOICES,
+        'frequency_choices': EmailSchedule.FREQUENCY_CHOICES,
+        'additional_email_list': [email.strip() for email in schedule.additional_emails.replace(';', ',').split(',') if email.strip()],
     }
     return render(request, 'admin_panel/communication.html', context)
 
@@ -393,3 +403,21 @@ def download_audit_log_excel(request):
     
     wb.save(response)
     return response
+
+
+# ============================================================
+# SCREEN MASTER SETTINGS PAGE
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='tickets:login')
+def settings_screen_master(request):
+    """
+    Screen Master Management Page
+    URL: /custom-admin/settings/screen-master/
+    """
+    screens = ScreenMaster.objects.all().order_by('screen_name')
+    context = {
+        'screens': screens,
+        'total_screens': screens.count(),
+    }
+    return render(request, 'admin_panel/settings_screen_master.html', context)

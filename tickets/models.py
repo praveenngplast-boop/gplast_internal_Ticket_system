@@ -19,6 +19,16 @@ class Unit(models.Model):
         return f"{self.code} - {self.full_name}"
 
 
+class UnitHead(models.Model):
+    unit = models.OneToOneField(Unit, on_delete=models.CASCADE, related_name='head')
+    name = models.CharField(max_length=150)
+    email = models.EmailField()
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.unit.code})"
+
+
 class Department(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
@@ -49,6 +59,37 @@ class AdminNotificationEmail(models.Model):
 
     def __str__(self):
         return self.email
+
+
+class EmailSchedule(models.Model):
+    FREQUENCY_CHOICES = [
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+    ]
+    REPORT_CHOICES = [
+        ('open', 'Open Tickets'),
+        ('escalated', 'Escalated Tickets'),
+        ('escalated_aging', 'Escalated Aging'),
+        ('hold', 'Hold Tickets'),
+        ('assigned', 'Assigned Tickets'),
+    ]
+
+    enabled = models.BooleanField(default=False)
+    reports = models.JSONField(default=list)
+    frequency = models.JSONField(default=list)
+    send_time = models.TimeField(default='08:00')
+    send_unit_heads = models.BooleanField(default=True)
+    send_admins = models.BooleanField(default=True)
+    additional_emails = models.TextField(blank=True, default='')
+    all_units = models.BooleanField(default=True)
+    units = models.ManyToManyField(Unit, blank=True, related_name='email_schedules')
+    subject_template = models.CharField(max_length=255, default='Ticket Report - {{date}}')
+    updated_at = models.DateTimeField(auto_now=True)
+    last_sent_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return 'Scheduled Email Reports'
 
 
 class EmployeeMaster(models.Model):
@@ -136,17 +177,44 @@ class Ticket(models.Model):
         ('Critical', 'Critical')
     ]
     
+    # ============================================================
+    # OLD ERROR TYPE - Used for employee ticket creation (New/Repeated)
+    # ============================================================
     ERROR_TYPE_CHOICES = [
         ('New', 'New'),
-        ('Regular', 'Regular'),
-        ('No Idea', 'No Idea'),
-        ('ERP Error', 'ERP Error'),
-        ('Data Entry Error', 'Data Entry Error'),
-        ('DB Error', 'DB Error'),
-        ('Server Error', 'Server Error'),
-        ('IT Error', 'IT Error'),
-        ('User Error', 'User Error'),
-        ('Other', 'Other'),
+        ('Repeated', 'Repeated'),
+    ]
+    
+    # ============================================================
+    # NEW ERROR TYPES - Used for admin closing tickets
+    # ============================================================
+    MAIN_ERROR_TYPE_CHOICES = [
+        ('Roadmap Error', 'Roadmap Error'),
+        ('GPL Error', 'GPL Error'),
+    ]
+    
+    # Roadmap Error Sub-Types
+    ROADMAP_SUB_ERROR_CHOICES = [
+        ('Database Error', 'Database Error'),
+        ('Logic / Functional Error', 'Logic / Functional Error'),
+        ('Application Error', 'Application Error'),
+        ('Calculation Error', 'Calculation Error'),
+        ('Report / Print Error', 'Report / Print Error'),
+        ('Workflow / Approval Error', 'Workflow / Approval Error'),
+        ('Integration / API Error', 'Integration / API Error'),
+        ('Barcode Error', 'Barcode Error'),
+        ('Performance Error', 'Performance Error'),
+        ('Access / Permission Error', 'Access / Permission Error'),
+        ('Master Data / Configuration Error', 'Master Data / Configuration Error'),
+        ('Other ERP Error', 'Other ERP Error'),
+    ]
+    
+    # GPL Error Sub-Types
+    GPL_SUB_ERROR_CHOICES = [
+        ('User / Data Entry Error', 'User / Data Entry Error'),
+        ('Process / Procedure Error', 'Process / Procedure Error'),
+        ('Master Data Error', 'Master Data Error'),
+        ('Other GPL Error', 'Other GPL Error'),
     ]
     
     STATUS_CHOICES = [
@@ -170,6 +238,9 @@ class Ticket(models.Model):
         ('Other', 'Other')
     ]
 
+    # ============================================================
+    # BASIC TICKET FIELDS
+    # ============================================================
     ticket_number = models.CharField(max_length=30, unique=True, editable=False)
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT)
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
@@ -181,10 +252,47 @@ class Ticket(models.Model):
     subject = models.CharField(max_length=150)
     description = models.TextField()
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
-    error_type = models.CharField(max_length=50, choices=ERROR_TYPE_CHOICES)
+    
+    # ============================================================
+    # ERROR TYPE - Used for employee ticket creation
+    # ============================================================
+    error_type = models.CharField(
+        max_length=50, 
+        choices=ERROR_TYPE_CHOICES,
+        default='New',
+        verbose_name="Error Type"
+    )
+    
+    # ============================================================
+    # NEW FIELDS - Used when admin closes the ticket
+    # ============================================================
+    main_error_type = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True,
+        choices=MAIN_ERROR_TYPE_CHOICES,
+        verbose_name="Main Error Type",
+        help_text="Select the main error category when closing the ticket"
+    )
+    
+    sub_error_type = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True,
+        verbose_name="Sub Error Type",
+        help_text="Select the sub-error type based on the main error category"
+    )
+    
+    # ============================================================
+    # ATTACHMENTS
+    # ============================================================
     attachment_1 = models.FileField(upload_to='attachments/', blank=True, null=True)
     attachment_2 = models.FileField(upload_to='attachments/', blank=True, null=True)
     attachment_3 = models.FileField(upload_to='attachments/', blank=True, null=True)
+    
+    # ============================================================
+    # STATUS & LIFECYCLE
+    # ============================================================
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
     created_by_role = models.CharField(max_length=10, choices=CREATED_BY_CHOICES, default='Employee')
     admin_creation_reason = models.CharField(max_length=50, choices=ADMIN_REASON_CHOICES, blank=True, null=True)
@@ -193,6 +301,10 @@ class Ticket(models.Model):
     closing_remarks = models.TextField(blank=True, null=True)
     closed_by = models.CharField(max_length=100, blank=True, null=True)
     vendor_ticket_number = models.CharField(max_length=100, blank=True, null=True)
+    
+    # ============================================================
+    # TIMESTAMPS
+    # ============================================================
     created_by_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     closed_at = models.DateTimeField(blank=True, null=True)
@@ -200,7 +312,7 @@ class Ticket(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     # ============================================================
-    # ✅ NOTIFICATION FIELDS - Bell notification system
+    # NOTIFICATION FIELDS - Bell notification system
     # ============================================================
     is_viewed = models.BooleanField(
         default=False,
@@ -223,6 +335,48 @@ class Ticket(models.Model):
 
     def __str__(self):
         return f"{self.ticket_number} - {self.subject}"
+    
+    # ============================================================
+    # HELPER METHODS
+    # ============================================================
+    
+    def get_main_error_display(self):
+        """Get display value for main error type"""
+        if self.main_error_type:
+            return self.main_error_type
+        return "N/A"
+    
+    def get_sub_error_display(self):
+        """Get display value for sub error type"""
+        if self.sub_error_type:
+            return self.sub_error_type
+        return "N/A"
+    
+    def get_full_error_details(self):
+        """Get full error details as dictionary"""
+        return {
+            'main_error_type': self.get_main_error_display(),
+            'sub_error_type': self.get_sub_error_display(),
+        }
+    
+    def has_closing_error_details(self):
+        """Check if ticket has closing error details"""
+        return bool(self.main_error_type and self.sub_error_type)
+    
+    def is_closed(self):
+        """Check if ticket is closed"""
+        return self.status == 'Closed'
+    
+    def can_reopen(self):
+        """Check if ticket can be reopened (within 48 hours of closing)"""
+        if not self.is_closed():
+            return False
+        if not self.closed_at:
+            return False
+        from django.utils import timezone
+        from datetime import timedelta
+        time_since_close = timezone.now() - self.closed_at
+        return time_since_close.total_seconds() <= 48 * 3600
 
 
 class TicketHistory(models.Model):
@@ -234,6 +388,19 @@ class TicketHistory(models.Model):
 
     def __str__(self):
         return f"{self.ticket.ticket_number} - {self.action} ({self.timestamp})"
+
+
+class ReopenAttachment(models.Model):
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='reopen_attachments')
+    file = models.FileField(upload_to='attachments/reopen/')
+    uploaded_by = models.CharField(max_length=100, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+
+    def __str__(self):
+        return f"{self.ticket.ticket_number} - {self.file.name}"
 
 
 # ============================================================
@@ -258,6 +425,7 @@ class SettingsAuditLog(models.Model):
         ('CONTACT', 'Contact'),
         ('EMAIL', 'Email'),
         ('PASSWORD', 'Password'),
+        ('SCREEN', 'Screen'),
         ('GENERAL', 'General'),
     ]
     
@@ -281,3 +449,148 @@ class SettingsAuditLog(models.Model):
     
     def __str__(self):
         return f"{self.performed_by_name} - {self.action_type} - {self.setting_name} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+
+# ============================================================
+# ERP USER ID MAPPING MODEL
+# ============================================================
+
+class ERPHolderMapping(models.Model):
+    """
+    Maps ERP User IDs to Employee IDs
+    One ERP User ID can have multiple Employee IDs mapped to it
+    No restrictions on department or unit
+    """
+    erp_user_id = models.CharField(
+        max_length=50, 
+        db_index=True,
+        verbose_name="ERP User ID",
+        help_text="ERP User ID (e.g., 0001, 0002)"
+    )
+    employee = models.ForeignKey(
+        EmployeeMaster, 
+        on_delete=models.CASCADE, 
+        related_name='erp_mappings',
+        verbose_name="Employee",
+        help_text="Employee mapped to this ERP User ID"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=100, blank=True, null=True)
+    
+    class Meta:
+        unique_together = ['erp_user_id', 'employee']
+        ordering = ['erp_user_id', 'employee__employee_id']
+        verbose_name = 'ERP User ID Mapping'
+        verbose_name_plural = 'ERP User ID Mappings'
+        indexes = [
+            models.Index(fields=['erp_user_id']),
+            models.Index(fields=['employee']),
+        ]
+    
+    def __str__(self):
+        return f"ERP {self.erp_user_id} → {self.employee.employee_id} ({self.employee.employee_name})"
+    
+    def get_employee_details(self):
+        return {
+            'employee_id': self.employee.employee_id,
+            'employee_name': self.employee.employee_name,
+            'mobile': self.employee.mobile,
+            'email': self.employee.email,
+            'unit_code': self.employee.unit.code if self.employee.unit else '',
+            'unit_name': self.employee.unit.full_name if self.employee.unit else '',
+            'department_name': self.employee.department.name if self.employee.department else '',
+        }
+
+
+# ============================================================
+# SCREEN MASTER MODEL
+# ============================================================
+
+class ScreenMaster(models.Model):
+    """
+    Master list of ERP Screens/Modules.
+    Screen Name and Screen Code must be unique.
+    """
+    SCREEN_TYPE_CHOICES = [
+        ('ALL', 'General'),
+        ('ENTRY', 'Data Entry'),
+        ('CONFIGURATION', 'Configuration'),
+        ('QUERY', 'Report/Query'),
+    ]
+
+    screen_name = models.CharField(
+        max_length=150,
+        unique=True,
+        verbose_name="Screen Name",
+        help_text="Full name of the screen/module (e.g., Sales Order Entry)"
+    )
+    screen_code = models.CharField(
+        max_length=50,
+        unique=True,
+        verbose_name="Screen Code",
+        help_text="Short code for the screen (e.g., SO-001)"
+    )
+    screen_type = models.CharField(
+        max_length=20,
+        choices=SCREEN_TYPE_CHOICES,
+        default='ALL',
+        verbose_name="Screen Type",
+        help_text="The category of the screen"
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=100, blank=True)
+
+    class Meta:
+        ordering = ['screen_name']
+        verbose_name = 'Screen Master'
+        verbose_name_plural = 'Screen Masters'
+
+    def save(self, *args, **kwargs):
+        self.screen_name = self.screen_name.strip()
+        self.screen_code = self.screen_code.strip().upper()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.screen_code} - {self.screen_name} ({self.get_screen_type_display()})"
+
+
+# ============================================================
+# SCREEN MAPPING MODEL
+# ============================================================
+
+class ScreenMapping(models.Model):
+    """
+    Maps screens from ScreenMaster to ERP User IDs.
+    One screen can be mapped to multiple ERP IDs.
+    One ERP ID can have multiple screens.
+    """
+    screen = models.ForeignKey(
+        ScreenMaster,
+        on_delete=models.CASCADE,
+        related_name='screen_mappings',
+        verbose_name="Screen"
+    )
+    erp_user_id = models.CharField(
+        max_length=50,
+        db_index=True,
+        verbose_name="ERP User ID",
+        help_text="ERP User ID (links to ERPHolderMapping.erp_user_id)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.CharField(max_length=100, blank=True)
+
+    class Meta:
+        unique_together = ['screen', 'erp_user_id']
+        ordering = ['erp_user_id', 'screen__screen_name']
+        verbose_name = 'Screen Mapping'
+        verbose_name_plural = 'Screen Mappings'
+        indexes = [
+            models.Index(fields=['erp_user_id']),
+            models.Index(fields=['screen']),
+        ]
+
+    def __str__(self):
+        return f"{self.screen.screen_code} → ERP {self.erp_user_id}"

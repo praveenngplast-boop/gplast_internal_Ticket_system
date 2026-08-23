@@ -13,6 +13,15 @@
         --ticket-radius: 16px;
         --ticket-shadow: 0 4px 24px rgba(0,0,0,0.06);
         --ticket-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --error-roadmap: #8B5CF6;
+        --error-gpl: #10B981;
+        --error-other: #94A3B8;
+    }
+
+    [data-theme="dark"] {
+        --error-roadmap: #A78BFA;
+        --error-gpl: #34D399;
+        --error-other: rgba(255,255,255,0.3);
     }
 
     .tickets-wrapper {
@@ -645,6 +654,61 @@
         50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
     }
 
+    /* Error Type Badge */
+    .badge-error-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        font-size: clamp(0.4rem, 0.5vw, 0.45rem);
+        font-weight: 600;
+        white-space: nowrap;
+        border: 1px solid transparent;
+    }
+
+    .badge-error-type.roadmap {
+        background: rgba(139, 92, 246, 0.12);
+        color: var(--error-roadmap);
+        border-color: rgba(139, 92, 246, 0.15);
+    }
+
+    .badge-error-type.gpl {
+        background: rgba(16, 185, 129, 0.12);
+        color: var(--error-gpl);
+        border-color: rgba(16, 185, 129, 0.15);
+    }
+
+    .badge-error-type.other {
+        background: rgba(148, 163, 184, 0.12);
+        color: var(--error-other);
+        border-color: rgba(148, 163, 184, 0.15);
+    }
+
+    .badge-error-type .sub-text {
+        font-weight: 400;
+        opacity: 0.7;
+        font-size: 0.35rem;
+    }
+
+    [data-theme="dark"] .badge-error-type.roadmap {
+        background: rgba(139, 92, 246, 0.15);
+        color: #A78BFA;
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    [data-theme="dark"] .badge-error-type.gpl {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34D399;
+        border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    [data-theme="dark"] .badge-error-type.other {
+        background: rgba(148, 163, 184, 0.12);
+        color: rgba(255, 255, 255, 0.4);
+        border-color: rgba(148, 163, 184, 0.15);
+    }
+
     .ticket-assigned {
         color: var(--text-secondary);
         font-size: clamp(0.45rem, 0.6vw, 0.55rem);
@@ -875,6 +939,14 @@
         .ticket-subject {
             max-width: 100px;
         }
+
+        .badge-error-type {
+            font-size: 0.4rem !important;
+            padding: 0.05rem 0.25rem !important;
+        }
+        .badge-error-type .sub-text {
+            font-size: 0.3rem;
+        }
     }
 
     /* Mobile Large */
@@ -1051,6 +1123,14 @@
 
         .badge-priority i {
             display: none;
+        }
+
+        .badge-error-type {
+            font-size: 0.35rem !important;
+            padding: 0.05rem 0.2rem !important;
+        }
+        .badge-error-type .sub-text {
+            font-size: 0.25rem;
         }
 
         .ticket-assigned {
@@ -1267,6 +1347,14 @@
         .badge-priority {
             font-size: 0.3rem;
             padding: 0.05rem 0.2rem;
+        }
+
+        .badge-error-type {
+            font-size: 0.3rem !important;
+            padding: 0.05rem 0.15rem !important;
+        }
+        .badge-error-type .sub-text {
+            font-size: 0.2rem;
         }
 
         .ticket-assigned {
@@ -1514,6 +1602,42 @@
                     <input class="filter-input" type="text" name="search" id="filterSearch" value="{{ search_query|default:'' }}" placeholder="Search tickets...">
                 </div>
 
+                <!-- ✅ NEW: Main Error Type Filter -->
+                <div class="filter-group">
+                    <label for="filterMainError"><i class="fa-solid fa-bug"></i> Main Error</label>
+                    <select class="filter-select" name="main_error_type" id="filterMainError">
+                        <option value="">All Error Types</option>
+                        <option value="Roadmap Error" {% if selected_main_error_type == 'Roadmap Error' %}selected{% endif %}>Roadmap Error</option>
+                        <option value="GPL Error" {% if selected_main_error_type == 'GPL Error' %}selected{% endif %}>GPL Error</option>
+                    </select>
+                </div>
+
+                <!-- ✅ FIXED: Sub Error Type Dropdown with options from forms.py -->
+                <div class="filter-group">
+                    <label for="filterSubError"><i class="fa-solid fa-bug"></i> Sub Error</label>
+                    <select class="filter-select" name="sub_error_type" id="filterSubError">
+                        <option value="">All</option>
+                        <!-- Roadmap Error Sub-Types (from forms.py) -->
+                        <option value="Database Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Database Error' %}selected{% endif %}>Database Error</option>
+                        <option value="Logic / Functional Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Logic / Functional Error' %}selected{% endif %}>Logic / Functional Error</option>
+                        <option value="Application Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Application Error' %}selected{% endif %}>Application Error</option>
+                        <option value="Calculation Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Calculation Error' %}selected{% endif %}>Calculation Error</option>
+                        <option value="Report / Print Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Report / Print Error' %}selected{% endif %}>Report / Print Error</option>
+                        <option value="Workflow / Approval Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Workflow / Approval Error' %}selected{% endif %}>Workflow / Approval Error</option>
+                        <option value="Integration / API Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Integration / API Error' %}selected{% endif %}>Integration / API Error</option>
+                        <option value="Barcode Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Barcode Error' %}selected{% endif %}>Barcode Error</option>
+                        <option value="Performance Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Performance Error' %}selected{% endif %}>Performance Error</option>
+                        <option value="Access / Permission Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Access / Permission Error' %}selected{% endif %}>Access / Permission Error</option>
+                        <option value="Master Data / Configuration Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Master Data / Configuration Error' %}selected{% endif %}>Master Data / Configuration Error</option>
+                        <option value="Other ERP Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Other ERP Error' %}selected{% endif %}>Other ERP Error</option>
+                        <!-- GPL Error Sub-Types (from forms.py) -->
+                        <option value="User / Data Entry Error" data-main="GPL Error" {% if selected_sub_error_type == 'User / Data Entry Error' %}selected{% endif %}>User / Data Entry Error</option>
+                        <option value="Process / Procedure Error" data-main="GPL Error" {% if selected_sub_error_type == 'Process / Procedure Error' %}selected{% endif %}>Process / Procedure Error</option>
+                        <option value="Master Data Error" data-main="GPL Error" {% if selected_sub_error_type == 'Master Data Error' %}selected{% endif %}>Master Data Error</option>
+                        <option value="Other GPL Error" data-main="GPL Error" {% if selected_sub_error_type == 'Other GPL Error' %}selected{% endif %}>Other GPL Error</option>
+                    </select>
+                </div>
+
                 <div class="filter-group" id="ticketNumberGroup" style="display: none;">
                     <label for="filterTicketNumber"><i class="fa-solid fa-hashtag"></i> Ticket Number</label>
                     <input class="filter-input" type="text" name="ticket_number" id="filterTicketNumber" value="{{ selected_ticket_number|default:'' }}" placeholder="TKT-0001">
@@ -1566,6 +1690,7 @@
                         <th>Subject</th>
                         <th>Priority</th>
                         <th>Status</th>
+                        <th>Error</th>
                         <th>Assigned To</th>
                         <th style="text-align: center;">Action</th>
                     </tr>
@@ -1604,6 +1729,24 @@
                                 </span>
                             </td>
                             <td>
+                                {% if ticket.main_error_type and ticket.sub_error_type %}
+                                    <span class="badge-error-type {% if ticket.main_error_type == 'Roadmap Error' %}roadmap{% elif ticket.main_error_type == 'GPL Error' %}gpl{% else %}other{% endif %}">
+                                        {{ ticket.main_error_type }}
+                                        <span class="sub-text">→ {{ ticket.sub_error_type }}</span>
+                                    </span>
+                                {% elif ticket.main_error_type %}
+                                    <span class="badge-error-type {% if ticket.main_error_type == 'Roadmap Error' %}roadmap{% elif ticket.main_error_type == 'GPL Error' %}gpl{% else %}other{% endif %}">
+                                        {{ ticket.main_error_type }}
+                                    </span>
+                                {% elif ticket.error_type %}
+                                    <span class="badge-error-type other">
+                                        {{ ticket.error_type }}
+                                    </span>
+                                {% else %}
+                                    <span style="font-size: clamp(0.4rem, 0.5vw, 0.45rem); color: var(--text-muted);">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
                                 <span class="ticket-assigned">
                                     {% if ticket.status == 'Assigned' and ticket.assigned_person %}
                                         <i class="fa-solid fa-user-gear"></i>
@@ -1622,7 +1765,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <div class="empty-state">
                                     <i class="fa-regular fa-folder-open"></i>
                                     <h4>No Tickets Found</h4>
@@ -1688,6 +1831,75 @@
         var ticketNumberGroup = document.getElementById('ticketNumberGroup');
         var dateFromGroup = document.getElementById('dateFromGroup');
         var dateToGroup = document.getElementById('dateToGroup');
+
+        // ✅ FIXED: Dynamic Sub Error Type based on Main Error Type
+        var filterMainError = document.getElementById('filterMainError');
+        var filterSubError = document.getElementById('filterSubError');
+
+        // Store all options with their data-main attribute
+        var allSubErrorOptions = [];
+        var allOptions = filterSubError.querySelectorAll('option');
+        allOptions.forEach(function(opt) {
+            if (opt.value !== '') {
+                allSubErrorOptions.push({
+                    value: opt.value,
+                    text: opt.textContent,
+                    mainType: opt.getAttribute('data-main') || '',
+                    selected: opt.selected
+                });
+            }
+        });
+
+        // Function to update sub-error options based on main error type
+        function updateSubErrorOptions() {
+            var selectedMain = filterMainError.value;
+            var currentValue = filterSubError.value;
+
+            // Clear current options (keep "All")
+            filterSubError.innerHTML = '<option value="">All</option>';
+
+            // Filter options based on selected main error type
+            var filteredOptions = [];
+            if (selectedMain === 'Roadmap Error') {
+                filteredOptions = allSubErrorOptions.filter(function(opt) {
+                    return opt.mainType === 'Roadmap Error';
+                });
+            } else if (selectedMain === 'GPL Error') {
+                filteredOptions = allSubErrorOptions.filter(function(opt) {
+                    return opt.mainType === 'GPL Error';
+                });
+            } else {
+                // Show all options
+                filteredOptions = allSubErrorOptions;
+            }
+
+            // Add filtered options to the select
+            filteredOptions.forEach(function(opt) {
+                var option = document.createElement('option');
+                option.value = opt.value;
+                option.textContent = opt.text;
+                option.setAttribute('data-main', opt.mainType);
+                if (opt.value === currentValue) {
+                    option.selected = true;
+                }
+                filterSubError.appendChild(option);
+            });
+
+            // If no option selected and we have options, select the first one
+            if (!filterSubError.value && filteredOptions.length > 0) {
+                filterSubError.value = filteredOptions[0].value;
+            }
+        }
+
+        // Run on page load to set initial state
+        setTimeout(updateSubErrorOptions, 50);
+
+        // Update when Main Error Type changes
+        if (filterMainError) {
+            filterMainError.addEventListener('change', function() {
+                updateSubErrorOptions();
+            });
+        }
 
         var advancedVisible = false;
 

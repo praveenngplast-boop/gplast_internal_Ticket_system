@@ -1,5 +1,5 @@
 from django.contrib import admin
-from tickets.models import Unit, Department, AdminContact, AdminNotificationEmail, Ticket, TicketHistory
+from tickets.models import Unit, Department, AdminContact, AdminNotificationEmail, Ticket, TicketHistory, UnitHead, EmailSchedule
 
 @admin.register(Unit)
 class UnitAdmin(admin.ModelAdmin):
@@ -20,7 +20,17 @@ class AdminContactAdmin(admin.ModelAdmin):
 @admin.register(AdminNotificationEmail)
 class AdminNotificationEmailAdmin(admin.ModelAdmin):
     list_display = ('email', 'is_active', 'created_at')
-    list_filter = ('is_active',)
+
+
+@admin.register(UnitHead)
+class UnitHeadAdmin(admin.ModelAdmin):
+    list_display = ('unit', 'name', 'email', 'is_active')
+
+
+@admin.register(EmailSchedule)
+class EmailScheduleAdmin(admin.ModelAdmin):
+    list_display = ('enabled', 'frequency', 'send_time', 'updated_at', 'last_sent_at')
+    list_filter = ('enabled', 'frequency')
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):

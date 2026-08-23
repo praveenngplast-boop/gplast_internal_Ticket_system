@@ -248,6 +248,13 @@
         opacity: 0.7;
     }
 
+    .date-range-error {
+        color: var(--audit-danger);
+        font-size: 0.72rem;
+        margin-top: 0.35rem;
+        min-height: 1rem;
+    }
+
     .filter-actions {
         display: flex;
         gap: 8px;
@@ -499,7 +506,7 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 0.5rem 1.8rem;
+        padding: 0.45rem 1rem;
         background: var(--audit-brand-gradient);
         color: #FFFFFF !important;
         border: none;
@@ -510,10 +517,14 @@
         text-decoration: none;
         font-family: var(--audit-font-family);
         margin-top: 1rem;
-        min-height: 44px;
+        min-height: 40px;
+        width: fit-content;
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        box-sizing: border-box;
         box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
         cursor: pointer;
-        width: auto;
     }
 
     .btn-empty-action:hover {
@@ -826,7 +837,7 @@
             font-size: 0.7rem;
             padding: 0.35rem 1rem;
             min-height: 34px;
-            width: 100%;
+            width: min(100%, 220px);
         }
     }
 
@@ -1029,6 +1040,9 @@
                 <div class="col-12 col-sm-6 col-md-2">
                     <label class="form-label"><i class="fa-regular fa-calendar"></i> Date To</label>
                     <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                    <div id="dateRangeError" class="date-range-error" role="alert">
+                        {% if date_error %}{{ date_error }}{% endif %}
+                    </div>
                 </div>
                 
                 <div class="col-12 col-sm-12 col-md-2">
@@ -1045,23 +1059,6 @@
             <div class="row mt-3">
                 <div class="col-12">
                     <div class="search-wrapper">
-                        <!-- Preserve other filter parameters -->
-                        {% if selected_action %}
-                        <input type="hidden" name="action" value="{{ selected_action }}">
-                        {% endif %}
-                        {% if selected_setting_type %}
-                        <input type="hidden" name="setting_type" value="{{ selected_setting_type }}">
-                        {% endif %}
-                        {% if selected_performed_by %}
-                        <input type="hidden" name="performed_by" value="{{ selected_performed_by }}">
-                        {% endif %}
-                        {% if date_from %}
-                        <input type="hidden" name="date_from" value="{{ date_from }}">
-                        {% endif %}
-                        {% if date_to %}
-                        <input type="hidden" name="date_to" value="{{ date_to }}">
-                        {% endif %}
-                        
                         <input type="text" name="search" class="form-control" placeholder="🔍 Search by setting name, summary, or user..." value="{{ search_query }}">
                         <button type="submit" class="btn-filter">
                             <i class="fa-solid fa-search me-1"></i> Search
@@ -1183,6 +1180,30 @@
 <!-- Dark/Light Mode Theme Observer - Syncs with base.html -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const auditForm = document.getElementById('auditFilterForm');
+    const dateFrom = auditForm.querySelector('[name="date_from"]');
+    const dateTo = auditForm.querySelector('[name="date_to"]');
+    const dateRangeError = document.getElementById('dateRangeError');
+
+    function validateDateRange() {
+        dateTo.min = dateFrom.value || '';
+        const hasInvalidRange = dateFrom.value && dateTo.value && dateTo.value < dateFrom.value;
+        const message = hasInvalidRange ? 'Date To cannot be earlier than Date From.' : '';
+        dateTo.setCustomValidity(message);
+        dateRangeError.textContent = message;
+        return !hasInvalidRange;
+    }
+
+    dateFrom.addEventListener('change', validateDateRange);
+    dateTo.addEventListener('change', validateDateRange);
+    auditForm.addEventListener('submit', function(event) {
+        if (!validateDateRange()) {
+            event.preventDefault();
+            dateTo.reportValidity();
+        }
+    });
+    validateDateRange();
+
     // Function to sync theme with base.html
     function syncAuditTheme() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';

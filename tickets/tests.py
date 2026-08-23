@@ -1,10 +1,15 @@
-from django.test import TestCase
+from django.test import TestCase, RequestFactory, override_settings
+from django.http import HttpResponse
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from tickets.models import Unit, Department, Ticket, TicketHistory
+from tickets.models import Unit, Department, Ticket, TicketHistory, UnitHead, EmailSchedule, AdminNotificationEmail
 from tickets.forms import TicketForm
 from tickets.utils import generate_ticket_number, send_ticket_email
+from tickets.views import reports_views
+from unittest.mock import patch
+from django.core import mail
+from tickets.email_utils import send_scheduled_reports
 
 class GPLASTTicketingTestCase(TestCase):
     def setUp(self):
@@ -279,3 +284,117 @@ class GPLASTTicketingTestCase(TestCase):
         self.assertIsNotNone(history)
         self.assertEqual(history.remarks, "Issue still exists")
         self.assertEqual(history.performed_by, "Admin adminuser")
+
+
+class ReportsViewTestCase(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.admin_user = User.objects.create_user(
+            username='reportadmin', password='password', is_staff=True,
+            email='admin@example.com'
+        )
+        self.unit = Unit.objects.create(
+            code='rpt', full_name='Report Unit', created_by='TEST'
+        )
+        self.department = Department.objects.create(
+            unit=self.unit, name='Report Department'
+        )
+
+    def create_ticket(self, number, status, sub_error_type):
+        return Ticket.objects.create(
+            ticket_number=number,
+            unit=self.unit,
+            department=self.department,
+            employee_id='EMP01',
+            employee_name='Report Employee',
+            mobile='1234567890',
+            email='report@example.com',
+            screen_number='SCR-01',
+            subject=f'Report {number}',
+            description='A report test ticket description.',
+            priority='High',
+            error_type='New',
+            main_error_type='Roadmap Error',
+            sub_error_type=sub_error_type,
+            status=status,
+            created_by_user=self.admin_user,
+        )
+
+    def test_report_filters_status_and_main_error_without_forcing_sub_error(self):
+        self.create_ticket('RPT001', 'Closed', 'Database Error')
+        self.create_ticket('RPT002', 'Closed', 'Logic / Functional Error')
+        self.create_ticket('RPT003', 'Open', 'Database Error')
+        request = self.factory.get('/custom-admin/reports/', {
+            'status': 'Closed',
+            'main_error_type': 'Roadmap Error',
+            'sub_error_type': '',
+        })
+        request.user = self.admin_user
+        with patch('tickets.views.reports_views.render') as render:
+            render.return_value = HttpResponse(status=200)
+            response = reports_views.reports(request)
+
+        self.assertEqual(response.status_code, 200)
+        context = render.call_args.args[2]
+        self.assertEqual(context['tickets'].paginator.count, 2)
+
+    def test_escalated_aging_report_groups_current_escalations(self):
+        old_ticket = self.create_ticket('RPT004', 'Escalated', 'Database Error')
+        old_ticket.escalated_at = timezone.now() - timezone.timedelta(days=20)
+        old_ticket.save(update_fields=['escalated_at'])
+        recent_ticket = self.create_ticket('RPT005', 'Escalated', 'Database Error')
+        recent_ticket.escalated_at = timezone.now() - timezone.timedelta(days=3)
+        recent_ticket.save(update_fields=['escalated_at'])
+        self.create_ticket('RPT006', 'Closed', 'Database Error')
+
+        request = self.factory.get('/custom-admin/reports/escalated-aging/')
+        request.user = self.admin_user
+        with patch('tickets.views.reports_views.render') as render:
+            render.return_value = HttpResponse(status=200)
+            response = reports_views.escalated_aging_report(request)
+
+        self.assertEqual(response.status_code, 200)
+        context = render.call_args.args[2]
+        self.assertEqual(context['total_escalated'], 2)
+        self.assertEqual(context['aging_counts']['0-7 Days'], 1)
+        self.assertEqual(context['aging_counts']['16-30 Days'], 1)
+
+    def test_escalated_aging_kpi_drills_into_selected_category(self):
+        recent_ticket = self.create_ticket('RPT007', 'Escalated', 'Database Error')
+        recent_ticket.escalated_at = timezone.now() - timezone.timedelta(days=3)
+        recent_ticket.save(update_fields=['escalated_at'])
+        old_ticket = self.create_ticket('RPT008', 'Escalated', 'Database Error')
+        old_ticket.escalated_at = timezone.now() - timezone.timedelta(days=20)
+        old_ticket.save(update_fields=['escalated_at'])
+
+        request = self.factory.get('/custom-admin/reports/escalated-aging/', {
+            'aging_category': '0-7 Days',
+        })
+        request.user = self.admin_user
+        with patch('tickets.views.reports_views.render') as render:
+            render.return_value = HttpResponse(status=200)
+            response = reports_views.escalated_aging_report(request)
+
+        self.assertEqual(response.status_code, 200)
+        context = render.call_args.args[2]
+        self.assertEqual(context['total_escalated'], 1)
+        self.assertEqual(context['aging_rows'][0]['ticket'].ticket_number, 'RPT007')
+
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_scheduled_reports_scope_admins_and_unit_heads(self):
+        UnitHead.objects.create(unit=self.unit, name='Unit Head', email='head@example.com')
+        AdminNotificationEmail.objects.create(email='admin@example.com')
+        self.create_ticket('RPT009', 'Open', 'Database Error')
+        schedule = EmailSchedule.objects.create(
+            enabled=True, reports=['open'], all_units=True,
+            send_unit_heads=True, send_admins=True,
+            subject_template='Ticket Report - {{date}}',
+        )
+
+        sent = send_scheduled_reports(schedule)
+
+        self.assertEqual(sent, 2)
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertIn('admin@example.com', mail.outbox[0].to)
+        self.assertIn('head@example.com', mail.outbox[1].to)
+        self.assertIn('admin@example.com', mail.outbox[1].cc)

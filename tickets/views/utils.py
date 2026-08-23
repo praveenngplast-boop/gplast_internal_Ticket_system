@@ -48,13 +48,16 @@ def get_client_ip(request):
     return ip
 
 
-def reopen_ticket_logic(ticket, performed_by, remarks):
+def reopen_ticket_logic(ticket, performed_by, remarks, attachments=None):
     """Reopen a closed ticket with audit trail"""
     with transaction.atomic():
         ticket.status = 'Open'
         ticket.closed_by = None
         ticket.closed_at = None
         ticket.closing_remarks = None
+        # ✅ Clear error type fields when reopening
+        ticket.main_error_type = None
+        ticket.sub_error_type = None
         ticket.save()
         TicketHistory.objects.create(
             ticket=ticket,
@@ -64,7 +67,16 @@ def reopen_ticket_logic(ticket, performed_by, remarks):
         )
     # Import here to avoid circular import
     from tickets.utils import send_ticket_email
-    send_ticket_email(ticket, 'Reopened', remarks=remarks)
+    from tickets.models import ReopenAttachment
+    reopen_attachments = []
+    for uploaded_file in attachments or []:
+        reopen_attachment = ReopenAttachment.objects.create(
+            ticket=ticket,
+            file=uploaded_file,
+            uploaded_by=performed_by,
+        )
+        reopen_attachments.append(reopen_attachment.file)
+    send_ticket_email(ticket, 'Reopened', remarks=remarks, attachments=reopen_attachments)
 
 
 def generate_ticket_list_html(tickets, status):
@@ -143,7 +155,7 @@ def generate_ticket_list_html(tickets, status):
 
 
 def generate_admin_ticket_list_html(tickets, status):
-    """Generate HTML for ticket list (Admin view)"""
+    """Generate HTML for ticket list (Admin view) with error type display"""
     if not tickets:
         return """
         <div class="empty-state text-center py-5">
@@ -166,6 +178,7 @@ def generate_admin_ticket_list_html(tickets, status):
                     <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Subject</th>
                     <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Status</th>
                     <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Priority</th>
+                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Error Type</th>
                     <th class="text-center" style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Action</th>
                 </tr>
             </thead>
@@ -191,6 +204,14 @@ def generate_admin_ticket_list_html(tickets, status):
         status_class = ticket.status.lower()
         badge_class = badge_class_map.get(status_class, 'badge-status-open')
         priority_class = priority_class_map.get(ticket.priority.lower(), 'badge-priority-low')
+        
+        # ✅ Get error type display - show main_error_type if available, else error_type
+        if ticket.main_error_type and ticket.sub_error_type:
+            error_display = f"{ticket.main_error_type}<br><small style='font-size:0.5rem;color:var(--text-muted);'>{ticket.sub_error_type}</small>"
+        elif ticket.error_type:
+            error_display = ticket.error_type
+        else:
+            error_display = '-'
         
         html += f"""
                 <tr>
@@ -218,6 +239,9 @@ def generate_admin_ticket_list_html(tickets, status):
                             {ticket.priority}
                         </span>
                     </td>
+                    <td style="font-size: 0.6rem;">
+                        {error_display}
+                    </td>
                     <td class="text-center">
                         <a href="/admin/ticket/{ticket.id}/" class="btn-view" style="font-size: 0.6rem; padding: 0.15rem 0.6rem; background: var(--accent-gradient); color: white; border-radius: 50px; text-decoration: none; display: inline-block;">
                             <i class="fa-solid fa-eye"></i> View
@@ -240,10 +264,9 @@ def get_contact_data():
     contact_obj, created = AdminContact.objects.get_or_create(
         id=1,
         defaults={
-            'name': "IT ADMIN",
-            'phone': "9999999999",
-            'email': "admin@gplast.com",
-            'designation': "IT Administrator"
+            'admin_name': "IT ADMIN",
+            'admin_phone': "9999999999",
+            'admin_email': "admin@gplast.com",
         }
     )
     return contact_obj
@@ -256,12 +279,16 @@ _get_contact_data = get_contact_data
 def get_employee_directory_data(request):
     """Get employee directory data with search"""
     emp_search = request.GET.get('emp_search', '').strip()
-    employees_qs = EmployeeMaster.objects.all().order_by('employee_id')
+    employees_qs = EmployeeMaster.objects.select_related('unit', 'department').all().order_by('employee_id')
     if emp_search:
         employees_qs = employees_qs.filter(
             Q(employee_id__icontains=emp_search) |
             Q(employee_name__icontains=emp_search) |
-            Q(email__icontains=emp_search)
+            Q(mobile__icontains=emp_search) |
+            Q(email__icontains=emp_search) |
+            Q(unit__code__icontains=emp_search) |
+            Q(unit__full_name__icontains=emp_search) |
+            Q(department__name__icontains=emp_search)
         )
     return employees_qs, emp_search
 
@@ -341,3 +368,119 @@ def get_ticket_priority_color(priority):
         'Low': 'secondary',
     }
     return color_map.get(priority, 'secondary')
+
+
+# ============================================================
+# ✅ NEW UTILITY FUNCTIONS FOR ERROR TYPES
+# ============================================================
+
+def get_error_type_display(ticket):
+    """
+    Get formatted error type display for a ticket
+    Returns HTML string with main and sub error types
+    """
+    if ticket.main_error_type and ticket.sub_error_type:
+        return f"{ticket.main_error_type} → {ticket.sub_error_type}"
+    elif ticket.main_error_type:
+        return ticket.main_error_type
+    elif ticket.error_type:
+        return ticket.error_type
+    return "Not Set"
+
+
+def get_error_type_badge(ticket):
+    """
+    Get HTML badge for error type display
+    Returns HTML string with styled badge
+    """
+    if ticket.main_error_type and ticket.sub_error_type:
+        color = '#8B5CF6' if ticket.main_error_type == 'Roadmap Error' else '#10B981'
+        return f"""
+            <span style="display:inline-block;background:{color}15;color:{color};padding:0.1rem 0.5rem;border-radius:50px;font-size:0.5rem;font-weight:600;border:1px solid {color}20;">
+                {ticket.main_error_type}
+                <span style="font-weight:400;opacity:0.7;">→</span>
+                {ticket.sub_error_type}
+            </span>
+        """
+    elif ticket.main_error_type:
+        color = '#8B5CF6' if ticket.main_error_type == 'Roadmap Error' else '#10B981'
+        return f"""
+            <span style="display:inline-block;background:{color}15;color:{color};padding:0.1rem 0.5rem;border-radius:50px;font-size:0.5rem;font-weight:600;border:1px solid {color}20;">
+                {ticket.main_error_type}
+            </span>
+        """
+    elif ticket.error_type:
+        return f"""
+            <span style="display:inline-block;background:#E8EDF5;color:#4A5A7A;padding:0.1rem 0.5rem;border-radius:50px;font-size:0.5rem;font-weight:600;border:1px solid #DCE3F0;">
+                {ticket.error_type}
+            </span>
+        """
+    return f"""
+        <span style="display:inline-block;color:#8A9AB8;padding:0.1rem 0.5rem;border-radius:50px;font-size:0.5rem;font-weight:400;">
+            Not Set
+        </span>
+    """
+
+
+def has_closing_error_details(ticket):
+    """Check if ticket has closing error details"""
+    return bool(ticket.main_error_type and ticket.sub_error_type)
+
+
+def get_sub_error_choices(main_error_type):
+    """
+    Get sub-error choices based on main error type
+    Returns list of tuples for form choices
+    """
+    if main_error_type == 'Roadmap Error':
+        return [
+            ('Database Error', 'Database Error'),
+            ('Logic / Functional Error', 'Logic / Functional Error'),
+            ('Application Error', 'Application Error'),
+            ('Calculation Error', 'Calculation Error'),
+            ('Report / Print Error', 'Report / Print Error'),
+            ('Workflow / Approval Error', 'Workflow / Approval Error'),
+            ('Integration / API Error', 'Integration / API Error'),
+            ('Barcode Error', 'Barcode Error'),
+            ('Performance Error', 'Performance Error'),
+            ('Access / Permission Error', 'Access / Permission Error'),
+            ('Master Data / Configuration Error', 'Master Data / Configuration Error'),
+            ('Other ERP Error', 'Other ERP Error'),
+        ]
+    elif main_error_type == 'GPL Error':
+        return [
+            ('User / Data Entry Error', 'User / Data Entry Error'),
+            ('Process / Procedure Error', 'Process / Procedure Error'),
+            ('Master Data Error', 'Master Data Error'),
+            ('Other GPL Error', 'Other GPL Error'),
+        ]
+    return []
+
+
+def get_error_type_stats(tickets_qs):
+    """
+    Get error type statistics from a queryset
+    Returns dictionary with main_error_type and sub_error_type counts
+    """
+    main_error_stats = (
+        tickets_qs
+        .exclude(main_error_type__isnull=True)
+        .exclude(main_error_type__exact='')
+        .values('main_error_type')
+        .annotate(count=models.Count('id'))
+        .order_by('-count')
+    )
+    
+    sub_error_stats = (
+        tickets_qs
+        .exclude(sub_error_type__isnull=True)
+        .exclude(sub_error_type__exact='')
+        .values('sub_error_type')
+        .annotate(count=models.Count('id'))
+        .order_by('-count')
+    )
+    
+    return {
+        'main_errors': main_error_stats,
+        'sub_errors': sub_error_stats,
+    }

@@ -34,6 +34,9 @@
         --table-hover: rgba(255, 107, 0, 0.04);
         --input-bg: #F8FAFF;
         --input-border: #DCE3F0;
+        --error-roadmap: #8B5CF6;
+        --error-gpl: #10B981;
+        --error-other: #94A3B8;
     }
 
     [data-theme="dark"] {
@@ -57,6 +60,9 @@
         --table-hover: rgba(255, 107, 0, 0.08);
         --input-bg: rgba(255, 255, 255, 0.05);
         --input-border: rgba(255, 255, 255, 0.08);
+        --error-roadmap: #A78BFA;
+        --error-gpl: #34D399;
+        --error-other: rgba(255,255,255,0.3);
     }
 
     .dashboard-container {
@@ -742,6 +748,43 @@
     .modal-loading i { font-size: 2rem; color: var(--brand-orange); margin-bottom: 1rem; display: block; }
     .modal-loading p { color: var(--text-secondary) !important; font-family: 'Inter', sans-serif; }
 
+    /* ✅ NEW: Error Type Badge in KPI */
+    .badge-error-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        font-size: 0.45rem;
+        font-weight: 600;
+        white-space: nowrap;
+        border: 1px solid transparent;
+    }
+
+    .badge-error-type.roadmap {
+        background: rgba(139, 92, 246, 0.12);
+        color: var(--error-roadmap);
+        border-color: rgba(139, 92, 246, 0.15);
+    }
+
+    .badge-error-type.gpl {
+        background: rgba(16, 185, 129, 0.12);
+        color: var(--error-gpl);
+        border-color: rgba(16, 185, 129, 0.15);
+    }
+
+    .badge-error-type.other {
+        background: rgba(148, 163, 184, 0.12);
+        color: var(--error-other);
+        border-color: rgba(148, 163, 184, 0.15);
+    }
+
+    .badge-error-type .sub-text {
+        font-weight: 400;
+        opacity: 0.7;
+        font-size: 0.35rem;
+    }
+
     @media (max-width: 992px) {
         .panel-card { min-height: 300px; }
         .chart-wrapper { min-height: 200px; max-height: 240px; }
@@ -777,6 +820,8 @@
         .modal-body { padding: 0.75rem !important; max-height: 350px; }
         .modal-body .table td { font-size: 0.6rem !important; padding: 0.2rem !important; }
         .modal-header .modal-title { font-size: 0.95rem !important; }
+        .badge-error-type { font-size: 0.4rem !important; padding: 0.05rem 0.25rem !important; }
+        .badge-error-type .sub-text { font-size: 0.3rem; }
     }
 
     @media (max-width: 576px) {
@@ -793,6 +838,8 @@
         .chart-legend-item .legend-color { width: 7px; height: 7px; }
         .modal-footer { flex-direction: column; gap: 0.5rem; }
         .modal-footer .btn { width: 100%; justify-content: center; }
+        .badge-error-type { font-size: 0.35rem !important; padding: 0.05rem 0.2rem !important; }
+        .badge-error-type .sub-text { font-size: 0.25rem; }
     }
 
     @media (max-width: 400px) {
@@ -900,6 +947,24 @@
     [data-theme="dark"] .chart-legend-item:hover {
         background: rgba(255, 107, 0, 0.08) !important;
         color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .badge-error-type.roadmap {
+        background: rgba(139, 92, 246, 0.15);
+        color: #A78BFA;
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    [data-theme="dark"] .badge-error-type.gpl {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34D399;
+        border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    [data-theme="dark"] .badge-error-type.other {
+        background: rgba(148, 163, 184, 0.12);
+        color: rgba(255, 255, 255, 0.4);
+        border-color: rgba(148, 163, 184, 0.15);
     }
 
     ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -1077,6 +1142,7 @@
             </div>
         </div>
 
+        <!-- ✅ UPDATED: Error Type Chart with Main and Sub Error Types -->
         <div class="col-12 col-lg-6">
             <div class="panel-card">
                 <div class="glass-header">
@@ -1185,6 +1251,8 @@
                         drillDownWithFilter('unit', unit ? unit.id || unit.unit_id : label, 'Unit: ' + label);
                     } else if (chartType === 'errorType') {
                         drillDownWithFilter('errorType', label, 'Error Type: ' + label + ' (Closed Tickets)');
+                    } else if (chartType === 'subErrorType') {
+                        drillDownWithFilter('subErrorType', label, 'Sub Error: ' + label + ' (Closed Tickets)');
                     }
                 });
             });
@@ -1206,7 +1274,7 @@
                 var priorityLabels = Object.keys(priorityData);
                 if (priorityLabels.length > 0) drillDownWithFilter('priority', priorityLabels[0], 'Priority: ' + priorityLabels[0]);
             } else if (chartType === 'errorType') {
-                var errorTypeData = chartsData.errorType || {};
+                var errorTypeData = chartsData.mainErrorType || chartsData.errorType || {};
                 var errorTypeLabels = Object.keys(errorTypeData);
                 if (errorTypeLabels.length > 0) {
                     drillDownWithFilter('errorType', errorTypeLabels[0], 'Error Type: ' + errorTypeLabels[0] + ' (Closed Tickets)');
@@ -1235,9 +1303,13 @@
                 viewAllBtn.href = "{% url 'all_tickets' %}?priority=" + encodeURIComponent(filterValue);
                 url += "&priority=" + encodeURIComponent(filterValue);
             } else if (filterType === 'errorType') {
-                viewAllBtn.href = "{% url 'all_tickets' %}?error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
-                url += "&error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
-                statusLabel.textContent = 'Error Type: ' + filterValue + ' (Closed Tickets)';
+                viewAllBtn.href = "{% url 'all_tickets' %}?main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+                url += "&main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+                statusLabel.textContent = 'Main Error: ' + filterValue + ' (Closed Tickets)';
+            } else if (filterType === 'subErrorType') {
+                viewAllBtn.href = "{% url 'all_tickets' %}?sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+                url += "&sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+                statusLabel.textContent = 'Sub Error: ' + filterValue + ' (Closed Tickets)';
             } else {
                 viewAllBtn.href = "{% url 'all_tickets' %}";
             }
@@ -1313,12 +1385,14 @@
             var statusColors = ['#22C55E', '#3B82F6', '#F59E0B', '#8B5CF6', '#94A3B8'];
             var unitColors = ['#FF6B00', '#FFB800', '#3B82F6', '#22C55E', '#8B5CF6', '#EF4444', '#F59E0B', '#06B6D4', '#EC4899'];
             var priorityColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E'];
-            var errorTypeColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E', '#8B5CF6', '#EC4899', '#06B6D4', '#94A3B8'];
+            // ✅ Updated error type colors - Purple for Roadmap, Green for GPL, others gray
+            var errorTypeColors = ['#8B5CF6', '#10B981', '#94A3B8', '#F59E0B', '#EF4444', '#3B82F6', '#EC4899', '#06B6D4'];
 
             var statusData = chartsData.status || {};
             var unitData = chartsData.units || [];
             var priorityData = chartsData.priority || {};
-            var errorTypeData = chartsData.errorType || {};
+            // ✅ Use mainErrorType from charts_data (new field in admin_views.py)
+            var errorTypeData = chartsData.mainErrorType || chartsData.errorType || {};
 
             var statusLabels = Object.keys(statusData);
             if (statusLabels.length > 0) {
@@ -1409,7 +1483,8 @@
         var statusColors = ['#22C55E', '#3B82F6', '#F59E0B', '#8B5CF6', '#94A3B8'];
         var unitColors = ['#FF6B00', '#FFB800', '#3B82F6', '#22C55E', '#8B5CF6', '#EF4444', '#F59E0B', '#06B6D4', '#EC4899'];
         var priorityColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E'];
-        var errorTypeColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E', '#8B5CF6', '#EC4899', '#06B6D4', '#94A3B8'];
+        // ✅ Updated error type colors
+        var errorTypeColors = ['#8B5CF6', '#10B981', '#94A3B8', '#F59E0B', '#EF4444', '#3B82F6', '#EC4899', '#06B6D4'];
 
         createChart('statusChart', chartsData.status || {}, statusColors, 'doughnut', 'status');
         
@@ -1421,7 +1496,8 @@
         }
         createChart('unitChart', unitChartData, unitColors, 'doughnut', 'unit');
         createChart('priorityChart', chartsData.priority || {}, priorityColors, 'pie', 'priority');
-        createChart('errorTypeChart', chartsData.errorType || {}, errorTypeColors, 'doughnut', 'errorType');
+        // ✅ Use mainErrorType from charts_data
+        createChart('errorTypeChart', chartsData.mainErrorType || chartsData.errorType || {}, errorTypeColors, 'doughnut', 'errorType');
 
         setTimeout(initChartsWithLegends, 500);
 

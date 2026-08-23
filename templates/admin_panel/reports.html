@@ -583,6 +583,19 @@
         display: block;
     }
 
+    .erp-id-cell {
+        font-weight: 500;
+        font-size: clamp(0.6rem, 0.7vw, 0.7rem);
+        color: var(--reports-primary);
+        white-space: nowrap;
+    }
+
+    .erp-id-cell i {
+        font-size: 0.35rem;
+        opacity: 0.4;
+        margin-right: 0.15rem;
+    }
+
     .badge-reopened {
         background: var(--reports-purple);
         color: white;
@@ -632,6 +645,45 @@
     .badge-priority-high { background: #F59E0B; color: #1A1A2E; }
     .badge-priority-medium { background: #3B82F6; color: white; }
     .badge-priority-low { background: #94A3B8; color: white; }
+
+    .badge-error-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        font-size: clamp(0.4rem, 0.5vw, 0.45rem);
+        font-weight: 600;
+        white-space: nowrap;
+        border: 1px solid transparent;
+    }
+
+    .badge-error-type.roadmap {
+        background: rgba(139, 92, 246, 0.12);
+        color: #8B5CF6;
+        border-color: rgba(139, 92, 246, 0.15);
+    }
+
+    .badge-error-type.gpl {
+        background: rgba(16, 185, 129, 0.12);
+        color: #10B981;
+        border-color: rgba(16, 185, 129, 0.15);
+    }
+
+    .badge-error-type.old {
+        background: rgba(148, 163, 184, 0.12);
+        color: #94A3B8;
+        border-color: rgba(148, 163, 184, 0.15);
+    }
+
+    .badge-error-type .sub-text {
+        font-weight: 400;
+        opacity: 0.7;
+        font-size: 0.4rem;
+    }
+
+    .badge-error-type.roadmap .sub-text { color: #A78BFA; }
+    .badge-error-type.gpl .sub-text { color: #34D399; }
 
     .btn-view-details {
         display: inline-flex;
@@ -789,6 +841,9 @@
         .empty-state .empty-icon { font-size: 2rem; }
         .empty-state h4 { font-size: 0.95rem; }
         .empty-state p { font-size: 0.7rem; }
+        .badge-error-type { font-size: 0.4rem !important; padding: 0.05rem 0.25rem !important; }
+        .badge-error-type .sub-text { font-size: 0.35rem; }
+        .erp-id-cell { font-size: 0.55rem; }
     }
 
     @media (max-width: 576px) {
@@ -814,6 +869,9 @@
         .empty-state h4 { font-size: 0.85rem; }
         .empty-state p { font-size: 0.65rem; }
         .empty-state .btn-reports { font-size: 0.65rem; padding: 0.2rem 0.8rem; min-height: 28px; }
+        .badge-error-type { font-size: 0.35rem !important; padding: 0.05rem 0.2rem !important; }
+        .badge-error-type .sub-text { font-size: 0.3rem; }
+        .erp-id-cell { font-size: 0.45rem; }
     }
 
     @media (max-width: 400px) {
@@ -882,6 +940,28 @@
         color: #FFFFFF;
     }
 
+    [data-theme="dark"] .badge-error-type.roadmap {
+        background: rgba(139, 92, 246, 0.15);
+        color: #A78BFA;
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    [data-theme="dark"] .badge-error-type.gpl {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34D399;
+        border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    [data-theme="dark"] .badge-error-type.old {
+        background: rgba(148, 163, 184, 0.12);
+        color: rgba(255, 255, 255, 0.4);
+        border-color: rgba(148, 163, 184, 0.15);
+    }
+
+    [data-theme="dark"] .erp-id-cell {
+        color: #FF8C38;
+    }
+
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
     ::-webkit-scrollbar-thumb { background: var(--reports-primary); border-radius: 8px; }
@@ -911,6 +991,9 @@
                         </span>
                     </div>
                 </div>
+                <a href="{% url 'escalated_aging_report' %}" class="btn-reports btn-reports-primary">
+                    <i class="fa-solid fa-hourglass-half"></i> Escalated Aging
+                </a>
             </div>
         </div>
     </div>
@@ -1035,7 +1118,6 @@
                         </select>
                     </div>
 
-                    <!-- CHANGED: Assigned To filter - Now a dropdown instead of input -->
                     <div class="filter-group">
                         <label for="id_assigned_person"><i class="fa-solid fa-user"></i> Assigned</label>
                         <select name="assigned_person" id="id_assigned_person" class="filter-select">
@@ -1043,6 +1125,19 @@
                             {% for employee in employees %}
                             <option value="{{ employee.employee_name }}" {% if selected_assigned_person == employee.employee_name %}selected{% endif %}>
                                 {{ employee.employee_name }} ({{ employee.employee_id }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- ✅ ERP ID Dropdown Filter -->
+                    <div class="filter-group">
+                        <label for="id_erp_id"><i class="fa-solid fa-id-card"></i> ERP ID</label>
+                        <select name="erp_id" id="id_erp_id" class="filter-select">
+                            <option value="">All ERP IDs</option>
+                            {% for erp in erp_ids %}
+                            <option value="{{ erp }}" {% if selected_erp_id == erp %}selected{% endif %}>
+                                {{ erp }}
                             </option>
                             {% endfor %}
                         </select>
@@ -1073,13 +1168,39 @@
                         </select>
                     </div>
 
+                    <!-- Main Error Type Filter -->
                     <div class="filter-group">
-                        <label for="id_error_type"><i class="fa-solid fa-bug"></i> Error Type</label>
-                        <select name="error_type" id="id_error_type" class="filter-select">
+                        <label for="id_main_error_type"><i class="fa-solid fa-bug"></i> Main Error Type</label>
+                        <select name="main_error_type" id="id_main_error_type" class="filter-select">
                             <option value="">All Error Types</option>
-                            {% for e in error_type_choices %}
-                            <option value="{{ e.0 }}" {% if selected_error_type == e.0 %}selected{% endif %}>{{ e.1 }}</option>
-                            {% endfor %}
+                            <option value="Roadmap Error" {% if selected_main_error_type == 'Roadmap Error' %}selected{% endif %}>Roadmap Error</option>
+                            <option value="GPL Error" {% if selected_main_error_type == 'GPL Error' %}selected{% endif %}>GPL Error</option>
+                        </select>
+                    </div>
+
+                    <!-- Sub Error Type Dropdown -->
+                    <div class="filter-group">
+                        <label for="id_sub_error_type"><i class="fa-solid fa-bug"></i> Sub Error Type</label>
+                        <select name="sub_error_type" id="id_sub_error_type" class="filter-select">
+                            <option value="">All</option>
+                            <!-- Roadmap Error Sub-Types -->
+                            <option value="Database Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Database Error' %}selected{% endif %}>Database Error</option>
+                            <option value="Logic / Functional Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Logic / Functional Error' %}selected{% endif %}>Logic / Functional Error</option>
+                            <option value="Application Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Application Error' %}selected{% endif %}>Application Error</option>
+                            <option value="Calculation Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Calculation Error' %}selected{% endif %}>Calculation Error</option>
+                            <option value="Report / Print Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Report / Print Error' %}selected{% endif %}>Report / Print Error</option>
+                            <option value="Workflow / Approval Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Workflow / Approval Error' %}selected{% endif %}>Workflow / Approval Error</option>
+                            <option value="Integration / API Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Integration / API Error' %}selected{% endif %}>Integration / API Error</option>
+                            <option value="Barcode Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Barcode Error' %}selected{% endif %}>Barcode Error</option>
+                            <option value="Performance Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Performance Error' %}selected{% endif %}>Performance Error</option>
+                            <option value="Access / Permission Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Access / Permission Error' %}selected{% endif %}>Access / Permission Error</option>
+                            <option value="Master Data / Configuration Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Master Data / Configuration Error' %}selected{% endif %}>Master Data / Configuration Error</option>
+                            <option value="Other ERP Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Other ERP Error' %}selected{% endif %}>Other ERP Error</option>
+                            <!-- GPL Error Sub-Types -->
+                            <option value="User / Data Entry Error" data-main="GPL Error" {% if selected_sub_error_type == 'User / Data Entry Error' %}selected{% endif %}>User / Data Entry Error</option>
+                            <option value="Process / Procedure Error" data-main="GPL Error" {% if selected_sub_error_type == 'Process / Procedure Error' %}selected{% endif %}>Process / Procedure Error</option>
+                            <option value="Master Data Error" data-main="GPL Error" {% if selected_sub_error_type == 'Master Data Error' %}selected{% endif %}>Master Data Error</option>
+                            <option value="Other GPL Error" data-main="GPL Error" {% if selected_sub_error_type == 'Other GPL Error' %}selected{% endif %}>Other GPL Error</option>
                         </select>
                     </div>
 
@@ -1154,8 +1275,11 @@
                         <th style="min-width: 80px;">Department</th>
                         <th style="min-width: 75px;">Status</th>
                         <th style="min-width: 70px;">Priority</th>
+                        <th style="min-width: 120px;">Error Type</th>
                         <th style="min-width: 100px;">Created</th>
                         <th style="min-width: 80px;">Assigned To</th>
+                        <!-- ✅ ERP ID Column -->
+                        <th style="min-width: 70px;">ERP ID</th>
                         <th style="text-align: center; min-width: 55px;">Action</th>
                     </tr>
                 </thead>
@@ -1192,6 +1316,24 @@
                                 {{ ticket.priority }}
                             </span>
                         </td>
+                        <td>
+                            {% if ticket.main_error_type and ticket.sub_error_type %}
+                                <span class="badge-error-type {% if ticket.main_error_type == 'Roadmap Error' %}roadmap{% elif ticket.main_error_type == 'GPL Error' %}gpl{% else %}old{% endif %}">
+                                    {{ ticket.main_error_type }}
+                                    <span class="sub-text">→ {{ ticket.sub_error_type }}</span>
+                                </span>
+                            {% elif ticket.main_error_type %}
+                                <span class="badge-error-type {% if ticket.main_error_type == 'Roadmap Error' %}roadmap{% elif ticket.main_error_type == 'GPL Error' %}gpl{% else %}old{% endif %}">
+                                    {{ ticket.main_error_type }}
+                                </span>
+                            {% elif ticket.error_type %}
+                                <span class="badge-error-type old">
+                                    {{ ticket.error_type }}
+                                </span>
+                            {% else %}
+                                <span style="font-size: clamp(0.4rem, 0.5vw, 0.45rem); color: var(--text-muted);">—</span>
+                            {% endif %}
+                        </td>
                         <td style="font-size: clamp(0.5rem, 0.65vw, 0.6rem); white-space: nowrap;">
                             {{ ticket.created_at|date:"d M Y" }}
                             <span style="display: block; font-size: 0.45rem; color: var(--text-muted);">
@@ -1200,6 +1342,17 @@
                         </td>
                         <td style="font-size: clamp(0.5rem, 0.65vw, 0.6rem);">
                             {{ ticket.assigned_person|default:"<span style='color: var(--text-muted);'>—</span>" }}
+                        </td>
+                        <!-- ✅ ERP ID Column Data - Using ticket.erp_id from annotation -->
+                        <td>
+                            <span class="erp-id-cell">
+                                <i class="fa-regular fa-id-card"></i>
+                                {% if ticket.erp_id %}
+                                    {{ ticket.erp_id }}
+                                {% else %}
+                                    <span style="color: var(--text-muted);">Not Mapped</span>
+                                {% endif %}
+                            </span>
                         </td>
                         <td style="text-align: center;">
                             <a href="{% url 'admin_ticket_detail' ticket.pk %}" class="btn-view-details">
@@ -1210,7 +1363,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="9">
+                        <td colspan="11">
                             <div class="empty-state">
                                 <i class="fa-regular fa-folder-open empty-icon"></i>
                                 <h4>No Tickets Found</h4>
@@ -1230,7 +1383,7 @@
         <div class="pagination-wrapper">
             <div class="pagination-controls">
                 {% if tickets.has_previous %}
-                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ tickets.previous_page_number }}" class="pagination-btn">
+                    <a href="?{{ filter_query }}&page={{ tickets.previous_page_number }}" class="pagination-btn">
                         <i class="fa-solid fa-chevron-left"></i> Prev
                     </a>
                 {% else %}
@@ -1241,12 +1394,12 @@
                     {% if tickets.number == num %}
                         <span class="pagination-btn active">{{ num }}</span>
                     {% elif num > tickets.number|add:'-3' and num < tickets.number|add:'3' %}
-                        <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}" class="pagination-btn">{{ num }}</a>
+                        <a href="?{{ filter_query }}&page={{ num }}" class="pagination-btn">{{ num }}</a>
                     {% endif %}
                 {% endfor %}
 
                 {% if tickets.has_next %}
-                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ tickets.next_page_number }}" class="pagination-btn">
+                    <a href="?{{ filter_query }}&page={{ tickets.next_page_number }}" class="pagination-btn">
                         Next <i class="fa-solid fa-chevron-right"></i>
                     </a>
                 {% else %}
@@ -1269,6 +1422,71 @@
         var deptSelect = document.getElementById('id_department');
         var categoryInput = document.getElementById('categoryInput');
         var quickFilterBtns = document.querySelectorAll('.quick-filter-btn');
+
+        // Dynamic Sub Error Type based on Main Error Type
+        var mainErrorTypeSelect = document.getElementById('id_main_error_type');
+        var subErrorTypeSelect = document.getElementById('id_sub_error_type');
+
+        // Store all options with their data-main attribute
+        var allSubErrorOptions = [];
+        var allOptions = subErrorTypeSelect.querySelectorAll('option');
+        allOptions.forEach(function(opt) {
+            if (opt.value !== '') {
+                allSubErrorOptions.push({
+                    value: opt.value,
+                    text: opt.textContent,
+                    mainType: opt.getAttribute('data-main') || '',
+                    selected: opt.selected
+                });
+            }
+        });
+
+        // Function to update sub-error options based on main error type
+        function updateSubErrorOptions() {
+            var selectedMain = mainErrorTypeSelect.value;
+            var currentValue = subErrorTypeSelect.value;
+
+            // Clear current options (keep "All")
+            subErrorTypeSelect.innerHTML = '<option value="">All</option>';
+
+            // Filter options based on selected main error type
+            var filteredOptions = [];
+            if (selectedMain === 'Roadmap Error') {
+                filteredOptions = allSubErrorOptions.filter(function(opt) {
+                    return opt.mainType === 'Roadmap Error';
+                });
+            } else if (selectedMain === 'GPL Error') {
+                filteredOptions = allSubErrorOptions.filter(function(opt) {
+                    return opt.mainType === 'GPL Error';
+                });
+            } else {
+                // Show all options
+                filteredOptions = allSubErrorOptions;
+            }
+
+            // Add filtered options to the select
+            filteredOptions.forEach(function(opt) {
+                var option = document.createElement('option');
+                option.value = opt.value;
+                option.textContent = opt.text;
+                option.setAttribute('data-main', opt.mainType);
+                if (opt.value === currentValue) {
+                    option.selected = true;
+                }
+                subErrorTypeSelect.appendChild(option);
+            });
+
+        }
+
+        // Run on page load to set initial state
+        setTimeout(updateSubErrorOptions, 50);
+
+        // Update when Main Error Type changes
+        if (mainErrorTypeSelect) {
+            mainErrorTypeSelect.addEventListener('change', function() {
+                updateSubErrorOptions();
+            });
+        }
 
         function loadDepartments(unitId, selectedDeptId) {
             if (!unitId) {
@@ -1330,6 +1548,16 @@
                 var category = url.searchParams.get('category');
                 if (categoryInput) {
                     categoryInput.value = category;
+                }
+                // Preserve error type values before submitting
+                if (mainErrorTypeSelect && mainErrorTypeSelect.value) {
+                    var currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('main_error_type', mainErrorTypeSelect.value);
+                    if (subErrorTypeSelect && subErrorTypeSelect.value) {
+                        currentUrl.searchParams.set('sub_error_type', subErrorTypeSelect.value);
+                    }
+                    window.location.href = currentUrl.toString();
+                    return;
                 }
                 filterForm.submit();
             });

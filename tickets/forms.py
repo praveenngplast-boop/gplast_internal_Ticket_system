@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.contrib.auth.models import User
-from tickets.models import Ticket, Unit, Department, AdminContact, AdminNotificationEmail, EmployeeMaster, DepartmentCredential
+from tickets.models import Ticket, Unit, Department, AdminContact, AdminNotificationEmail, EmployeeMaster, DepartmentCredential, ERPHolderMapping
 from tickets.utils import validate_attachment
 
 
@@ -34,10 +34,10 @@ class TicketForm(forms.ModelForm):
             else:
                 field.widget.attrs.update({'class': 'form-control'})
 
-        # ✅ FIXED: Only New and Repeated error types
+        # Only New and Repeated error types for employees
         EMPLOYEE_ERROR_TYPE_CHOICES = [
             ('New', 'New'),
-            ('Repeated', 'Repeated'),  # ✅ Only these two options
+            ('Repeated', 'Repeated'),
         ]
         self.fields['error_type'].choices = EMPLOYEE_ERROR_TYPE_CHOICES
 
@@ -100,7 +100,7 @@ class AdminTicketForm(TicketForm):
         self.fields['admin_creation_reason'].widget.attrs.update({'class': 'form-select'})
         self.initial['created_by_role'] = 'Admin'
 
-        # ✅ Also update error_type for AdminTicketForm to only New and Repeated
+        # Also update error_type for AdminTicketForm to only New and Repeated
         EMPLOYEE_ERROR_TYPE_CHOICES = [
             ('New', 'New'),
             ('Repeated', 'Repeated'),
@@ -235,4 +235,162 @@ class DepartmentCredentialForm(forms.ModelForm):
                 raise ValidationError({
                     "department": "Selected department does not belong to the selected unit."
                 })
+        return cleaned_data
+
+
+# ============================================================
+# CLOSE TICKET FORM - Used for admin closing tickets
+# ============================================================
+class CloseTicketForm(forms.Form):
+    """
+    Form for closing a ticket with new error type structure.
+    Used in the admin ticket detail view.
+    """
+    main_error_type = forms.ChoiceField(
+        choices=[
+            ('', '-- Select Error Type --'),
+            ('Roadmap Error', 'Roadmap Error'),
+            ('GPL Error', 'GPL Error'),
+        ],
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'mainErrorType'})
+    )
+    
+    sub_error_type = forms.ChoiceField(
+        choices=[],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'subErrorType'})
+    )
+    
+    closing_remarks = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Enter resolution details...',
+            'id': 'closingRemarks'
+        }),
+        required=True,
+        label='Closing Remarks'
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Set sub_error_type choices based on main_error_type if provided
+        main_error = self.data.get('main_error_type') if self.data else None
+        
+        if main_error == 'Roadmap Error':
+            self.fields['sub_error_type'].choices = [
+                ('', '-- Select Sub Error Type --'),
+                ('Database Error', 'Database Error'),
+                ('Logic / Functional Error', 'Logic / Functional Error'),
+                ('Application Error', 'Application Error'),
+                ('Calculation Error', 'Calculation Error'),
+                ('Report / Print Error', 'Report / Print Error'),
+                ('Workflow / Approval Error', 'Workflow / Approval Error'),
+                ('Integration / API Error', 'Integration / API Error'),
+                ('Barcode Error', 'Barcode Error'),
+                ('Performance Error', 'Performance Error'),
+                ('Access / Permission Error', 'Access / Permission Error'),
+                ('Master Data / Configuration Error', 'Master Data / Configuration Error'),
+                ('Other ERP Error', 'Other ERP Error'),
+            ]
+            self.fields['sub_error_type'].required = True
+        elif main_error == 'GPL Error':
+            self.fields['sub_error_type'].choices = [
+                ('', '-- Select Sub Error Type --'),
+                ('User / Data Entry Error', 'User / Data Entry Error'),
+                ('Process / Procedure Error', 'Process / Procedure Error'),
+                ('Master Data Error', 'Master Data Error'),
+                ('Other GPL Error', 'Other GPL Error'),
+            ]
+            self.fields['sub_error_type'].required = True
+        else:
+            self.fields['sub_error_type'].choices = [('', '-- Select Sub Error Type --')]
+            self.fields['sub_error_type'].required = False
+        
+        # Add widget classes
+        for name, field in self.fields.items():
+            if hasattr(field.widget, 'attrs'):
+                if 'class' not in field.widget.attrs:
+                    field.widget.attrs.update({'class': 'form-control'})
+                if isinstance(field.widget, forms.Select):
+                    field.widget.attrs.update({'class': 'form-select'})
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        main_error = cleaned_data.get('main_error_type')
+        sub_error = cleaned_data.get('sub_error_type')
+        closing_remarks = cleaned_data.get('closing_remarks')
+        
+        # Validate sub_error_type when main_error_type is selected
+        if main_error and main_error in ['Roadmap Error', 'GPL Error']:
+            if not sub_error:
+                raise ValidationError({
+                    'sub_error_type': 'Please select a sub-error type for the selected error category.'
+                })
+        
+        # Validate closing remarks
+        if closing_remarks and len(closing_remarks.strip()) < 5:
+            raise ValidationError({
+                'closing_remarks': 'Closing remarks must be at least 5 characters.'
+            })
+        
+        return cleaned_data
+
+
+# ============================================================
+# ERP USER ID MAPPING FORM
+# ============================================================
+class ERPHolderMappingForm(forms.ModelForm):
+    """
+    Form for mapping ERP User IDs to Employee IDs
+    """
+    class Meta:
+        model = ERPHolderMapping
+        fields = ['erp_user_id', 'employee']
+        widgets = {
+            'erp_user_id': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter ERP User ID (e.g., 0001)'
+            }),
+            'employee': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only show active employees
+        self.fields['employee'].queryset = EmployeeMaster.objects.filter(is_active=True).order_by('employee_id')
+        
+        # Add help text
+        self.fields['erp_user_id'].help_text = "Enter the ERP User ID (e.g., 0001, 0002)"
+        self.fields['employee'].help_text = "Select the employee to map to this ERP User ID"
+
+    def clean_erp_user_id(self):
+        erp_user_id = self.cleaned_data.get('erp_user_id', '').strip()
+        if not erp_user_id:
+            raise ValidationError("ERP User ID is required")
+        return erp_user_id
+
+    def clean(self):
+        cleaned_data = super().clean()
+        erp_user_id = cleaned_data.get('erp_user_id')
+        employee = cleaned_data.get('employee')
+        
+        if erp_user_id and employee:
+            # Check if mapping already exists (for update)
+            instance = self.instance
+            exists = ERPHolderMapping.objects.filter(
+                erp_user_id=erp_user_id,
+                employee=employee
+            )
+            if instance and instance.pk:
+                exists = exists.exclude(pk=instance.pk)
+            
+            if exists.exists():
+                raise ValidationError(
+                    f'Mapping already exists: ERP {erp_user_id} → {employee.employee_id} ({employee.employee_name})'
+                )
+        
         return cleaned_data

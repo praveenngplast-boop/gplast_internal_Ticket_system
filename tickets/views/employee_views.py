@@ -7,6 +7,7 @@ from django.db.models import Q, Count
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
+from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
 from datetime import timedelta, datetime
 import openpyxl
@@ -19,11 +20,12 @@ from tickets.models import (
     AdminNotificationEmail, 
     EmployeeMaster,         
     TicketHistory,
+    ReopenAttachment,
     SettingsAuditLog,
     DepartmentCredential    
 )
 from tickets.forms import TicketForm
-from tickets.utils import send_ticket_email
+from tickets.utils import send_ticket_email, validate_attachment
 import logging
 
 logger = logging.getLogger(__name__)
@@ -252,6 +254,10 @@ def all_tickets(request):
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     
+    # ✅ NEW: Main Error Type and Sub Error Type filters
+    main_error_type = request.GET.get('main_error_type', '').strip()
+    sub_error_type = request.GET.get('sub_error_type', '').strip()
+    
     # 30-DAY CLOSED TICKETS FILTER (DEFAULT VIEW)
     if not status_filter:
         thirty_days_ago = timezone.now() - timedelta(days=30)
@@ -265,6 +271,14 @@ def all_tickets(request):
     
     if priority_filter:
         tickets = tickets.filter(priority=priority_filter)
+    
+    # ✅ NEW: Apply Main Error Type filter
+    if main_error_type and main_error_type != '':
+        tickets = tickets.filter(main_error_type=main_error_type)
+    
+    # ✅ NEW: Apply Sub Error Type filter
+    if sub_error_type and sub_error_type != '' and sub_error_type != 'All':
+        tickets = tickets.filter(sub_error_type=sub_error_type)
     
     if date_from:
         try:
@@ -336,6 +350,9 @@ def all_tickets(request):
         'priority_choices': Ticket.PRIORITY_CHOICES,
         'units': Unit.objects.filter(is_active=True),
         'departments': Department.objects.filter(is_active=True),
+        # ✅ NEW: Pass error type filters to template
+        'selected_main_error_type': main_error_type,
+        'selected_sub_error_type': sub_error_type,
     }
     return render(request, 'employee/all_tickets.html', context)
 
@@ -356,6 +373,10 @@ def my_tickets(request):
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     
+    # ✅ NEW: Main Error Type and Sub Error Type filters
+    main_error_type = request.GET.get('main_error_type', '').strip()
+    sub_error_type = request.GET.get('sub_error_type', '').strip()
+    
     selected_status = status_filter
     selected_priority = priority_filter
     selected_assigned_person = assigned_person_filter
@@ -372,6 +393,14 @@ def my_tickets(request):
     
     if ticket_number_filter:
         tickets = tickets.filter(ticket_number__icontains=ticket_number_filter)
+    
+    # ✅ NEW: Apply Main Error Type filter
+    if main_error_type and main_error_type != '':
+        tickets = tickets.filter(main_error_type=main_error_type)
+    
+    # ✅ NEW: Apply Sub Error Type filter
+    if sub_error_type and sub_error_type != '' and sub_error_type != 'All':
+        tickets = tickets.filter(sub_error_type=sub_error_type)
     
     if date_from:
         try:
@@ -460,6 +489,9 @@ def my_tickets(request):
         'status_choices': Ticket.STATUS_CHOICES,
         'priority_choices': Ticket.PRIORITY_CHOICES,
         'employees': employees,
+        # ✅ NEW: Pass error type filters to template
+        'selected_main_error_type': main_error_type,
+        'selected_sub_error_type': sub_error_type,
     }
     return render(request, 'employee/my_tickets.html', context)
 
@@ -498,25 +530,27 @@ def export_filtered_tickets_excel(request, tickets_qs):
         bottom=Side(style='thin', color='D0D0D0')
     )
     
-    ws.merge_cells('A1:X1')
+    ws.merge_cells('A1:AB1')
     ws['A1'] = f"ALL TICKETS - GPLAST SUPPORT SYSTEM"
     ws['A1'].font = title_font
     ws['A1'].fill = title_fill
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 45
     
-    ws.merge_cells('A2:X2')
+    ws.merge_cells('A2:AB2')
     ws['A2'] = f"Generated: {report_time}  |  Total Tickets: {tickets_qs.count()}"
     ws['A2'].font = Font(name='Calibri', size=10, italic=True, color='666666')
     ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[2].height = 25
     
+    # ✅ UPDATED: Added Main Error Type and Sub Error Type columns
     headers = [
         'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
         'Employee ID', 'Employee Name', 'Mobile', 'Email', 'Screen/Module',
         'Subject', 'Description', 'Priority', 'Error Type', 'Created By Role',
         'Assigned Person', 'Hold Reason', 'Closing Remarks', 'Closed By',
-        'Vendor Ticket', 'Created At', 'Closed At', 'Time to Close', 'Escalated At'
+        'Vendor Ticket', 'Main Error Type', 'Sub Error Type',
+        'Created At', 'Closed At', 'Time to Close', 'Escalated At'
     ]
     
     for col_idx, header in enumerate(headers, 1):
@@ -589,6 +623,8 @@ def export_filtered_tickets_excel(request, tickets_qs):
             ticket.closing_remarks or '',
             ticket.closed_by or '',
             ticket.vendor_ticket_number or '',
+            ticket.main_error_type or 'N/A',  # ✅ NEW
+            ticket.sub_error_type or 'N/A',   # ✅ NEW
             created_at_local,
             closed_at_local,
             time_to_close,
@@ -609,7 +645,7 @@ def export_filtered_tickets_excel(request, tickets_qs):
         'F': 14, 'G': 22, 'H': 16, 'I': 25, 'J': 16,
         'K': 30, 'L': 40, 'M': 14, 'N': 20, 'O': 18,
         'P': 20, 'Q': 20, 'R': 30, 'S': 18, 'T': 18,
-        'U': 22, 'V': 22, 'W': 16, 'X': 22
+        'U': 22, 'V': 22, 'W': 16, 'X': 22, 'Y': 16, 'Z': 22
     }
     
     for col_letter, width in column_widths.items():
@@ -653,25 +689,27 @@ def export_filtered_my_tickets_excel(request, tickets_qs):
         bottom=Side(style='thin', color='D0D0D0')
     )
     
-    ws.merge_cells('A1:X1')
+    ws.merge_cells('A1:AB1')
     ws['A1'] = f"MY TICKETS - GPLAST SUPPORT SYSTEM"
     ws['A1'].font = title_font
     ws['A1'].fill = title_fill
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 45
     
-    ws.merge_cells('A2:X2')
+    ws.merge_cells('A2:AB2')
     ws['A2'] = f"Generated: {report_time}  |  Total Tickets: {tickets_qs.count()}"
     ws['A2'].font = Font(name='Calibri', size=10, italic=True, color='666666')
     ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[2].height = 25
     
+    # ✅ UPDATED: Added Main Error Type and Sub Error Type columns
     headers = [
         'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
         'Employee ID', 'Employee Name', 'Mobile', 'Email', 'Screen/Module',
         'Subject', 'Description', 'Priority', 'Error Type', 'Created By Role',
         'Assigned Person', 'Hold Reason', 'Closing Remarks', 'Closed By',
-        'Vendor Ticket', 'Created At', 'Closed At', 'Time to Close', 'Escalated At'
+        'Vendor Ticket', 'Main Error Type', 'Sub Error Type',
+        'Created At', 'Closed At', 'Time to Close', 'Escalated At'
     ]
     
     for col_idx, header in enumerate(headers, 1):
@@ -744,6 +782,8 @@ def export_filtered_my_tickets_excel(request, tickets_qs):
             ticket.closing_remarks or '',
             ticket.closed_by or '',
             ticket.vendor_ticket_number or '',
+            ticket.main_error_type or 'N/A',  # ✅ NEW
+            ticket.sub_error_type or 'N/A',   # ✅ NEW
             created_at_local,
             closed_at_local,
             time_to_close,
@@ -764,7 +804,7 @@ def export_filtered_my_tickets_excel(request, tickets_qs):
         'F': 14, 'G': 22, 'H': 16, 'I': 25, 'J': 16,
         'K': 30, 'L': 40, 'M': 14, 'N': 20, 'O': 18,
         'P': 20, 'Q': 20, 'R': 30, 'S': 18, 'T': 18,
-        'U': 22, 'V': 22, 'W': 16, 'X': 22
+        'U': 22, 'V': 22, 'W': 16, 'X': 22, 'Y': 16, 'Z': 22
     }
     
     for col_letter, width in column_widths.items():
@@ -940,46 +980,9 @@ def download_individual_ticket_excel(request, ticket_id):
     
     row += 1
     
-    # Attachments
-    ws.merge_cells(f'A{row}:F{row}')
-    ws[f'A{row}'] = "ATTACHMENTS"
-    ws[f'A{row}'].font = section_font
-    ws[f'A{row}'].fill = PatternFill(start_color='8B5CF6', end_color='8B5CF6', fill_type='solid')
-    ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
-    ws.row_dimensions[row].height = 30
     row += 1
     
-    attachments = []
-    if ticket.attachment_1:
-        attachments.append({'file': ticket.attachment_1, 'name': 'Attachment 1'})
-    if ticket.attachment_2:
-        attachments.append({'file': ticket.attachment_2, 'name': 'Attachment 2'})
-    if ticket.attachment_3:
-        attachments.append({'file': ticket.attachment_3, 'name': 'Attachment 3'})
-    
-    if attachments:
-        for idx, att in enumerate(attachments, 1):
-            att_label = f"Attachment {idx}"
-            att_value = att['file'].name if att['file'] else 'No file'
-            ws.cell(row=row, column=1, value=att_label).font = label_font
-            ws.cell(row=row, column=1).fill = label_fill
-            ws.cell(row=row, column=1).border = thin_border
-            ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
-            
-            ws.cell(row=row, column=2, value=att_value).font = data_font
-            ws.cell(row=row, column=2).border = thin_border
-            ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
-            ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
-            row += 1
-    else:
-        ws.cell(row=row, column=1, value="No Attachments").font = data_font
-        ws.cell(row=row, column=1).border = thin_border
-        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=6)
-        row += 1
-    
-    row += 1
-    
-    # Closing Details (if closed)
+    # Closing Details (if closed) - ✅ UPDATED with new error types
     if ticket.status == 'Closed':
         ws.merge_cells(f'A{row}:F{row}')
         ws[f'A{row}'] = "CLOSING DETAILS"
@@ -1003,6 +1006,8 @@ def download_individual_ticket_excel(request, ticket_id):
         closing_info = [
             ('Closed By', ticket.closed_by or ''),
             ('Closed Date', ticket.closed_at.strftime('%d-%b-%Y %I:%M %p') if ticket.closed_at else ''),
+            ('Main Error Type', ticket.main_error_type or 'N/A'),  # ✅ NEW
+            ('Sub Error Type', ticket.sub_error_type or 'N/A'),   # ✅ NEW
             ('Closing Remarks', ticket.closing_remarks or ''),
             ('Time to Close', time_to_close_str),
         ]
@@ -1066,6 +1071,7 @@ def update_ticket_status(request, ticket_id):
                 remarks=remarks,
                 performed_by=request.user.username
             )
+            send_ticket_email(ticket, 'Assigned', remarks=remarks, request=request)
             messages.success(request, f'Ticket assigned to {assigned_person}')
         else:
             messages.error(request, 'Please select an employee to assign')
@@ -1083,6 +1089,7 @@ def update_ticket_status(request, ticket_id):
                 remarks=hold_reason,
                 performed_by=request.user.username
             )
+            send_ticket_email(ticket, 'Hold', remarks=hold_reason)
             messages.success(request, 'Ticket put on hold')
         else:
             messages.error(request, 'Please provide a reason for holding')
@@ -1103,14 +1110,18 @@ def update_ticket_status(request, ticket_id):
             remarks=f'Vendor Ticket: {vendor_ticket or "N/A"} - {remarks}',
             performed_by=request.user.username
         )
+        send_ticket_email(ticket, 'Escalated', remarks=remarks)
         messages.success(request, 'Ticket escalated successfully')
     
     elif action_type == 'Close':
-        error_type = request.POST.get('error_type')
-        closing_remarks = request.POST.get('closing_remarks')
+        # ✅ UPDATED: Get new error type fields
+        main_error_type = request.POST.get('main_error_type', '').strip()
+        sub_error_type = request.POST.get('sub_error_type', '').strip()
+        closing_remarks = request.POST.get('closing_remarks', '').strip()
         
-        if error_type and closing_remarks:
-            ticket.error_type = error_type
+        if main_error_type and sub_error_type and closing_remarks:
+            ticket.main_error_type = main_error_type
+            ticket.sub_error_type = sub_error_type
             ticket.closing_remarks = closing_remarks
             ticket.status = 'Closed'
             ticket.closed_by = request.user.username
@@ -1120,7 +1131,7 @@ def update_ticket_status(request, ticket_id):
             TicketHistory.objects.create(
                 ticket=ticket,
                 action='Closed Ticket',
-                remarks=f'Error Type: {error_type}\nClosing Remarks: {closing_remarks}',
+                remarks=f'Main Error: {main_error_type}\nSub Error: {sub_error_type}\nClosing Remarks: {closing_remarks}',
                 performed_by=request.user.username
             )
             
@@ -1131,13 +1142,20 @@ def update_ticket_status(request, ticket_id):
             
             messages.success(request, 'Ticket closed successfully')
         else:
-            messages.error(request, 'Please provide both error type and closing remarks')
+            messages.error(request, 'Please provide main error type, sub error type, and closing remarks')
     
     elif action_type == 'Reopen':
         remarks = request.POST.get('remarks', '')
+        uploaded_files = request.FILES.getlist('reopen_attachments')
         
         if remarks:
             if ticket.closed_at and (timezone.now() - ticket.closed_at).total_seconds() <= 48 * 3600:
+                try:
+                    for uploaded_file in uploaded_files:
+                        validate_attachment(uploaded_file)
+                except ValidationError as error:
+                    messages.error(request, str(error))
+                    return redirect('ticket_detail', ticket_id=ticket_id)
                 ticket.status = 'Open'
                 ticket.closed_at = None
                 ticket.closed_by = None
@@ -1150,9 +1168,17 @@ def update_ticket_status(request, ticket_id):
                     remarks=remarks,
                     performed_by=request.user.username
                 )
+                reopen_attachments = [
+                    ReopenAttachment.objects.create(
+                        ticket=ticket,
+                        file=uploaded_file,
+                        uploaded_by=request.user.username,
+                    ).file
+                    for uploaded_file in uploaded_files
+                ]
                 
                 try:
-                    send_ticket_email(ticket, 'Reopened', remarks=remarks)
+                    send_ticket_email(ticket, 'Reopened', remarks=remarks, attachments=reopen_attachments)
                 except Exception as e:
                     logger.error(f"Failed to send reopen email: {e}")
                 
@@ -1171,7 +1197,7 @@ def update_ticket_status(request, ticket_id):
 @login_required
 def export_closed_tickets_30_days(request):
     """
-    Export closed tickets from the last 30 days to Excel
+    Export closed tickets from the last 30 days to Excel with new error type fields
     """
     thirty_days_ago = timezone.now() - timedelta(days=30)
     
@@ -1208,26 +1234,27 @@ def export_closed_tickets_30_days(request):
         bottom=Side(style='thin', color='D0D0D0')
     )
     
-    ws.merge_cells('A1:Y1')
+    ws.merge_cells('A1:AA1')
     ws['A1'] = f"CLOSED TICKETS - LAST 30 DAYS"
     ws['A1'].font = title_font
     ws['A1'].fill = title_fill
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 45
     
-    ws.merge_cells('A2:Y2')
+    ws.merge_cells('A2:AA2')
     ws['A2'] = f"Generated: {report_time}  |  Total Closed Tickets: {tickets_qs.count()}  |  Period: {thirty_days_ago.strftime('%d-%b-%Y')} to {timezone.now().strftime('%d-%b-%Y')}"
     ws['A2'].font = Font(name='Calibri', size=10, italic=True, color='666666')
     ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[2].height = 25
     
+    # ✅ UPDATED: Added Main Error Type and Sub Error Type columns
     headers = [
         'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
         'Employee ID', 'Employee Name', 'Mobile', 'Email', 'Screen/Module',
         'Subject', 'Description', 'Priority', 'Error Type', 'Created By Role',
         'Admin Creation Reason', 'Assigned Person', 'Hold Reason',
-        'Closing Remarks', 'Closed By', 'Vendor Ticket Number',
-        'Created At', 'Closed At', 'Time to Close', 'Escalated At'
+        'Main Error Type', 'Sub Error Type', 'Closing Remarks', 'Closed By',
+        'Vendor Ticket Number', 'Created At', 'Closed At', 'Time to Close', 'Escalated At'
     ]
     
     for col_idx, header in enumerate(headers, 1):
@@ -1298,6 +1325,8 @@ def export_closed_tickets_30_days(request):
             ticket.admin_creation_reason or '',
             ticket.assigned_person or '',
             ticket.hold_reason or '',
+            ticket.main_error_type or 'N/A',  # ✅ NEW
+            ticket.sub_error_type or 'N/A',   # ✅ NEW
             ticket.closing_remarks or '',
             ticket.closed_by or '',
             ticket.vendor_ticket_number or '',
@@ -1320,8 +1349,9 @@ def export_closed_tickets_30_days(request):
         'A': 18, 'B': 14, 'C': 12, 'D': 25, 'E': 20,
         'F': 14, 'G': 22, 'H': 16, 'I': 25, 'J': 16,
         'K': 30, 'L': 40, 'M': 14, 'N': 20, 'O': 18,
-        'P': 25, 'Q': 20, 'R': 20, 'S': 30, 'T': 18,
-        'U': 18, 'V': 22, 'W': 22, 'X': 16, 'Y': 22
+        'P': 25, 'Q': 20, 'R': 20, 'S': 22, 'T': 22,
+        'U': 30, 'V': 18, 'W': 18, 'X': 22, 'Y': 22,
+        'Z': 16, 'AA': 22
     }
     
     for col_letter, width in column_widths.items():

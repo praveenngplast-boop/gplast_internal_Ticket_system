@@ -2,6 +2,7 @@ import logging
 import os
 import base64
 from datetime import datetime
+from email.utils import parseaddr
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -155,44 +156,43 @@ def get_footer_logo_html():
     """
 
 
-def send_ticket_email(ticket, action, remarks=None, request=None):
+def send_ticket_email(ticket, action, remarks=None, request=None, attachments=None):
     """
     Send email notification for ticket actions.
     
-    TO: The employee who created the ticket (from email input box)
-    CC: All Notification Emails configured in Settings
+    TO: The configured backend email address
+    CC: All Notification Emails configured in Settings and ticket participants
     """
     # Import here to avoid circular import
-    from tickets.models import AdminNotificationEmail
+    from tickets.models import AdminNotificationEmail, EmployeeMaster
     
     # Get notification emails from database
-    notification_emails = list(AdminNotificationEmail.objects.filter(is_active=True).values_list('email', flat=True))
+    notification_emails = list(AdminNotificationEmail.objects.values_list('email', flat=True))
     employee_email = ticket.email
-    
-    to_emails = []
+    default_email = settings.DEFAULT_FROM_EMAIL
+    to_emails = [default_email] if default_email else []
     cc_emails = list(notification_emails)
-    
-    # Always add the employee who created the ticket
-    if employee_email:
-        to_emails.append(employee_email)
+
+    if employee_email and employee_email not in to_emails:
+        cc_emails.append(employee_email)
+
+    if action == 'Assigned' and ticket.assigned_person:
+        assigned_employee = EmployeeMaster.objects.filter(
+            employee_name=ticket.assigned_person,
+            is_active=True,
+        ).exclude(email='').first()
+        if assigned_employee:
+            cc_emails.append(assigned_employee.email)
+    to_keys = {(parseaddr(email)[1] or email).strip().lower() for email in to_emails}
+    cc_emails = list(dict.fromkeys(
+        email for email in cc_emails
+        if (parseaddr(email)[1] or email).strip().lower() not in to_keys
+    ))
     
     # If no notification emails exist, use a default from settings
     if not notification_emails:
         # Use DEFAULT_FROM_EMAIL as fallback
-        default_email = settings.DEFAULT_FROM_EMAIL
-        if default_email and 'erpimd@gplast.com' in default_email:
-            # Add to cc if employee exists, else add to to
-            if to_emails:
-                cc_emails.append(default_email)
-            else:
-                to_emails.append(default_email)
-        
-        logger.warning(f"No AdminNotificationEmail records found. Using DEFAULT_FROM_EMAIL: {default_email}")
-    
-    # If we have to_emails but no cc, we're fine
-    if not to_emails and notification_emails:
-        to_emails = notification_emails
-        cc_emails = []
+        logger.warning(f"No AdminNotificationEmail records found. Using DEFAULT_FROM_EMAIL as To: {default_email}")
     
     # If still no recipients, log and return
     if not to_emails and not cc_emails:
@@ -488,6 +488,12 @@ def send_ticket_email(ticket, action, remarks=None, request=None):
             cc=cc_emails,
         )
         email.attach_alternative(html_content, "text/html")
+        for attachment in attachments or []:
+            attachment.open('rb')
+            try:
+                email.attach(attachment.name.rsplit('/', 1)[-1], attachment.read(), getattr(attachment, 'content_type', None))
+            finally:
+                attachment.close()
         email.send(fail_silently=False)
         
         logger.info(f"Email sent for ticket {ticket.ticket_number} - Action: {action}")

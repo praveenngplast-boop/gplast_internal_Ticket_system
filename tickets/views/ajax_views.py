@@ -3,10 +3,11 @@
 AJAX Endpoints for dynamic content loading
 - Get Units
 - Get Departments by Unit
-- Get Employee Details (with department validation)
+- Get Employee Details (with ERP User ID)
 - Get Employees by Department
-- Get Ticket Statistics (for 30-day dashboard)
-- Get Closed Tickets (for AJAX loading)
+- Get Ticket Statistics
+- Get Closed Tickets
+- Get Error Type Statistics
 """
 from django.http import JsonResponse
 from django.db.models import Q, Count
@@ -14,7 +15,7 @@ from django.utils import timezone
 from datetime import timedelta
 import logging
 
-from tickets.models import Unit, Department, EmployeeMaster, Ticket
+from tickets.models import Unit, Department, EmployeeMaster, Ticket, ERPHolderMapping
 
 logger = logging.getLogger(__name__)
 
@@ -85,17 +86,13 @@ def get_departments_by_unit(request):
 
 
 # ============================================================
-# ✅ UPDATED: EMPLOYEE DETAILS WITH DEPARTMENT VALIDATION
+# ✅ UPDATED: EMPLOYEE DETAILS WITH ERP USER ID
 # ============================================================
 def get_employee_details(request):
     """
-    AJAX: Get employee details by Employee ID with department/unit validation
+    AJAX: Get employee details by Employee ID with ERP User ID
     Query params: employee_id (required), unit_id (optional), department_id (optional)
-    Returns: JSON with:
-        - found: boolean - if employee exists
-        - mismatch: boolean - if employee exists but belongs to different dept/unit
-        - employee: dict with employee details
-        - message: string message
+    Returns: JSON with employee details including erp_user_id
     """
     eid = request.GET.get('employee_id', '').strip().upper()
     u_uid = request.GET.get('unit_id', '')
@@ -112,7 +109,11 @@ def get_employee_details(request):
         # Find the employee
         emp = EmployeeMaster.objects.get(employee_id=eid, is_active=True)
         
-        # Prepare employee data
+        # ✅ NEW: Get ERP User ID from ERPHolderMapping
+        erp_mapping = ERPHolderMapping.objects.filter(employee=emp).first()
+        erp_user_id = erp_mapping.erp_user_id if erp_mapping else None
+        
+        # Prepare employee data with ERP User ID
         emp_data = {
             'employee_id': emp.employee_id,
             'employee_name': emp.employee_name,
@@ -121,10 +122,11 @@ def get_employee_details(request):
             'unit_id': emp.unit_id or None,
             'unit_code': emp.unit.code if emp.unit else None,
             'department_id': emp.department_id or None,
-            'department_name': emp.department.name if emp.department else None
+            'department_name': emp.department.name if emp.department else None,
+            'erp_user_id': erp_user_id,  # ✅ NEW: ERP User ID
         }
         
-        # ✅ Check if unit/department validation is required
+        # Check if unit/department validation is required
         if u_uid and u_did:
             try:
                 u_uid = int(u_uid)
@@ -150,7 +152,7 @@ def get_employee_details(request):
                     'message': f'⚠️ Employee belongs to different {", ".join(mismatches)}'
                 })
         
-        # ✅ Employee found and matches (or no validation required)
+        # Employee found and matches (or no validation required)
         return JsonResponse({
             'found': True,
             'mismatch': False,
@@ -175,7 +177,7 @@ def get_employee_details(request):
 
 def get_employees_by_department(request):
     """
-    AJAX: Get all employees for a department
+    AJAX: Get all employees for a department with ERP User ID
     Query params: department_id
     Returns: JSON with employee list, count, and department info
     """
@@ -195,6 +197,10 @@ def get_employees_by_department(request):
         
         employee_list = []
         for emp in employees:
+            # ✅ NEW: Get ERP User ID for each employee
+            erp_mapping = ERPHolderMapping.objects.filter(employee=emp).first()
+            erp_user_id = erp_mapping.erp_user_id if erp_mapping else None
+            
             employee_list.append({
                 'id': emp.id,
                 'employee_id': emp.employee_id or '-',
@@ -202,7 +208,8 @@ def get_employees_by_department(request):
                 'mobile': emp.mobile or '-',
                 'email': emp.email or '-',
                 'is_active': emp.is_active,
-                'can_assign_ticket': emp.can_assign_ticket
+                'can_assign_ticket': emp.can_assign_ticket,
+                'erp_user_id': erp_user_id,  # ✅ NEW: ERP User ID
             })
         
         return JsonResponse({
@@ -227,39 +234,33 @@ def get_employees_by_department(request):
 
 
 # ============================================================
-# ✅ AJAX ENDPOINTS FOR 30-DAY CLOSED TICKETS FEATURE
+# TICKET STATISTICS
 # ============================================================
 
 def get_ticket_statistics(request):
     """
     AJAX: Get ticket statistics for dashboard
-    Returns: JSON with ticket counts (total, open, closed, etc.)
+    Returns: JSON with ticket counts
     """
     try:
-        # Get all tickets
         total = Ticket.objects.count()
-        
-        # Status counts
         open_count = Ticket.objects.filter(status='Open').count()
         assigned_count = Ticket.objects.filter(status='Assigned').count()
         hold_count = Ticket.objects.filter(status='Hold').count()
         escalated_count = Ticket.objects.filter(status='Escalated').count()
         closed_count = Ticket.objects.filter(status='Closed').count()
         
-        # Priority counts
         critical_count = Ticket.objects.filter(priority='Critical').count()
         high_count = Ticket.objects.filter(priority='High').count()
         medium_count = Ticket.objects.filter(priority='Medium').count()
         low_count = Ticket.objects.filter(priority='Low').count()
         
-        # 30-day closed tickets
         thirty_days_ago = timezone.now() - timedelta(days=30)
         closed_30_days = Ticket.objects.filter(
             status='Closed',
             closed_at__gte=thirty_days_ago
         ).count()
         
-        # Today's tickets
         today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
         today_count = Ticket.objects.filter(created_at__gte=today_start).count()
         
@@ -292,7 +293,6 @@ def get_closed_tickets_30_days(request):
     """
     AJAX: Get closed tickets from last 30 days
     Query params: limit (optional, default 50)
-    Returns: JSON with ticket list
     """
     try:
         limit = int(request.GET.get('limit', 50))
@@ -317,6 +317,9 @@ def get_closed_tickets_30_days(request):
                 'closed_at': ticket.closed_at.strftime('%Y-%m-%d %H:%M:%S') if ticket.closed_at else '',
                 'closed_by': ticket.closed_by or '',
                 'closing_remarks': ticket.closing_remarks or '',
+                'main_error_type': ticket.main_error_type or 'N/A',
+                'sub_error_type': ticket.sub_error_type or 'N/A',
+                'error_type_display': f"{ticket.main_error_type} → {ticket.sub_error_type}" if ticket.main_error_type and ticket.sub_error_type else (ticket.main_error_type or ticket.error_type or 'Not Set'),
                 'url': f'/admin/ticket/{ticket.id}/'
             })
         
@@ -337,11 +340,63 @@ def get_closed_tickets_30_days(request):
         })
 
 
+def get_error_type_statistics(request):
+    """
+    AJAX: Get error type statistics for closed tickets
+    """
+    try:
+        closed_tickets = Ticket.objects.filter(status='Closed')
+        
+        main_error_stats = (
+            closed_tickets
+            .exclude(main_error_type__isnull=True)
+            .exclude(main_error_type__exact='')
+            .values('main_error_type')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        )
+        
+        sub_error_stats = (
+            closed_tickets
+            .exclude(sub_error_type__isnull=True)
+            .exclude(sub_error_type__exact='')
+            .values('sub_error_type')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        )
+        
+        roadmap_count = closed_tickets.filter(main_error_type='Roadmap Error').count()
+        gpl_count = closed_tickets.filter(main_error_type='GPL Error').count()
+        
+        total_with_error = closed_tickets.exclude(
+            main_error_type__isnull=True
+        ).exclude(
+            main_error_type__exact=''
+        ).count()
+        
+        return JsonResponse({
+            'success': True,
+            'statistics': {
+                'main_errors': list(main_error_stats),
+                'sub_errors': list(sub_error_stats),
+                'roadmap_count': roadmap_count,
+                'gpl_count': gpl_count,
+                'total_with_error': total_with_error,
+                'total_closed': closed_tickets.count(),
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error in get_error_type_statistics: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
 def get_ticket_by_number(request):
     """
     AJAX: Get ticket details by ticket number
     Query params: ticket_number
-    Returns: JSON with ticket data
     """
     ticket_number = request.GET.get('ticket_number', '').strip()
     
@@ -368,6 +423,11 @@ def get_ticket_by_number(request):
                 'department': ticket.department.name if ticket.department else '',
                 'created_at': ticket.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 'closed_at': ticket.closed_at.strftime('%Y-%m-%d %H:%M:%S') if ticket.closed_at else '',
+                'main_error_type': ticket.main_error_type or 'N/A',
+                'sub_error_type': ticket.sub_error_type or 'N/A',
+                'error_type': ticket.error_type or 'Not Set',
+                'closing_remarks': ticket.closing_remarks or '',
+                'closed_by': ticket.closed_by or '',
                 'url': f'/admin/ticket/{ticket.id}/'
             }
         })
@@ -388,7 +448,6 @@ def search_tickets_ajax(request):
     """
     AJAX: Search tickets across ALL history
     Query params: query, limit (optional)
-    Returns: JSON with matching tickets
     """
     query = request.GET.get('query', '').strip()
     limit = int(request.GET.get('limit', 20))
@@ -402,7 +461,6 @@ def search_tickets_ajax(request):
         })
     
     try:
-        # Search across ALL tickets (no date restriction)
         tickets = Ticket.objects.filter(
             Q(ticket_number__icontains=query) |
             Q(subject__icontains=query) |
@@ -424,6 +482,9 @@ def search_tickets_ajax(request):
                 'priority': ticket.priority,
                 'unit': ticket.unit.code if ticket.unit else '',
                 'created_at': ticket.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'main_error_type': ticket.main_error_type or 'N/A',
+                'sub_error_type': ticket.sub_error_type or 'N/A',
+                'error_type_display': f"{ticket.main_error_type} → {ticket.sub_error_type}" if ticket.main_error_type and ticket.sub_error_type else (ticket.main_error_type or ticket.error_type or 'Not Set'),
                 'url': f'/admin/ticket/{ticket.id}/'
             })
         

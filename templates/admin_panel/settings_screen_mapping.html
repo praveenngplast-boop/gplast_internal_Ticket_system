@@ -1,0 +1,1405 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Screen Mapping - GPLAST Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --smap-text-primary: #1A2A6C;
+        --smap-text-secondary: #4A5A7A;
+        --smap-text-muted: #8A9AB8;
+        --smap-border: #E8EDF5;
+        --smap-bg-card: #FFFFFF;
+        --smap-orange: #FF6B00;
+        --smap-orange-grad: linear-gradient(135deg,#FF6B00,#FF8C38);
+        --smap-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        --smap-shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
+        --smap-radius: 14px;
+        --smap-transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        --smap-success: #22C55E;
+        --smap-danger: #EF4444;
+        --smap-warning: #F59E0B;
+        --smap-info: #3B82F6;
+    }
+    
+    [data-theme="dark"] {
+        --smap-text-primary: #E8EDF5;
+        --smap-text-secondary: #A8B8D8;
+        --smap-text-muted: #6A7A9A;
+        --smap-border: rgba(255,255,255,0.07);
+        --smap-bg-card: #12121F;
+        --smap-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        --smap-shadow-hover: 0 8px 30px rgba(0,0,0,0.5);
+    }
+    
+    .smap-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 0.5rem 2rem;
+        animation: fadeUp 0.5s ease;
+    }
+    
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* ===== HEADER ===== */
+    .smap-header {
+        background: var(--smap-bg-card);
+        border: 1px solid var(--smap-border);
+        border-radius: var(--smap-radius);
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--smap-shadow);
+        position: relative;
+        overflow: hidden;
+        transition: var(--smap-transition);
+    }
+    
+    .smap-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--smap-orange-grad);
+        background-size: 200% 100%;
+        animation: shimmerMove 3s ease infinite;
+    }
+    
+    @keyframes shimmerMove {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+    
+    .smap-header:hover {
+        box-shadow: var(--smap-shadow-hover);
+    }
+    
+    .smap-header h1 {
+        font-size: clamp(1.1rem, 2vw, 1.5rem);
+        font-weight: 700;
+        color: var(--smap-text-primary);
+        margin: 0;
+        font-family: 'Fraunces', serif;
+    }
+    
+    .smap-header .subtitle {
+        color: var(--smap-text-secondary);
+        font-size: clamp(0.7rem, 0.9vw, 0.85rem);
+        margin: 0.1rem 0 0;
+    }
+    
+    .btn-back {
+        border: 2px solid var(--smap-border);
+        color: var(--smap-text-secondary);
+        border-radius: 50px;
+        padding: 0.35rem 1.2rem;
+        font-size: 0.75rem;
+        transition: var(--smap-transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: transparent;
+        min-height: 36px;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .btn-back:hover {
+        border-color: var(--smap-orange);
+        color: var(--smap-text-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255,107,0,0.12);
+    }
+    
+    .btn-orange {
+        background: var(--smap-orange-grad);
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        padding: 0.4rem 1.2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--smap-transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 36px;
+        box-shadow: 0 2px 12px rgba(255,107,0,0.2);
+        font-family: 'Inter', sans-serif;
+        text-decoration: none;
+    }
+    
+    .btn-orange:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(255,107,0,0.35);
+        color: #fff;
+    }
+    
+    .btn-outline {
+        background: transparent;
+        color: var(--smap-text-secondary);
+        border: 2px solid var(--smap-border);
+        border-radius: 50px;
+        padding: 0.4rem 1.2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--smap-transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 36px;
+        text-decoration: none;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .btn-outline:hover {
+        border-color: var(--smap-orange);
+        color: var(--smap-text-primary);
+        transform: translateY(-2px);
+    }
+    
+    .btn-sm {
+        padding: 0.15rem 0.6rem;
+        font-size: 0.6rem;
+        min-height: 24px;
+        border-radius: 50px;
+        border: none;
+        cursor: pointer;
+        transition: var(--smap-transition);
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+    
+    .btn-sm-add {
+        background: rgba(34, 197, 94, 0.12);
+        color: var(--smap-success);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+    
+    .btn-sm-add:hover {
+        background: var(--smap-success);
+        color: #fff;
+        transform: scale(1.05);
+    }
+    
+    .btn-sm-remove {
+        background: rgba(239, 68, 68, 0.08);
+        color: var(--smap-danger);
+        border: 1px solid rgba(239, 68, 68, 0.15);
+    }
+    
+    .btn-sm-remove:hover {
+        background: var(--smap-danger);
+        color: #fff;
+        transform: scale(1.05);
+    }
+    
+    .btn-sm-delete {
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--smap-danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .btn-sm-delete:hover {
+        background: var(--smap-danger);
+        color: #fff;
+        transform: scale(1.05);
+    }
+    
+    .btn-sm-view {
+        background: rgba(59, 130, 246, 0.10);
+        color: var(--smap-info);
+        border: 1px solid rgba(59, 130, 246, 0.15);
+    }
+    
+    .btn-sm-view:hover {
+        background: var(--smap-info);
+        color: #fff;
+        transform: scale(1.05);
+    }
+    
+    /* ===== FILTER BAR ===== */
+    .filter-bar {
+        background: var(--smap-bg-card);
+        border: 1px solid var(--smap-border);
+        border-radius: var(--smap-radius);
+        padding: 0.75rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        box-shadow: var(--smap-shadow);
+        transition: var(--smap-transition);
+    }
+    
+    .filter-bar:hover {
+        box-shadow: var(--smap-shadow-hover);
+    }
+    
+    .filter-bar .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+    }
+    
+    .filter-bar .filter-group label {
+        font-size: 0.6rem;
+        font-weight: 600;
+        color: var(--smap-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .filter-bar select,
+    .filter-bar input {
+        padding: 0.3rem 0.6rem;
+        border: 2px solid var(--smap-border);
+        border-radius: 8px;
+        font-size: 0.7rem;
+        background: var(--smap-bg-card);
+        color: var(--smap-text-primary);
+        transition: var(--smap-transition);
+        font-family: 'Inter', sans-serif;
+        min-height: 32px;
+    }
+    
+    .filter-bar select:focus,
+    .filter-bar input:focus {
+        border-color: var(--smap-orange);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255,107,0,0.08);
+    }
+    
+    /* ===== TABLE ===== */
+    .smap-table-wrapper {
+        background: var(--smap-bg-card);
+        border: 1px solid var(--smap-border);
+        border-radius: var(--smap-radius);
+        overflow: hidden;
+        box-shadow: var(--smap-shadow);
+        transition: var(--smap-transition);
+    }
+    
+    .smap-table-wrapper:hover {
+        box-shadow: var(--smap-shadow-hover);
+    }
+    
+    .smap-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+    }
+    
+    .smap-table thead {
+        background: rgba(255,107,0,0.04);
+    }
+    
+    .smap-table th {
+        padding: 0.7rem 1rem;
+        text-align: left;
+        font-weight: 700;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--smap-text-secondary);
+        border-bottom: 2px solid var(--smap-border);
+        font-family: 'Inter', sans-serif;
+        background: var(--smap-bg-card);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+    
+    .smap-table td {
+        padding: 0.6rem 1rem;
+        border-bottom: 1px solid var(--smap-border);
+        color: var(--smap-text-primary);
+        vertical-align: middle;
+    }
+    
+    .smap-table tbody tr {
+        transition: var(--smap-transition);
+        cursor: pointer;
+    }
+    
+    .smap-table tbody tr:hover {
+        background: rgba(255,107,0,0.03);
+    }
+    
+    .smap-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .smap-table .erp-id-cell {
+        font-weight: 700;
+        color: var(--smap-orange);
+        font-family: 'Fraunces', serif;
+        font-size: 0.9rem;
+    }
+    
+    .smap-table .erp-id-cell i {
+        margin-right: 0.4rem;
+    }
+    
+    .smap-table .count-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        padding: 0.1rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        background: var(--smap-orange-grad);
+        color: #fff;
+    }
+    
+    .smap-table .count-badge.zero {
+        background: var(--smap-border);
+        color: var(--smap-text-muted);
+    }
+    
+    .smap-table .actions-cell {
+        display: flex;
+        gap: 0.3rem;
+        flex-wrap: wrap;
+    }
+    
+    .smap-table .click-hint {
+        font-size: 0.55rem;
+        color: var(--smap-text-muted);
+        opacity: 0.5;
+        margin-left: 0.5rem;
+    }
+    
+    /* ===== MODAL ===== */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 1050;
+        backdrop-filter: blur(4px);
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-overlay.active {
+        display: flex;
+    }
+    
+    .modal-box {
+        background: var(--smap-bg-card);
+        border-radius: 18px;
+        padding: 1.5rem 2rem 2rem;
+        width: 90%;
+        max-width: 750px;
+        max-height: 85vh;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        animation: modalIn 0.3s ease;
+        border: 1px solid var(--smap-border);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    @keyframes modalIn {
+        from { opacity: 0; transform: scale(0.92) translateY(20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    
+    .modal-box .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--smap-border);
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .modal-box .modal-header h5 {
+        color: var(--smap-text-primary);
+        font-weight: 700;
+        margin: 0;
+        font-family: 'Fraunces', serif;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .modal-box .modal-header h5 .erp-badge {
+        background: var(--smap-orange-grad);
+        color: #fff;
+        padding: 0.1rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .modal-box .modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem 0 0;
+        max-height: 55vh;
+    }
+    
+    .modal-box .modal-body .modal-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+    }
+    
+    .modal-box .modal-body .modal-table th {
+        padding: 0.5rem 0.7rem;
+        text-align: left;
+        font-weight: 700;
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--smap-text-secondary);
+        border-bottom: 2px solid var(--smap-border);
+        font-family: 'Inter', sans-serif;
+        background: var(--smap-bg-card);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+    
+    .modal-box .modal-body .modal-table td {
+        padding: 0.4rem 0.7rem;
+        border-bottom: 1px solid var(--smap-border);
+        color: var(--smap-text-primary);
+        vertical-align: middle;
+        font-size: 0.78rem;
+    }
+    
+    .modal-box .modal-body .modal-table tbody tr:hover {
+        background: rgba(255,107,0,0.03);
+    }
+    
+    .modal-box .modal-body .modal-table .screen-code-cell {
+        font-weight: 700;
+        color: var(--smap-orange);
+        font-family: monospace;
+        font-size: 0.7rem;
+        background: rgba(255,107,0,0.06);
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    
+    .modal-box .modal-body .modal-table .screen-type-badge {
+        font-size: 0.55rem;
+        font-weight: 600;
+        padding: 0.05rem 0.4rem;
+        border-radius: 50px;
+        font-family: 'Inter', sans-serif;
+        display: inline-block;
+    }
+    
+    .modal-box .modal-body .modal-table .screen-type-badge.all { background: #E8EDF5; color: #4A5A7A; }
+    .modal-box .modal-body .modal-table .screen-type-badge.entry { background: #D1FAE5; color: #065F46; }
+    .modal-box .modal-body .modal-table .screen-type-badge.configuration { background: #DBEAFE; color: #1E40AF; }
+    .modal-box .modal-body .modal-table .screen-type-badge.query { background: #FEF3C7; color: #92400E; }
+    
+    [data-theme="dark"] .modal-box .modal-body .modal-table .screen-type-badge.all { background: rgba(255,255,255,0.08); color: #A8B8D8; }
+    [data-theme="dark"] .modal-box .modal-body .modal-table .screen-type-badge.entry { background: rgba(16,185,129,0.15); color: #34D399; }
+    [data-theme="dark"] .modal-box .modal-body .modal-table .screen-type-badge.configuration { background: rgba(59,130,246,0.15); color: #60A5FA; }
+    [data-theme="dark"] .modal-box .modal-body .modal-table .screen-type-badge.query { background: rgba(245,158,11,0.15); color: #FBBF24; }
+    
+    .modal-box .modal-footer {
+        padding-top: 1rem;
+        border-top: 1px solid var(--smap-border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .modal-close-btn {
+        background: transparent;
+        border: 2px solid var(--smap-border);
+        border-radius: 50px;
+        padding: 0.25rem 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--smap-text-secondary);
+        cursor: pointer;
+        transition: var(--smap-transition);
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .modal-close-btn:hover {
+        border-color: var(--smap-danger);
+        color: var(--smap-danger);
+        transform: translateY(-2px);
+    }
+    
+    .modal-add-btn {
+        background: var(--smap-orange-grad);
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        padding: 0.25rem 1.2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--smap-transition);
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 2px 12px rgba(255,107,0,0.2);
+    }
+    
+    .modal-add-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(255,107,0,0.35);
+        color: #fff;
+    }
+    
+    /* ===== TOAST ===== */
+    .toast-container {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .toast {
+        padding: 0.75rem 1.2rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        animation: toastIn 0.4s ease;
+        min-width: 250px;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .toast.success {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+        color: #fff;
+    }
+    
+    .toast.error {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        color: #fff;
+    }
+    
+    .toast.warning {
+        background: linear-gradient(135deg, #d97706, #f59e0b);
+        color: #1A1A2E;
+    }
+    
+    .toast.info {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: #fff;
+    }
+    
+    @keyframes toastIn {
+        from { opacity: 0; transform: translateX(30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    /* ===== PAGINATION ===== */
+    .pagination-wrapper {
+        padding: 0.75rem 1.25rem;
+        border-top: 1px solid var(--smap-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .pagination-controls {
+        display: flex;
+        gap: 0.2rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .pagination-btn {
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.65rem;
+        font-weight: 500;
+        border: 1px solid var(--smap-border);
+        background: transparent;
+        color: var(--smap-text-secondary);
+        transition: var(--smap-transition);
+        cursor: pointer;
+        min-width: 28px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        min-height: 28px;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .pagination-btn:hover {
+        background: var(--smap-bg-card);
+        border-color: var(--smap-orange);
+        color: var(--smap-text-primary);
+    }
+    
+    .pagination-btn.active {
+        background: var(--smap-orange-grad);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 2px 8px rgba(255,107,0,0.2);
+    }
+    
+    .pagination-btn.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    
+    .pagination-info {
+        color: var(--smap-text-muted);
+        font-size: 0.6rem;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .empty-state {
+        padding: 3rem 1rem;
+        text-align: center;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--smap-orange);
+        opacity: 0.3;
+        display: block;
+        margin-bottom: 0.75rem;
+    }
+    
+    .empty-state h4 {
+        color: var(--smap-text-primary);
+        font-family: 'Fraunces', serif;
+        margin-bottom: 0.3rem;
+    }
+    
+    .empty-state p {
+        color: var(--smap-text-muted);
+        font-size: 0.85rem;
+    }
+    
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .smap-header .d-flex {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+        }
+        .smap-header .d-flex .btn-back,
+        .smap-header .d-flex .btn-orange,
+        .smap-header .d-flex .btn-outline {
+            width: 100%;
+            justify-content: center;
+        }
+        .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filter-bar .filter-group {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filter-bar .filter-group select,
+        .filter-bar .filter-group input {
+            width: 100%;
+        }
+        .smap-table th,
+        .smap-table td {
+            padding: 0.4rem 0.5rem;
+            font-size: 0.7rem;
+        }
+        .smap-table .actions-cell {
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        .smap-table .actions-cell .btn-sm {
+            width: 100%;
+            justify-content: center;
+        }
+        .modal-box {
+            padding: 1rem;
+            max-width: 95%;
+        }
+        .modal-box .modal-body .modal-table th,
+        .modal-box .modal-body .modal-table td {
+            padding: 0.3rem 0.4rem;
+            font-size: 0.65rem;
+        }
+        .pagination-wrapper {
+            flex-direction: column;
+            align-items: center;
+        }
+        .pagination-controls {
+            justify-content: center;
+        }
+        .toast-container {
+            left: 1rem;
+            right: 1rem;
+            bottom: 1rem;
+        }
+        .toast {
+            min-width: unset;
+            width: 100%;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .smap-container { padding: 0 0.25rem; }
+        .smap-header { padding: 0.75rem 1rem; }
+        .smap-header h1 { font-size: 0.95rem; }
+        .smap-header .subtitle { font-size: 0.65rem; }
+        .btn-back, .btn-orange, .btn-outline {
+            font-size: 0.65rem;
+            padding: 0.3rem 0.8rem;
+            min-height: 30px;
+        }
+        .smap-table th,
+        .smap-table td {
+            padding: 0.3rem 0.3rem;
+            font-size: 0.6rem;
+        }
+        .smap-table .erp-id-cell { font-size: 0.75rem; }
+        .smap-table .count-badge { font-size: 0.6rem; min-width: 22px; }
+        .btn-sm { font-size: 0.5rem; padding: 0.1rem 0.4rem; min-height: 20px; }
+        .modal-box .modal-body .modal-table th,
+        .modal-box .modal-body .modal-table td {
+            font-size: 0.55rem;
+            padding: 0.2rem 0.3rem;
+        }
+        .modal-box .modal-header h5 { font-size: 0.9rem; }
+        .pagination-btn { font-size: 0.5rem; padding: 0.1rem 0.3rem; min-width: 22px; min-height: 22px; }
+    }
+    
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--smap-bg-card); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--smap-orange); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: #E05A00; }
+    
+    ::selection { background: var(--smap-orange); color: #fff; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const CSRF = '{{ csrf_token }}';
+    const ADD_URL = '{% url "screen_mapping_add" %}';
+    const REMOVE_URL = '{% url "screen_mapping_remove" %}';
+    const DELETE_ERP_URL = '{% url "screen_mapping_delete_erp" %}';
+
+    // ============================================================
+    // SHOW TOAST
+    // ============================================================
+    window.showToast = function(msg, type = 'success') {
+        const tc = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        const iconMap = {
+            'success': 'fa-check-circle',
+            'error': 'fa-times-circle',
+            'warning': 'fa-exclamation-triangle',
+            'info': 'fa-info-circle'
+        };
+        t.innerHTML = `<i class="fas ${iconMap[type] || 'fa-info-circle'} me-2"></i>${msg}`;
+        tc.appendChild(t);
+        setTimeout(() => {
+            t.style.opacity = '0';
+            t.style.transform = 'translateX(30px)';
+            setTimeout(() => t.remove(), 400);
+        }, 3500);
+    };
+
+    // ============================================================
+    // VIEW SCREENS MODAL
+    // ============================================================
+    window.viewScreens = function(erpId) {
+        // ✅ FIX: Get the screens data from the hidden div using JSON string
+        const screensDataEl = document.getElementById('screensData');
+        if (!screensDataEl) {
+            console.error('screensData element not found');
+            return;
+        }
+        
+        let screens = {};
+        try {
+            // ✅ Parse the JSON string from data attribute
+            const jsonData = screensDataEl.getAttribute('data-screens');
+            screens = JSON.parse(jsonData);
+        } catch(e) {
+            console.error('Error parsing screens data:', e);
+            console.error('Raw data:', screensDataEl.getAttribute('data-screens'));
+            showToast('Error loading screens data', 'error');
+            return;
+        }
+        
+        const erpScreens = screens[erpId] || [];
+        const modal = document.getElementById('viewModal');
+        const body = document.getElementById('viewModalBody');
+        const title = document.getElementById('viewModalTitle');
+        
+        // Set title
+        title.innerHTML = `
+            <i class="fas fa-id-badge" style="color:var(--smap-orange);"></i> 
+            ERP User ID: ${erpId}
+            <span class="erp-badge">${erpScreens.length} screens</span>
+        `;
+        
+        // Build table
+        if (erpScreens.length === 0) {
+            body.innerHTML = `
+                <div style="text-align:center; padding:2rem; color:var(--smap-text-muted);">
+                    <i class="fas fa-plus-circle" style="font-size:2rem; display:block; margin-bottom:0.5rem; opacity:0.3;"></i>
+                    No screens mapped to this ERP ID.
+                    <br>
+                    <button class="btn-sm btn-sm-add" onclick="closeViewModal(); openAddModal('${erpId}');" style="margin-top:0.5rem;">
+                        <i class="fas fa-plus"></i> Add Screen
+                    </button>
+                </div>
+            `;
+        } else {
+            let html = `
+                <table class="modal-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Screen Code</th>
+                            <th>Screen Name</th>
+                            <th>Type</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            erpScreens.forEach(function(screen, index) {
+                const typeClass = screen.screen_type.toLowerCase();
+                let typeLabel = screen.screen_type;
+                if (typeLabel === 'ENTRY') typeLabel = '📝 ENTRY';
+                else if (typeLabel === 'CONFIGURATION') typeLabel = '⚙️ CONFIG';
+                else if (typeLabel === 'QUERY') typeLabel = '📊 QUERY';
+                else typeLabel = '📌 ALL';
+                
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><span class="screen-code-cell">${screen.screen_code}</span></td>
+                        <td>${screen.screen_name}</td>
+                        <td><span class="screen-type-badge ${typeClass}">${typeLabel}</span></td>
+                        <td>
+                            <button class="btn-sm btn-sm-remove" onclick="closeViewModal(); confirmRemove(${screen.mapping_id}, '${screen.screen_name}', '${erpId}');">
+                                <i class="fas fa-unlink"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            html += `
+                    </tbody>
+                </table>
+            `;
+            body.innerHTML = html;
+        }
+        
+        // Store ERP ID for Add button in footer
+        document.getElementById('viewModalErpId').value = erpId;
+        
+        modal.classList.add('active');
+    };
+
+    window.closeViewModal = function() {
+        document.getElementById('viewModal').classList.remove('active');
+    };
+
+    // ============================================================
+    // ADD SCREEN TO ERP (from modal footer)
+    // ============================================================
+    window.addScreenFromModal = function() {
+        const erpId = document.getElementById('viewModalErpId').value;
+        closeViewModal();
+        openAddModal(erpId);
+    };
+
+    // ============================================================
+    // ADD SCREEN TO ERP (main)
+    // ============================================================
+    window.openAddModal = function(erpId) {
+        document.getElementById('addErpId').value = erpId || '';
+        document.getElementById('addScreen').value = '';
+        document.getElementById('addModal').classList.add('active');
+    };
+
+    window.closeAddModal = function() {
+        document.getElementById('addModal').classList.remove('active');
+    };
+
+    window.submitAdd = function() {
+        const erpId = document.getElementById('addErpId').value.trim();
+        const screenId = document.getElementById('addScreen').value;
+
+        if (!erpId) {
+            showToast('Please select or enter an ERP User ID', 'error');
+            return;
+        }
+        if (!screenId) {
+            showToast('Please select a Screen', 'error');
+            return;
+        }
+
+        fetch(ADD_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': CSRF
+            },
+            body: `erp_user_id=${encodeURIComponent(erpId)}&screen_id=${screenId}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                showToast(d.message, 'success');
+                closeAddModal();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(d.message || 'Failed to add mapping', 'error');
+            }
+        })
+        .catch(e => showToast('Error: ' + e.message, 'error'));
+    };
+
+    // ============================================================
+    // REMOVE SCREEN FROM ERP
+    // ============================================================
+    window.confirmRemove = function(mappingId, screenName, erpId) {
+        document.getElementById('removeId').value = mappingId;
+        document.getElementById('removeScreen').textContent = screenName;
+        document.getElementById('removeErp').textContent = erpId;
+        document.getElementById('removeModal').classList.add('active');
+    };
+
+    window.closeRemoveModal = function() {
+        document.getElementById('removeModal').classList.remove('active');
+    };
+
+    window.submitRemove = function() {
+        const id = document.getElementById('removeId').value;
+
+        fetch(REMOVE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': CSRF
+            },
+            body: `mapping_id=${id}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                showToast(d.message, 'success');
+                closeRemoveModal();
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showToast(d.message || 'Failed to remove mapping', 'error');
+            }
+        })
+        .catch(e => showToast('Error: ' + e.message, 'error'));
+    };
+
+    // ============================================================
+    // DELETE ENTIRE ERP ID (all screens)
+    // ============================================================
+    window.confirmDeleteErp = function(erpId, screenCount) {
+        if (!confirm(`Are you sure you want to delete ALL mappings for ERP ID "${erpId}"?\n\nThis will remove ${screenCount} screen mapping(s).`)) {
+            return;
+        }
+
+        fetch(DELETE_ERP_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': CSRF
+            },
+            body: `erp_user_id=${encodeURIComponent(erpId)}`
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                showToast(d.message, 'success');
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showToast(d.message || 'Failed to delete mappings', 'error');
+            }
+        })
+        .catch(e => showToast('Error: ' + e.message, 'error'));
+    };
+
+    // ============================================================
+    // MODAL CLOSE ON OVERLAY CLICK
+    // ============================================================
+    ['addModal', 'removeModal', 'viewModal'].forEach(id => {
+        document.getElementById(id).addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+    });
+
+    // ============================================================
+    // ESC KEY TO CLOSE MODALS
+    // ============================================================
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            ['addModal', 'removeModal', 'viewModal'].forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+        }
+    });
+
+    // ============================================================
+    // ENTER KEY TO SUBMIT ADD
+    // ============================================================
+    document.getElementById('addScreen').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') window.submitAdd();
+    });
+    document.getElementById('addErpId').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') document.getElementById('addScreen').focus();
+    });
+
+    // ============================================================
+    // THEME SYNC
+    // ============================================================
+    function updateThemeStyles() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const selects = document.querySelectorAll('select, input');
+        selects.forEach(el => {
+            if (isDark) {
+                el.style.backgroundColor = 'rgba(255,255,255,0.04)';
+                el.style.borderColor = 'rgba(255,255,255,0.08)';
+                el.style.color = '#E8EDF5';
+            } else {
+                el.style.backgroundColor = '';
+                el.style.borderColor = '';
+                el.style.color = '';
+            }
+        });
+    }
+
+    const themeToggle = document.getElementById('themeToggleFloating');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => setTimeout(updateThemeStyles, 100));
+    }
+
+    const observer = new MutationObserver(() => updateThemeStyles());
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+
+    setTimeout(updateThemeStyles, 200);
+});
+</script>
+
+<script>
+    // FIX: Notification URL - Use correct custom-admin path
+    document.addEventListener('DOMContentLoaded', function() {
+        var originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+            if (typeof url === 'string' && url.includes('/admin/notifications/')) {
+                url = url.replace('/admin/notifications/', '/custom-admin/notifications/');
+            }
+            return originalFetch.call(this, url, options);
+        };
+        
+        var originalOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+            if (typeof url === 'string' && url.includes('/admin/notifications/')) {
+                url = url.replace('/admin/notifications/', '/custom-admin/notifications/');
+            }
+            return originalOpen.call(this, method, url, async !== false, user, password);
+        };
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="smap-container">
+
+    <!-- ===== HEADER ===== -->
+    <div class="smap-header">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <h1>
+                    <i class="fas fa-link" style="color: var(--smap-orange);"></i> Screen Mapping
+                </h1>
+                <p class="subtitle">
+                    <i class="fa-regular fa-clock me-1"></i>
+                    Map screens to ERP User IDs &mdash; one ERP ID can have multiple screens
+                    <span style="display:inline-block; background: var(--smap-orange-grad); color:#fff; padding:0.05rem 0.6rem; border-radius:50px; font-size:0.6rem; font-weight:700; margin-left:0.5rem;">
+                        {{ total_erps }} ERP IDs
+                    </span>
+                    <span style="display:inline-block; background: var(--smap-border); color:var(--smap-text-secondary); padding:0.05rem 0.6rem; border-radius:50px; font-size:0.6rem; font-weight:600; margin-left:0.3rem;">
+                        {{ total_mappings }} Mappings
+                    </span>
+                </p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'settings_page' %}" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                <a href="{% url 'screen_mapping_export_excel' %}{% if erp_filter %}?erp_user_id={{ erp_filter }}{% endif %}" class="btn-outline">
+                    <i class="fas fa-download"></i> Export
+                </a>
+                <button class="btn-orange" onclick="openAddModal()">
+                    <i class="fas fa-plus"></i> Add Mapping
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FILTER BAR ===== -->
+    <div class="filter-bar">
+        <form method="GET" class="d-flex align-items-center gap-2 flex-wrap" style="flex:1;">
+            <div class="filter-group">
+                <label><i class="fas fa-filter"></i> Filter by ERP:</label>
+                <select name="erp_user_id">
+                    <option value="">All ERP IDs</option>
+                    {% for eid in erp_user_ids %}
+                    <option value="{{ eid }}" {% if eid == erp_filter %}selected{% endif %}>{{ eid }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-search"></i> Screen:</label>
+                <input type="text" name="screen_search" value="{{ screen_search }}" placeholder="Search screen code/name..." style="min-width:160px;">
+            </div>
+            <button type="submit" class="btn-orange" style="min-height:32px; padding:0.25rem 1rem; font-size:0.7rem;">
+                <i class="fas fa-search"></i> Filter
+            </button>
+            <a href="{% url 'settings_screen_mapping' %}" class="btn-outline" style="min-height:32px; padding:0.25rem 0.8rem; font-size:0.7rem;">
+                <i class="fas fa-times"></i> Clear
+            </a>
+        </form>
+    </div>
+
+    <!-- ===== TABLE ===== -->
+    <div class="smap-table-wrapper">
+        <div style="overflow-x:auto; max-height: 600px; overflow-y: auto;">
+            <table class="smap-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">#</th>
+                        <th>ERP User ID</th>
+                        <th style="text-align:center; width:140px;">Screens</th>
+                        <th style="text-align:center; width:280px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in page_obj %}
+                    <tr>
+                        <td style="color:var(--smap-text-muted); font-size:0.7rem;">{{ forloop.counter }}</td>
+                        <td>
+                            <span class="erp-id-cell" onclick="viewScreens('{{ item.erp_user_id }}')" style="cursor:pointer;">
+                                <i class="fas fa-id-badge"></i> {{ item.erp_user_id }}
+                                <span class="click-hint">(click to view screens)</span>
+                            </span>
+                        </td>
+                        <td style="text-align:center;">
+                            <span class="count-badge {% if item.screen_count == 0 %}zero{% endif %}">
+                                {{ item.screen_count }}
+                            </span>
+                        </td>
+                        <td style="text-align:center;">
+                            <div class="actions-cell" style="justify-content:center;">
+                                <button class="btn-sm btn-sm-view" onclick="viewScreens('{{ item.erp_user_id }}')" title="View screens">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="btn-sm btn-sm-add" onclick="openAddModal('{{ item.erp_user_id }}')" title="Add screen to this ERP">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                                {% if item.screen_count > 0 %}
+                                <button class="btn-sm btn-sm-delete" onclick="confirmDeleteErp('{{ item.erp_user_id }}', {{ item.screen_count }})" title="Delete all mappings for this ERP">
+                                    <i class="fas fa-trash"></i> Delete All
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i class="fas fa-link"></i>
+                                <h4>No Mappings Found</h4>
+                                <p>
+                                    {% if erp_filter or screen_search %}
+                                    No mappings match your filters. Try clearing the filters.
+                                    {% else %}
+                                    Start by adding your first screen mapping.
+                                    {% endif %}
+                                </p>
+                                <div class="d-flex gap-2 justify-content-center flex-wrap mt-2">
+                                    {% if erp_filter or screen_search %}
+                                    <a href="{% url 'settings_screen_mapping' %}" class="btn-outline">
+                                        <i class="fas fa-times"></i> Clear Filters
+                                    </a>
+                                    {% endif %}
+                                    <button class="btn-orange" onclick="openAddModal()">
+                                        <i class="fas fa-plus"></i> Add Mapping
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- ===== PAGINATION ===== -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination-wrapper">
+            <div class="pagination-controls">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if erp_filter %}&erp_user_id={{ erp_filter }}{% endif %}{% if screen_search %}&screen_search={{ screen_search }}{% endif %}" class="pagination-btn">
+                        <i class="fas fa-chevron-left"></i> Prev
+                    </a>
+                {% else %}
+                    <span class="pagination-btn disabled"><i class="fas fa-chevron-left"></i> Prev</span>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="pagination-btn active">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% if erp_filter %}&erp_user_id={{ erp_filter }}{% endif %}{% if screen_search %}&screen_search={{ screen_search }}{% endif %}" class="pagination-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if erp_filter %}&erp_user_id={{ erp_filter }}{% endif %}{% if screen_search %}&screen_search={{ screen_search }}{% endif %}" class="pagination-btn">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% else %}
+                    <span class="pagination-btn disabled">Next <i class="fas fa-chevron-right"></i></span>
+                {% endif %}
+            </div>
+            <span class="pagination-info">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                ({{ page_obj.paginator.count }} total)
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- ===== VIEW SCREENS MODAL ===== -->
+<div class="modal-overlay" id="viewModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h5 id="viewModalTitle">
+                <i class="fas fa-id-badge" style="color:var(--smap-orange);"></i> 
+                Screens for ERP ID
+            </h5>
+            <button class="modal-close-btn" onclick="closeViewModal()">
+                <i class="fas fa-times"></i> Close
+            </button>
+        </div>
+        <div class="modal-body" id="viewModalBody">
+            <!-- Dynamically loaded content -->
+        </div>
+        <div class="modal-footer">
+            <input type="hidden" id="viewModalErpId" value="">
+            <button class="modal-add-btn" onclick="addScreenFromModal()">
+                <i class="fas fa-plus"></i> Add Screen to this ERP
+            </button>
+            <button class="modal-close-btn" onclick="closeViewModal()">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ADD MODAL ===== -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal-box">
+        <h5><i class="fas fa-plus-circle me-2" style="color:var(--smap-orange);"></i> Add Screen Mapping</h5>
+        <div class="form-group">
+            <label>ERP User ID <span style="color:#ef4444;">*</span></label>
+            <select id="addErpId" class="form-control" style="width:100%;">
+                <option value="">-- Select ERP User ID --</option>
+                {% for eid in erp_user_ids %}
+                <option value="{{ eid }}">{{ eid }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Select Screen <span style="color:#ef4444;">*</span></label>
+            <select id="addScreen" class="form-control" style="width:100%;">
+                <option value="">-- Select Screen --</option>
+                {% for screen in screens %}
+                <option value="{{ screen.id }}">{{ screen.screen_code }} - {{ screen.screen_name }} ({{ screen.screen_type }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="d-flex gap-2 justify-content-end mt-3">
+            <button class="btn-outline" onclick="closeAddModal()" style="min-height:32px; padding:0.25rem 1rem; font-size:0.75rem;">
+                Cancel
+            </button>
+            <button class="btn-orange" onclick="submitAdd()" style="min-height:32px; padding:0.25rem 1.2rem; font-size:0.75rem;">
+                <i class="fas fa-save"></i> Add Mapping
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== REMOVE MODAL ===== -->
+<div class="modal-overlay" id="removeModal">
+    <div class="modal-box">
+        <h5><i class="fas fa-exclamation-triangle me-2" style="color:#ef4444;"></i> Remove Screen</h5>
+        <input type="hidden" id="removeId">
+        <p style="color:var(--smap-text-secondary); font-size:0.9rem;">
+            Remove screen <strong id="removeScreen" style="color:var(--smap-text-primary);"></strong> 
+            from ERP ID <strong id="removeErp" style="color:var(--smap-orange);"></strong>?
+        </p>
+        <div class="d-flex gap-2 justify-content-end mt-3">
+            <button class="btn-outline" onclick="closeRemoveModal()" style="min-height:32px; padding:0.25rem 1rem; font-size:0.75rem;">
+                Cancel
+            </button>
+            <button style="background:linear-gradient(135deg,#dc2626,#ef4444); color:#fff; border:none; border-radius:50px; padding:0.25rem 1.2rem; font-size:0.75rem; font-weight:600; cursor:pointer; min-height:32px;" onclick="submitRemove()">
+                <i class="fas fa-unlink"></i> Remove
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== HIDDEN SCREENS DATA - USING JSON STRING ===== -->
+<div id="screensData" data-screens='{{ erp_screens_json|safe }}' style="display:none;"></div>
+
+{% endblock %}

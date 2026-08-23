@@ -1,0 +1,1297 @@
+{% extends 'base.html' %}
+{% block title %}Scheduled Email Reports - GPLAST{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<style>
+    /* ============================================================
+       PAGE CONTAINER
+    ============================================================ */
+    .email-report-page {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 0.5rem 2rem;
+        animation: fadeIn 0.5s ease;
+        --email-primary: #FF6B00;
+        --email-primary-dark: #E55A00;
+        --email-primary-light: #FF8C38;
+        --email-success: #22C55E;
+        --email-danger: #EF4444;
+        --email-warning: #F59E0B;
+        --email-info: #3B82F6;
+        --email-radius: 14px;
+        --email-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --email-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        --email-shadow-hover: 0 8px 30px rgba(0,0,0,0.10);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       HEADER
+    ============================================================ */
+    .email-report-header {
+        background: #FFFFFF;
+        border: 1px solid #E8EDF5;
+        border-radius: var(--email-radius);
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--email-shadow);
+        position: relative;
+        overflow: hidden;
+        transition: var(--email-transition);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .email-report-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(135deg, #FF6B00 0%, #FF8C38 100%);
+        background-size: 200% 100%;
+        animation: shimmerMove 3s ease infinite;
+    }
+
+    @keyframes shimmerMove {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    .email-report-header:hover {
+        box-shadow: var(--email-shadow-hover);
+        border-color: rgba(255, 107, 0, 0.10);
+    }
+
+    .email-report-header h1 {
+        font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+        font-weight: 700;
+        color: #1A2A6C;
+        margin: 0;
+        font-family: 'Fraunces', serif;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .email-report-header h1 i {
+        color: #FF6B00;
+        font-size: 1.3rem;
+    }
+
+    .email-report-header p {
+        margin: 0.2rem 0 0;
+        color: #4A5A7A;
+        font-size: clamp(0.7rem, 0.9vw, 0.82rem);
+    }
+
+    .email-report-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 1rem;
+        border: 2px solid #E8EDF5;
+        border-radius: 50px;
+        color: #4A5A7A;
+        background: transparent;
+        text-decoration: none;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: var(--email-transition);
+        font-family: 'Inter', sans-serif;
+        min-height: 36px;
+        white-space: nowrap;
+    }
+
+    .email-report-back:hover {
+        color: #FF6B00;
+        border-color: #FF6B00;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255,107,0,0.12);
+        text-decoration: none;
+    }
+
+    /* ============================================================
+       ALERTS
+    ============================================================ */
+    .email-alert {
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+        border: 1px solid;
+        animation: alertIn 0.4s ease;
+    }
+
+    @keyframes alertIn {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    .email-alert-success {
+        background: rgba(34, 197, 94, 0.06);
+        border-color: rgba(34, 197, 94, 0.15);
+        color: #22C55E;
+    }
+
+    .email-alert-error {
+        background: rgba(239, 68, 68, 0.06);
+        border-color: rgba(239, 68, 68, 0.15);
+        color: #EF4444;
+    }
+
+    .email-alert-warning {
+        background: rgba(245, 158, 11, 0.06);
+        border-color: rgba(245, 158, 11, 0.15);
+        color: #F59E0B;
+    }
+
+    .email-alert-info {
+        background: rgba(59, 130, 246, 0.06);
+        border-color: rgba(59, 130, 246, 0.15);
+        color: #3B82F6;
+    }
+
+    .email-alert i {
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    /* ============================================================
+       FORM CARD
+    ============================================================ */
+    .email-report-form {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .email-report-form .card {
+        background: #FFFFFF;
+        border: 1px solid #E8EDF5;
+        border-radius: var(--email-radius);
+        overflow: hidden;
+        box-shadow: var(--email-shadow);
+        transition: var(--email-transition);
+    }
+
+    .email-report-form .card:hover {
+        box-shadow: var(--email-shadow-hover);
+        border-color: rgba(255, 107, 0, 0.08);
+    }
+
+    .email-report-form .card .card-body {
+        padding: 1.25rem 1.5rem;
+    }
+
+    /* ============================================================
+       SECTION HEADERS
+    ============================================================ */
+    .email-section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: clamp(0.85rem, 1vw, 0.95rem);
+        font-weight: 700;
+        color: #1A2A6C;
+        margin: 1.2rem 0 0.75rem;
+        padding-top: 1rem;
+        border-top: 2px solid #E8EDF5;
+        font-family: 'Fraunces', serif;
+    }
+
+    .email-section-title:first-of-type {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+    }
+
+    .email-section-title i {
+        color: #FF6B00;
+        font-size: 0.9rem;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 107, 0, 0.08);
+        border-radius: 6px;
+    }
+
+    /* ============================================================
+       FORM ELEMENTS
+    ============================================================ */
+    .email-form-label {
+        color: #4A5A7A;
+        font-size: 0.72rem;
+        font-weight: 700;
+        font-family: 'Inter', sans-serif;
+        display: block;
+        margin-bottom: 0.2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .email-form-control,
+    .email-form-select {
+        width: 100%;
+        padding: 0.45rem 0.7rem;
+        border: 2px solid #DCE3F0;
+        border-radius: 8px;
+        background: #F8FAFF;
+        color: #1A2A6C;
+        font-size: 0.8rem;
+        transition: var(--email-transition);
+        font-family: 'Inter', sans-serif;
+        min-height: 38px;
+    }
+
+    .email-form-control:focus,
+    .email-form-select:focus {
+        border-color: #FF6B00;
+        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.08);
+        outline: none;
+    }
+
+    .email-form-control::placeholder {
+        color: #8A9AB8;
+        opacity: 0.6;
+        font-size: 0.75rem;
+    }
+
+    .email-form-control:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* ============================================================
+       TOGGLE SWITCH
+    ============================================================ */
+    .email-toggle-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.8rem;
+        background: rgba(255, 107, 0, 0.03);
+        border: 1px solid rgba(255, 107, 0, 0.08);
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .email-toggle {
+        position: relative;
+        width: 48px;
+        height: 26px;
+        flex-shrink: 0;
+    }
+
+    .email-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .email-toggle .slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: #CBD5E1;
+        border-radius: 50px;
+        transition: var(--email-transition);
+    }
+
+    .email-toggle .slider::before {
+        content: '';
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background: #FFFFFF;
+        border-radius: 50%;
+        transition: var(--email-transition);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .email-toggle input:checked + .slider {
+        background: #FF6B00;
+    }
+
+    .email-toggle input:checked + .slider::before {
+        transform: translateX(22px);
+    }
+
+    .email-toggle-label {
+        font-weight: 600;
+        color: #1A2A6C;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .email-toggle-status {
+        font-size: 0.6rem;
+        font-weight: 600;
+        padding: 0.1rem 0.5rem;
+        border-radius: 50px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .email-toggle-status.active {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22C55E;
+    }
+
+    .email-toggle-status.inactive {
+        background: rgba(148, 163, 184, 0.1);
+        color: #64748b;
+    }
+
+    /* ============================================================
+       CHECKBOXES
+    ============================================================ */
+    .email-check-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.5rem;
+        margin-top: 0.3rem;
+    }
+
+    .email-check-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.7rem;
+        border: 2px solid #DCE3F0;
+        border-radius: 8px;
+        background: #F8FAFF;
+        transition: var(--email-transition);
+        cursor: pointer;
+        font-size: 0.78rem;
+        color: #1A2A6C;
+        font-family: 'Inter', sans-serif;
+        min-height: 38px;
+    }
+
+    .email-check-item:hover {
+        border-color: #FF6B00;
+        background: rgba(255, 107, 0, 0.02);
+    }
+
+    .email-check-item input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #FF6B00;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+
+    .email-check-item label {
+        cursor: pointer;
+        flex: 1;
+        margin: 0;
+    }
+
+    /* ============================================================
+       FREQUENCY RADIO
+    ============================================================ */
+    .email-frequency-group {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        margin-top: 0.3rem;
+    }
+
+    .email-frequency-item {
+        position: relative;
+        padding: 0.5rem 0.7rem;
+        border: 2px solid #DCE3F0;
+        border-radius: 8px;
+        background: #F8FAFF;
+        transition: var(--email-transition);
+        cursor: pointer;
+        text-align: center;
+        font-size: 0.75rem;
+        color: #4A5A7A;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+    }
+
+    .email-frequency-item:hover {
+        border-color: #FF6B00;
+        background: rgba(255, 107, 0, 0.02);
+    }
+
+    .email-frequency-item input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #FF6B00;
+        margin-right: 0.35rem;
+        vertical-align: middle;
+    }
+
+    .email-frequency-item.active {
+        border-color: #FF6B00;
+        background: rgba(255, 107, 0, 0.06);
+        color: #FF6B00;
+    }
+
+    .email-frequency-item.active::after {
+        content: '\2713';
+        position: absolute;
+        top: 0.35rem;
+        right: 0.45rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: #FF6B00;
+        color: #FFFFFF;
+        font-size: 0.65rem;
+        line-height: 1rem;
+        text-align: center;
+    }
+
+    /* ============================================================
+       FORM ROW
+    ============================================================ */
+    .email-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin: 0.75rem 0;
+    }
+
+    .email-form-row .full-width {
+        grid-column: 1 / -1;
+    }
+
+    /* ============================================================
+       ADDITIONAL EMAILS
+    ============================================================ */
+    .email-additional-list {
+        display: grid;
+        gap: 0.5rem;
+        margin: 0.3rem 0 0.5rem;
+    }
+
+    .email-additional-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .email-additional-row .email-form-control {
+        flex: 1;
+    }
+
+    .email-remove-btn {
+        flex: 0 0 auto;
+        width: 36px;
+        height: 36px;
+        border: 2px solid #EF4444;
+        border-radius: 8px;
+        color: #EF4444;
+        background: transparent;
+        cursor: pointer;
+        transition: var(--email-transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+    }
+
+    .email-remove-btn:hover {
+        color: #FFFFFF;
+        background: #EF4444;
+        transform: scale(1.05);
+    }
+
+    .email-add-btn {
+        padding: 0.35rem 1rem;
+        border: 2px dashed #DCE3F0;
+        border-radius: 8px;
+        color: #4A5A7A;
+        background: transparent;
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: var(--email-transition);
+        font-family: 'Inter', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        min-height: 36px;
+    }
+
+    .email-add-btn:hover {
+        border-color: #FF6B00;
+        color: #FF6B00;
+        background: rgba(255, 107, 0, 0.04);
+    }
+
+    /* ============================================================
+       UNIT HEADS SECTION
+    ============================================================ */
+    .unit-heads-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-top: 0.3rem;
+    }
+
+    .unit-head-item {
+        background: #F8FAFF;
+        border: 1px solid #DCE3F0;
+        border-radius: 8px;
+        padding: 0.6rem 0.8rem;
+        transition: var(--email-transition);
+    }
+
+    .unit-head-item:hover {
+        border-color: rgba(255, 107, 0, 0.15);
+    }
+
+    .unit-head-item .unit-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #4A5A7A;
+        font-family: 'Inter', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 0.2rem;
+    }
+
+    .unit-head-item .email-form-control {
+        min-height: 32px;
+        font-size: 0.75rem;
+        padding: 0.3rem 0.5rem;
+    }
+
+    /* ============================================================
+       BUTTONS
+    ============================================================ */
+    .email-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid #E8EDF5;
+    }
+
+    .email-actions .email-report-back {
+        margin-right: auto;
+    }
+
+    .email-btn {
+        padding: 0.45rem 1.2rem;
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        transition: var(--email-transition);
+        cursor: pointer;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 38px;
+    }
+
+    .email-btn-primary {
+        background: linear-gradient(135deg, #FF6B00 0%, #FF8C38 100%);
+        color: #FFFFFF;
+        box-shadow: 0 2px 12px rgba(255, 107, 0, 0.2);
+    }
+
+    .email-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(255, 107, 0, 0.35);
+        color: #FFFFFF;
+    }
+
+    .email-btn-outline-primary {
+        background: transparent;
+        color: #3B82F6;
+        border: 2px solid #3B82F6;
+    }
+
+    .email-btn-outline-primary:hover {
+        background: #3B82F6;
+        color: #FFFFFF;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .email-btn-outline-success {
+        background: transparent;
+        color: #22C55E;
+        border: 2px solid #22C55E;
+    }
+
+    .email-btn-outline-success:hover {
+        background: #22C55E;
+        color: #FFFFFF;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .email-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 992px) {
+        .email-form-row {
+            grid-template-columns: 1fr;
+        }
+        .email-frequency-group {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        .unit-heads-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .email-report-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+        }
+        .email-report-header h1 {
+            font-size: 1rem;
+        }
+        .email-report-back {
+            justify-content: center;
+            width: 100%;
+        }
+        .email-report-form .card .card-body {
+            padding: 0.75rem 1rem;
+        }
+        .email-check-group {
+            grid-template-columns: 1fr 1fr;
+        }
+        .email-frequency-group {
+            grid-template-columns: 1fr;
+        }
+        .email-actions {
+            flex-direction: column;
+        }
+        .email-actions .email-btn {
+            width: 100%;
+            justify-content: center;
+        }
+        .email-toggle-wrapper {
+            flex-wrap: wrap;
+        }
+        .email-additional-row {
+            flex-wrap: wrap;
+        }
+        .email-additional-row .email-form-control {
+            min-width: 150px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .email-report-page {
+            padding: 0 0.25rem 1rem;
+        }
+        .email-report-header {
+            padding: 0.75rem 1rem;
+        }
+        .email-report-header h1 {
+            font-size: 0.9rem;
+        }
+        .email-report-header p {
+            font-size: 0.65rem;
+        }
+        .email-report-form .card .card-body {
+            padding: 0.5rem 0.65rem;
+        }
+        .email-check-group {
+            grid-template-columns: 1fr;
+        }
+        .email-check-item {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.5rem;
+            min-height: 32px;
+        }
+        .email-frequency-item {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.5rem;
+        }
+        .email-form-control,
+        .email-form-select {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.5rem;
+            min-height: 32px;
+        }
+        .email-form-label {
+            font-size: 0.65rem;
+        }
+        .email-btn {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.8rem;
+            min-height: 32px;
+        }
+        .email-section-title {
+            font-size: 0.8rem;
+        }
+        .unit-head-item .email-form-control {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.4rem;
+            min-height: 28px;
+        }
+        .email-add-btn {
+            font-size: 0.65rem;
+            padding: 0.25rem 0.6rem;
+            min-height: 30px;
+        }
+        .email-remove-btn {
+            width: 30px;
+            height: 30px;
+            font-size: 0.7rem;
+        }
+        .email-additional-row .email-form-control {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.4rem;
+            min-height: 28px;
+        }
+        .email-toggle-label {
+            font-size: 0.75rem;
+        }
+        .email-toggle-status {
+            font-size: 0.5rem;
+        }
+        .email-alert {
+            font-size: 0.7rem;
+            padding: 0.5rem 0.6rem;
+        }
+    }
+
+    /* ============================================================
+       DARK THEME
+    ============================================================ */
+    [data-theme="dark"] .email-report-header {
+        background: #1A1A2E;
+        border-color: rgba(255,255,255,0.06);
+    }
+
+    [data-theme="dark"] .email-report-header h1 {
+        color: #E8EDF5;
+    }
+
+    [data-theme="dark"] .email-report-header p {
+        color: #A8B8D8;
+    }
+
+    [data-theme="dark"] .email-report-back {
+        border-color: rgba(255,255,255,0.08);
+        color: #A8B8D8;
+        background: #1A1A2E;
+    }
+
+    [data-theme="dark"] .email-report-back:hover {
+        border-color: #FF6B00;
+        color: #FF6B00;
+    }
+
+    [data-theme="dark"] .email-report-form .card {
+        background: #1A1A2E;
+        border-color: rgba(255,255,255,0.06);
+    }
+
+    [data-theme="dark"] .email-report-form .card .card-body {
+        background: #1A1A2E;
+    }
+
+    [data-theme="dark"] .email-section-title {
+        color: #E8EDF5;
+        border-top-color: rgba(255,255,255,0.06);
+    }
+
+    [data-theme="dark"] .email-section-title i {
+        color: #FF8C38;
+        background: rgba(255,107,0,0.12);
+    }
+
+    [data-theme="dark"] .email-form-label {
+        color: #A8B8D8;
+    }
+
+    [data-theme="dark"] .email-form-control,
+    [data-theme="dark"] .email-form-select {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.08);
+        color: #E8EDF5;
+    }
+
+    [data-theme="dark"] .email-form-control::placeholder {
+        color: #6A7A9A;
+    }
+
+    [data-theme="dark"] .email-form-control:focus,
+    [data-theme="dark"] .email-form-select:focus {
+        border-color: #FF6B00;
+        box-shadow: 0 0 0 4px rgba(255,107,0,0.08);
+    }
+
+    [data-theme="dark"] .email-toggle-wrapper {
+        background: rgba(255,107,0,0.04);
+        border-color: rgba(255,107,0,0.08);
+    }
+
+    [data-theme="dark"] .email-toggle-label {
+        color: #E8EDF5;
+    }
+
+    [data-theme="dark"] .email-check-item {
+        background: rgba(255,255,255,0.03);
+        border-color: rgba(255,255,255,0.08);
+        color: #E8EDF5;
+    }
+
+    [data-theme="dark"] .email-check-item:hover {
+        border-color: #FF6B00;
+        background: rgba(255,107,0,0.04);
+    }
+
+    [data-theme="dark"] .email-frequency-item {
+        background: rgba(255,255,255,0.03);
+        border-color: rgba(255,255,255,0.08);
+        color: #A8B8D8;
+    }
+
+    [data-theme="dark"] .email-frequency-item:hover {
+        border-color: #FF6B00;
+        background: rgba(255,107,0,0.04);
+    }
+
+    [data-theme="dark"] .email-frequency-item.active {
+        border-color: #FF6B00;
+        background: rgba(255,107,0,0.08);
+        color: #FF8C38;
+    }
+
+    [data-theme="dark"] .unit-head-item {
+        background: rgba(255,255,255,0.03);
+        border-color: rgba(255,255,255,0.08);
+    }
+
+    [data-theme="dark"] .unit-head-item .unit-label {
+        color: #A8B8D8;
+    }
+
+    [data-theme="dark"] .email-add-btn {
+        border-color: rgba(255,255,255,0.08);
+        color: #A8B8D8;
+    }
+
+    [data-theme="dark"] .email-add-btn:hover {
+        border-color: #FF6B00;
+        color: #FF6B00;
+        background: rgba(255,107,0,0.04);
+    }
+
+    [data-theme="dark"] .email-actions {
+        border-top-color: rgba(255,255,255,0.06);
+    }
+
+    [data-theme="dark"] .email-btn-outline-primary {
+        border-color: #3B82F6;
+        color: #60A5FA;
+    }
+
+    [data-theme="dark"] .email-btn-outline-primary:hover {
+        background: #3B82F6;
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .email-btn-outline-success {
+        border-color: #22C55E;
+        color: #4ADE80;
+    }
+
+    [data-theme="dark"] .email-btn-outline-success:hover {
+        background: #22C55E;
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .email-remove-btn {
+        border-color: #EF4444;
+        color: #F87171;
+    }
+
+    [data-theme="dark"] .email-remove-btn:hover {
+        background: #EF4444;
+        color: #FFFFFF;
+    }
+
+    [data-theme="dark"] .email-alert-success {
+        background: rgba(34,197,94,0.06);
+        border-color: rgba(34,197,94,0.12);
+        color: #4ADE80;
+    }
+
+    [data-theme="dark"] .email-alert-error {
+        background: rgba(239,68,68,0.06);
+        border-color: rgba(239,68,68,0.12);
+        color: #F87171;
+    }
+
+    [data-theme="dark"] .email-alert-warning {
+        background: rgba(245,158,11,0.06);
+        border-color: rgba(245,158,11,0.12);
+        color: #FBBF24;
+    }
+
+    [data-theme="dark"] .email-alert-info {
+        background: rgba(59,130,246,0.06);
+        border-color: rgba(59,130,246,0.12);
+        color: #60A5FA;
+    }
+
+    [data-theme="dark"] .email-form-select option {
+        background: #1A1A2E;
+        color: #E8EDF5;
+    }
+
+    /* ============================================================
+       SCROLLBAR
+    ============================================================ */
+    ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #F8FAFF;
+        border-radius: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #FF6B00;
+        border-radius: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #E55A00;
+    }
+
+    [data-theme="dark"] ::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.03);
+    }
+
+    ::selection {
+        background: #FF6B00;
+        color: #FFFFFF;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<main class="email-report-page">
+
+    <!-- ===== HEADER ===== -->
+    <div class="email-report-header">
+        <div>
+            <h1>
+                <i class="fa-solid fa-calendar-days"></i>
+                Scheduled Email Reports
+            </h1>
+            <p>
+                <i class="fa-regular fa-clock me-1"></i>
+                Send ticket summaries automatically to unit heads and admins
+            </p>
+        </div>
+        <a href="{% url 'settings_page' %}" class="email-report-back">
+            <i class="fa-solid fa-arrow-left"></i> Settings
+        </a>
+    </div>
+
+    <!-- ===== MESSAGES ===== -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="email-alert email-alert-{{ message.tags }}">
+                <i class="fa-solid {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-circle-xmark{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- ===== FORM ===== -->
+    <form method="post" class="email-report-form">
+        {% csrf_token %}
+        <div class="card">
+            <div class="card-body">
+
+                <!-- ===== ENABLE TOGGLE ===== -->
+                <div class="email-toggle-wrapper">
+                    <label class="email-toggle">
+                        <input type="checkbox" name="enabled" id="enabled" {% if schedule.enabled %}checked{% endif %}>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="email-toggle-label">Enable scheduled email reports</span>
+                    <span class="email-toggle-status {% if schedule.enabled %}active{% else %}inactive{% endif %}" id="toggleStatus">
+                        <i class="fa-regular {% if schedule.enabled %}fa-circle-check{% else %}fa-circle-xmark{% endif %}"></i>
+                        {% if schedule.enabled %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+
+                <!-- ===== REPORTS TO SEND ===== -->
+                <div class="email-section-title">
+                    <i class="fa-regular fa-file-lines"></i>
+                    Reports to Send
+                </div>
+                <div class="email-check-group">
+                    {% for value, label in report_choices %}
+                    <label class="email-check-item">
+                        <input type="checkbox" name="reports" value="{{ value }}" id="report_{{ value }}" {% if value in schedule.reports %}checked{% endif %}>
+                        <span>{{ label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <!-- ===== SCHEDULE ===== -->
+                <div class="email-section-title">
+                    <i class="fa-regular fa-clock"></i>
+                    Schedule Settings
+                </div>
+                <div class="email-form-row">
+                    <div>
+                        <label class="email-form-label">Frequency</label>
+                        <div class="email-frequency-group">
+                            {% for value, label in frequency_choices %}
+                            <label class="email-frequency-item {% if value in selected_frequencies %}active{% endif %}" for="frequency_{{ value }}">
+                                <input type="checkbox" name="frequency" value="{{ value }}" id="frequency_{{ value }}" {% if value in selected_frequencies %}checked{% endif %}>
+                                {{ label }}
+                                {% if value == 'weekly' %}
+                                <span style="display:block;font-size:0.55rem;color:var(--text-muted);font-weight:400;">(Monday)</span>
+                                {% elif value == 'monthly' %}
+                                <span style="display:block;font-size:0.55rem;color:var(--text-muted);font-weight:400;">(1st of month)</span>
+                                {% endif %}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="email-form-label" for="send_time">Time</label>
+                        <input class="email-form-control" type="time" name="send_time" id="send_time" value="{{ schedule.send_time|time:'H:i' }}">
+                    </div>
+                </div>
+
+                <!-- ===== SUBJECT ===== -->
+                <div class="email-form-row">
+                    <div class="full-width">
+                        <label class="email-form-label" for="subject_template">Email Subject</label>
+                                    <input class="email-form-control" name="subject_template" id="subject_template" value="{{ schedule.subject_template }}" placeholder="Ticket Report - {% templatetag openvariable %}date{% templatetag closevariable %}">
+                        <div style="font-size:0.6rem;color:#8A9AB8;margin-top:0.15rem;">
+                                        <i class="fa-regular fa-circle-info"></i> Use {% templatetag openvariable %}date{% templatetag closevariable %} for the current date
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== RECIPIENTS ===== -->
+                <div class="email-section-title">
+                    <i class="fa-regular fa-users"></i>
+                    Recipients
+                </div>
+                <div class="email-check-group">
+                    <label class="email-check-item">
+                        <input type="checkbox" name="send_unit_heads" id="send_unit_heads" {% if schedule.send_unit_heads %}checked{% endif %}>
+                        <span>Unit Heads <small style="color:#8A9AB8;font-weight:400;">(receive their unit's reports)</small></span>
+                    </label>
+                    <label class="email-check-item">
+                        <input type="checkbox" name="send_admins" id="send_admins" {% if schedule.send_admins %}checked{% endif %}>
+                        <span>Admins <small style="color:#8A9AB8;font-weight:400;">(receive all reports)</small></span>
+                    </label>
+                </div>
+
+                <!-- ===== ADDITIONAL EMAILS ===== -->
+                <div style="margin-top:0.75rem;">
+                    <label class="email-form-label">Additional Emails</label>
+                    <div class="email-additional-list" id="additionalEmailList">
+                        {% for email in additional_email_list %}
+                        <div class="email-additional-row">
+                            <input class="email-form-control" type="email" name="additional_emails" value="{{ email }}" placeholder="person@example.com">
+                            <button class="email-remove-btn" type="button" aria-label="Remove email">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        {% empty %}
+                        <div class="email-additional-row">
+                            <input class="email-form-control" type="email" name="additional_emails" placeholder="person@example.com">
+                            <button class="email-remove-btn" type="button" aria-label="Remove email">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button class="email-add-btn" type="button" id="addAdditionalEmail">
+                        <i class="fa-solid fa-plus"></i> Add Email
+                    </button>
+                </div>
+
+                <!-- ===== UNITS ===== -->
+                <div class="email-section-title">
+                    <i class="fa-regular fa-building"></i>
+                    Units to Include
+                </div>
+                <label class="email-check-item" style="border-color:#FF6B00;background:rgba(255,107,0,0.03);">
+                    <input type="checkbox" name="all_units" id="all_units" {% if schedule.all_units %}checked{% endif %}>
+                    <span style="font-weight:600;">All Units</span>
+                </label>
+                <div class="email-check-group" style="margin-top:0.3rem;">
+                    {% for unit in units %}
+                    <label class="email-check-item unit-choice">
+                        <input type="checkbox" name="units" value="{{ unit.id }}" id="unit_{{ unit.id }}" {% if unit in schedule.units.all %}checked{% endif %}>
+                        <span>{{ unit.code }} - {{ unit.full_name }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <!-- ===== UNIT HEADS ===== -->
+                <div class="email-section-title">
+                    <i class="fa-regular fa-user-tie"></i>
+                    Unit Heads
+                </div>
+                <p style="font-size:0.75rem;color:#8A9AB8;margin-bottom:0.5rem;">
+                    <i class="fa-regular fa-circle-info"></i>
+                    Set the recipient for each unit. These addresses receive only their unit's reports.
+                </p>
+                <div class="unit-heads-grid">
+                    {% for unit in units %}
+                    {% with head=unit.head %}
+                    <div class="unit-head-item">
+                        <div class="unit-label">{{ unit.code }} Head Name</div>
+                        <input class="email-form-control" name="head_name_{{ unit.id }}" value="{% if head %}{{ head.name }}{% endif %}" placeholder="Enter name">
+                    </div>
+                    <div class="unit-head-item">
+                        <div class="unit-label">{{ unit.code }} Head Email</div>
+                        <input class="email-form-control" type="email" name="head_email_{{ unit.id }}" value="{% if head %}{{ head.email }}{% endif %}" placeholder="Enter email">
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+
+                <!-- ===== ACTIONS ===== -->
+                <div class="email-actions">
+                    <a href="{% url 'settings_page' %}" class="email-report-back">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Settings
+                    </a>
+                    <button class="email-btn email-btn-primary" name="action" value="save">
+                        <i class="fa-solid fa-calendar-check"></i> Save Schedule
+                    </button>
+                    <button class="email-btn email-btn-outline-primary" name="action" value="test">
+                        <i class="fa-solid fa-paper-plane"></i> Send Test Email
+                    </button>
+                    <button class="email-btn email-btn-outline-success" name="action" value="send">
+                        <i class="fa-solid fa-bolt"></i> Send Now
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+
+</main>
+
+<script>
+    // ============================================================
+    // TOGGLE STATUS
+    // ============================================================
+    document.getElementById('enabled').addEventListener('change', function() {
+        const status = document.getElementById('toggleStatus');
+        if (this.checked) {
+            status.className = 'email-toggle-status active';
+            status.innerHTML = '<i class="fa-regular fa-circle-check"></i> Active';
+        } else {
+            status.className = 'email-toggle-status inactive';
+            status.innerHTML = '<i class="fa-regular fa-circle-xmark"></i> Inactive';
+        }
+    });
+
+    // ============================================================
+    // FREQUENCY CHECKBOXES
+    // ============================================================
+    document.querySelectorAll('.email-frequency-item input[type="checkbox"]').forEach(function(input) {
+        input.addEventListener('change', function() {
+            this.closest('.email-frequency-item').classList.toggle('active', this.checked);
+        });
+    });
+
+    // ============================================================
+    // ALL UNITS TOGGLE
+    // ============================================================
+    document.getElementById('all_units').addEventListener('change', function() {
+        document.querySelectorAll('.unit-choice').forEach(function(box) {
+            box.style.opacity = this.checked ? '0.4' : '1';
+            box.style.pointerEvents = this.checked ? 'none' : 'auto';
+            if (this.checked) {
+                box.querySelector('input[type="checkbox"]').checked = false;
+            }
+        }.bind(this));
+    });
+
+    // ============================================================
+    // ADD ADDITIONAL EMAIL
+    // ============================================================
+    const additionalEmailList = document.getElementById('additionalEmailList');
+
+    document.getElementById('addAdditionalEmail').addEventListener('click', function() {
+        const row = document.createElement('div');
+        row.className = 'email-additional-row';
+        row.innerHTML = `
+            <input class="email-form-control" type="email" name="additional_emails" placeholder="person@example.com">
+            <button class="email-remove-btn" type="button" aria-label="Remove email">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        `;
+        additionalEmailList.appendChild(row);
+        row.querySelector('input').focus();
+    });
+
+    // ============================================================
+    // REMOVE ADDITIONAL EMAIL
+    // ============================================================
+    additionalEmailList.addEventListener('click', function(event) {
+        const removeButton = event.target.closest('.email-remove-btn');
+        if (!removeButton) return;
+        const rows = additionalEmailList.querySelectorAll('.email-additional-row');
+        if (rows.length > 1) {
+            removeButton.closest('.email-additional-row').remove();
+        } else {
+            removeButton.closest('.email-additional-row').querySelector('input').value = '';
+        }
+    });
+
+    // ============================================================
+    // INITIAL: DISABLE UNIT CHECKBOXES IF ALL UNITS IS CHECKED
+    // ============================================================
+    (function() {
+        const allUnits = document.getElementById('all_units');
+        if (allUnits && allUnits.checked) {
+            document.querySelectorAll('.unit-choice').forEach(function(box) {
+                box.style.opacity = '0.4';
+                box.style.pointerEvents = 'none';
+                box.querySelector('input[type="checkbox"]').checked = false;
+            });
+        }
+    })();
+</script>
+{% endblock %}

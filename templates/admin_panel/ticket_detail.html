@@ -1000,6 +1000,40 @@
         font-size: 0.8rem;
     }
 
+    /* ========== SUB-ERROR TYPE GROUP ========== */
+    .sub-error-group {
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--input-bg);
+        border-radius: 8px;
+        border: 1px solid var(--ticket-border);
+        display: none;
+        transition: all 0.3s ease;
+    }
+
+    .sub-error-group.show {
+        display: block;
+        animation: fadeInSub 0.3s ease;
+    }
+
+    @keyframes fadeInSub {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .sub-error-group .sub-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+
+    .sub-error-group .sub-label i {
+        color: var(--brand-orange);
+        margin-right: 0.3rem;
+    }
+
     /* ========== SCROLLBAR ========== */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: var(--input-bg); border-radius: 8px; }
@@ -1375,6 +1409,11 @@
     [data-theme="dark"] .btn-download-excel {
         background: linear-gradient(135deg, #22C55E, #16A34A) !important;
     }
+
+    [data-theme="dark"] .sub-error-group {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
 </style>
 {% endblock %}
 
@@ -1562,10 +1601,6 @@
                             <div class="detail-value">{{ ticket.screen_number }}</div>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Error Type</span>
-                            <div class="detail-value">{{ ticket.error_type|default:"Not Set" }}</div>
-                        </div>
-                        <div class="detail-item">
                             <span class="detail-label">Priority</span>
                             <div class="detail-value">
                                 <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
@@ -1606,6 +1641,23 @@
                             <div class="detail-value">{{ ticket.updated_at|date:"d M Y h:i A" }}</div>
                         </div>
 
+                        <!-- ===== CLOSING DETAILS (When Closed) ===== -->
+                        {% if ticket.status == 'Closed' and ticket.closing_details %}
+                        <div class="detail-item closing-details">
+                            <span class="detail-label">Closing Information</span>
+                            <div class="detail-value">
+                                <div class="closing-row">
+                                    <span class="closing-label">Main Error Type</span>
+                                    <span class="closing-value">{{ ticket.closing_details.main_error_type|default:"N/A" }}</span>
+                                </div>
+                                <div class="closing-row">
+                                    <span class="closing-label">Sub Error Type</span>
+                                    <span class="closing-value">{{ ticket.closing_details.sub_error_type|default:"N/A" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         <!-- ===== DESCRIPTION ===== -->
                         <div class="detail-item detail-description">
                             <span class="detail-label">Description</span>
@@ -1631,7 +1683,12 @@
                                         <i class="fa-solid fa-paperclip me-1"></i>Attachment 3
                                     </a>
                                 {% endif %}
-                                {% if not ticket.attachment_1 and not ticket.attachment_2 and not ticket.attachment_3 %}
+                                {% for reopen_attachment in ticket.reopen_attachments.all %}
+                                    <a href="{{ reopen_attachment.file.url }}" target="_blank" class="btn-attachment">
+                                        <i class="fa-solid fa-paperclip me-1"></i>{{ reopen_attachment.file.name|cut:"attachments/reopen/" }}
+                                    </a>
+                                {% endfor %}
+                                {% if not ticket.attachment_1 and not ticket.attachment_2 and not ticket.attachment_3 and not ticket.reopen_attachments.all %}
                                     <span style="color: var(--text-muted); font-size: 0.75rem;">No attachments uploaded</span>
                                 {% endif %}
                             </div>
@@ -1640,7 +1697,7 @@
                 </div>
             </div>
 
-            <!-- ========== STATUS BOXES (Hold Reason - moved to bottom) ========== -->
+            <!-- ========== STATUS BOXES (Hold Reason) ========== -->
             {% if ticket.status == 'Hold' and ticket.hold_reason %}
             <div class="status-box status-box-hold">
                 <strong style="color: var(--warning-color);"><i class="fa-solid fa-pause me-1"></i>Hold Reason</strong>
@@ -1798,9 +1855,9 @@
     </div>
 </div>
 
-<!-- Close Modal -->
+<!-- Close Modal - Updated with new error types -->
 <div class="modal fade" id="closeModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content">
             <form method="POST" id="closeForm">
                 {% csrf_token %}
@@ -1810,19 +1867,25 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <!-- Main Error Type -->
                     <div class="mb-3">
-                        <label class="form-label"><i class="fa-regular fa-circle-exclamation"></i>Error Classification <span class="required">*</span></label>
-                        <select name="error_type" id="errorType" class="form-select" required>
-                            <option value="">-- Select --</option>
-                            <option value="ERP Error">ERP Error</option>
-                            <option value="Data Entry Error">Data Entry Error</option>
-                            <option value="DB Error">DB Error</option>
-                            <option value="Server Error">Server Error</option>
-                            <option value="IT Error">IT Error</option>
-                            <option value="User Error">User Error</option>
-                            <option value="Other">Other</option>
+                        <label class="form-label"><i class="fa-solid fa-bug"></i>Error Type <span class="required">*</span></label>
+                        <select name="main_error_type" id="mainErrorType" class="form-select" required>
+                            <option value="">-- Select Error Type --</option>
+                            <option value="Roadmap Error">Roadmap Error</option>
+                            <option value="GPL Error">GPL Error</option>
                         </select>
                     </div>
+
+                    <!-- Sub Error Type - Dynamic based on main selection -->
+                    <div class="mb-3 sub-error-group" id="subErrorGroup">
+                        <label class="sub-label"><i class="fa-solid fa-chevron-right"></i>Sub Error Type <span class="required">*</span></label>
+                        <select name="sub_error_type" id="subErrorType" class="form-select">
+                            <option value="">-- Select Sub Error Type --</option>
+                        </select>
+                    </div>
+
+                    <!-- Closing Remarks -->
                     <div class="mb-0">
                         <label class="form-label"><i class="fa-regular fa-message"></i>Closing Remarks <span class="required">*</span></label>
                         <textarea name="closing_remarks" id="closingRemarks" class="form-control" rows="3" placeholder="Resolution details" required></textarea>
@@ -1841,7 +1904,7 @@
 <div class="modal fade" id="reopenModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <form method="POST" id="reopenForm">
+            <form method="POST" id="reopenForm" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Reopen">
                 <div class="modal-header bg-reopen">
@@ -1852,6 +1915,9 @@
                     <div class="mb-0">
                         <label class="form-label"><i class="fa-regular fa-message"></i>Reason <span class="required">*</span></label>
                         <textarea name="remarks" id="reopenRemarks" class="form-control" rows="3" placeholder="Reason for reopening" required></textarea>
+                        <label class="form-label mt-3"><i class="fa-solid fa-paperclip"></i> Attachments</label>
+                        <input type="file" name="reopen_attachments" class="form-control" multiple>
+                        <small class="text-muted" style="font-size: 0.65rem;">Add one or more files. Each file can be up to 5 MB.</small>
                     </div>
                     <small class="text-muted d-block mt-2" style="font-size: 0.65rem;">
                         <i class="fa-regular fa-clock me-1"></i>You can only reopen within <strong>48 hours</strong> of closing.
@@ -1936,6 +2002,65 @@
         var deadlineISO = "{{ reopen_deadline_iso|default:'' }}";
         if (deadlineISO && deadlineISO !== '') {
             startCountdown(deadlineISO);
+        }
+
+        // ========== DYNAMIC SUB ERROR TYPES ==========
+        const subErrorOptions = {
+            'Roadmap Error': [
+                'Database Error',
+                'Logic / Functional Error',
+                'Application Error',
+                'Calculation Error',
+                'Report / Print Error',
+                'Workflow / Approval Error',
+                'Integration / API Error',
+                'Barcode Error',
+                'Performance Error',
+                'Access / Permission Error',
+                'Master Data / Configuration Error',
+                'Other ERP Error'
+            ],
+            'GPL Error': [
+                'User / Data Entry Error',
+                'Process / Procedure Error',
+                'Master Data Error',
+                'Other GPL Error'
+            ]
+        };
+
+        const mainErrorSelect = document.getElementById('mainErrorType');
+        const subErrorSelect = document.getElementById('subErrorType');
+        const subErrorGroup = document.getElementById('subErrorGroup');
+
+        if (mainErrorSelect && subErrorSelect && subErrorGroup) {
+            mainErrorSelect.addEventListener('change', function() {
+                const selected = this.value;
+                const subOptions = subErrorOptions[selected] || [];
+
+                // Clear existing options
+                subErrorSelect.innerHTML = '<option value="">-- Select Sub Error Type --</option>';
+
+                if (subOptions.length > 0) {
+                    subOptions.forEach(function(option) {
+                        const opt = document.createElement('option');
+                        opt.value = option;
+                        opt.textContent = option;
+                        subErrorSelect.appendChild(opt);
+                    });
+                    subErrorGroup.classList.add('show');
+                    subErrorSelect.disabled = false;
+                    subErrorSelect.required = true;
+                } else {
+                    subErrorGroup.classList.remove('show');
+                    subErrorSelect.disabled = true;
+                    subErrorSelect.required = false;
+                }
+            });
+
+            // Trigger change on load if value is set
+            if (mainErrorSelect.value) {
+                mainErrorSelect.dispatchEvent(new Event('change'));
+            }
         }
 
         // ========== PREVENT DOUBLE SUBMIT ==========

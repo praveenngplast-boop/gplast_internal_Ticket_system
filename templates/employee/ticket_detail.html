@@ -939,7 +939,13 @@
                             <span class="detail-label">
                                 <i class="fa-regular fa-display"></i> Screen Number
                             </span>
-                            <div class="detail-value">{{ ticket.screen_number }}</div>
+                            <div class="detail-value">
+                                {% if screen_object %}
+                                    {{ screen_object }}
+                                {% else %}
+                                    {{ ticket.screen_number }}
+                                {% endif %}
+                            </div>
                         </div>
 
                         <div class="detail-item">
@@ -1029,7 +1035,12 @@
                                         <i class="fa-solid fa-paperclip me-1"></i>Attachment 3
                                     </a>
                                 {% endif %}
-                                {% if not ticket.attachment_1 and not ticket.attachment_2 and not ticket.attachment_3 %}
+                                {% for reopen_attachment in ticket.reopen_attachments.all %}
+                                    <a href="{{ reopen_attachment.file.url }}" target="_blank" class="btn-attachment">
+                                        <i class="fa-solid fa-paperclip me-1"></i>{{ reopen_attachment.file.name|cut:"attachments/reopen/" }}
+                                    </a>
+                                {% endfor %}
+                                {% if not ticket.attachment_1 and not ticket.attachment_2 and not ticket.attachment_3 and not ticket.reopen_attachments.all %}
                                     <span style="color: var(--text-muted); font-size: 0.75rem;">No attachments uploaded</span>
                                 {% endif %}
                             </div>
@@ -1166,7 +1177,7 @@
 <div class="modal fade" id="reopenModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form method="POST" action="{% url 'ticket_detail' ticket.id %}" id="reopenForm">
+            <form method="POST" action="{% url 'ticket_detail' ticket.id %}" id="reopenForm" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Reopen">
                 <div class="modal-header" style="background: var(--brand-gradient);">
@@ -1181,6 +1192,11 @@
                             <i class="fa-regular fa-message me-1"></i>Reason for Reopening <span class="text-danger">*</span>
                         </label>
                         <textarea name="remarks" class="form-control" rows="4" placeholder="Please describe why this ticket needs to be reopened (e.g., 'The issue is happening again.')" required style="min-height: 80px;"></textarea>
+                        <label class="form-label fw-bold mt-3" style="color: var(--text-secondary); font-size: 0.85rem;">
+                            <i class="fa-solid fa-paperclip me-1"></i>Attachments
+                        </label>
+                        <input type="file" name="reopen_attachments" class="form-control" multiple>
+                        <small class="text-muted" style="font-size: 0.7rem;">Add one or more files. Each file can be up to 5 MB.</small>
                         <small class="text-muted" style="font-size: 0.7rem;">
                             <i class="fa-regular fa-clock me-1"></i>You can only reopen within <strong>48 hours</strong> of closing.
                         </small>

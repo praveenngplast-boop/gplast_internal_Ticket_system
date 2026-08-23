@@ -8,6 +8,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-default-key-for-gplas
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+APP_URL = config('APP_URL', default='http://localhost:8000').rstrip('/')
 
 INSTALLED_APPS = [
     'django.contrib.admin',

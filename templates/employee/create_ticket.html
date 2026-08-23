@@ -34,7 +34,7 @@
         --text-muted-light: #6A7A9A;
     }
 
-    /* ✅ DARK MODE FIX: Dropdown options */
+    /* DARK MODE FIX: Dropdown options */
     [data-theme="dark"] .form-select option,
     [data-theme="dark"] select option,
     [data-theme="dark"] .form-select optgroup,
@@ -199,17 +199,42 @@
         outline: none !important;
     }
 
-    /* CSS-only locking - fields are enabled but look locked */
+    /* ============================================================
+       LOCKED FIELD STYLES - Using readonly/disabled attributes
+    ============================================================ */
     .form-control.field-locked,
     .form-select.field-locked,
-    select.field-locked {
+    select.field-locked,
+    input.field-locked {
         cursor: not-allowed !important;
-        opacity: 0.7;
+        opacity: 0.75;
+        background-color: var(--input-bg-light) !important;
+        border-color: rgba(59, 130, 246, 0.2) !important;
+    }
+
+    /* Override for readonly fields that are locked */
+    .form-control.field-locked:read-only {
+        cursor: not-allowed !important;
+        opacity: 0.75;
+        background-color: var(--input-bg-light) !important;
+        border-color: rgba(59, 130, 246, 0.2) !important;
+    }
+
+    /* Override for disabled selects that are locked */
+    .form-select.field-locked:disabled,
+    select.field-locked:disabled {
+        cursor: not-allowed !important;
+        opacity: 0.75;
+        background-color: var(--input-bg-light) !important;
+        border-color: rgba(59, 130, 246, 0.2) !important;
+    }
+
+    /* ERP User ID - always readonly style */
+    .erp-user-id-wrapper input[readonly] {
+        cursor: not-allowed !important;
+        opacity: 0.85;
         background-color: var(--input-bg-light) !important;
         border-color: rgba(59, 130, 246, 0.15) !important;
-        pointer-events: none !important;
-        -webkit-user-select: none;
-        user-select: none;
     }
 
     textarea {
@@ -227,6 +252,11 @@
         appearance: none !important;
         padding-right: 2.5rem !important;
         cursor: pointer;
+    }
+
+    .form-select:disabled {
+        cursor: not-allowed !important;
+        opacity: 0.75;
     }
 
     .form-select option,
@@ -913,6 +943,27 @@
                             {% if form.employee_id.errors %}<div class="text-danger small mt-1">{{ form.employee_id.errors }}</div>{% endif %}
                         </div>
 
+                        <!-- ERP User ID Field -->
+                        <div class="col-12 col-sm-6">
+                            <label for="erp_user_id" class="form-label">
+                                <i class="fa-solid fa-id-badge"></i>ERP User ID
+                                <span class="auto-fill-badge" id="erpAutoFillBadge" style="display:none;">
+                                    <i class="fa-solid fa-magic me-1"></i>Auto-filled
+                                </span>
+                            </label>
+                            <div class="erp-user-id-wrapper" style="position:relative;">
+                                <input type="text" id="erp_user_id" name="erp_user_id" class="form-control field-locked" 
+                                       placeholder="Auto-filled from mapping" readonly
+                                       style="background: var(--input-bg-light); cursor: default; opacity: 0.85; border-color: rgba(59, 130, 246, 0.15);">
+                                <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color: var(--text-muted-light); font-size:0.7rem; opacity:0.5;">
+                                    <i class="fa-solid fa-link"></i>
+                                </span>
+                            </div>
+                            <div class="char-counter" style="text-align:left;font-size:0.55rem;color:var(--text-muted-light);">
+                                <i class="fa-regular fa-circle-info"></i> Mapped ERP User ID for this employee
+                            </div>
+                        </div>
+
                         <div class="col-12 col-sm-6">
                             <label for="{{ form.employee_name.id_for_label }}" class="form-label">
                                 <i class="fa-regular fa-user"></i>Employee Name
@@ -941,7 +992,7 @@
                             {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
                         </div>
 
-                        <!-- Unit field - CSS locked, NOT disabled -->
+                        <!-- Unit field - LOCKED when validated -->
                         <div class="col-12 col-sm-6">
                             <label for="{{ form.unit.id_for_label }}" class="form-label">
                                 <i class="fa-regular fa-building"></i>Unit / Plant
@@ -957,7 +1008,7 @@
                             {% if form.unit.errors %}<div class="text-danger small mt-1">{{ form.unit.errors }}</div>{% endif %}
                         </div>
 
-                        <!-- Department field - CSS locked, NOT disabled -->
+                        <!-- Department field - LOCKED when validated -->
                         <div class="col-12 col-sm-6">
                             <label for="{{ form.department.id_for_label }}" class="form-label">
                                 <i class="fa-regular fa-layer-group"></i>Department
@@ -992,7 +1043,12 @@
                                 <i class="fa-regular fa-desktop"></i>Screen Number / Module
                                 <span class="required-star">*</span>
                             </label>
-                            {{ form.screen_number }}
+                            <select name="screen_number" id="id_screen_number" class="form-select" required>
+                                <option value="">Please enter Employee ID first</option>
+                                {% if form.screen_number.value %}
+                                <option value="{{ form.screen_number.value }}" selected>{{ form.screen_number.value }}</option>
+                                {% endif %}
+                            </select>
                             <div class="char-counter" id="screen_counter">
                                 <span class="counter-number">0</span> chars
                             </div>
@@ -1012,7 +1068,7 @@
                             {% if form.priority.errors %}<div class="text-danger small mt-1">{{ form.priority.errors }}</div>{% endif %}
                         </div>
 
-                        <!-- ✅ FIXED: Error Type - Only New and Repeated -->
+                        <!-- Error Type - Only New and Repeated -->
                         <div class="col-12 col-sm-6">
                             <label for="{{ form.error_type.id_for_label }}" class="form-label">
                                 <i class="fa-solid fa-bug"></i>Error Type
@@ -1142,6 +1198,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var empNameInput = document.getElementById('id_employee_name');
     var empMobileInput = document.getElementById('id_mobile');
     var empEmailInput = document.getElementById('id_email');
+    var erpUserIdInput = document.getElementById('erp_user_id');
+    var erpAutoFillBadge = document.getElementById('erpAutoFillBadge');
     var unitSelect = document.getElementById('id_unit');
     var deptSelect = document.getElementById('id_department');
     var deptLoading = document.getElementById('dept-loading');
@@ -1171,44 +1229,162 @@ document.addEventListener('DOMContentLoaded', function() {
     var isFetching = false;
 
     // ============================================================
-    // INIT: LOCK FIELDS FOR CREDENTIALED USERS (CSS only, NOT disabled)
+    // CORE LOCKING FUNCTIONS - Using readonly/disabled attributes
     // ============================================================
-    if (isCredentialedUser) {
-        if (unitSelect) {
-            unitSelect.classList.add('field-locked');
-        }
-        if (deptSelect) {
-            deptSelect.classList.add('field-locked');
-        }
-        if (unitLockBadge) unitLockBadge.style.display = 'inline-flex';
-        if (deptLockBadge) deptLockBadge.style.display = 'inline-flex';
-    }
+    
+    /**
+     * Lock all auto-filled fields (Name, Mobile, Email, Unit, Department)
+     * Using readonly for text inputs and disabled for select dropdowns
+     */
+    function lockFields(lock) {
+        // Text inputs - use readonly attribute
+        var textFields = [empNameInput, empMobileInput, empEmailInput];
+        textFields.forEach(function(field) {
+            if (field) {
+                if (lock) {
+                    field.setAttribute('readonly', 'readonly');
+                    field.classList.add('field-locked');
+                    field.style.cursor = 'not-allowed';
+                } else {
+                    field.removeAttribute('readonly');
+                    field.classList.remove('field-locked');
+                    field.style.cursor = '';
+                }
+            }
+        });
 
-    // ============================================================
-    // LOCK/UNLOCK FUNCTIONS - CSS only, NOT disabled
-    // ============================================================
-    function lockUnitDepartment(lock) {
-        if (lock) {
+        // ERP User ID - always readonly (but we'll manage the class)
+        if (erpUserIdInput) {
+            if (lock) {
+                erpUserIdInput.classList.add('field-locked');
+            } else {
+                erpUserIdInput.classList.remove('field-locked');
+            }
+        }
+
+        // Keep auto-filled selects locked visually, but enabled so their values submit.
+        var selectFields = [unitSelect, deptSelect];
+        selectFields.forEach(function(field) {
+            if (field) {
+                if (lock) {
+                    field.setAttribute('aria-disabled', 'true');
+                    field.style.pointerEvents = 'none';
+                    field.classList.add('field-locked');
+                } else {
+                    // Don't remove disabled if user is credentialed
+                    if (!isCredentialedUser) {
+                        field.removeAttribute('aria-disabled');
+                        field.style.pointerEvents = '';
+                        field.classList.remove('field-locked');
+                    }
+                }
+            }
+        });
+
+        // Show/hide lock badges
+        if (unitLockBadge) {
+            unitLockBadge.style.display = (lock && !isCredentialedUser) ? 'inline-flex' : 'none';
+        }
+        if (deptLockBadge) {
+            deptLockBadge.style.display = (lock && !isCredentialedUser) ? 'inline-flex' : 'none';
+        }
+
+        // If user is credentialed, keep their fields locked always
+        if (isCredentialedUser) {
             if (unitSelect) {
+                unitSelect.setAttribute('aria-disabled', 'true');
+                unitSelect.style.pointerEvents = 'none';
                 unitSelect.classList.add('field-locked');
             }
             if (deptSelect) {
+                deptSelect.setAttribute('aria-disabled', 'true');
+                deptSelect.style.pointerEvents = 'none';
                 deptSelect.classList.add('field-locked');
             }
             if (unitLockBadge) unitLockBadge.style.display = 'inline-flex';
             if (deptLockBadge) deptLockBadge.style.display = 'inline-flex';
-        } else {
-            if (!isCredentialedUser) {
-                if (unitSelect) {
-                    unitSelect.classList.remove('field-locked');
+        }
+    }
+
+    /**
+     * Unlock all fields and clear auto-filled values
+     */
+    function unlockAndClearFields() {
+        // Unlock fields
+        lockFields(false);
+        
+        // Clear auto-filled values but preserve if credentialed
+        if (!isCredentialedUser) {
+            [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
+                if (field) {
+                    field.value = '';
+                    field.classList.remove('field-auto-filled');
+                    field.removeAttribute('data-auto-filled');
                 }
-                if (deptSelect) {
-                    deptSelect.classList.remove('field-locked');
-                }
-                if (unitLockBadge) unitLockBadge.style.display = 'none';
-                if (deptLockBadge) deptLockBadge.style.display = 'none';
+            });
+            
+            if (unitSelect) {
+                unitSelect.value = '';
+                unitSelect.classList.remove('field-auto-filled');
+                unitSelect.removeAttribute('data-auto-filled');
+            }
+            if (deptSelect) {
+                deptSelect.value = '';
+                deptSelect.classList.remove('field-auto-filled');
+                deptSelect.removeAttribute('data-auto-filled');
+            }
+            
+            // Clear ERP User ID
+            if (erpUserIdInput) {
+                erpUserIdInput.value = '';
+                erpUserIdInput.style.borderColor = '';
+                erpUserIdInput.style.color = '';
+            }
+            if (erpAutoFillBadge) erpAutoFillBadge.style.display = 'none';
+            
+            // Clear screens
+            var screenSelect = document.getElementById('id_screen_number');
+            if (screenSelect) {
+                screenSelect.innerHTML = '<option value="">Please enter Employee ID first</option>';
             }
         }
+        
+        isAutoFilled = false;
+        employeeValidated = false;
+        employeeMismatch = false;
+    }
+
+    /**
+     * Mark a field as auto-filled
+     */
+    function markFieldAutoFilled(field, isAuto) {
+        if (!field) return;
+        if (isAuto) {
+            field.classList.add('field-auto-filled');
+            field.setAttribute('data-auto-filled', 'true');
+        } else {
+            field.classList.remove('field-auto-filled');
+            field.removeAttribute('data-auto-filled');
+        }
+    }
+
+    // ============================================================
+    // INIT: LOCK FIELDS FOR CREDENTIALED USERS
+    // ============================================================
+    if (isCredentialedUser) {
+        lockFields(true);
+        if (unitSelect) {
+            unitSelect.classList.add('field-locked');
+            unitSelect.setAttribute('aria-disabled', 'true');
+            unitSelect.style.pointerEvents = 'none';
+        }
+        if (deptSelect) {
+            deptSelect.classList.add('field-locked');
+            deptSelect.setAttribute('aria-disabled', 'true');
+            deptSelect.style.pointerEvents = 'none';
+        }
+        if (unitLockBadge) unitLockBadge.style.display = 'inline-flex';
+        if (deptLockBadge) deptLockBadge.style.display = 'inline-flex';
     }
 
     // ============================================================
@@ -1224,6 +1400,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (autoFillBadge) autoFillBadge.style.display = 'none';
         if (validationBadge) validationBadge.style.display = 'none';
+        if (erpAutoFillBadge) erpAutoFillBadge.style.display = 'none';
     }
 
     function showFetchStatus(status, message) {
@@ -1246,8 +1423,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 empFetchMessage.style.textAlign = 'left';
             }
             isFetching = true;
-            clearAutoFilledFields();
-            lockUnitDepartment(false);
+            // Unlock fields while loading
+            if (!isCredentialedUser) {
+                lockFields(false);
+            }
         } else if (status === 'found') {
             employeeValidated = true;
             empFetchStatus.innerHTML = '<i class="fa-regular fa-circle-check"></i>';
@@ -1276,7 +1455,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (empNotFound) empNotFound.classList.remove('show');
             isFetching = false;
             
-            lockUnitDepartment(true);
+            // LOCK ALL FIELDS after successful validation
+            if (!isCredentialedUser) {
+                lockFields(true);
+            }
             
         } else if (status === 'mismatch') {
             employeeMismatch = true;
@@ -1295,6 +1477,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 validationBadge.className = 'validation-badge invalid';
                 validationBadge.innerHTML = '<i class="fa-solid fa-times-circle me-1"></i>Invalid';
             }
+            if (erpAutoFillBadge) erpAutoFillBadge.style.display = 'none';
             
             if (mismatchWarning) {
                 mismatchWarning.classList.add('show');
@@ -1306,13 +1489,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (employeeValid) employeeValid.classList.remove('show');
             if (empNotFound) empNotFound.classList.remove('show');
-            clearAutoFilledFields();
+            
+            // Clear and unlock on mismatch
+            unlockAndClearFields();
             if (empIdInput) {
                 empIdInput.value = '';
                 empIdInput.focus();
             }
             isFetching = false;
-            lockUnitDepartment(false);
             
         } else if (status === 'not-found') {
             employeeMismatch = true;
@@ -1331,6 +1515,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 validationBadge.className = 'validation-badge invalid';
                 validationBadge.innerHTML = '<i class="fa-solid fa-times-circle me-1"></i>Invalid';
             }
+            if (erpAutoFillBadge) erpAutoFillBadge.style.display = 'none';
             if (mismatchWarning) mismatchWarning.classList.remove('show');
             if (employeeValid) employeeValid.classList.remove('show');
             if (empNotFound) {
@@ -1341,24 +1526,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     notFoundSpan.textContent = 'Employee ID not found. Please check and try again.';
                 }
             }
-            clearAutoFilledFields();
+            
+            // Clear and unlock on not found
+            unlockAndClearFields();
             if (empIdInput) {
                 empIdInput.value = '';
                 empIdInput.focus();
             }
             isFetching = false;
-            lockUnitDepartment(false);
-        }
-    }
-
-    function markFieldAutoFilled(field, isAuto) {
-        if (!field) return;
-        if (isAuto) {
-            field.classList.add('field-auto-filled');
-            field.setAttribute('data-auto-filled', 'true');
-        } else {
-            field.classList.remove('field-auto-filled');
-            field.removeAttribute('data-auto-filled');
         }
     }
 
@@ -1374,65 +1549,86 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (autoFillBadge) autoFillBadge.style.display = 'none';
         if (validationBadge) validationBadge.style.display = 'none';
+        if (erpAutoFillBadge) erpAutoFillBadge.style.display = 'none';
         if (mismatchWarning) mismatchWarning.classList.remove('show');
         if (employeeValid) employeeValid.classList.remove('show');
         if (empNotFound) empNotFound.classList.remove('show');
         employeeMismatch = false;
         employeeValidated = false;
         isFetching = false;
-        lockUnitDepartment(false);
+        
+        // Unlock fields when clearing status (unless credentialed)
+        if (!isCredentialedUser) {
+            lockFields(false);
+        }
     }
 
     function autoFillEmployeeDetails(data) {
         if (employeeMismatch || !data) return;
 
         isAutoFilled = true;
+        employeeValidated = true;
 
+        // Fill Employee Name
         if (data.employee_name) {
             empNameInput.value = data.employee_name;
             markFieldAutoFilled(empNameInput, true);
         }
+
+        // Fill Mobile
         if (data.mobile) {
             empMobileInput.value = data.mobile;
             markFieldAutoFilled(empMobileInput, true);
         }
+
+        // Fill Email
         if (data.email) {
             empEmailInput.value = data.email;
             markFieldAutoFilled(empEmailInput, true);
         }
 
+        // Fill ERP User ID
+        if (data.erp_user_id && erpUserIdInput) {
+            erpUserIdInput.value = data.erp_user_id;
+            erpUserIdInput.style.borderColor = 'var(--success-color)';
+            erpUserIdInput.style.color = 'var(--success-color)';
+            if (erpAutoFillBadge) {
+                erpAutoFillBadge.style.display = 'inline-block';
+                erpAutoFillBadge.innerHTML = '<i class="fa-solid fa-magic me-1"></i>Auto-filled';
+            }
+            // Fetch mapped screens
+            fetchScreensForErp(data.erp_user_id);
+        } else if (erpUserIdInput) {
+            erpUserIdInput.value = 'Not mapped';
+            erpUserIdInput.style.borderColor = 'var(--warning-color)';
+            erpUserIdInput.style.color = 'var(--warning-color)';
+            if (erpAutoFillBadge) erpAutoFillBadge.style.display = 'none';
+            // Clear screens
+            const screenSelect = document.getElementById('id_screen_number');
+            if (screenSelect) {
+                screenSelect.innerHTML = '<option value="">No screens mapped for this ERP ID</option>';
+            }
+        }
+
+        // Fill Unit
         if (data.unit_id && unitSelect) {
             unitSelect.value = data.unit_id;
             markFieldAutoFilled(unitSelect, true);
             loadDepartments(data.unit_id, data.department_id, true);
         }
         
+        // Fill Department
         if (data.department_id && deptSelect) {
             if (deptSelect.querySelector('option[value="' + data.department_id + '"]')) {
                 deptSelect.value = data.department_id;
                 markFieldAutoFilled(deptSelect, true);
             }
         }
-        
-        lockUnitDepartment(true);
-    }
 
-    function clearAutoFilledFields() {
-        [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
-            if (field && field.getAttribute('data-auto-filled') === 'true') {
-                field.value = '';
-                markFieldAutoFilled(field, false);
-            }
-        });
-        if (unitSelect && unitSelect.getAttribute('data-auto-filled') === 'true') {
-            unitSelect.value = '';
-            markFieldAutoFilled(unitSelect, false);
+        // LOCK ALL FIELDS after filling
+        if (!isCredentialedUser) {
+            lockFields(true);
         }
-        if (deptSelect && deptSelect.getAttribute('data-auto-filled') === 'true') {
-            deptSelect.value = '';
-            markFieldAutoFilled(deptSelect, false);
-        }
-        isAutoFilled = false;
     }
 
     // ============================================================
@@ -1448,8 +1644,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!trimmedId || trimmedId.length < 2) {
             clearFetchStatus();
-            clearAutoFilledFields();
+            unlockAndClearFields();
             employeeMismatch = false;
+            // If credentialed, re-lock
+            if (isCredentialedUser) {
+                lockFields(true);
+            }
             return;
         }
 
@@ -1475,7 +1675,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.mismatch) {
                         var errorMsg = data.message || 'Employee belongs to a different department/unit.';
                         showFetchStatus('mismatch', errorMsg);
-                        clearAutoFilledFields();
+                        unlockAndClearFields();
                         if (empIdInput) {
                             empIdInput.value = '';
                             empIdInput.focus();
@@ -1486,7 +1686,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 } else {
                     showFetchStatus('not-found', data.message || 'Employee ID not found. Please check and try again.');
-                    clearAutoFilledFields();
+                    unlockAndClearFields();
                     if (empIdInput) {
                         empIdInput.value = '';
                         empIdInput.focus();
@@ -1496,7 +1696,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(function(err) {
                 console.error('Fetch error:', err);
                 showFetchStatus('not-found', 'Error fetching employee. Please try again.');
-                clearAutoFilledFields();
+                unlockAndClearFields();
             });
         }, 800);
     }
@@ -1515,9 +1715,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (value.length < 2) {
                 clearFetchStatus();
-                clearAutoFilledFields();
+                unlockAndClearFields();
                 employeeMismatch = false;
-                lockUnitDepartment(false);
+                if (isCredentialedUser) {
+                    lockFields(true);
+                } else {
+                    lockFields(false);
+                }
                 return;
             }
 
@@ -1555,29 +1759,79 @@ document.addEventListener('DOMContentLoaded', function() {
     [empNameInput, empMobileInput, empEmailInput].forEach(function(field) {
         if (field) {
             field.addEventListener('input', function() {
+                // If field is locked (readonly), don't allow editing
+                if (this.hasAttribute('readonly')) {
+                    // If user tries to type in a locked field, revert the value
+                    this.value = this.defaultValue || '';
+                    return;
+                }
+                
                 if (this.getAttribute('data-auto-filled') === 'true') {
                     markFieldAutoFilled(this, false);
                     employeeValidated = false;
                     if (validationBadge) validationBadge.style.display = 'none';
                     if (employeeValid) employeeValid.classList.remove('show');
-                    lockUnitDepartment(false);
+                    // Unlock fields if user manually edits
+                    if (!isCredentialedUser) {
+                        lockFields(false);
+                    }
                 }
             });
         }
     });
 
     // ============================================================
-    // UNIT SELECT CHANGE - CLEAR EMPLOYEE VALIDATION
+    // UNIT SELECT CHANGE - Clear validation
     // ============================================================
-    if (unitSelect && !unitSelect.classList.contains('field-locked')) {
+    if (unitSelect) {
         unitSelect.addEventListener('change', function() {
+            // If unit is disabled (locked), don't allow changes
+            if (this.hasAttribute('disabled')) {
+                // Revert to previous value if user tries to change
+                var currentVal = this.value;
+                var prevVal = this.getAttribute('data-locked-value') || '';
+                if (currentVal !== prevVal) {
+                    this.value = prevVal;
+                }
+                return;
+            }
+            
             markFieldAutoFilled(this, false);
             employeeValidated = false;
             employeeMismatch = false;
             clearFetchStatus();
-            clearAutoFilledFields();
+            unlockAndClearFields();
             if (empIdInput) empIdInput.value = '';
-            lockUnitDepartment(false);
+            if (!isCredentialedUser) {
+                lockFields(false);
+            }
+        });
+    }
+
+    // ============================================================
+    // DEPARTMENT SELECT CHANGE - Clear validation
+    // ============================================================
+    if (deptSelect) {
+        deptSelect.addEventListener('change', function() {
+            // If dept is disabled (locked), don't allow changes
+            if (this.hasAttribute('disabled')) {
+                var currentVal = this.value;
+                var prevVal = this.getAttribute('data-locked-value') || '';
+                if (currentVal !== prevVal) {
+                    this.value = prevVal;
+                }
+                return;
+            }
+            
+            markFieldAutoFilled(this, false);
+            employeeValidated = false;
+            employeeMismatch = false;
+            clearFetchStatus();
+            unlockAndClearFields();
+            if (empIdInput) empIdInput.value = '';
+            if (!isCredentialedUser) {
+                lockFields(false);
+            }
         });
     }
 
@@ -1589,11 +1843,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!deptSelect) return;
         if (!unitId) {
             deptSelect.innerHTML = '<option value="">Select Unit First</option>';
-            deptSelect.disabled = true;
+            if (!isCredentialedUser) {
+                deptSelect.removeAttribute('aria-disabled');
+                deptSelect.style.pointerEvents = '';
+            }
             return;
         }
         if (deptLoading) deptLoading.style.display = 'block';
-        deptSelect.disabled = true;
+        if (!isCredentialedUser) {
+            deptSelect.setAttribute('aria-disabled', 'true');
+            deptSelect.style.pointerEvents = 'none';
+        }
         deptSelect.innerHTML = '<option value="">Loading departments...</option>';
 
         fetch('/ajax/get-departments/?unit_id=' + unitId, {
@@ -1629,34 +1889,81 @@ document.addEventListener('DOMContentLoaded', function() {
                         markFieldAutoFilled(deptSelect, true);
                     }
                 }
-                if (lockAfterLoad && employeeValidated) {
+                
+                // Only lock if employee is validated
+                if (lockAfterLoad && employeeValidated && !isCredentialedUser) {
+                    deptSelect.setAttribute('aria-disabled', 'true');
+                    deptSelect.style.pointerEvents = 'none';
                     deptSelect.classList.add('field-locked');
-                    deptSelect.style.opacity = '0.7';
-                } else {
+                } else if (!isCredentialedUser) {
+                    deptSelect.removeAttribute('aria-disabled');
+                    deptSelect.style.pointerEvents = '';
                     deptSelect.classList.remove('field-locked');
-                    deptSelect.style.opacity = '1';
                 }
-                deptSelect.disabled = false;
+                
+                if (isCredentialedUser) {
+                    deptSelect.setAttribute('aria-disabled', 'true');
+                    deptSelect.style.pointerEvents = 'none';
+                    deptSelect.classList.add('field-locked');
+                }
             } else {
                 deptSelect.innerHTML += '<option value="">No departments available</option>';
-                deptSelect.disabled = false;
+                if (!isCredentialedUser) {
+                    deptSelect.removeAttribute('aria-disabled');
+                    deptSelect.style.pointerEvents = '';
+                }
             }
             if (deptLoading) deptLoading.style.display = 'none';
         })
         .catch(function(err) {
             deptSelect.innerHTML = '<option value="">Error loading departments</option>';
-            deptSelect.disabled = false;
+            if (!isCredentialedUser) {
+                deptSelect.removeAttribute('aria-disabled');
+                deptSelect.style.pointerEvents = '';
+            }
             if (deptLoading) deptLoading.style.display = 'none';
         });
     }
 
-    if (unitSelect && !unitSelect.classList.contains('field-locked')) {
-        unitSelect.addEventListener('change', function() {
-            loadDepartments(this.value);
-        });
+    // Load departments on unit change only if unit is not locked
+    if (unitSelect) {
         if (unitSelect.value) {
-            loadDepartments(unitSelect.value, deptSelect ? deptSelect.value : null);
+            loadDepartments(unitSelect.value, deptSelect ? deptSelect.value : null, employeeValidated);
         }
+    }
+
+    // ============================================================
+    // FETCH SCREENS FOR ERP ID
+    // ============================================================
+    function fetchScreensForErp(erpUserId) {
+        const screenSelect = document.getElementById('id_screen_number');
+        if (!screenSelect) return;
+        
+        screenSelect.innerHTML = '<option value="">Loading screens...</option>';
+        
+        fetch('/ajax/get-screens-for-erp/?erp_user_id=' + encodeURIComponent(erpUserId))
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.screens && data.screens.length > 0) {
+                    let options = '<option value="">Select Screen/Module</option>';
+                    data.screens.forEach(s => {
+                        options += `<option value="${s.screen_code}">${s.display}</option>`;
+                    });
+                    screenSelect.innerHTML = options;
+                    
+                    // Recover previous selection if we had an error validation reload
+                    const preVal = "{{ form.screen_number.value|default:'' }}";
+                    if (preVal && data.screens.some(s => s.screen_code === preVal)) {
+                        screenSelect.value = preVal;
+                    }
+                } else {
+                    screenSelect.innerHTML = '<option value="">No screens mapped for this ERP ID</option>';
+                }
+            })
+            .catch(err => {
+                console.error("Failed to fetch screens", err);
+                screenSelect.innerHTML = '<option value="">Error loading screens</option>';
+            });
     }
 
     // ============================================================

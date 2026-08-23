@@ -21,19 +21,41 @@
         indigo: '#6366F1',
         pink: '#EC4899',
         status: {
-            'Open': '#48bb78',
-            'Assigned': '#4299e1',
-            'Hold': '#ed8936',
-            'Escalated': '#9f7aea',
-            'Closed': '#718096'
+            'Open': '#22C55E',
+            'Assigned': '#3B82F6',
+            'Hold': '#F59E0B',
+            'Escalated': '#8B5CF6',
+            'Closed': '#94A3B8'
         },
         priority: {
-            'Critical': '#fc8181',
-            'High': '#ed8936',
-            'Medium': '#4299e1',
-            'Low': '#48bb78'
+            'Critical': '#EF4444',
+            'High': '#F59E0B',
+            'Medium': '#3B82F6',
+            'Low': '#22C55E'
         },
+        // ✅ NEW: Error Type Colors - Roadmap Error (Purple), GPL Error (Green)
         errorType: {
+            'Roadmap Error': '#8B5CF6',
+            'GPL Error': '#10B981',
+            'Database Error': '#8B5CF6',
+            'Logic / Functional Error': '#A78BFA',
+            'Application Error': '#7C3AED',
+            'Calculation Error': '#6D28D9',
+            'Report / Print Error': '#5B21B6',
+            'Workflow / Approval Error': '#4C1D95',
+            'Integration / API Error': '#3B82F6',
+            'Barcode Error': '#06B6D4',
+            'Performance Error': '#F59E0B',
+            'Access / Permission Error': '#EF4444',
+            'Master Data / Configuration Error': '#6366F1',
+            'Other ERP Error': '#94A3B8',
+            'User / Data Entry Error': '#10B981',
+            'Process / Procedure Error': '#34D399',
+            'Master Data Error': '#059669',
+            'Other GPL Error': '#047857',
+            'New': '#22C55E',
+            'Repeated': '#F59E0B',
+            // Legacy error types
             'ERP Error': '#EF4444',
             'Data Entry Error': '#F59E0B',
             'DB Error': '#3B82F6',
@@ -484,7 +506,7 @@
     }
 
     // ============================================
-    // ✅ NEW: CREATE ERROR TYPE CHART
+    // ✅ UPDATED: CREATE ERROR TYPE CHART
     // ============================================
     function createErrorTypeChart(canvasId, data, drillDownFunction) {
         const ctx = document.getElementById(canvasId);
@@ -494,8 +516,8 @@
         
         // If no data, show empty state
         if (chartData.labels.length === 0) {
-            ctx.style.display = 'none';
-            const container = document.getElementById(canvasId + 'Container');
+            // Show empty state if container exists
+            const container = document.getElementById(canvasId + 'Container') || ctx.parentElement;
             if (container) {
                 let emptyMsg = container.querySelector('.chart-empty-msg');
                 if (!emptyMsg) {
@@ -513,6 +535,7 @@
                     `;
                     container.appendChild(emptyMsg);
                 }
+                ctx.style.display = 'none';
             }
             return null;
         }
@@ -524,13 +547,36 @@
             COLORS.errorType[label] || COLORS.grey
         );
         
+        // Check if we have Roadmap Error or GPL Error - if so, use specific colors
+        const hasRoadmap = chartData.labels.some(l => l === 'Roadmap Error' || l.includes('Roadmap'));
+        const hasGPL = chartData.labels.some(l => l === 'GPL Error' || l.includes('GPL'));
+        
+        // If we have main error types, use specific colors
+        const finalColors = chartData.labels.map(label => {
+            if (label === 'Roadmap Error' || label === 'Roadmap') return '#8B5CF6';
+            if (label === 'GPL Error' || label === 'GPL') return '#10B981';
+            if (label === 'Database Error' || label === 'Logic / Functional Error' || 
+                label === 'Application Error' || label === 'Calculation Error' ||
+                label === 'Report / Print Error' || label === 'Workflow / Approval Error' ||
+                label === 'Integration / API Error' || label === 'Barcode Error' ||
+                label === 'Performance Error' || label === 'Access / Permission Error' ||
+                label === 'Master Data / Configuration Error' || label === 'Other ERP Error') {
+                return '#8B5CF6'; // Roadmap sub-errors
+            }
+            if (label === 'User / Data Entry Error' || label === 'Process / Procedure Error' ||
+                label === 'Master Data Error' || label === 'Other GPL Error') {
+                return '#10B981'; // GPL sub-errors
+            }
+            return COLORS.errorType[label] || COLORS.grey;
+        });
+        
         return new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: chartData.labels,
                 datasets: [{
                     data: chartData.values,
-                    backgroundColor: colors,
+                    backgroundColor: finalColors,
                     borderWidth: 2,
                     borderColor: theme.borderColor,
                     hoverOffset: 15,
@@ -657,7 +703,7 @@
             department: null,
             deptStatus: null,
             deptPriority: null,
-            errorType: null  // ✅ ADDED ERROR TYPE
+            errorType: null  // ✅ ERROR TYPE CHART
         };
 
         // Admin Dashboard Charts
@@ -693,11 +739,13 @@
                 );
             }
 
-            // ✅ ADDED: Error Type Chart
+            // ✅ UPDATED: Error Type Chart - uses mainErrorType or errorType
             if (document.getElementById('errorTypeChart')) {
+                // Use mainErrorType first, fallback to errorType
+                const errorData = data.mainErrorType || data.errorType || {};
                 charts.errorType = createErrorTypeChart(
                     'errorTypeChart',
-                    data.errorType || {},
+                    errorData,
                     function(errorType) {
                         if (config.drillDown) config.drillDown.errorType(errorType);
                     }
