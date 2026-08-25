@@ -1596,10 +1596,19 @@
                             <span class="detail-label">Department</span>
                             <div class="detail-value">{{ ticket.department.name }}</div>
                         </div>
+
+                        <!-- ===== SCREEN / MODULE - ✅ FIXED ===== -->
                         <div class="detail-item">
                             <span class="detail-label">Screen / Module</span>
-                            <div class="detail-value">{{ ticket.screen_number }}</div>
+                            <div class="detail-value">
+                                {% if screen_object %}
+                                    {{ screen_object.screen_name }}
+                                {% else %}
+                                    {{ ticket.screen_number }}
+                                {% endif %}
+                            </div>
                         </div>
+
                         <div class="detail-item">
                             <span class="detail-label">Priority</span>
                             <div class="detail-value">
@@ -1642,17 +1651,17 @@
                         </div>
 
                         <!-- ===== CLOSING DETAILS (When Closed) ===== -->
-                        {% if ticket.status == 'Closed' and ticket.closing_details %}
+                        {% if ticket.status == 'Closed' %}
                         <div class="detail-item closing-details">
                             <span class="detail-label">Closing Information</span>
                             <div class="detail-value">
                                 <div class="closing-row">
                                     <span class="closing-label">Main Error Type</span>
-                                    <span class="closing-value">{{ ticket.closing_details.main_error_type|default:"N/A" }}</span>
+                                    <span class="closing-value">{{ ticket.main_error_type|default:"N/A" }}</span>
                                 </div>
                                 <div class="closing-row">
                                     <span class="closing-label">Sub Error Type</span>
-                                    <span class="closing-value">{{ ticket.closing_details.sub_error_type|default:"N/A" }}</span>
+                                    <span class="closing-value">{{ ticket.sub_error_type|default:"N/A" }}</span>
                                 </div>
                             </div>
                         </div>
@@ -1742,7 +1751,7 @@
                                     {% if log.remarks %}
                                     <div class="timeline-body">{{ log.remarks }}</div>
                                     {% endif %}
-                                    <span class="timeline-by">By: {{ log.performed_by }}</span>
+                                    <span class="timeline-by">By: {{ log.get_performed_by_display }}</span>
                                 </div>
                             </li>
                             {% empty %}

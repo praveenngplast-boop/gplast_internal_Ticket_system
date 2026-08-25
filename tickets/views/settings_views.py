@@ -354,7 +354,7 @@ def download_audit_log_excel(request):
         ws.cell(row=row_idx, column=7).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         ws.cell(row=row_idx, column=7).border = thin_border
         
-        ws.cell(row=row_idx, column=8, value=log.performed_by_name).font = data_font
+        ws.cell(row=row_idx, column=8, value=log.get_performed_by_display()).font = data_font
         ws.cell(row=row_idx, column=8).alignment = Alignment(horizontal='left', vertical='center')
         ws.cell(row=row_idx, column=8).border = thin_border
         

@@ -1445,6 +1445,7 @@
                                     {{ ticket.subject }}
                                 </span>
                             </td>
+                            <!-- ✅ FIXED: Use ticket.screen_number instead of ticket.get_screen_display -->
                             <td>
                                 <span style="font-size:0.75rem; font-weight:600; color:var(--text-secondary);">
                                     {{ ticket.screen_number|default:"—" }}
@@ -1526,7 +1527,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="12">
+                            <td colspan="13">
                                 <div class="empty-state">
                                     <span class="empty-icon"><i class="fa-regular fa-folder-open"></i></span>
                                     <h4>No Tickets Found</h4>

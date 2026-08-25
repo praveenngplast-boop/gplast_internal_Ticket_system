@@ -107,7 +107,19 @@ gplast_internal_Ticket_system/
 /custom-admin/settings/communication/
 /custom-admin/settings/audit/
 /custom-admin/settings/audit/download-excel/
+/custom-admin/settings/backup/
 ```
+
+## Settings Dashboard Structure
+
+The administrator Settings dashboard in `templates/admin_panel/settings_index.html` is organized into four sections:
+
+- **Configuration:** Units & Departments, Communication, and Department Credentials
+- **People & Access:** Employee Master, Department Employees, and ERP User ID Mapping
+- **System Records:** Audit Logs, Screen Master, and Screen Mapping
+- **Backup & Recovery:** Full System Backup, which downloads all application records as a timestamped Excel workbook
+
+The Settings dashboard and backup route are available only to administrator accounts.
 
 ## On-Premises Dell Server Requirements
 

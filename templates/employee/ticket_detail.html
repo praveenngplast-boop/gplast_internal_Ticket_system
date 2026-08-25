@@ -935,13 +935,14 @@
                             <div class="detail-value">{{ ticket.department.name }}</div>
                         </div>
 
+                        <!-- ✅ FIXED: Screen Number - No longer uses get_screen_display -->
                         <div class="detail-item">
                             <span class="detail-label">
                                 <i class="fa-regular fa-display"></i> Screen Number
                             </span>
                             <div class="detail-value">
                                 {% if screen_object %}
-                                    {{ screen_object }}
+                                    {{ screen_object.screen_name }}
                                 {% else %}
                                     {{ ticket.screen_number }}
                                 {% endif %}
@@ -1121,7 +1122,7 @@
                                         {% endif %}
                                         <span class="timeline-by">
                                             <i class="fa-regular fa-user me-1"></i>
-                                            By: {{ log.performed_by }}
+                                            By: {{ log.get_performed_by_display }}
                                         </span>
                                     </div>
                                 </li>

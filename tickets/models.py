@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User
 import re
 
@@ -335,6 +336,15 @@ class Ticket(models.Model):
 
     def __str__(self):
         return f"{self.ticket_number} - {self.subject}"
+
+    def get_screen_display(self):
+        """Return the screen name and code for legacy code or ID values."""
+        screen = ScreenMaster.objects.filter(
+            Q(screen_code=self.screen_number) | Q(pk=self.screen_number)
+        ).first()
+        if screen:
+            return f'{screen.screen_name} ({screen.screen_code})'
+        return self.screen_number or 'Not Set'
     
     # ============================================================
     # HELPER METHODS
@@ -388,6 +398,14 @@ class TicketHistory(models.Model):
 
     def __str__(self):
         return f"{self.ticket.ticket_number} - {self.action} ({self.timestamp})"
+
+    def get_performed_by_display(self):
+        """Return a readable user label for current and legacy history rows."""
+        if self.performed_by and self.performed_by.isdigit():
+            user = User.objects.filter(pk=int(self.performed_by)).first()
+            if user:
+                return user.get_full_name() or user.username
+        return self.performed_by or 'System'
 
 
 class ReopenAttachment(models.Model):
@@ -449,6 +467,16 @@ class SettingsAuditLog(models.Model):
     
     def __str__(self):
         return f"{self.performed_by_name} - {self.action_type} - {self.setting_name} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+    def get_performed_by_display(self):
+        """Return a readable user label for current and legacy audit rows."""
+        if self.performed_by:
+            return self.performed_by.get_full_name() or self.performed_by.username
+        if self.performed_by_name and self.performed_by_name.isdigit():
+            user = User.objects.filter(pk=int(self.performed_by_name)).first()
+            if user:
+                return user.get_full_name() or user.username
+        return self.performed_by_name or 'System'
 
 
 # ============================================================

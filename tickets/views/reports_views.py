@@ -51,7 +51,7 @@ def _aging_category(days):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
 def escalated_aging_report(request):
     """Show and export currently escalated tickets grouped by age."""
     now = timezone.now()
@@ -172,7 +172,7 @@ def escalated_aging_report(request):
 # REPORTS VIEW - COMPLETELY REWRITTEN
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
 def reports(request):
     """
     Reports page with advanced filtering and export
@@ -373,7 +373,7 @@ def reports(request):
     ).values_list('erp_user_id', flat=True).distinct().order_by('erp_user_id')
     
     # ============================================================
-    # EXPORT TO EXCEL
+    # EXPORT TO EXCEL - ✅ FIXED
     # ============================================================
     if 'export' in request.GET:
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -431,7 +431,9 @@ def reports(request):
             row_data = [
                 t.ticket_number, t.status, t.unit.code if t.unit else '', t.unit.full_name if t.unit else '',
                 t.department.name if t.department else '', t.employee_id, t.erp_id, t.employee_name,
-                t.mobile, t.email, t.screen_number, t.subject, t.description, t.priority,
+                t.mobile, t.email, 
+                t.screen_number,  # ✅ FIXED: Use screen_number instead of get_screen_display
+                t.subject, t.description, t.priority,
                 t.error_type, t.created_by_role, ttc, t.admin_creation_reason or '',
                 t.assigned_person or '', t.hold_reason or '', t.main_error_type or 'N/A',
                 t.sub_error_type or 'N/A', t.closing_remarks or '', t.closed_by or '',
@@ -526,10 +528,10 @@ def reports(request):
 
 
 # ============================================================
-# DOWNLOAD TICKET EXCEL
+# DOWNLOAD TICKET EXCEL - ✅ FIXED
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
 def download_ticket_excel(request, pk):
     """Export single ticket details to Excel"""
     ticket = get_object_or_404(Ticket, pk=pk)
@@ -593,8 +595,8 @@ def download_ticket_excel(request, pk):
         ('Priority', ticket.priority),
         ('Status', ticket.status),
         ('Error Type', ticket.error_type or 'Not Set'),
-        ('Created Date', ticket.created_at.strftime('%d-%b-%Y %I:%M %p') if ticket.created_at else ''),
-        ('Updated Date', ticket.updated_at.strftime('%d-%b-%Y %I:%M %p') if ticket.updated_at else ''),
+        ('Created Date', timezone.localtime(ticket.created_at).strftime('%d-%b-%Y %I:%M %p') if ticket.created_at else ''),
+        ('Updated Date', timezone.localtime(ticket.updated_at).strftime('%d-%b-%Y %I:%M %p') if ticket.updated_at else ''),
     ]
     
     for label, value in basic_info:
@@ -626,6 +628,7 @@ def download_ticket_excel(request, pk):
         ('Email', ticket.email),
         ('Unit', ticket.unit.full_name if ticket.unit else ''),
         ('Department', ticket.department.name if ticket.department else ''),
+        # ✅ FIXED: Use screen_number instead of get_screen_display
         ('Screen/Module', ticket.screen_number),
     ]
     
@@ -684,7 +687,7 @@ def download_ticket_excel(request, pk):
         
         closing_info = [
             ('Closed By', ticket.closed_by or ''),
-            ('Closed Date', ticket.closed_at.strftime('%d-%b-%Y %I:%M %p') if ticket.closed_at else ''),
+            ('Closed Date', timezone.localtime(ticket.closed_at).strftime('%d-%b-%Y %I:%M %p') if ticket.closed_at else ''),
             ('Main Error Type', ticket.main_error_type or 'N/A'),
             ('Sub Error Type', ticket.sub_error_type or 'N/A'),
             ('Closing Remarks', ticket.closing_remarks or ''),
@@ -724,7 +727,7 @@ def download_ticket_excel(request, pk):
     row += 1
     
     for history in ticket.history.all().order_by('timestamp'):
-        ws.cell(row=row, column=1, value=history.timestamp.strftime('%d-%b-%Y %I:%M %p')).font = history_data_font
+        ws.cell(row=row, column=1, value=timezone.localtime(history.timestamp).strftime('%d-%b-%Y %I:%M %p')).font = history_data_font
         ws.cell(row=row, column=1).border = thin_border
         ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         ws.cell(row=row, column=2, value=history.action).font = history_data_font
@@ -733,7 +736,7 @@ def download_ticket_excel(request, pk):
         ws.cell(row=row, column=3, value=history.remarks or '').font = history_data_font
         ws.cell(row=row, column=3).border = thin_border
         ws.cell(row=row, column=3).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
-        ws.cell(row=row, column=4, value=history.performed_by).font = history_data_font
+        ws.cell(row=row, column=4, value=history.get_performed_by_display()).font = history_data_font
         ws.cell(row=row, column=4).border = thin_border
         ws.cell(row=row, column=4).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         row += 1
@@ -759,10 +762,10 @@ def download_ticket_excel(request, pk):
 
 
 # ============================================================
-# EXPORT CLOSED TICKETS (LAST 30 DAYS) TO EXCEL
+# EXPORT CLOSED TICKETS (LAST 30 DAYS) TO EXCEL - ✅ FIXED
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
 def export_closed_tickets_30_days(request):
     """Export closed tickets from the last 30 days to Excel"""
     thirty_days_ago = timezone.now() - timedelta(days=30)
@@ -822,7 +825,8 @@ def export_closed_tickets_30_days(request):
     
     headers = [
         'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
-        'Employee ID', 'ERP ID', 'Employee Name', 'Mobile', 'Email', 'Screen/Module',
+        'Employee ID', 'ERP ID', 'Employee Name', 'Mobile', 'Email', 
+        'Screen/Module',  # ✅ This column will use screen_number
         'Subject', 'Description', 'Priority', 'Error Type', 'Created By Role',
         'Admin Creation Reason', 'Assigned Person', 'Hold Reason',
         'Main Error Type', 'Sub Error Type', 'Closing Remarks', 'Closed By', 
@@ -859,7 +863,8 @@ def export_closed_tickets_30_days(request):
             ticket.ticket_number, ticket.status, ticket.unit.code if ticket.unit else '',
             ticket.unit.full_name if ticket.unit else '', ticket.department.name if ticket.department else '',
             ticket.employee_id, erp_id, ticket.employee_name, ticket.mobile, ticket.email,
-            ticket.screen_number, ticket.subject, ticket.description or '', ticket.priority,
+            ticket.screen_number,  # ✅ FIXED: Use screen_number instead of get_screen_display
+            ticket.subject, ticket.description or '', ticket.priority,
             ticket.error_type or '', ticket.created_by_role, ticket.admin_creation_reason or '',
             ticket.assigned_person or '', ticket.hold_reason or '', ticket.main_error_type or 'N/A',
             ticket.sub_error_type or 'N/A', ticket.closing_remarks or '', ticket.closed_by or '',

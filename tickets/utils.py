@@ -244,8 +244,8 @@ def send_ticket_email(ticket, action, remarks=None, request=None, attachments=No
     priority_text_color = '#1a202c' if ticket.priority == 'High' else '#ffffff'
     
     # Format dates for display
-    created_at_str = ticket.created_at.strftime('%Y-%m-%d %H:%M') if ticket.created_at else 'N/A'
-    closed_at_str = ticket.closed_at.strftime('%Y-%m-%d %H:%M') if ticket.closed_at else ''
+    created_at_str = timezone.localtime(ticket.created_at).strftime('%Y-%m-%d %H:%M') if ticket.created_at else 'N/A'
+    closed_at_str = timezone.localtime(ticket.closed_at).strftime('%Y-%m-%d %H:%M') if ticket.closed_at else ''
     unit_name = ticket.unit.full_name if ticket.unit else 'N/A'
     dept_name = ticket.department.name if ticket.department else 'N/A'
     
@@ -466,7 +466,7 @@ def send_ticket_email(ticket, action, remarks=None, request=None, attachments=No
     Ticket Details:
     * Unit: {ticket.unit.code if ticket.unit else 'N/A'}
     * Department: {ticket.department.name if ticket.department else 'N/A'}
-    * Created: {ticket.created_at.strftime('%d-%m-%Y %I:%M %p') if ticket.created_at else 'N/A'}
+    * Created: {timezone.localtime(ticket.created_at).strftime('%d-%m-%Y %I:%M %p') if ticket.created_at else 'N/A'}
     * Description: {ticket.description[:200] + '...' if ticket.description and len(ticket.description) > 200 else ticket.description or 'N/A'}
     
     {f'Remarks: {remarks}' if remarks else ''}

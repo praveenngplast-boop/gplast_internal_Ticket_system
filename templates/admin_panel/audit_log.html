@@ -1087,7 +1087,7 @@
                         <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                             <span class="audit-action {{ log.action_type }}">{{ log.get_action_type_display }}</span>
                             <span class="audit-setting-type">{{ log.get_setting_type_display }}</span>
-                            <span class="audit-user"><i class="fa-regular fa-user me-1"></i>{{ log.performed_by_name }}</span>
+                            <span class="audit-user"><i class="fa-regular fa-user me-1"></i>{{ log.get_performed_by_display }}</span>
                             <span class="audit-time"><i class="fa-regular fa-clock me-1"></i>{{ log.created_at|date:"d M Y H:i:s" }}</span>
                             <span class="audit-ip"><i class="fa-solid fa-network-wired me-1"></i>{{ log.ip_address|default:"N/A" }}</span>
                         </div>

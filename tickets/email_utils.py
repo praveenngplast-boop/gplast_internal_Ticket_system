@@ -74,10 +74,10 @@ def report_html(report, queryset):
             if days > 7:
                 aging_over_seven += 1
             details = f'{days} days'
-            date_value = ticket.escalated_at.strftime('%d-%b-%Y %I:%M %p')
+            date_value = timezone.localtime(ticket.escalated_at).strftime('%d-%b-%Y %I:%M %p')
         else:
             details = ticket.priority
-            date_value = ticket.created_at.strftime('%d-%b-%Y %I:%M %p')
+            date_value = timezone.localtime(ticket.created_at).strftime('%d-%b-%Y %I:%M %p')
         if ticket.priority in priority_counts:
             priority_counts[ticket.priority] += 1
         rows.append(

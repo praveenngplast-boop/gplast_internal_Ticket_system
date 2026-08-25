@@ -103,11 +103,12 @@ def settings_audit_log(request):
 @user_passes_test(is_admin, login_url='tickets:login')
 def download_audit_log_excel(request):
     logs, date_error = _filtered_audit_logs(request)
+    generated_at = timezone.localtime(timezone.now())
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = (
-        f'attachment; filename=Audit_Log_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        f'attachment; filename=Audit_Log_{generated_at.strftime("%Y%m%d_%H%M%S")}.xlsx'
     )
 
     workbook = openpyxl.Workbook()
@@ -137,7 +138,7 @@ def download_audit_log_excel(request):
             log.old_value or '',
             log.new_value or '',
             log.change_summary or '',
-            log.performed_by_name,
+            log.get_performed_by_display(),
             log.ip_address or 'N/A',
             log.remarks or '',
             created_at.strftime('%d-%b-%Y %I:%M:%S %p') if created_at else '',

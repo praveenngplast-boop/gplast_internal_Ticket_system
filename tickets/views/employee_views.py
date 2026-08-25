@@ -22,7 +22,8 @@ from tickets.models import (
     TicketHistory,
     ReopenAttachment,
     SettingsAuditLog,
-    DepartmentCredential    
+    DepartmentCredential,
+    ScreenMaster,
 )
 from tickets.forms import TicketForm
 from tickets.utils import send_ticket_email, validate_attachment
@@ -815,13 +816,17 @@ def export_filtered_my_tickets_excel(request, tickets_qs):
 
 
 # ============================================================
-# TICKET DETAIL VIEW
+# TICKET DETAIL VIEW - ✅ FIXED
 # ============================================================
 @login_required
 def employee_ticket_detail(request, ticket_id):
     """View ticket details with individual ticket Excel download"""
     ticket = get_object_or_404(Ticket, id=ticket_id)
     history = TicketHistory.objects.filter(ticket=ticket).order_by('timestamp')
+    
+    # ✅ FIXED: Only filter by screen_code, NOT by pk
+    # This was the cause of: ValueError: Field 'id' expected a number but got 'CFG0200'
+    screen_object = ScreenMaster.objects.filter(screen_code=ticket.screen_number).first()
     
     # Build attachments list for display
     attachments = []
@@ -861,6 +866,7 @@ def employee_ticket_detail(request, ticket_id):
         'reopen_deadline_iso': reopen_deadline_iso,
         'time_to_close': time_to_close,
         'employees': employees,
+        'screen_object': screen_object,
     }
     return render(request, 'employee/ticket_detail.html', context)
 
@@ -929,7 +935,7 @@ def download_individual_ticket_excel(request, ticket_id):
         ('Priority', ticket.priority),
         ('Status', ticket.status),
         ('Error Type', ticket.error_type or 'Not Set'),
-        ('Created Date', ticket.created_at.strftime('%d-%b-%Y %I:%M %p') if ticket.created_at else ''),
+        ('Created Date', timezone.localtime(ticket.created_at).strftime('%d-%b-%Y %I:%M %p') if ticket.created_at else ''),
         ('Updated Date', ticket.updated_at.strftime('%d-%b-%Y %I:%M %p') if ticket.updated_at else ''),
     ]
     
@@ -1005,7 +1011,7 @@ def download_individual_ticket_excel(request, ticket_id):
         
         closing_info = [
             ('Closed By', ticket.closed_by or ''),
-            ('Closed Date', ticket.closed_at.strftime('%d-%b-%Y %I:%M %p') if ticket.closed_at else ''),
+            ('Closed Date', timezone.localtime(ticket.closed_at).strftime('%d-%b-%Y %I:%M %p') if ticket.closed_at else ''),
             ('Main Error Type', ticket.main_error_type or 'N/A'),  # ✅ NEW
             ('Sub Error Type', ticket.sub_error_type or 'N/A'),   # ✅ NEW
             ('Closing Remarks', ticket.closing_remarks or ''),

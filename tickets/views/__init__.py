@@ -57,6 +57,7 @@ from .audit_views import (
     settings_audit_log,
     download_audit_log_excel as settings_download_audit_log_excel,
 )
+from .backup_views import download_full_backup
 from .scheduled_email_views import settings_email_reports
 
 # Import settings action views from the package.
@@ -161,6 +162,7 @@ __all__ = [
     'settings_dept_employees',
     'settings_audit_log',
     'settings_download_audit_log_excel',
+    'download_full_backup',
     'settings_screen_master',
     
     # Settings Actions

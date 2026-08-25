@@ -16,6 +16,8 @@ from tickets.views.settings_action import (
     screen_master_bulk_upload,
 )
 
+
+
 urlpatterns = [
     # ============================================================
     # AUTH URLS
@@ -69,8 +71,8 @@ urlpatterns = [
     path('custom-admin/settings/credentials/', views.settings_credentials_page, name='settings_credentials_page'),
     path('custom-admin/settings/dept-employees/', views.settings_dept_employees, name='settings_dept_employees'),
     path('custom-admin/settings/audit/', views.settings_audit_log, name='settings_audit_log'),
+    path('custom-admin/settings/backup/', views.download_full_backup, name='download_full_backup'),
     
-    # ✅ FIXED: Use admin_download_audit_log_excel instead of download_audit_log_excel
     path('custom-admin/settings/audit/download-excel/', views.admin_download_audit_log_excel, name='admin_download_audit_log_excel'),
 
     # ============================================================
@@ -94,10 +96,8 @@ urlpatterns = [
     path('custom-admin/settings/erp-mapping/add/', erp_mapping_views.erp_mapping_add, name='settings_erp_mapping_add'),
     path('custom-admin/settings/erp-mapping/remove/', erp_mapping_views.erp_mapping_remove, name='settings_erp_mapping_remove'),
     
-    # ERP USER ID MAPPING - EXPORT URLS
     path('custom-admin/settings/erp-mapping/export-excel/', erp_mapping_views.erp_mapping_export_excel, name='settings_erp_mapping_export_excel'),
     
-    # ERP USER ID MAPPING - AJAX URLS
     path('ajax/get-erp-mappings/', erp_mapping_views.erp_mapping_list, name='settings_erp_mapping_list'),
     path('ajax/search-employees/', erp_mapping_views.erp_mapping_search_employees, name='settings_erp_mapping_search_employees'),
 
@@ -118,7 +118,6 @@ urlpatterns = [
     path('custom-admin/settings/screen-master/edit/', views.screen_master_edit, name='screen_master_edit'),
     path('custom-admin/settings/screen-master/delete/', views.screen_master_delete, name='screen_master_delete'),
     path('custom-admin/settings/screen-master/download/', views.screen_master_download_excel, name='screen_master_download_excel'),
-    # ✅ USING IMPORTED FUNCTIONS
     path('custom-admin/settings/screen-master/download-template/', screen_master_download_template, name='screen_master_download_template'),
     path('custom-admin/settings/screen-master/bulk-upload/', screen_master_bulk_upload, name='screen_master_bulk_upload'),
 
@@ -128,7 +127,6 @@ urlpatterns = [
     path('custom-admin/settings/screen-mapping/', views.settings_screen_mapping_page, name='settings_screen_mapping'),
     path('custom-admin/settings/screen-mapping/add/', views.screen_mapping_add, name='screen_mapping_add'),
     path('custom-admin/settings/screen-mapping/remove/', views.screen_mapping_remove, name='screen_mapping_remove'),
-    # ✅ USING IMPORTED FUNCTION
     path('custom-admin/settings/screen-mapping/delete-erp/', screen_mapping_delete_erp, name='screen_mapping_delete_erp'),
     path('custom-admin/settings/screen-mapping/export/', views.screen_mapping_export_excel, name='screen_mapping_export_excel'),
 
