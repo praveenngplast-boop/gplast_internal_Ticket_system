@@ -48,33 +48,57 @@ def settings_employees(request):
             uid = request.POST.get('unit')
             did = request.POST.get('department')
             
-            if not all([eid,ename,mob,email]): 
-                messages.error(request, "All mandatory fields are required.")
+            # Only Employee ID and Name are mandatory
+            if not eid:
+                messages.error(request, "Employee ID is required.")
+                return redirect('settings_employees_page')
+            if not ename:
+                messages.error(request, "Employee Name is required.")
+                return redirect('settings_employees_page')
+            
+            # Validate mobile if provided
+            if mob and (not mob.isdigit() or len(mob) != 10):
+                messages.error(request, f'Mobile number must be exactly 10 digits: {mob}')
+                return redirect('settings_employees_page')
+            
+            # Validate email if provided
+            if email and ('@' not in email or '.' not in email):
+                messages.error(request, f'Invalid email format: {email}')
+                return redirect('settings_employees_page')
+            
+            # Check for duplicate employee_id (case-insensitive)
+            existing_employee = EmployeeMaster.objects.filter(employee_id__iexact=eid).first()
+            if existing_employee:
+                messages.error(request, f'❌ Employee ID "{eid}" already exists in the database.')
                 return redirect('settings_employees_page')
             
             try:
                 emp = EmployeeMaster.objects.create(
                     employee_id=eid,
                     employee_name=ename,
-                    mobile=mob,
-                    email=email,
+                    mobile=mob or None,
+                    email=email or None,
                     unit_id=uid or None,
                     department_id=did or None,
                     is_active=True
                 )
-                messages.success(request, f'Employee "{eid}" added.')
+                messages.success(request, f'✅ Employee "{eid}" added successfully.')
                 
                 log_settings_change(
                     request,
                     action_type='CREATE',
                     setting_type='EMPLOYEE',
                     setting_name=f"Employee: {eid} - {ename}",
-                    new_value=f"ID: {eid}, Name: {ename}, Mobile: {mob}, Email: {email}",
+                    new_value=f"ID: {eid}, Name: {ename}, Mobile: {mob or 'Not provided'}, Email: {email or 'Not provided'}",
                     change_summary=f"Added employee {eid} - {ename}",
                     remarks=f"Employee added by {request.user.username}"
                 )
-            except IntegrityError: 
-                messages.error(request, f'Employee ID "{eid}" already exists.')
+            except IntegrityError as e:
+                logger.error(f"IntegrityError while adding employee {eid}: {str(e)}")
+                messages.error(request, f'❌ Employee ID "{eid}" already exists.')
+            except Exception as e:
+                logger.error(f"Error adding employee {eid}: {str(e)}")
+                messages.error(request, f'❌ Error adding employee: {str(e)}')
         
         # ========== BULK UPLOAD ==========
         elif action == 'bulk_upload':
@@ -111,7 +135,8 @@ def settings_employees(request):
                     messages.error(request, "The uploaded file is empty.")
                     return redirect('settings_employees_page')
                 
-                required_columns = ['Employee ID', 'Employee Name', 'Mobile', 'Email']
+                # Required columns - Email and Mobile are optional
+                required_columns = ['Employee ID', 'Employee Name']
                 missing_columns = []
                 for col in required_columns:
                     if col not in df.columns:
@@ -164,24 +189,24 @@ def settings_employees(request):
                         elif col_lower in ['department', 'dept', 'department name', 'department_name']:
                             dn = str(row.get(col, '')).strip().upper()
                     
+                    # Only Employee ID and Name are mandatory
                     if not eid:
                         validation_errors.append({'row': row_num, 'message': 'Employee ID is required'})
                         continue
                     if not ename:
                         validation_errors.append({'row': row_num, 'message': 'Employee Name is required'})
                         continue
-                    if not mob:
-                        validation_errors.append({'row': row_num, 'message': 'Mobile number is required'})
-                        continue
-                    if not email:
-                        validation_errors.append({'row': row_num, 'message': 'Email is required'})
-                        continue
-                    if '@' not in email or '.' not in email:
-                        validation_errors.append({'row': row_num, 'message': f'Invalid email format: {email}'})
-                        continue
-                    if not mob.isdigit() or len(mob) != 10:
+                    
+                    # Validate mobile if provided
+                    if mob and (not mob.isdigit() or len(mob) != 10):
                         validation_errors.append({'row': row_num, 'message': f'Mobile number must be 10 digits: {mob}'})
                         continue
+                    
+                    # Validate email if provided
+                    if email and ('@' not in email or '.' not in email):
+                        validation_errors.append({'row': row_num, 'message': f'Invalid email format: {email}'})
+                        continue
+                    
                     if uc and uc not in all_units:
                         valid_units = ', '.join(list(all_units.keys())[:5])
                         if len(all_units) > 5:
@@ -213,6 +238,7 @@ def settings_employees(request):
                 
                 success_count = 0
                 error_count = 0
+                update_count = 0
                 
                 for idx, row in df.iterrows():
                     try:
@@ -238,52 +264,78 @@ def settings_employees(request):
                             elif col_lower in ['department', 'dept', 'department name', 'department_name']:
                                 dn = str(row.get(col, '')).strip().upper()
                         
-                        if not eid or not ename or not mob or not email:
+                        if not eid or not ename:
+                            error_count += 1
+                            continue
+                        
+                        # Validate mobile if provided
+                        if mob and (not mob.isdigit() or len(mob) != 10):
+                            error_count += 1
+                            continue
+                        
+                        # Validate email if provided
+                        if email and ('@' not in email or '.' not in email):
                             error_count += 1
                             continue
                         
                         unit_obj = all_units.get(uc) if uc else None
                         dept_obj = all_departments.get(dn) if dn else None
                         
-                        EmployeeMaster.objects.update_or_create(
-                            employee_id=eid,
-                            defaults={
-                                'employee_name': ename,
-                                'mobile': mob,
-                                'email': email,
-                                'unit': unit_obj,
-                                'department': dept_obj,
-                                'is_active': True
-                            }
-                        )
-                        success_count += 1
+                        # Check if employee already exists (case-insensitive)
+                        existing_emp = EmployeeMaster.objects.filter(employee_id__iexact=eid).first()
+                        if existing_emp:
+                            # Update existing employee
+                            existing_emp.employee_name = ename
+                            existing_emp.mobile = mob or None
+                            existing_emp.email = email or None
+                            existing_emp.unit = unit_obj
+                            existing_emp.department = dept_obj
+                            existing_emp.is_active = True
+                            existing_emp.save()
+                            update_count += 1
+                            logger.info(f"Updated existing employee: {eid}")
+                        else:
+                            # Create new employee
+                            EmployeeMaster.objects.create(
+                                employee_id=eid,
+                                employee_name=ename,
+                                mobile=mob or None,
+                                email=email or None,
+                                unit=unit_obj,
+                                department=dept_obj,
+                                is_active=True
+                            )
+                            success_count += 1
+                            logger.info(f"Created new employee: {eid}")
                         
                     except Exception as e:
                         error_count += 1
                         logger.error(f"Error processing row {idx+2}: {str(e)}")
                 
                 # Log bulk upload summary
-                if success_count > 0:
+                if success_count > 0 or update_count > 0:
                     log_settings_change(
                         request,
                         action_type='CREATE',
                         setting_type='EMPLOYEE',
-                        setting_name=f"Bulk Upload: {success_count} employees",
-                        new_value=f"Successfully uploaded {success_count} employees",
-                        change_summary=f"Bulk uploaded {success_count} employees",
+                        setting_name=f"Bulk Upload: {success_count + update_count} employees",
+                        new_value=f"Created {success_count} new employees, Updated {update_count} existing",
+                        change_summary=f"Bulk upload processed {success_count + update_count} employees",
                         remarks=f"Bulk upload by {request.user.username}"
                     )
                 
                 if is_ajax:
                     return JsonResponse({
                         'success': True,
-                        'message': f'Successfully processed {success_count} employees. {error_count} skipped.'
+                        'message': f'✅ Created {success_count} new employees, Updated {update_count} existing. {error_count} skipped.'
                     })
                 
                 if success_count > 0:
-                    messages.success(request, f'Successfully uploaded {success_count} employees.')
+                    messages.success(request, f'✅ Created {success_count} new employees.')
+                if update_count > 0:
+                    messages.success(request, f'✅ Updated {update_count} existing employees.')
                 if error_count > 0:
-                    messages.warning(request, f'{error_count} rows were skipped due to errors.')
+                    messages.warning(request, f'⚠️ {error_count} rows were skipped due to errors.')
                 
             except Exception as e:
                 logger.error(f"Bulk upload error: {str(e)}")
@@ -306,17 +358,49 @@ def settings_employees(request):
             old_dept = emp.department.name if emp.department else 'None'
             old_can_assign = 'Yes' if emp.can_assign_ticket else 'No'
             
-            emp.employee_id = request.POST.get('employee_id','').strip().upper()
-            emp.employee_name = request.POST.get('employee_name','').strip().upper()
-            emp.mobile = request.POST.get('mobile','').strip()
-            emp.email = request.POST.get('email','').strip()
-            emp.unit_id = request.POST.get('unit') or None
-            emp.department_id = request.POST.get('department') or None
+            new_eid = request.POST.get('employee_id','').strip().upper()
+            new_ename = request.POST.get('employee_name','').strip().upper()
+            new_mobile = request.POST.get('mobile','').strip()
+            new_email = request.POST.get('email','').strip()
+            new_unit = request.POST.get('unit') or None
+            new_dept = request.POST.get('department') or None
+            
+            # Validate required fields
+            if not new_eid:
+                messages.error(request, "Employee ID is required.")
+                return redirect('settings_employees_page')
+            if not new_ename:
+                messages.error(request, "Employee Name is required.")
+                return redirect('settings_employees_page')
+            
+            # Validate mobile if provided
+            if new_mobile and (not new_mobile.isdigit() or len(new_mobile) != 10):
+                messages.error(request, f'Mobile number must be exactly 10 digits: {new_mobile}')
+                return redirect('settings_employees_page')
+            
+            # Validate email if provided
+            if new_email and ('@' not in new_email or '.' not in new_email):
+                messages.error(request, f'Invalid email format: {new_email}')
+                return redirect('settings_employees_page')
+            
+            # Check for duplicate employee_id if changed (case-insensitive)
+            if new_eid != old_id:
+                existing_employee = EmployeeMaster.objects.filter(employee_id__iexact=new_eid).exclude(pk=emp.pk).first()
+                if existing_employee:
+                    messages.error(request, f'❌ Employee ID "{new_eid}" already exists in the database.')
+                    return redirect('settings_employees_page')
+            
+            emp.employee_id = new_eid
+            emp.employee_name = new_ename
+            emp.mobile = new_mobile or None
+            emp.email = new_email or None
+            emp.unit_id = new_unit
+            emp.department_id = new_dept
             emp.can_assign_ticket = request.POST.get('can_assign_ticket') == 'on'
             
             try: 
                 emp.save()
-                messages.success(request, 'Employee updated successfully.')
+                messages.success(request, '✅ Employee updated successfully.')
                 
                 change_details = []
                 if old_id != emp.employee_id:
@@ -324,9 +408,9 @@ def settings_employees(request):
                 if old_name != emp.employee_name:
                     change_details.append(f"Name: {old_name} → {emp.employee_name}")
                 if old_mobile != emp.mobile:
-                    change_details.append(f"Mobile: {old_mobile} → {emp.mobile}")
+                    change_details.append(f"Mobile: {old_mobile or 'None'} → {emp.mobile or 'None'}")
                 if old_email != emp.email:
-                    change_details.append(f"Email: {old_email} → {emp.email}")
+                    change_details.append(f"Email: {old_email or 'None'} → {emp.email or 'None'}")
                 if old_unit != (emp.unit.code if emp.unit else 'None'):
                     change_details.append(f"Unit: {old_unit} → {emp.unit.code if emp.unit else 'None'}")
                 if old_dept != (emp.department.name if emp.department else 'None'):
@@ -339,13 +423,17 @@ def settings_employees(request):
                     action_type='UPDATE',
                     setting_type='EMPLOYEE',
                     setting_name=f"Employee: {emp.employee_id} - {emp.employee_name}",
-                    old_value=f"ID: {old_id}, Name: {old_name}, Mobile: {old_mobile}, Email: {old_email}",
-                    new_value=f"ID: {emp.employee_id}, Name: {emp.employee_name}, Mobile: {emp.mobile}, Email: {emp.email}",
+                    old_value=f"ID: {old_id}, Name: {old_name}, Mobile: {old_mobile or 'None'}, Email: {old_email or 'None'}",
+                    new_value=f"ID: {emp.employee_id}, Name: {emp.employee_name}, Mobile: {emp.mobile or 'None'}, Email: {emp.email or 'None'}",
                     change_summary='; '.join(change_details) if change_details else 'Employee updated',
                     remarks=f"Employee updated by {request.user.username}"
                 )
-            except IntegrityError: 
-                messages.error(request, 'Employee ID already exists.')
+            except IntegrityError as e:
+                logger.error(f"IntegrityError while editing employee: {str(e)}")
+                messages.error(request, '❌ Employee ID already exists.')
+            except Exception as e:
+                logger.error(f"Error editing employee: {str(e)}")
+                messages.error(request, f'❌ Error updating employee: {str(e)}')
         
         # ========== TOGGLE EMPLOYEE ACTIVE/INACTIVE ==========
         elif action == 'toggle_employee':
@@ -355,7 +443,7 @@ def settings_employees(request):
             emp.save()
             new_status = 'Active' if emp.is_active else 'Inactive'
             
-            messages.success(request, f'Employee {"activated" if emp.is_active else "deactivated"}.')
+            messages.success(request, f'✅ Employee {"activated" if emp.is_active else "deactivated"}.')
             
             log_settings_change(
                 request,
@@ -377,7 +465,7 @@ def settings_employees(request):
             new_value = 'Yes' if emp.can_assign_ticket else 'No'
             
             status = "enabled" if emp.can_assign_ticket else "disabled"
-            messages.success(request, f'Employee "{emp.employee_id}" assignment {status}.')
+            messages.success(request, f'✅ Employee "{emp.employee_id}" assignment {status}.')
             
             log_settings_change(
                 request,
@@ -411,7 +499,7 @@ def settings_employees(request):
                 action_type='DELETE',
                 setting_type='EMPLOYEE',
                 setting_name=f"Employee: {eid} - {ename}",
-                old_value=f"ID: {eid}, Name: {ename}, Mobile: {emp_mobile}, Email: {emp_email}, Status: Inactive",
+                old_value=f"ID: {eid}, Name: {ename}, Mobile: {emp_mobile or 'None'}, Email: {emp_email or 'None'}, Status: Inactive",
                 change_summary=f"Permanently deleted employee {eid} - {ename}",
                 remarks=f"Employee permanently deleted by {request.user.username} (was already deactivated)"
             )
@@ -463,8 +551,8 @@ def download_employee_list(request):
         rd = [
             emp.employee_id,
             emp.employee_name,
-            emp.mobile,
-            emp.email,
+            emp.mobile or '',
+            emp.email or '',
             emp.unit.code if emp.unit else '',
             emp.unit.full_name if emp.unit else '',
             emp.department.name if emp.department else '',
@@ -490,6 +578,7 @@ def download_employee_template(request):
     """
     Download Excel template for bulk employee upload
     Columns: Employee ID, Employee Name, Mobile, Email, Unit Code, Department
+    Note: Mobile and Email are optional
     """
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=Employee_Upload_Template.xlsx'
@@ -515,6 +604,8 @@ def download_employee_template(request):
         ['EMP001', 'JOHN DOE', '9876543210', 'john.doe@company.com', 'GPL', 'Production'],
         ['EMP002', 'JANE SMITH', '9876543211', 'jane.smith@company.com', 'GPLAST', 'QA'],
         ['EMP003', 'MIKE JOHNSON', '9876543212', 'mike.johnson@company.com', 'IMD', 'Purchase'],
+        ['EMP004', 'SARAH WILLIAMS', '', '', 'GPL', 'Sales'],
+        ['EMP005', 'DAVID BROWN', '9876543213', '', 'GPLAST', 'Finance'],
     ]
     
     for row_idx, row_data in enumerate(sample_data, 2):
@@ -525,7 +616,7 @@ def download_employee_template(request):
     
     note_row = len(sample_data) + 3
     note_cell = ws.cell(row=note_row, column=1)
-    note_cell.value = "Mandatory fields: Employee ID, Employee Name, Mobile, Email"
+    note_cell.value = "Mandatory fields: Employee ID, Employee Name. Mobile and Email are optional."
     note_cell.font = Font(name='Calibri', size=10, italic=True, color='FF0000')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=6)
     

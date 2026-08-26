@@ -24,6 +24,16 @@ class TicketForm(forms.ModelForm):
         self.fields['unit'].queryset = Unit.objects.filter(is_active=True)
         self.fields['department'].queryset = Department.objects.filter(is_active=True)
         
+        # ✅ Make mobile and email optional
+        self.fields['mobile'].required = False
+        self.fields['email'].required = False
+        
+        # ✅ Set help texts and placeholders for optional fields
+        self.fields['mobile'].help_text = '10 digits only (optional)'
+        self.fields['email'].help_text = 'Valid email format (optional)'
+        self.fields['mobile'].widget.attrs.update({'placeholder': '10 digits (optional)'})
+        self.fields['email'].widget.attrs.update({'placeholder': 'email@example.com (optional)'})
+        
         for name, field in self.fields.items():
             if isinstance(field.widget, (forms.Select, forms.RadioSelect)):
                 field.widget.attrs.update({'class': 'form-select'})
@@ -41,13 +51,54 @@ class TicketForm(forms.ModelForm):
         ]
         self.fields['error_type'].choices = EMPLOYEE_ERROR_TYPE_CHOICES
 
+    # ============================================================
+    # ✅ FIXED: clean_mobile - Handles None and empty values
+    # ============================================================
     def clean_mobile(self):
-        mobile = self.cleaned_data.get('mobile', '')
+        mobile = self.cleaned_data.get('mobile')
+        
+        # Allow None or empty string
+        if mobile is None or mobile == '':
+            return None
+        
+        # Remove whitespace
+        mobile = mobile.strip()
+        
+        # If empty after stripping, return None
+        if mobile == '':
+            return None
+        
+        # Now safe to validate
         if not mobile.isdigit():
-            raise ValidationError("Mobile number must contain digits only.")
+            raise ValidationError("Mobile number must contain only digits.")
+        
         if len(mobile) != 10:
             raise ValidationError("Mobile number must be exactly 10 digits.")
+        
         return mobile
+
+    # ============================================================
+    # ✅ FIXED: clean_email - Handles None and empty values
+    # ============================================================
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        
+        # Allow None or empty string
+        if email is None or email == '':
+            return None
+        
+        # Remove whitespace
+        email = email.strip()
+        
+        # If empty after stripping, return None
+        if email == '':
+            return None
+        
+        # Validate email format
+        if '@' not in email or '.' not in email:
+            raise ValidationError("Please enter a valid email address.")
+        
+        return email
 
     def clean_description(self):
         description = self.cleaned_data.get('description', '')

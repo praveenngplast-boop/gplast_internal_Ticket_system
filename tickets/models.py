@@ -96,8 +96,15 @@ class EmailSchedule(models.Model):
 class EmployeeMaster(models.Model):
     employee_id = models.CharField(max_length=50, unique=True)
     employee_name = models.CharField(max_length=150)
-    mobile = models.CharField(max_length=10)
-    email = models.EmailField()
+    mobile = models.CharField(
+        max_length=10, 
+        blank=True,
+        null=True
+    )
+    email = models.EmailField(
+        blank=True,
+        null=True
+    )
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=True)
@@ -117,6 +124,11 @@ class EmployeeMaster(models.Model):
     def save(self, *args, **kwargs):
         self.employee_id = self.employee_id.upper()
         self.employee_name = self.employee_name.upper()
+        # Convert empty strings to None for mobile and email
+        if self.mobile == '':
+            self.mobile = None
+        if self.email == '':
+            self.email = None
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -247,8 +259,18 @@ class Ticket(models.Model):
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     employee_id = models.CharField(max_length=50)
     employee_name = models.CharField(max_length=150)
-    mobile = models.CharField(max_length=10)
-    email = models.EmailField()
+    
+    # ✅ FIXED: Made mobile and email optional
+    mobile = models.CharField(
+        max_length=10, 
+        blank=True,      # ← Added
+        null=True        # ← Added
+    )
+    email = models.EmailField(
+        blank=True,      # ← Added
+        null=True        # ← Added
+    )
+    
     screen_number = models.CharField(max_length=50)
     subject = models.CharField(max_length=150)
     description = models.TextField()
@@ -332,6 +354,11 @@ class Ticket(models.Model):
     def save(self, *args, **kwargs):
         if not self.ticket_number:
             self.ticket_number = generate_ticket_number()
+        # Convert empty strings to None for mobile and email
+        if self.mobile == '':
+            self.mobile = None
+        if self.email == '':
+            self.email = None
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -523,8 +550,8 @@ class ERPHolderMapping(models.Model):
         return {
             'employee_id': self.employee.employee_id,
             'employee_name': self.employee.employee_name,
-            'mobile': self.employee.mobile,
-            'email': self.employee.email,
+            'mobile': self.employee.mobile or '',
+            'email': self.employee.email or '',
             'unit_code': self.employee.unit.code if self.employee.unit else '',
             'unit_name': self.employee.unit.full_name if self.employee.unit else '',
             'department_name': self.employee.department.name if self.employee.department else '',

@@ -509,6 +509,12 @@
         color: var(--danger-color);
     }
 
+    .attachment-wrapper .attachment-number .optional-text {
+        font-size: 0.5rem;
+        font-weight: 400;
+        color: var(--text-muted-light);
+    }
+
     .attachment-wrapper input[type="file"] {
         padding: 0.25rem 0.5rem !important;
         font-size: 0.7rem !important;
@@ -973,20 +979,22 @@
                             {% if form.employee_name.errors %}<div class="text-danger small mt-1">{{ form.employee_name.errors }}</div>{% endif %}
                         </div>
 
+                        <!-- Mobile - Made Optional -->
                         <div class="col-12 col-sm-6">
                             <label for="{{ form.mobile.id_for_label }}" class="form-label">
                                 <i class="fa-regular fa-phone"></i>Mobile
-                                <span class="required-star">*</span>
+                                <span style="font-size:0.55rem;color:var(--text-muted-light);font-weight:400;">(Optional)</span>
                             </label>
                             {{ form.mobile }}
-                            <div class="char-counter">10 digits</div>
+                            <div class="char-counter">10 digits, no spaces (optional)</div>
                             {% if form.mobile.errors %}<div class="text-danger small mt-1">{{ form.mobile.errors }}</div>{% endif %}
                         </div>
 
+                        <!-- Email - Made Optional -->
                         <div class="col-12 col-sm-6">
                             <label for="{{ form.email.id_for_label }}" class="form-label">
                                 <i class="fa-regular fa-envelope"></i>Email
-                                <span class="required-star">*</span>
+                                <span style="font-size:0.55rem;color:var(--text-muted-light);font-weight:400;">(Optional)</span>
                             </label>
                             {{ form.email }}
                             {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
@@ -1108,10 +1116,10 @@
                             {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
                         </div>
 
-                        <!-- ATTACHMENT SECTION -->
+                        <!-- ATTACHMENT SECTION - Made Mandatory -->
                         <div class="col-12">
                             <label class="form-label">
-                                <i class="fa-solid fa-paperclip"></i>Attachments
+                                <i class="fa-solid fa-paperclip"></i>Attachments <span class="required-star">*</span>
                                 <span style="font-size:0.55rem;color:var(--text-muted-light);font-weight:400;">
                                     (Max 3 files, 3MB each)
                                 </span>
@@ -1126,7 +1134,7 @@
                                     </div>
                                     <div class="attachment-status" id="status1">
                                         <span class="status-icon">⏳</span>
-                                        <span class="status-text">No file selected</span>
+                                        <span class="status-text" style="color:#EF4444;font-weight:600;">No file selected (Required)</span>
                                     </div>
                                     <button type="button" class="remove-attachment" data-attachment-num="1" title="Remove this attachment" style="display:none;">
                                         <i class="fa-solid fa-xmark"></i>
@@ -1134,7 +1142,7 @@
                                 </div>
 
                                 <div class="attachment-wrapper" id="attachmentWrapper2" data-attachment-num="2" style="display:none;">
-                                    <span class="attachment-number">Attachment 2</span>
+                                    <span class="attachment-number">Attachment 2 <span class="optional-text">(Optional)</span></span>
                                     <input type="file" name="attachment_2" id="id_attachment_2" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt">
                                     <div class="char-counter" style="text-align:left;font-size:0.55rem;">
                                         <i class="fa-regular fa-file"></i> Max 3MB (PDF, DOC, XLS, PNG, JPG, TXT)
@@ -1149,7 +1157,7 @@
                                 </div>
 
                                 <div class="attachment-wrapper" id="attachmentWrapper3" data-attachment-num="3" style="display:none;">
-                                    <span class="attachment-number">Attachment 3</span>
+                                    <span class="attachment-number">Attachment 3 <span class="optional-text">(Optional)</span></span>
                                     <input type="file" name="attachment_3" id="id_attachment_3" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt">
                                     <div class="char-counter" style="text-align:left;font-size:0.55rem;">
                                         <i class="fa-regular fa-file"></i> Max 3MB (PDF, DOC, XLS, PNG, JPG, TXT)
@@ -1575,13 +1583,13 @@ document.addEventListener('DOMContentLoaded', function() {
             markFieldAutoFilled(empNameInput, true);
         }
 
-        // Fill Mobile
+        // Fill Mobile (optional - only if present)
         if (data.mobile) {
             empMobileInput.value = data.mobile;
             markFieldAutoFilled(empMobileInput, true);
         }
 
-        // Fill Email
+        // Fill Email (optional - only if present)
         if (data.email) {
             empEmailInput.value = data.email;
             markFieldAutoFilled(empEmailInput, true);
@@ -2058,7 +2066,15 @@ document.addEventListener('DOMContentLoaded', function() {
             var fileName = fileInput.files[0].name;
             var fileSize = (fileInput.files[0].size / 1024).toFixed(1);
             statusIcon.textContent = '✅';
-            statusText.textContent = fileName + ' (' + fileSize + ' KB)';
+            if (num === 1) {
+                statusText.textContent = fileName + ' (' + fileSize + ' KB)';
+                statusText.style.color = '';
+                statusText.style.fontWeight = '';
+            } else {
+                statusText.textContent = fileName + ' (' + fileSize + ' KB)';
+                statusText.style.color = '';
+                statusText.style.fontWeight = '';
+            }
             statusText.className = 'status-text has-file';
             
             var removeBtn = wrapper.querySelector('.remove-attachment');
@@ -2072,7 +2088,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } else {
             statusIcon.textContent = '⏳';
-            statusText.textContent = 'No file selected';
+            if (num === 1) {
+                statusText.textContent = 'No file selected (Required)';
+                statusText.style.color = '#EF4444';
+                statusText.style.fontWeight = '600';
+            } else {
+                statusText.textContent = 'No file selected';
+                statusText.style.color = '';
+                statusText.style.fontWeight = '';
+            }
             statusText.className = 'status-text';
             
             if (num === 1) {
@@ -2214,7 +2238,15 @@ document.addEventListener('DOMContentLoaded', function() {
             var text = statusEl.querySelector('.status-text');
             if (icon) icon.textContent = '⏳';
             if (text) {
-                text.textContent = 'No file selected';
+                if (num == 1) {
+                    text.textContent = 'No file selected (Required)';
+                    text.style.color = '#EF4444';
+                    text.style.fontWeight = '600';
+                } else {
+                    text.textContent = 'No file selected';
+                    text.style.color = '';
+                    text.style.fontWeight = '';
+                }
                 text.className = 'status-text';
             }
         }
@@ -2270,6 +2302,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (text) {
                 text.textContent = 'No file selected';
                 text.className = 'status-text';
+                text.style.color = '';
+                text.style.fontWeight = '';
             }
         }
         
@@ -2306,7 +2340,7 @@ document.addEventListener('DOMContentLoaded', function() {
     validateFileInput(fileInput3);
 
     // ============================================================
-    // FORM SUBMISSION VALIDATION
+    // FORM SUBMISSION VALIDATION - INCLUDES ATTACHMENT CHECK
     // ============================================================
     if (form && submitBtn) {
         form.addEventListener('submit', function(e) {
@@ -2335,6 +2369,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('⚠️ Please enter a valid Employee ID from your department.');
                 empIdInput.focus();
                 return false;
+            }
+
+            // ============================================================
+            // VALIDATE: Attachment 1 is required
+            // ============================================================
+            var attachment1 = document.getElementById('id_attachment_1');
+            if (attachment1) {
+                if (!attachment1.files || attachment1.files.length === 0) {
+                    e.preventDefault();
+                    alert('❌ Attachment 1 is required.\n\nPlease select a file to upload before submitting the ticket.');
+                    attachment1.focus();
+                    return false;
+                }
             }
 
             if (this.checkValidity()) {

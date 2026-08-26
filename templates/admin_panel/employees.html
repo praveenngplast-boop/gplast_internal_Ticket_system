@@ -924,6 +924,12 @@
         font-size: 0.8rem;
     }
 
+    .form-label .optional-text {
+        font-size: 0.6rem;
+        font-weight: 400;
+        color: var(--text-muted);
+    }
+
     .form-text {
         color: var(--text-muted) !important;
         font-size: 0.6rem !important;
@@ -1230,8 +1236,9 @@
                         <small class="action-subtitle" style="font-size: 0.55rem;">.xlsx, .xls files only</small>
                     </div>
                 </form>
+                <!-- FIX: Removed asterisk from Mobile and Email -->
                 <div class="mt-2 text-start" style="font-size: 0.55rem; color: var(--text-muted);">
-                    <strong>Columns:</strong> Employee ID*, Name*, Mobile*, Email*, Unit Code, Department
+                    <strong>Columns:</strong> Employee ID*, Name*, Mobile, Email, Unit Code, Department
                     <br>
                     <a href="{% url 'download_employee_template' %}" class="text-primary" style="font-size: 0.55rem;">
                         <i class="fa-solid fa-download me-1"></i>Download Template
@@ -1292,8 +1299,8 @@
                         <tr>
                             <td><span class="employee-id">{{ emp.employee_id }}</span></td>
                             <td>{{ emp.employee_name }}</td>
-                            <td>{{ emp.mobile }}</td>
-                            <td style="font-size: 0.65rem;">{{ emp.email }}</td>
+                            <td>{{ emp.mobile|default:"-" }}</td>
+                            <td style="font-size: 0.65rem;">{{ emp.email|default:"-" }}</td>
                             <td>{{ emp.unit.code|default:"-" }}</td>
                             <td>{{ emp.department.name|default:"-" }}</td>
                             <td>
@@ -1393,15 +1400,15 @@
                             <div class="form-text"><strong>Mandatory</strong></div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Mobile <span class="required">*</span></label>
-                            <input type="text" name="mobile" class="form-control" placeholder="10 digits" maxlength="10" required pattern="[0-9]{10}">
-                            <div class="form-text"><strong>Mandatory - 10 digits only</strong></div>
-                            <div class="form-text text-danger" id="mobileError" style="display:none;">Please enter exactly 10 digits (0-9)</div>
+                            <label class="form-label">Mobile <span class="optional-text">(Optional)</span></label>
+                            <input type="text" name="mobile" class="form-control" placeholder="10 digits (optional)" maxlength="10" pattern="[0-9]{10}">
+                            <div class="form-text">10 digits only (optional)</div>
+                            <div class="form-text text-danger" id="addMobileError" style="display:none;">Please enter exactly 10 digits (0-9) or leave empty</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Email <span class="required">*</span></label>
-                            <input type="email" name="email" class="form-control" placeholder="email@company.com" required>
-                            <div class="form-text"><strong>Mandatory</strong></div>
+                            <label class="form-label">Email <span class="optional-text">(Optional)</span></label>
+                            <input type="email" name="email" class="form-control" placeholder="email@company.com (optional)">
+                            <div class="form-text">Valid email format (optional)</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Unit</label>
@@ -1417,6 +1424,16 @@
                             <select name="department" class="form-select">
                                 <option value="">-- Select Unit First --</option>
                             </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input type="checkbox" name="can_assign_ticket" id="add_emp_can_assign" class="form-check-input" checked>
+                                <label class="form-check-label" for="add_emp_can_assign">
+                                    <i class="fa-solid fa-user-check me-1" style="color: var(--settings-primary);"></i>
+                                    Can Assign Tickets
+                                </label>
+                                <div class="form-text">Enable to allow this employee to be assigned tickets</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1452,12 +1469,15 @@
                             <input type="text" name="employee_name" id="edit_emp_name" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Mobile <span class="required">*</span></label>
-                            <input type="text" name="mobile" id="edit_emp_mobile" class="form-control" maxlength="10" required pattern="[0-9]{10}">
+                            <label class="form-label">Mobile <span class="optional-text">(Optional)</span></label>
+                            <input type="text" name="mobile" id="edit_emp_mobile" class="form-control" maxlength="10" pattern="[0-9]{10}">
+                            <div class="form-text">10 digits only (optional)</div>
+                            <div class="form-text text-danger" id="editMobileError" style="display:none;">Please enter exactly 10 digits (0-9) or leave empty</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Email <span class="required">*</span></label>
-                            <input type="email" name="email" id="edit_emp_email" class="form-control" required>
+                            <label class="form-label">Email <span class="optional-text">(Optional)</span></label>
+                            <input type="email" name="email" id="edit_emp_email" class="form-control">
+                            <div class="form-text">Valid email format (optional)</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Unit</label>
@@ -1614,11 +1634,11 @@
         }
 
         // ============================================================
-        // ADD EMPLOYEE MOBILE VALIDATION
+        // ADD EMPLOYEE MOBILE VALIDATION (Optional)
         // ============================================================
         var addEmpMobileInput = document.querySelector('#addEmployeeModal input[name="mobile"]');
         var addEmpForm = document.querySelector('#addEmployeeModal form');
-        var mobileError = document.getElementById('mobileError');
+        var addMobileError = document.getElementById('addMobileError');
 
         if (addEmpMobileInput && addEmpForm) {
             addEmpMobileInput.addEventListener('input', function() {
@@ -1626,22 +1646,58 @@
                 this.value = val.replace(/\D/g, '');
 
                 if (this.value.length > 0 && (this.value.length !== 10 || !/^\d{10}$/.test(this.value))) {
-                    if (mobileError) mobileError.style.display = 'block';
+                    if (addMobileError) addMobileError.style.display = 'block';
                     this.style.borderColor = '#EF4444';
                 } else {
-                    if (mobileError) mobileError.style.display = 'none';
+                    if (addMobileError) addMobileError.style.display = 'none';
                     this.style.borderColor = '';
                 }
             });
 
             addEmpForm.addEventListener('submit', function(e) {
                 var mobileVal = addEmpMobileInput.value.trim();
-                if (!/^\d{10}$/.test(mobileVal)) {
+                // Allow empty or exactly 10 digits
+                if (mobileVal.length > 0 && !/^\d{10}$/.test(mobileVal)) {
                     e.preventDefault();
-                    if (mobileError) mobileError.style.display = 'block';
+                    if (addMobileError) addMobileError.style.display = 'block';
                     addEmpMobileInput.style.borderColor = '#EF4444';
                     addEmpMobileInput.focus();
-                    alert('Please enter exactly 10 digits for Mobile number.');
+                    alert('Please enter exactly 10 digits for Mobile number or leave it empty.');
+                    return false;
+                }
+            });
+        }
+
+        // ============================================================
+        // EDIT EMPLOYEE MOBILE VALIDATION (Optional)
+        // ============================================================
+        var editEmpMobileInput = document.getElementById('edit_emp_mobile');
+        var editEmpForm = document.querySelector('#editEmployeeModal form');
+        var editMobileError = document.getElementById('editMobileError');
+
+        if (editEmpMobileInput && editEmpForm) {
+            editEmpMobileInput.addEventListener('input', function() {
+                var val = this.value;
+                this.value = val.replace(/\D/g, '');
+
+                if (this.value.length > 0 && (this.value.length !== 10 || !/^\d{10}$/.test(this.value))) {
+                    if (editMobileError) editMobileError.style.display = 'block';
+                    this.style.borderColor = '#EF4444';
+                } else {
+                    if (editMobileError) editMobileError.style.display = 'none';
+                    this.style.borderColor = '';
+                }
+            });
+
+            editEmpForm.addEventListener('submit', function(e) {
+                var mobileVal = editEmpMobileInput.value.trim();
+                // Allow empty or exactly 10 digits
+                if (mobileVal.length > 0 && !/^\d{10}$/.test(mobileVal)) {
+                    e.preventDefault();
+                    if (editMobileError) editMobileError.style.display = 'block';
+                    editEmpMobileInput.style.borderColor = '#EF4444';
+                    editEmpMobileInput.focus();
+                    alert('Please enter exactly 10 digits for Mobile number or leave it empty.');
                     return false;
                 }
             });
@@ -1686,6 +1742,44 @@
         }
 
         // ============================================================
+        // DEPARTMENT FETCH FOR EDIT EMPLOYEE
+        // ============================================================
+        var editEmpUnitSelect = document.getElementById('edit_emp_unit');
+        var editEmpDeptSelect = document.getElementById('edit_emp_dept');
+
+        if (editEmpUnitSelect && editEmpDeptSelect) {
+            editEmpUnitSelect.addEventListener('change', function() {
+                var unitId = this.value;
+                if (!unitId) {
+                    editEmpDeptSelect.innerHTML = '<option value="">-- Select --</option>';
+                    editEmpDeptSelect.disabled = true;
+                    return;
+                }
+                editEmpDeptSelect.disabled = true;
+                editEmpDeptSelect.innerHTML = '<option value="">Loading...</option>';
+                fetch('/ajax/get-departments/?unit_id=' + unitId)
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        editEmpDeptSelect.innerHTML = '<option value="">-- Select --</option>';
+                        if (data.departments && data.departments.length > 0) {
+                            data.departments.forEach(function(d) {
+                                var opt = document.createElement('option');
+                                opt.value = d.id;
+                                opt.textContent = d.name;
+                                editEmpDeptSelect.appendChild(opt);
+                            });
+                            editEmpDeptSelect.disabled = false;
+                        } else {
+                            editEmpDeptSelect.innerHTML += '<option value="">None</option>';
+                        }
+                    })
+                    .catch(function() {
+                        editEmpDeptSelect.innerHTML = '<option value="">Error</option>';
+                    });
+            });
+        }
+
+        // ============================================================
         // PREFILL EDIT EMPLOYEE MODAL
         // ============================================================
         document.getElementById('editEmployeeModal').addEventListener('show.bs.modal', function(e) {
@@ -1693,8 +1787,8 @@
             document.getElementById('edit_emp_id').value = btn.getAttribute('data-id');
             document.getElementById('edit_emp_empid').value = btn.getAttribute('data-empid');
             document.getElementById('edit_emp_name').value = btn.getAttribute('data-name');
-            document.getElementById('edit_emp_mobile').value = btn.getAttribute('data-mobile');
-            document.getElementById('edit_emp_email').value = btn.getAttribute('data-email');
+            document.getElementById('edit_emp_mobile').value = btn.getAttribute('data-mobile') || '';
+            document.getElementById('edit_emp_email').value = btn.getAttribute('data-email') || '';
             document.getElementById('edit_emp_unit').value = btn.getAttribute('data-unit') || '';
             document.getElementById('edit_emp_dept').value = btn.getAttribute('data-dept') || '';
 
@@ -1702,6 +1796,20 @@
             var checkbox = document.getElementById('edit_emp_can_assign');
             if (checkbox) {
                 checkbox.checked = canAssign === 'true';
+            }
+
+            // Trigger department load if unit is set
+            var unitSelect = document.getElementById('edit_emp_unit');
+            if (unitSelect && unitSelect.value) {
+                var event = new Event('change');
+                unitSelect.dispatchEvent(event);
+                // Set department after load (delayed)
+                setTimeout(function() {
+                    var deptVal = btn.getAttribute('data-dept') || '';
+                    if (deptVal) {
+                        document.getElementById('edit_emp_dept').value = deptVal;
+                    }
+                }, 300);
             }
         });
 
