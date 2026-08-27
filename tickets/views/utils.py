@@ -1,45 +1,302 @@
 # tickets/views/utils.py
 
 """
-Utility functions used across multiple views
+Utility functions for views
+- Admin check
+- Format timedelta display
+- Reopen ticket logic
+- Generate admin ticket list HTML
+- Get contact data
+- Get employee directory data
+- Get credentials data
+- Unit Head helper functions
 """
-from datetime import timedelta
-from django.db import transaction
+
+from django.contrib.auth.models import User
 from django.utils import timezone
-from django.contrib import messages
-from django.db.models import Q
-from tickets.models import Ticket, TicketHistory, Unit, DepartmentCredential, EmployeeMaster, AdminContact
+from django.db import transaction
+from django.template.loader import render_to_string
+from datetime import timedelta
 import logging
+
+from tickets.models import (
+    Ticket, TicketHistory, ReopenAttachment, 
+    AdminContact, EmployeeMaster, DepartmentCredential,
+    UnitHead
+)
 
 logger = logging.getLogger(__name__)
 
 
+# ============================================================
+# ADMIN CHECK
+# ============================================================
 def is_admin(user):
-    """Check if user is admin (staff)"""
+    """Check if user is a staff/admin user"""
     return user.is_authenticated and user.is_staff
 
 
+# ============================================================
+# UNIT HEAD CHECK FUNCTIONS
+# ============================================================
+def is_unit_head(user):
+    """
+    Check if a user is a Unit Head.
+    Returns True if the user has an active UnitHead record.
+    """
+    if not user or not user.is_authenticated:
+        return False
+    
+    try:
+        return UnitHead.objects.filter(user=user, is_active=True).exists()
+    except Exception:
+        return False
+
+
+def get_unit_head_unit(user):
+    """
+    Get the Unit object for a Unit Head user.
+    Returns None if user is not a Unit Head.
+    """
+    if not user or not user.is_authenticated:
+        return None
+    
+    try:
+        unit_head = UnitHead.objects.filter(user=user, is_active=True).select_related('unit').first()
+        return unit_head.unit if unit_head else None
+    except Exception:
+        return None
+
+
+def get_unit_head_object(user):
+    """
+    Get the UnitHead object for a user.
+    Returns None if user is not a Unit Head.
+    """
+    if not user or not user.is_authenticated:
+        return None
+    
+    try:
+        return UnitHead.objects.filter(user=user, is_active=True).first()
+    except Exception:
+        return None
+
+
+def get_unit_head_emails(unit_id=None):
+    """
+    Get all active Unit Head email addresses.
+    If unit_id is provided, only return the Unit Head for that unit.
+    """
+    try:
+        queryset = UnitHead.objects.filter(is_active=True)
+        
+        if unit_id:
+            queryset = queryset.filter(unit_id=unit_id)
+        
+        return list(queryset.values_list('email', flat=True))
+    except Exception:
+        return []
+
+
+# ============================================================
+# ROLE BASED REDIRECT
+# ============================================================
+def get_user_dashboard_url(user):
+    """
+    Get the appropriate dashboard URL based on user role.
+    Priority: Admin > Unit Head > Employee
+    """
+    if not user or not user.is_authenticated:
+        return '/login/'
+    
+    if user.is_staff:
+        return '/custom-admin/dashboard/'
+    
+    if is_unit_head(user):
+        return '/unit-head/dashboard/'
+    
+    return '/dashboard/'
+
+
+# ============================================================
+# FORMAT TIMEDELTA DISPLAY
+# ============================================================
 def format_timedelta_display(td):
-    """Format timedelta for human readable display"""
+    """
+    Convert timedelta to human readable string
+    Example: 2d 5h 30m
+    """
     if not td:
-        return ""
+        return ''
+    
     days = td.days
-    hours, remainder = divmod(td.seconds, 3600)
-    minutes, _ = divmod(remainder, 60)
+    hours = td.seconds // 3600
+    minutes = (td.seconds % 3600) // 60
+    
     parts = []
     if days > 0:
-        parts.append(f"{days} day{'s' if days > 1 else ''}")
+        parts.append(f"{days}d")
     if hours > 0:
-        parts.append(f"{hours} hour{'s' if hours > 1 else ''}")
+        parts.append(f"{hours}h")
     if minutes > 0:
-        parts.append(f"{minutes} min{'s' if minutes > 1 else ''}")
-    if not parts:
-        return "< 1 minute"
-    return ", ".join(parts)
+        parts.append(f"{minutes}m")
+    
+    return ' '.join(parts) if parts else '0m'
 
 
+# ============================================================
+# REOPEN TICKET LOGIC
+# ============================================================
+def reopen_ticket_logic(ticket, performed_by, remarks, uploaded_files=None):
+    """
+    Reopen a closed ticket with attachments
+    """
+    with transaction.atomic():
+        # Reset ticket status
+        ticket.status = 'Open'
+        ticket.closed_at = None
+        ticket.closed_by = None
+        ticket.closing_remarks = ''
+        ticket.save()
+        
+        # Create history entry
+        TicketHistory.objects.create(
+            ticket=ticket,
+            action="Ticket Reopened",
+            remarks=remarks,
+            performed_by=performed_by
+        )
+        
+        # Save attachments
+        if uploaded_files:
+            for file in uploaded_files:
+                ReopenAttachment.objects.create(
+                    ticket=ticket,
+                    file=file,
+                    uploaded_by=performed_by
+                )
+        
+        logger.info(f"Ticket {ticket.ticket_number} reopened by {performed_by}")
+        return True
+
+
+# ============================================================
+# GENERATE ADMIN TICKET LIST HTML
+# ============================================================
+def generate_admin_ticket_list_html(tickets, filter_value):
+    """
+    Generate HTML for admin ticket list (fallback when template fails)
+    """
+    if not tickets:
+        return '<p class="text-muted">No tickets found.</p>'
+    
+    html = '<div class="table-responsive"><table class="table table-sm">'
+    html += """
+    <thead>
+        <tr>
+            <th>Ticket #</th>
+            <th>Subject</th>
+            <th>Unit</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Created</th>
+        </tr>
+    </thead>
+    <tbody>
+    """
+    
+    for ticket in tickets:
+        status_color = {
+            'Open': 'success',
+            'Assigned': 'primary',
+            'Hold': 'warning',
+            'Escalated': 'danger',
+            'Closed': 'secondary'
+        }.get(ticket.status, 'secondary')
+        
+        html += f"""
+        <tr>
+            <td><a href="/custom-admin/ticket/{ticket.id}/">{ticket.ticket_number}</a></td>
+            <td>{ticket.subject}</td>
+            <td>{ticket.unit.code if ticket.unit else '-'}</td>
+            <td><span class="badge bg-{status_color}">{ticket.status}</span></td>
+            <td><span class="badge bg-{ticket.priority.lower()}">{ticket.priority}</span></td>
+            <td>{ticket.created_at.strftime('%d-%b-%Y %H:%M') if ticket.created_at else '-'}</td>
+        </tr>
+        """
+    
+    html += '</tbody></table></div>'
+    return html
+
+
+# ============================================================
+# GET CONTACT DATA
+# ============================================================
+def _get_contact_data():
+    """
+    Get or create AdminContact record
+    """
+    contact, created = AdminContact.objects.get_or_create(
+        id=1,
+        defaults={
+            'admin_name': 'GPLAST Support',
+            'admin_phone': '+91-1234567890',
+            'admin_email': 'erpimd@gplast.com'
+        }
+    )
+    return contact
+
+
+# ============================================================
+# GET EMPLOYEE DIRECTORY DATA
+# ============================================================
+def _get_employee_directory_data(request):
+    """
+    Get employee list with search filtering
+    Returns: (queryset, search_term)
+    """
+    emp_search = request.GET.get('emp_search', '').strip()
+    
+    if emp_search:
+        employees = EmployeeMaster.objects.filter(
+            Q(employee_id__icontains=emp_search) |
+            Q(employee_name__icontains=emp_search) |
+            Q(mobile__icontains=emp_search) |
+            Q(email__icontains=emp_search)
+        ).order_by('employee_id')
+    else:
+        employees = EmployeeMaster.objects.all().order_by('employee_id')
+    
+    return employees, emp_search
+
+
+# ============================================================
+# GET CREDENTIALS DATA
+# ============================================================
+def _get_credentials_data():
+    """
+    Get all department credentials grouped by unit
+    Returns: (all_credentials, credentials_by_unit)
+    """
+    all_credentials = DepartmentCredential.objects.all().select_related('unit', 'department')
+    
+    credentials_by_unit = {}
+    for cred in all_credentials:
+        unit_code = cred.unit.code if cred.unit else 'Unknown'
+        if unit_code not in credentials_by_unit:
+            credentials_by_unit[unit_code] = []
+        credentials_by_unit[unit_code].append(cred)
+    
+    return all_credentials, credentials_by_unit
+
+
+# ============================================================
+# CLIENT IP ADDRESS
+# ============================================================
 def get_client_ip(request):
-    """Get client IP address from request"""
+    """
+    Get client IP address from request
+    """
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
         ip = x_forwarded_for.split(',')[0]
@@ -48,439 +305,104 @@ def get_client_ip(request):
     return ip
 
 
-def reopen_ticket_logic(ticket, performed_by, remarks, attachments=None):
-    """Reopen a closed ticket with audit trail"""
-    with transaction.atomic():
-        ticket.status = 'Open'
-        ticket.closed_by = None
-        ticket.closed_at = None
-        ticket.closing_remarks = None
-        # ✅ Clear error type fields when reopening
-        ticket.main_error_type = None
-        ticket.sub_error_type = None
-        ticket.save()
-        TicketHistory.objects.create(
-            ticket=ticket,
-            action="Ticket Reopened",
-            remarks=remarks,
-            performed_by=performed_by
-        )
-    # Import here to avoid circular import
-    from tickets.utils import send_ticket_email
-    from tickets.models import ReopenAttachment
-    reopen_attachments = []
-    for uploaded_file in attachments or []:
-        reopen_attachment = ReopenAttachment.objects.create(
-            ticket=ticket,
-            file=uploaded_file,
-            uploaded_by=performed_by,
-        )
-        reopen_attachments.append(reopen_attachment.file)
-    send_ticket_email(ticket, 'Reopened', remarks=remarks, attachments=reopen_attachments)
-
-
-def generate_ticket_list_html(tickets, status):
-    """Generate HTML for ticket list (Employee view)"""
-    if not tickets:
-        return """
-        <div class="empty-state text-center py-5">
-            <i class="fa-solid fa-receipt fa-3x mb-3 d-block opacity-25" style="color: var(--accent);"></i>
-            <h6 style="color: var(--text-secondary); font-weight: 600;">No Tickets Found</h6>
-            <p style="color: var(--text-muted); font-size: 0.85rem;">
-                No tickets found.
-            </p>
-            <a href="javascript:void(0)" onclick="window.location.href='/create-ticket/'" class="btn btn-primary-custom btn-sm mt-2">
-                <i class="fa-solid fa-circle-plus me-1"></i>Create New Ticket
-            </a>
-        </div>
-        """
-    
-    html = """
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Ticket</th>
-                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Created</th>
-                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Subject</th>
-                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Status</th>
-                    <th class="text-center" style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Action</th>
-                </tr>
-            </thead>
-            <tbody>
+# ============================================================
+# GET USER DISPLAY NAME
+# ============================================================
+def get_user_display_name(user):
     """
-    
-    for ticket in tickets:
-        status_class = ticket.status.lower()
-        badge_class = {
-            'open': 'badge-status-open',
-            'assigned': 'badge-status-assigned',
-            'hold': 'badge-status-hold',
-            'escalated': 'badge-status-escalated',
-            'closed': 'badge-status-closed',
-        }.get(status_class, 'badge-status-open')
-        
-        html += f"""
-                <tr>
-                    <td class="fw-bold" style="color: var(--accent-light); font-size: 0.7rem;">
-                        {ticket.ticket_number}
-                    </td>
-                    <td style="font-size: 0.65rem; color: var(--text-secondary);">
-                        {ticket.created_at.strftime('%d-%m-%Y') if ticket.created_at else '-'}
-                        <span class="d-block" style="font-size: 0.55rem; color: var(--text-muted);">{ticket.created_at.strftime('%I:%M %p') if ticket.created_at else ''}</span>
-                    </td>
-                    <td class="text-truncate" style="max-width: 120px; font-size: 0.7rem;" title="{ticket.subject}">
-                        {ticket.subject}
-                    </td>
-                    <td>
-                        <span class="badge-custom {badge_class}" style="font-size: 0.5rem; padding: 0.15rem 0.5rem;">
-                            {ticket.status}
-                        </span>
-                    </td>
-                    <td class="text-center">
-                        <a href="/ticket/{ticket.id}/" class="btn-view" style="font-size: 0.6rem; padding: 0.15rem 0.6rem;">
-                            <i class="fa-solid fa-eye"></i> View
-                        </a>
-                    </td>
-                </tr>
-        """
-    
-    html += """
-            </tbody>
-        </table>
-    </div>
+    Get formatted display name for a user
     """
+    if not user:
+        return 'Unknown'
     
-    return html
-
-
-def generate_admin_ticket_list_html(tickets, status):
-    """Generate HTML for ticket list (Admin view) with error type display"""
-    if not tickets:
-        return """
-        <div class="empty-state text-center py-5">
-            <i class="fa-solid fa-receipt fa-3x mb-3 d-block opacity-25" style="color: var(--accent);"></i>
-            <h6 style="color: var(--text-secondary); font-weight: 600;">No Tickets Found</h6>
-            <p style="color: var(--text-muted); font-size: 0.85rem;">
-                No tickets found.
-            </p>
-        </div>
-        """
+    if user.get_full_name():
+        return user.get_full_name()
     
-    html = """
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Ticket</th>
-                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Created</th>
-                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Unit</th>
-                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Subject</th>
-                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Status</th>
-                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Priority</th>
-                    <th style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Error Type</th>
-                    <th class="text-center" style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary);">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-    """
-    
-    badge_class_map = {
-        'open': 'badge-status-open',
-        'assigned': 'badge-status-assigned',
-        'hold': 'badge-status-hold',
-        'escalated': 'badge-status-escalated',
-        'closed': 'badge-status-closed',
-    }
-    
-    priority_class_map = {
-        'critical': 'badge-priority-critical',
-        'high': 'badge-priority-high',
-        'medium': 'badge-priority-medium',
-        'low': 'badge-priority-low',
-    }
-    
-    for ticket in tickets:
-        status_class = ticket.status.lower()
-        badge_class = badge_class_map.get(status_class, 'badge-status-open')
-        priority_class = priority_class_map.get(ticket.priority.lower(), 'badge-priority-low')
-        
-        # ✅ Get error type display - show main_error_type if available, else error_type
-        if ticket.main_error_type and ticket.sub_error_type:
-            error_display = f"{ticket.main_error_type}<br><small style='font-size:0.5rem;color:var(--text-muted);'>{ticket.sub_error_type}</small>"
-        elif ticket.error_type:
-            error_display = ticket.error_type
-        else:
-            error_display = '-'
-        
-        html += f"""
-                <tr>
-                    <td class="fw-bold" style="color: var(--accent-light); font-size: 0.7rem;">
-                        {ticket.ticket_number}
-                    </td>
-                    <td style="font-size: 0.65rem; color: var(--text-secondary);">
-                        {ticket.created_at.strftime('%d-%m-%Y') if ticket.created_at else '-'}
-                        <span class="d-block" style="font-size: 0.55rem; color: var(--text-muted);">{ticket.created_at.strftime('%I:%M %p') if ticket.created_at else ''}</span>
-                    </td>
-                    <td style="font-size: 0.65rem; color: var(--text-secondary);">
-                        <span class="unit-badge" style="background: rgba(233,69,96,0.1); color: var(--accent); border: 1px solid rgba(233,69,96,0.15); padding: 0.15rem 0.5rem; border-radius: 50px; font-size: 0.6rem; font-weight: 600;">{ticket.unit.code if ticket.unit else '-'}</span>
-                    </td>
-                    <td class="text-truncate" style="max-width: 100px; font-size: 0.7rem;" title="{ticket.subject}">
-                        {ticket.subject}
-                    </td>
-                    <td>
-                        <span class="badge-custom {badge_class}" style="font-size: 0.5rem; padding: 0.15rem 0.5rem;">
-                            {ticket.status}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="badge-priority {priority_class}" style="font-size: 0.5rem; padding: 0.15rem 0.5rem;">
-                            <i class="fa-solid fa-flag" style="font-size: 0.3rem;"></i>
-                            {ticket.priority}
-                        </span>
-                    </td>
-                    <td style="font-size: 0.6rem;">
-                        {error_display}
-                    </td>
-                    <td class="text-center">
-                        <a href="/admin/ticket/{ticket.id}/" class="btn-view" style="font-size: 0.6rem; padding: 0.15rem 0.6rem; background: var(--accent-gradient); color: white; border-radius: 50px; text-decoration: none; display: inline-block;">
-                            <i class="fa-solid fa-eye"></i> View
-                        </a>
-                    </td>
-                </tr>
-        """
-    
-    html += """
-            </tbody>
-        </table>
-    </div>
-    """
-    
-    return html
-
-
-def get_contact_data():
-    """Get or create admin contact data"""
-    contact_obj, created = AdminContact.objects.get_or_create(
-        id=1,
-        defaults={
-            'admin_name': "IT ADMIN",
-            'admin_phone': "9999999999",
-            'admin_email': "admin@gplast.com",
-        }
-    )
-    return contact_obj
-
-
-# ✅ Alias for backward compatibility
-_get_contact_data = get_contact_data
-
-
-def get_employee_directory_data(request):
-    """Get employee directory data with search"""
-    emp_search = request.GET.get('emp_search', '').strip()
-    employees_qs = EmployeeMaster.objects.select_related('unit', 'department').all().order_by('employee_id')
-    if emp_search:
-        employees_qs = employees_qs.filter(
-            Q(employee_id__icontains=emp_search) |
-            Q(employee_name__icontains=emp_search) |
-            Q(mobile__icontains=emp_search) |
-            Q(email__icontains=emp_search) |
-            Q(unit__code__icontains=emp_search) |
-            Q(unit__full_name__icontains=emp_search) |
-            Q(department__name__icontains=emp_search)
-        )
-    return employees_qs, emp_search
-
-
-# ✅ Alias for backward compatibility
-_get_employee_directory_data = get_employee_directory_data
-
-
-def get_credentials_data():
-    """Get department credentials grouped by unit"""
-    all_credentials = DepartmentCredential.objects.select_related('unit', 'department').order_by('unit__code', 'department__name')
-    credentials_by_unit = []
-    
-    for unit in Unit.objects.filter(is_active=True).order_by('code'):
-        unit_creds = all_credentials.filter(unit=unit)
-        if unit_creds.exists():
-            credentials_by_unit.append({
-                'unit': unit, 
-                'credentials': unit_creds
-            })
-    
-    for unit in Unit.objects.filter(is_active=False).order_by('code'):
-        unit_creds = all_credentials.filter(unit=unit)
-        if unit_creds.exists():
-            credentials_by_unit.append({
-                'unit': unit, 
-                'credentials': unit_creds
-            })
-    
-    return all_credentials, credentials_by_unit
-
-
-# ✅ Alias for backward compatibility
-_get_credentials_data = get_credentials_data
-
-
-def is_ajax(request):
-    """Check if request is AJAX"""
-    return request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.GET.get('ajax', False)
-
-
-def get_paginated_queryset(queryset, page_number, per_page=20):
-    """
-    Get paginated queryset with proper error handling
-    """
-    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    
-    paginator = Paginator(queryset, per_page)
-    try:
-        page_obj = paginator.page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-    
-    return page_obj
-
-
-def get_ticket_status_color(status):
-    """Get color class for ticket status"""
-    color_map = {
-        'Open': 'success',
-        'Assigned': 'info',
-        'Hold': 'warning',
-        'Escalated': 'danger',
-        'Closed': 'secondary',
-    }
-    return color_map.get(status, 'secondary')
-
-
-def get_ticket_priority_color(priority):
-    """Get color class for ticket priority"""
-    color_map = {
-        'Critical': 'danger',
-        'High': 'warning',
-        'Medium': 'info',
-        'Low': 'secondary',
-    }
-    return color_map.get(priority, 'secondary')
+    return user.username
 
 
 # ============================================================
-# ✅ NEW UTILITY FUNCTIONS FOR ERROR TYPES
+# CHECK TICKET OWNERSHIP
 # ============================================================
-
-def get_error_type_display(ticket):
+def user_can_view_ticket(user, ticket):
     """
-    Get formatted error type display for a ticket
-    Returns HTML string with main and sub error types
+    Check if a user can view a ticket based on their role
     """
-    if ticket.main_error_type and ticket.sub_error_type:
-        return f"{ticket.main_error_type} → {ticket.sub_error_type}"
-    elif ticket.main_error_type:
-        return ticket.main_error_type
-    elif ticket.error_type:
-        return ticket.error_type
-    return "Not Set"
-
-
-def get_error_type_badge(ticket):
-    """
-    Get HTML badge for error type display
-    Returns HTML string with styled badge
-    """
-    if ticket.main_error_type and ticket.sub_error_type:
-        color = '#8B5CF6' if ticket.main_error_type == 'Roadmap Error' else '#10B981'
-        return f"""
-            <span style="display:inline-block;background:{color}15;color:{color};padding:0.1rem 0.5rem;border-radius:50px;font-size:0.5rem;font-weight:600;border:1px solid {color}20;">
-                {ticket.main_error_type}
-                <span style="font-weight:400;opacity:0.7;">→</span>
-                {ticket.sub_error_type}
-            </span>
-        """
-    elif ticket.main_error_type:
-        color = '#8B5CF6' if ticket.main_error_type == 'Roadmap Error' else '#10B981'
-        return f"""
-            <span style="display:inline-block;background:{color}15;color:{color};padding:0.1rem 0.5rem;border-radius:50px;font-size:0.5rem;font-weight:600;border:1px solid {color}20;">
-                {ticket.main_error_type}
-            </span>
-        """
-    elif ticket.error_type:
-        return f"""
-            <span style="display:inline-block;background:#E8EDF5;color:#4A5A7A;padding:0.1rem 0.5rem;border-radius:50px;font-size:0.5rem;font-weight:600;border:1px solid #DCE3F0;">
-                {ticket.error_type}
-            </span>
-        """
-    return f"""
-        <span style="display:inline-block;color:#8A9AB8;padding:0.1rem 0.5rem;border-radius:50px;font-size:0.5rem;font-weight:400;">
-            Not Set
-        </span>
-    """
-
-
-def has_closing_error_details(ticket):
-    """Check if ticket has closing error details"""
-    return bool(ticket.main_error_type and ticket.sub_error_type)
-
-
-def get_sub_error_choices(main_error_type):
-    """
-    Get sub-error choices based on main error type
-    Returns list of tuples for form choices
-    """
-    if main_error_type == 'Roadmap Error':
-        return [
-            ('Database Error', 'Database Error'),
-            ('Logic / Functional Error', 'Logic / Functional Error'),
-            ('Application Error', 'Application Error'),
-            ('Calculation Error', 'Calculation Error'),
-            ('Report / Print Error', 'Report / Print Error'),
-            ('Workflow / Approval Error', 'Workflow / Approval Error'),
-            ('Integration / API Error', 'Integration / API Error'),
-            ('Barcode Error', 'Barcode Error'),
-            ('Performance Error', 'Performance Error'),
-            ('Access / Permission Error', 'Access / Permission Error'),
-            ('Master Data / Configuration Error', 'Master Data / Configuration Error'),
-            ('Other ERP Error', 'Other ERP Error'),
-        ]
-    elif main_error_type == 'GPL Error':
-        return [
-            ('User / Data Entry Error', 'User / Data Entry Error'),
-            ('Process / Procedure Error', 'Process / Procedure Error'),
-            ('Master Data Error', 'Master Data Error'),
-            ('Other GPL Error', 'Other GPL Error'),
-        ]
-    return []
-
-
-def get_error_type_stats(tickets_qs):
-    """
-    Get error type statistics from a queryset
-    Returns dictionary with main_error_type and sub_error_type counts
-    """
-    main_error_stats = (
-        tickets_qs
-        .exclude(main_error_type__isnull=True)
-        .exclude(main_error_type__exact='')
-        .values('main_error_type')
-        .annotate(count=models.Count('id'))
-        .order_by('-count')
-    )
+    if not user or not user.is_authenticated:
+        return False
     
-    sub_error_stats = (
-        tickets_qs
-        .exclude(sub_error_type__isnull=True)
-        .exclude(sub_error_type__exact='')
-        .values('sub_error_type')
-        .annotate(count=models.Count('id'))
-        .order_by('-count')
-    )
+    # Admin can view all tickets
+    if user.is_staff:
+        return True
     
-    return {
-        'main_errors': main_error_stats,
-        'sub_errors': sub_error_stats,
-    }
+    # Unit Head can view tickets from their unit
+    if is_unit_head(user):
+        unit = get_unit_head_unit(user)
+        if unit and ticket.unit == unit:
+            return True
+        return False
+    
+    # Employee can view tickets they created or are assigned to
+    if ticket.created_by_user == user:
+        return True
+    
+    if ticket.assigned_person and ticket.assigned_person.lower() in user.username.lower():
+        return True
+    
+    return False
+
+
+# ============================================================
+# CHECK TICKET UPDATE PERMISSION
+# ============================================================
+def user_can_update_ticket(user, ticket):
+    """
+    Check if a user can update a ticket based on their role
+    """
+    if not user or not user.is_authenticated:
+        return False
+    
+    # Admin can update all tickets
+    if user.is_staff:
+        return True
+    
+    # Unit Head can update tickets from their unit
+    if is_unit_head(user):
+        unit = get_unit_head_unit(user)
+        if unit and ticket.unit == unit:
+            return True
+        return False
+    
+    # Employee can only update tickets they created
+    if ticket.created_by_user == user:
+        return True
+    
+    return False
+
+
+# ============================================================
+# FILTER TICKETS BY USER ROLE
+# ============================================================
+def filter_tickets_by_role(user, queryset):
+    """
+    Filter a ticket queryset based on user role
+    """
+    if not user or not user.is_authenticated:
+        return queryset.none()
+    
+    # Admin sees all tickets
+    if user.is_staff:
+        return queryset
+    
+    # Unit Head sees only their unit's tickets
+    if is_unit_head(user):
+        unit = get_unit_head_unit(user)
+        if unit:
+            return queryset.filter(unit=unit)
+        return queryset.none()
+    
+    # Employee sees their own tickets and assigned tickets
+    return queryset.filter(
+        Q(created_by_user=user) |
+        Q(assigned_person__icontains=user.username)
+    ).distinct()

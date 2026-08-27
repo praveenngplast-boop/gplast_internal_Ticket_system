@@ -11,7 +11,7 @@
  *   <form data-confirm="Are you sure?" action="/submit" method="POST">
  *   <a href="/delete/1" data-confirm="Delete this item?" class="confirm-link">
  * 
- * @version 1.0.0
+ * @version 1.1.0
  * @author GPLAST Team
  */
 
@@ -320,7 +320,7 @@
     });
 
     // Cancel button
-    modalEl.querySelectorAll('.btn-outline-grad, .btn-cancel, .btn-secondary').forEach(function(btn) {
+    modalEl.querySelectorAll('.btn-outline-grad, .btn-cancel, .btn-secondary, .btn-confirm-cancel, .btn-modal-close, .btn-no').forEach(function(btn) {
         btn.addEventListener('click', handleCancel);
     });
 
@@ -463,7 +463,7 @@
             };
             
             const cancelHandler = function(e) {
-                modalEl.querySelectorAll('[data-bs-dismiss="modal"], .btn-close, .btn-outline-grad, .btn-cancel, .btn-secondary')
+                modalEl.querySelectorAll('[data-bs-dismiss="modal"], .btn-close, .btn-outline-grad, .btn-cancel, .btn-secondary, .btn-confirm-cancel, .btn-modal-close, .btn-no')
                     .forEach(function(btn) {
                         btn.removeEventListener('click', cancelHandler);
                     });
@@ -476,7 +476,7 @@
             
             // Bind the handlers
             confirmYes.addEventListener('click', confirmHandler);
-            modalEl.querySelectorAll('[data-bs-dismiss="modal"], .btn-close, .btn-outline-grad, .btn-cancel, .btn-secondary')
+            modalEl.querySelectorAll('[data-bs-dismiss="modal"], .btn-close, .btn-outline-grad, .btn-cancel, .btn-secondary, .btn-confirm-cancel, .btn-modal-close, .btn-no')
                 .forEach(function(btn) {
                     btn.addEventListener('click', cancelHandler);
                 });

@@ -1,14 +1,18 @@
-# tickets/views/settings_actions/screen_mapping.py
+# tickets/views/settings_action/screen_mapping.py
 
 """
-Screen Mapping - Add, Remove, Delete ERP, Export Excel, Page View, AJAX
+Screen Mapping - Add, Remove, Delete ERP, Export Excel, Page View, AJAX, Bulk Upload
 """
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from django.core.paginator import Paginator
 import json
+import openpyxl
+import pandas as pd
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from django.utils import timezone
 import logging
 
 from tickets.models import ScreenMaster, ScreenMapping, ERPHolderMapping
@@ -326,3 +330,216 @@ def ajax_get_screens_for_erp(request):
     } for sm in screens]
 
     return JsonResponse({'success': True, 'screens': screen_list})
+
+
+# ============================================================
+# ✅ NEW: SCREEN MAPPING - BULK UPLOAD (AJAX)
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='tickets:login')
+def screen_mapping_bulk_upload(request):
+    """
+    Bulk upload screen mappings from Excel/CSV
+    Columns: ERP User ID, Screen Code
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
+    
+    excel_file = request.FILES.get('excel_file')
+    if not excel_file:
+        return JsonResponse({'success': False, 'message': 'Please select an Excel file.'})
+    
+    if not excel_file.name.endswith(('.xlsx', '.xls', '.csv')):
+        return JsonResponse({'success': False, 'message': 'Invalid file format. Only .xlsx, .xls, and .csv files are supported.'})
+    
+    try:
+        # Read the file
+        if excel_file.name.endswith('.csv'):
+            df = pd.read_csv(excel_file, dtype=str)
+        else:
+            df = pd.read_excel(excel_file, dtype=str)
+        
+        if df.empty:
+            return JsonResponse({'success': False, 'message': 'The uploaded file is empty.'})
+        
+        # Find columns
+        erp_column = None
+        screen_column = None
+        
+        for col in df.columns:
+            col_lower = col.strip().lower()
+            if 'erp' in col_lower and ('user' in col_lower or 'id' in col_lower):
+                erp_column = col
+            elif 'screen' in col_lower and ('code' in col_lower or 'id' in col_lower):
+                screen_column = col
+        
+        # If columns not found, use first two columns
+        if erp_column is None:
+            erp_column = df.columns[0]
+        if screen_column is None:
+            screen_column = df.columns[1] if len(df.columns) > 1 else df.columns[0]
+        
+        # Get all ERP IDs from system
+        existing_erp_ids = set(ERPHolderMapping.objects.values_list('erp_user_id', flat=True))
+        
+        # Get all screens from Screen Master (map by screen_code)
+        screens_by_code = {}
+        for screen in ScreenMaster.objects.filter(is_active=True):
+            screens_by_code[screen.screen_code.upper()] = screen
+        
+        # Get existing mappings to check duplicates (erp_id + screen_id)
+        existing_mappings = set()
+        for mapping in ScreenMapping.objects.all():
+            existing_mappings.add((mapping.erp_user_id, mapping.screen_id))
+        
+        # Process rows
+        added_count = 0
+        skipped_count = 0
+        errors = []
+        added_mappings = []
+        
+        for idx, row in df.iterrows():
+            row_num = idx + 2
+            erp_id = str(row.get(erp_column, '')).strip()
+            screen_code = str(row.get(screen_column, '')).strip().upper()
+            
+            if not erp_id:
+                errors.append(f'Row {row_num}: ERP User ID is empty')
+                skipped_count += 1
+                continue
+            
+            if not screen_code:
+                errors.append(f'Row {row_num}: Screen Code is empty')
+                skipped_count += 1
+                continue
+            
+            # Check if ERP ID exists
+            if erp_id not in existing_erp_ids:
+                errors.append(f'Row {row_num}: ERP ID "{erp_id}" not found in system')
+                skipped_count += 1
+                continue
+            
+            # Find screen by code
+            screen = screens_by_code.get(screen_code)
+            if not screen:
+                errors.append(f'Row {row_num}: Screen Code "{screen_code}" not found in Screen Master')
+                skipped_count += 1
+                continue
+            
+            # Check if mapping already exists
+            if (erp_id, screen.id) in existing_mappings:
+                errors.append(f'Row {row_num}: Mapping already exists for ERP "{erp_id}" → Screen "{screen_code}"')
+                skipped_count += 1
+                continue
+            
+            # Create mapping
+            try:
+                mapping = ScreenMapping.objects.create(
+                    erp_user_id=erp_id,
+                    screen=screen,
+                    created_by=request.user.username
+                )
+                added_count += 1
+                added_mappings.append(f'{erp_id} → {screen_code}')
+                # Add to existing mappings set
+                existing_mappings.add((erp_id, screen.id))
+            except Exception as e:
+                errors.append(f'Row {row_num}: Error creating mapping - {str(e)}')
+                skipped_count += 1
+        
+        # Log bulk upload
+        if added_count > 0:
+            log_settings_change(
+                request,
+                action_type='CREATE',
+                setting_type='SCREEN_MAPPING',
+                setting_name=f'Bulk Upload: {added_count} screen mappings',
+                new_value=f'Added {added_count} mappings: {", ".join(added_mappings[:10])}{"..." if len(added_mappings) > 10 else ""}',
+                change_summary=f'Bulk uploaded {added_count} screen mappings',
+                remarks=f'Bulk upload by {request.user.username}'
+            )
+        
+        message = f'Successfully added {added_count} screen mappings.'
+        if skipped_count > 0:
+            message += f' Skipped {skipped_count} rows with errors.'
+        
+        return JsonResponse({
+            'success': True,
+            'message': message,
+            'added_count': added_count,
+            'skipped_count': skipped_count,
+            'added_mappings': added_mappings[:20],
+            'errors': errors[:20]
+        })
+        
+    except Exception as e:
+        logger.error(f"Bulk upload error: {str(e)}")
+        return JsonResponse({'success': False, 'message': f'Error processing file: {str(e)}'})
+
+
+# ============================================================
+# ✅ NEW: SCREEN MAPPING - DOWNLOAD BULK UPLOAD TEMPLATE
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='tickets:login')
+def screen_mapping_download_template(request):
+    """
+    Download Excel template for bulk screen mapping upload
+    Columns: ERP User ID, Screen Code
+    """
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=Screen_Mapping_Upload_Template.xlsx'
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Screen Mapping"
+    
+    # Header
+    header_font = Font(name='Calibri', size=12, bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+    header_alignment = Alignment(horizontal='center', vertical='center')
+    
+    headers = ['ERP User ID', 'Screen Code']
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+    
+    # Sample data
+    data_font = Font(name='Calibri', size=11)
+    samples = [
+        ['HRD1223', 'SO-001'],
+        ['HRD1223', 'PO-002'],
+        ['FIN001', 'INV-003'],
+        ['IT9876', 'USR-004'],
+        ['MKT456', 'REP-005'],
+    ]
+    for row_idx, row in enumerate(samples, 2):
+        for col_idx, val in enumerate(row, 1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.value = val
+            cell.font = data_font
+    
+    # Notes
+    note_row = len(samples) + 3
+    note_cell = ws.cell(row=note_row, column=1)
+    note_cell.value = "📌 Add your screen mappings below. One per row."
+    note_cell.font = Font(name='Calibri', size=10, italic=True, color='FF0000')
+    ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=2)
+    
+    note_row2 = len(samples) + 4
+    note_cell2 = ws.cell(row=note_row2, column=1)
+    note_cell2.value = "⚠️ ERP User ID must exist in the system. Screen Code must exist in Screen Master."
+    note_cell2.font = Font(name='Calibri', size=10, italic=True, color='FF6B00')
+    ws.merge_cells(start_row=note_row2, start_column=1, end_row=note_row2, end_column=2)
+    
+    # Column widths
+    ws.column_dimensions['A'].width = 25
+    ws.column_dimensions['B'].width = 20
+    
+    wb.save(response)
+    return response

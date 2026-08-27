@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load ticket_filters %}
-{% block title %}Employee Dashboard - GPLAST{% endblock %}
+{% block title %}Unit Head Dashboard - {{ unit_head_unit_code }} - GPLAST{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -163,19 +163,19 @@
         color: var(--text-secondary);
     }
 
-    .dept-badge {
+    .unit-badge {
         display: inline-block;
-        background: rgba(255, 107, 0, 0.08);
-        border: 1px solid rgba(255, 107, 0, 0.12);
+        background: rgba(139, 92, 246, 0.08);
+        border: 1px solid rgba(139, 92, 246, 0.15);
         border-radius: 50px;
         padding: 0.2rem 0.8rem;
         font-size: 0.7rem;
-        color: var(--brand-orange);
+        color: #8B5CF6;
         font-weight: 600;
         font-family: 'Inter', sans-serif;
     }
 
-    .dept-badge i { margin-right: 0.4rem; color: var(--brand-orange); }
+    .unit-badge i { margin-right: 0.4rem; color: #8B5CF6; }
 
     /* Buttons */
     .btn-primary-custom {
@@ -458,43 +458,6 @@
     .chart-empty i { font-size: 2rem; color: var(--brand-orange); opacity: 0.3; margin-bottom: 0.5rem; }
     .chart-empty p { font-size: 0.8rem; margin: 0; font-family: 'Inter', sans-serif; }
 
-    /* Badge Error Type */
-    .badge-error-type {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.2rem;
-        padding: 0.1rem 0.4rem;
-        border-radius: 50px;
-        font-size: 0.45rem;
-        font-weight: 600;
-        white-space: nowrap;
-        border: 1px solid transparent;
-    }
-
-    .badge-error-type.roadmap {
-        background: rgba(139, 92, 246, 0.12);
-        color: var(--error-roadmap);
-        border-color: rgba(139, 92, 246, 0.15);
-    }
-
-    .badge-error-type.gpl {
-        background: rgba(16, 185, 129, 0.12);
-        color: var(--error-gpl);
-        border-color: rgba(16, 185, 129, 0.15);
-    }
-
-    .badge-error-type.other {
-        background: rgba(148, 163, 184, 0.12);
-        color: var(--error-other);
-        border-color: rgba(148, 163, 184, 0.15);
-    }
-
-    .badge-error-type .sub-text {
-        font-weight: 400;
-        opacity: 0.7;
-        font-size: 0.35rem;
-    }
-
     /* Badges */
     .badge-custom {
         display: inline-block;
@@ -515,47 +478,6 @@
     .badge-status-hold { background: var(--status-hold); color: white; }
     .badge-status-escalated { background: var(--status-escalated); color: white; }
     .badge-status-closed { background: var(--status-closed); color: white; }
-
-    /* Contact Card */
-    .contact-card {
-        background: var(--brand-gradient) !important;
-        border: none !important;
-        border-radius: 16px !important;
-        overflow: hidden;
-        position: relative;
-        color: #FFFFFF !important;
-        height: 100%;
-        min-height: 200px;
-    }
-
-    .contact-card::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -30%;
-        width: 300px;
-        height: 300px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 50%;
-        animation: shimmerFloat 8s ease-in-out infinite;
-    }
-
-    @keyframes shimmerFloat {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        50% { transform: translate(-30px, 20px) scale(1.2); }
-    }
-
-    .contact-card .card-body {
-        position: relative;
-        z-index: 1;
-        padding: 1.5rem !important;
-    }
-
-    .contact-card hr { border-color: rgba(255, 255, 255, 0.15) !important; }
-    .contact-card a { color: #FFFFFF !important; text-decoration: none; transition: all 0.3s ease; }
-    .contact-card a:hover { text-decoration: underline; opacity: 0.8; }
-    .contact-card .text-white-50 { color: rgba(255, 255, 255, 0.6) !important; }
-    .contact-card .fs-5 { font-size: 1rem !important; color: #FFFFFF !important; }
 
     /* Modal */
     .modal-content {
@@ -581,7 +503,6 @@
     }
 
     .modal-header .modal-title i { color: var(--brand-orange) !important; }
-    .modal-header .modal-title #drillDownStatusLabel { color: var(--brand-orange) !important; }
 
     .modal-body {
         padding: 1.25rem !important;
@@ -720,10 +641,6 @@
         .glass-header { padding: 0.4rem 0.75rem; }
         .glass-header h6 { font-size: 0.75rem; }
         .card-body { padding: 0.5rem; }
-        .contact-card { min-height: 180px; }
-        .contact-card .card-body { padding: 1rem !important; }
-        .contact-card h4 { font-size: 1rem; }
-        .contact-card .fs-5 { font-size: 0.9rem !important; }
         .modal-body { padding: 0.75rem !important; max-height: 350px; }
         .modal-body .table td { font-size: 0.6rem !important; padding: 0.2rem !important; }
         .modal-header .modal-title { font-size: 0.95rem !important; }
@@ -731,8 +648,6 @@
         .chart-empty { min-height: 140px; }
         .chart-empty i { font-size: 1.5rem; }
         .chart-empty p { font-size: 0.7rem; }
-        .badge-error-type { font-size: 0.4rem !important; padding: 0.05rem 0.25rem !important; }
-        .badge-error-type .sub-text { font-size: 0.3rem; }
         .aging-badge { font-size: 0.4rem; padding: 0.05rem 0.3rem; min-width: 35px; }
     }
 
@@ -744,25 +659,18 @@
         .chart-wrapper { min-height: 160px; max-height: 190px; }
         .header-title { font-size: 1rem; }
         .header-subtitle { font-size: 0.7rem; }
-        .dept-badge { font-size: 0.6rem; padding: 0.1rem 0.6rem; }
+        .unit-badge { font-size: 0.6rem; padding: 0.1rem 0.6rem; }
         .btn-primary-custom { font-size: 0.75rem !important; padding: 0.3rem 1rem !important; }
         .btn-outline-custom { font-size: 0.65rem !important; padding: 0.2rem 0.8rem !important; }
         .badge-custom { font-size: 0.4rem; padding: 0.05rem 0.3rem; }
         .btn-view { font-size: 0.4rem; padding: 0.05rem 0.3rem; min-width: 32px; }
-        .badge-error-type { font-size: 0.35rem !important; padding: 0.05rem 0.2rem !important; }
-        .badge-error-type .sub-text { font-size: 0.25rem; }
         .aging-badge { font-size: 0.35rem; padding: 0.03rem 0.25rem; min-width: 30px; }
     }
 
-    @media (max-width: 400px) {
-        .kpi-card { min-height: 55px; padding: 0.3rem 0.4rem !important; }
-        .kpi-value { font-size: 0.8rem; }
-        .kpi-label { font-size: 0.45rem; }
-        .panel-card { min-height: 240px; }
-        .chart-wrapper { min-height: 140px; max-height: 170px; }
-        .chart-wrapper .chart-hint { content: ''; }
-        .kpi-filter-badge { display: none; }
-        .click-hint { display: none; }
+    @media (max-width: 360px) {
+        .badge-custom { font-size: 0.35rem; padding: 0.03rem 0.2rem; }
+        .btn-view { font-size: 0.35rem; padding: 0.03rem 0.2rem; min-width: 28px; }
+        .aging-badge { font-size: 0.3rem; padding: 0.02rem 0.15rem; min-width: 25px; }
     }
 
     /* Dark Mode Specific */
@@ -833,28 +741,6 @@
         color: var(--brand-orange) !important;
     }
 
-    [data-theme="dark"] .contact-card {
-        background: var(--brand-gradient) !important;
-    }
-
-    [data-theme="dark"] .badge-error-type.roadmap {
-        background: rgba(139, 92, 246, 0.15);
-        color: #A78BFA;
-        border-color: rgba(139, 92, 246, 0.2);
-    }
-
-    [data-theme="dark"] .badge-error-type.gpl {
-        background: rgba(16, 185, 129, 0.15);
-        color: #34D399;
-        border-color: rgba(16, 185, 129, 0.2);
-    }
-
-    [data-theme="dark"] .badge-error-type.other {
-        background: rgba(148, 163, 184, 0.12);
-        color: rgba(255, 255, 255, 0.4);
-        border-color: rgba(148, 163, 184, 0.15);
-    }
-
     /* Scrollbar */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
@@ -873,32 +759,35 @@
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
                 <h1 class="header-title">
-                    <i class="fa-solid fa-gauge-high me-2" style="color: var(--brand-orange);"></i>
-                    Welcome, {{ user.username|upper }}
+                    <i class="fa-solid fa-chart-pie me-2" style="color: #8B5CF6;"></i>
+                    Unit Dashboard
                 </h1>
                 <p class="header-subtitle">
-                    <i class="fa-regular fa-clock me-1"></i>
-                    Manage and monitor your IT & ERP support requests
+                    <i class="fa-regular fa-building me-1"></i>
+                    {{ unit_head_unit_name|default:unit_head_unit_code }}
                     <span class="badge rounded-pill ms-2 px-2 py-1" style="font-size: clamp(0.55rem, 0.8vw, 0.65rem); background: rgba(255, 107, 0, 0.08); color: var(--brand-orange); border: 1px solid rgba(255, 107, 0, 0.1);">
-                        <i class="fa-regular fa-circle-check me-1"></i>Active
+                        <i class="fa-regular fa-circle-check me-1"></i>Live
                     </span>
                 </p>
-                {% if show_department_tickets and department_name and unit_name %}
                 <div class="mt-2">
-                    <span class="dept-badge">
-                        <i class="fa-solid fa-building"></i>
-                        {{ unit_name }} - {{ department_name }}
+                    <span class="unit-badge">
+                        <i class="fa-solid fa-user-tie"></i>
+                        Unit Head - {{ unit_head_unit_code }}
                     </span>
-                    <span class="dept-badge ms-2" style="background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.15); color: #22C55E;">
-                        <i class="fa-solid fa-users"></i>
-                        Department Dashboard
+                    <span class="unit-badge ms-2" style="background: rgba(139, 92, 246, 0.08); border-color: rgba(139, 92, 246, 0.15); color: #8B5CF6;">
+                        <i class="fa-solid fa-eye"></i>
+                        Unit-Specific View
                     </span>
                 </div>
-                {% endif %}
             </div>
-            <a href="{% url 'create_ticket' %}" class="btn btn-primary-custom">
-                <i class="fa-solid fa-circle-plus"></i>New Support Ticket
-            </a>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'unit_head_all_tickets' %}" class="btn btn-primary-custom">
+                    <i class="fa-solid fa-list-check"></i>View All Tickets
+                </a>
+                <a href="{% url 'unit_head_reports' %}" class="btn btn-outline-custom">
+                    <i class="fa-solid fa-file-excel"></i>Reports
+                </a>
+            </div>
         </div>
     </div>
 
@@ -907,7 +796,7 @@
         <div class="col-12">
             <h6 class="fw-bold mb-2" style="color: var(--text-primary); font-size: 0.8rem; font-family: 'Fraunces', serif;">
                 <i class="fa-solid fa-chart-simple me-2" style="color: var(--brand-orange);"></i>
-                {% if show_department_tickets %}Department{% else %}My{% endif %} Tickets Overview
+                Unit Ticket Overview <span style="font-size: 0.55rem; font-weight: 400; color: var(--text-muted);">(Click any card to filter)</span>
             </h6>
         </div>
     </div>
@@ -915,7 +804,7 @@
     <div class="row g-3 mb-4">
         <!-- Total -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="kpi-card kpi-total" onclick="drillDownTickets('all')">
+            <div class="kpi-card kpi-total" onclick="drillDownUnitTickets('all')">
                 <div class="kpi-value">{{ kpis.total }}</div>
                 <div class="kpi-label"><i class="fa-regular fa-circle-check me-1"></i>Total</div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
@@ -924,7 +813,7 @@
         </div>
         <!-- Open -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="kpi-card kpi-open" onclick="drillDownTickets('Open')">
+            <div class="kpi-card kpi-open" onclick="drillDownUnitTickets('Open')">
                 <div class="kpi-value">{{ kpis.open }}</div>
                 <div class="kpi-label"><i class="fa-regular fa-circle me-1"></i>Open</div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
@@ -933,7 +822,7 @@
         </div>
         <!-- Assigned -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="kpi-card kpi-assigned" onclick="drillDownTickets('Assigned')">
+            <div class="kpi-card kpi-assigned" onclick="drillDownUnitTickets('Assigned')">
                 <div class="kpi-value">{{ kpis.assigned }}</div>
                 <div class="kpi-label"><i class="fa-solid fa-user-check me-1"></i>Assigned</div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
@@ -942,7 +831,7 @@
         </div>
         <!-- Hold -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="kpi-card kpi-hold" onclick="drillDownTickets('Hold')">
+            <div class="kpi-card kpi-hold" onclick="drillDownUnitTickets('Hold')">
                 <div class="kpi-value">{{ kpis.hold }}</div>
                 <div class="kpi-label"><i class="fa-solid fa-pause me-1"></i>Hold</div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
@@ -951,7 +840,7 @@
         </div>
         <!-- Escalated -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="kpi-card kpi-escalated" onclick="drillDownTickets('Escalated')">
+            <div class="kpi-card kpi-escalated" onclick="drillDownUnitTickets('Escalated')">
                 <div class="kpi-value">{{ kpis.escalated }}</div>
                 <div class="kpi-label"><i class="fa-solid fa-cloud-arrow-up me-1"></i>Escalated</div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
@@ -960,7 +849,7 @@
         </div>
         <!-- Closed -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="kpi-card kpi-closed" onclick="drillDownTickets('Closed')">
+            <div class="kpi-card kpi-closed" onclick="drillDownUnitTickets('Closed')">
                 <div class="kpi-value">{{ kpis.closed }}</div>
                 <div class="kpi-label"><i class="fa-solid fa-circle-check me-1"></i>Closed</div>
                 <span class="click-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click</span>
@@ -969,7 +858,7 @@
         </div>
         <!-- Critical -->
         <div class="col-12">
-            <div class="kpi-card kpi-critical" onclick="drillDownTickets('Critical')">
+            <div class="kpi-card kpi-critical" onclick="drillDownUnitTickets('Critical')">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="kpi-value">{{ kpis.critical }}</div>
@@ -989,19 +878,19 @@
         <div class="col-12 col-lg-6">
             <div class="panel-card">
                 <div class="glass-header">
-                    <h6><i class="fa-solid fa-chart-pie me-2"></i>Ticket Status Distribution</h6>
-                    <a href="{% url 'my_tickets' %}" class="btn-outline-custom btn-sm">
+                    <h6><i class="fa-solid fa-chart-pie me-2"></i>Ticket Status Distribution <span style="font-size: 0.5rem; font-weight: 400; color: var(--text-muted);">(Click segments to filter)</span></h6>
+                    <a href="{% url 'unit_head_all_tickets' %}" class="btn-outline-custom btn-sm">
                         <i class="fa-solid fa-arrow-right"></i> View All
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-wrapper" id="deptStatusChartWrapper">
-                        <canvas id="deptStatusChart"></canvas>
-                        <div id="deptStatusEmpty" class="chart-empty" style="display:none;">
+                    <div class="chart-wrapper" id="statusChartWrapper">
+                        <canvas id="statusChart"></canvas>
+                        <div id="statusEmpty" class="chart-empty" style="display:none;">
                             <i class="fa-solid fa-chart-pie"></i>
                             <p>No status data available</p>
                         </div>
-                        <span class="chart-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click segments</span>
+                        <span class="chart-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click segments to filter</span>
                     </div>
                 </div>
             </div>
@@ -1011,60 +900,25 @@
         <div class="col-12 col-lg-6">
             <div class="panel-card">
                 <div class="glass-header">
-                    <h6><i class="fa-solid fa-flag me-2"></i>Priority Distribution</h6>
-                    <a href="{% url 'my_tickets' %}" class="btn-outline-custom btn-sm">
+                    <h6><i class="fa-solid fa-flag me-2"></i>Priority Distribution <span style="font-size: 0.5rem; font-weight: 400; color: var(--text-muted);">(Click segments to filter)</span></h6>
+                    <a href="{% url 'unit_head_all_tickets' %}" class="btn-outline-custom btn-sm">
                         <i class="fa-solid fa-arrow-right"></i> View All
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="chart-wrapper" id="deptPriorityChartWrapper">
-                        <canvas id="deptPriorityChart"></canvas>
-                        <div id="deptPriorityEmpty" class="chart-empty" style="display:none;">
+                    <div class="chart-wrapper" id="priorityChartWrapper">
+                        <canvas id="priorityChart"></canvas>
+                        <div id="priorityEmpty" class="chart-empty" style="display:none;">
                             <i class="fa-solid fa-flag"></i>
                             <p>No priority data available</p>
                         </div>
-                        <span class="chart-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click segments</span>
+                        <span class="chart-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click segments to filter</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Contact Card (Full Width) -->
-    <div class="row g-4">
-        <div class="col-12">
-            <div class="contact-card">
-                <div class="card-body text-center">
-                    <i class="fa-solid fa-headset fa-3x mb-3 text-white-50"></i>
-                    <h4 class="fw-bold mb-1" style="color: #FFFFFF;">Need Help?</h4>
-                    <p class="small text-white-50 mb-4">Contact our internal ERP support helpdesk</p>
-
-                    <hr class="my-3">
-
-                    {% if contact %}
-                    <div class="text-start" style="max-width: 500px; margin: 0 auto;">
-                        <p class="mb-3 d-flex align-items-center">
-                            <i class="fa-solid fa-user-tie me-3 text-white-50"></i>
-                            <span>
-                                <span class="d-block small text-white-50">Assigned ERP Executive</span>
-                                <strong class="fs-5" style="color: #FFFFFF;">{{ contact.admin_name|default:"Not Set" }}</strong>
-                            </span>
-                        </p>
-                        <p class="mb-3 d-flex align-items-center">
-                            <i class="fa-solid fa-envelope me-3 text-white-50"></i>
-                            <span>
-                                <span class="d-block small text-white-50">Email Address</span>
-                                <a href="mailto:{{ contact.admin_email }}" class="fw-bold" style="color: #FFFFFF;">{{ contact.admin_email|default:"Not Set" }}</a>
-                            </span>
-                        </p>
-                    </div>
-                    {% else %}
-                    <p class="mb-0 text-white-50">IT support details not configured yet.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Modal -->
@@ -1074,7 +928,7 @@
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="fa-solid fa-list-ul me-2"></i>
-                    Tickets - <span id="drillDownStatusLabel">All</span>
+                    Tickets - <span id="drillDownStatusLabel">All Unit Tickets</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -1088,8 +942,8 @@
                 <button type="button" class="btn-close-custom" data-bs-dismiss="modal">
                     <i class="fa-solid fa-xmark me-1"></i>Close
                 </button>
-                <a href="{% url 'my_tickets' %}" class="btn-view-all" id="drillDownViewAllBtn">
-                    <i class="fa-solid fa-arrow-right me-1"></i>View All
+                <a href="{% url 'unit_head_all_tickets' %}" class="btn-view-all" id="drillDownViewAllBtn">
+                    <i class="fa-solid fa-arrow-right me-1"></i>View All Unit Tickets
                 </a>
             </div>
         </div>
@@ -1121,21 +975,21 @@
             console.error('Error parsing chart data:', e);
         }
 
-        const hasStatusData = chartsData.dept_status && Object.keys(chartsData.dept_status).length > 0;
-        const hasPriorityData = chartsData.dept_priority && Object.keys(chartsData.dept_priority).length > 0;
+        const hasStatusData = chartsData.status && Object.keys(chartsData.status).length > 0;
+        const hasPriorityData = chartsData.priority && Object.keys(chartsData.priority).length > 0;
 
-        const statusEmpty = document.getElementById('deptStatusEmpty');
-        const priorityEmpty = document.getElementById('deptPriorityEmpty');
-        const statusCanvas = document.getElementById('deptStatusChart');
-        const priorityCanvas = document.getElementById('deptPriorityChart');
+        const statusEmpty = document.getElementById('statusEmpty');
+        const priorityEmpty = document.getElementById('priorityEmpty');
+        const statusCanvas = document.getElementById('statusChart');
+        const priorityCanvas = document.getElementById('priorityChart');
 
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const textColor = isDark ? '#E8EDF5' : '#1A2A6C';
 
-        // Chart 1: Status
+        // Chart 1: Status - Doughnut with Drill Down
         if (statusCanvas && hasStatusData) {
-            const statusLabels = Object.keys(chartsData.dept_status);
-            const statusValues = Object.values(chartsData.dept_status);
+            const statusLabels = Object.keys(chartsData.status);
+            const statusValues = Object.values(chartsData.status);
             const statusColors = {
                 'Open': '#22C55E',
                 'Assigned': '#3B82F6',
@@ -1155,7 +1009,7 @@
                         backgroundColor: colors,
                         borderColor: isDark ? '#1A1A2E' : '#FFFFFF',
                         borderWidth: 3,
-                        hoverOffset: 12
+                        hoverOffset: 15
                     }]
                 },
                 options: {
@@ -1190,7 +1044,7 @@
                         if (elements.length > 0) {
                             const index = elements[0].index;
                             const label = this.data.labels[index];
-                            drillDownTickets(label);
+                            drillDownUnitTickets(label);
                         }
                     }
                 }
@@ -1201,10 +1055,10 @@
             statusEmpty.style.display = 'flex';
         }
 
-        // Chart 2: Priority
+        // Chart 2: Priority - Pie with Drill Down
         if (priorityCanvas && hasPriorityData) {
-            const priorityLabels = Object.keys(chartsData.dept_priority);
-            const priorityValues = Object.values(chartsData.dept_priority);
+            const priorityLabels = Object.keys(chartsData.priority);
+            const priorityValues = Object.values(chartsData.priority);
             const priorityColors = {
                 'Critical': '#EF4444',
                 'High': '#F59E0B',
@@ -1223,7 +1077,7 @@
                         backgroundColor: colors,
                         borderColor: isDark ? '#1A1A2E' : '#FFFFFF',
                         borderWidth: 3,
-                        hoverOffset: 12
+                        hoverOffset: 15
                     }]
                 },
                 options: {
@@ -1257,7 +1111,7 @@
                         if (elements.length > 0) {
                             const index = elements[0].index;
                             const label = this.data.labels[index];
-                            drillDownTicketsByPriority(label);
+                            drillDownUnitTicketsByPriority(label);
                         }
                     }
                 }
@@ -1328,10 +1182,10 @@
         }
 
         // Make functions global
-        window.drillDownTickets = drillDownTickets;
-        window.drillDownTicketsByPriority = drillDownTicketsByPriority;
+        window.drillDownUnitTickets = drillDownUnitTickets;
+        window.drillDownUnitTicketsByPriority = drillDownUnitTicketsByPriority;
 
-        console.log('✅ Employee Dashboard loaded');
+        console.log('✅ Unit Head Dashboard loaded with drill-down enabled');
         console.log('📊 Status data:', hasStatusData ? 'Available' : 'None');
         console.log('📊 Priority data:', hasPriorityData ? 'Available' : 'None');
     });
@@ -1340,7 +1194,7 @@
     // DRILL DOWN FUNCTIONS
     // ============================================================
 
-    function drillDownTickets(status) {
+    function drillDownUnitTickets(status) {
         forceCleanupBackdrops();
 
         const modalEl = document.getElementById('drillDownModal');
@@ -1351,7 +1205,7 @@
         const viewAllBtn = document.getElementById('drillDownViewAllBtn');
 
         const statusMap = {
-            'all': 'All Tickets',
+            'all': 'All Unit Tickets',
             'Open': 'Open Tickets',
             'Assigned': 'Assigned Tickets',
             'Hold': 'Hold Tickets',
@@ -1359,7 +1213,7 @@
             'Closed': 'Closed Tickets',
             'Critical': 'Critical Priority Tickets'
         };
-        statusLabel.textContent = statusMap[status] || status || 'All Tickets';
+        statusLabel.textContent = statusMap[status] || status || 'All Unit Tickets';
 
         let filterParam = 'status';
         let filterValue = status;
@@ -1373,9 +1227,9 @@
         }
 
         if (filterParam && filterValue) {
-            viewAllBtn.href = "{% url 'my_tickets' %}?" + filterParam + "=" + encodeURIComponent(filterValue);
+            viewAllBtn.href = "{% url 'unit_head_all_tickets' %}?" + filterParam + "=" + encodeURIComponent(filterValue);
         } else {
-            viewAllBtn.href = "{% url 'my_tickets' %}";
+            viewAllBtn.href = "{% url 'unit_head_all_tickets' %}";
         }
 
         modalBody.innerHTML = `
@@ -1387,7 +1241,7 @@
 
         modal.show();
 
-        let url = "{% url 'my_tickets' %}?ajax=1";
+        let url = "{% url 'unit_head_all_tickets' %}?ajax=1";
         if (filterParam && filterValue) {
             url += "&" + filterParam + "=" + encodeURIComponent(filterValue);
         }
@@ -1405,7 +1259,7 @@
             if (data.html) {
                 modalBody.innerHTML = data.html;
                 if (data.count !== undefined) {
-                    statusLabel.textContent = (statusMap[status] || status || 'All Tickets') + ` (${data.count})`;
+                    statusLabel.textContent = (statusMap[status] || status || 'All Unit Tickets') + ` (${data.count})`;
                 }
             } else {
                 modalBody.innerHTML = `
@@ -1422,7 +1276,7 @@
                     <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
                     <p><strong>Error loading tickets</strong></p>
                     <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
-                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownTickets('${status}')">
+                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownUnitTickets('${status}')">
                         <i class="fa-solid fa-rotate me-1"></i>Retry
                     </button>
                 </div>
@@ -1430,7 +1284,7 @@
         });
     }
 
-    function drillDownTicketsByPriority(priority) {
+    function drillDownUnitTicketsByPriority(priority) {
         forceCleanupBackdrops();
 
         const modalEl = document.getElementById('drillDownModal');
@@ -1441,7 +1295,7 @@
         const viewAllBtn = document.getElementById('drillDownViewAllBtn');
 
         statusLabel.textContent = 'Priority: ' + priority;
-        viewAllBtn.href = "{% url 'my_tickets' %}?priority=" + encodeURIComponent(priority);
+        viewAllBtn.href = "{% url 'unit_head_all_tickets' %}?priority=" + encodeURIComponent(priority);
 
         modalBody.innerHTML = `
             <div class="modal-loading">
@@ -1452,7 +1306,7 @@
 
         modal.show();
 
-        let url = "{% url 'my_tickets' %}?ajax=1&priority=" + encodeURIComponent(priority);
+        let url = "{% url 'unit_head_all_tickets' %}?ajax=1&priority=" + encodeURIComponent(priority);
         url += "&_=" + Date.now();
 
         fetch(url, {
@@ -1484,7 +1338,7 @@
                     <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
                     <p><strong>Error loading tickets</strong></p>
                     <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
-                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownTicketsByPriority('${priority}')">
+                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownUnitTicketsByPriority('${priority}')">
                         <i class="fa-solid fa-rotate me-1"></i>Retry
                     </button>
                 </div>
@@ -1501,4 +1355,4 @@
         document.body.style.paddingRight = '';
     }
 </script>
-{% endblock %}
+{% endblock %}  

@@ -240,6 +240,35 @@
     }
     .btn-sm i { font-size: 0.6rem; }
 
+    /* Bulk Upload Button */
+    .btn-bulk-upload {
+        background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+        border: none;
+        color: white;
+        border-radius: 50px;
+        padding: 0.2rem 0.8rem;
+        font-size: 0.65rem;
+        font-weight: 600;
+        transition: var(--settings-transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        text-decoration: none;
+        min-height: 28px;
+        cursor: pointer;
+        box-shadow: 0 2px 12px rgba(139, 92, 246, 0.2);
+    }
+
+    .btn-bulk-upload:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+        color: white;
+    }
+
+    [data-theme="dark"] .btn-bulk-upload {
+        box-shadow: 0 2px 12px rgba(139, 92, 246, 0.3);
+    }
+
     /* ============================================================
        PANEL CARDS
     ============================================================ */
@@ -768,6 +797,122 @@
     }
 
     /* ============================================================
+       BULK UPLOAD STYLES
+    ============================================================ */
+    .upload-area {
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: var(--settings-transition);
+        cursor: pointer;
+        background: var(--bg-secondary);
+    }
+
+    .upload-area:hover {
+        border-color: var(--settings-primary);
+        background: rgba(255, 107, 0, 0.02);
+    }
+
+    .upload-area i {
+        font-size: 2rem;
+        color: var(--settings-primary);
+        opacity: 0.5;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-area p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .upload-area .file-name {
+        font-weight: 600;
+        color: var(--settings-primary);
+        margin-top: 0.3rem;
+    }
+
+    [data-theme="dark"] .upload-area {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-theme="dark"] .upload-area:hover {
+        border-color: var(--settings-primary);
+        background: rgba(255, 107, 0, 0.05);
+    }
+
+    .upload-result {
+        max-height: 200px;
+        overflow-y: auto;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+
+    .upload-result .success-item { color: var(--success-color); }
+    .upload-result .error-item { color: var(--danger-color); }
+    .upload-result .warning-item { color: var(--warning-color); }
+
+    .progress-bar-container {
+        width: 100%;
+        height: 6px;
+        background: var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    .progress-bar-container.active { display: block; }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+        border-radius: 4px;
+        width: 0%;
+        transition: width 0.5s ease;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .btn-template-download {
+        background: linear-gradient(135deg, #1F4E79, #2F5597);
+        border: none;
+        color: white;
+        border-radius: 50px;
+        padding: 0.3rem 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: var(--settings-transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        min-height: 34px;
+        cursor: pointer;
+    }
+
+    .btn-template-download:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(31, 78, 121, 0.3);
+        color: white;
+    }
+
+    /* ============================================================
        RESPONSIVE
     ============================================================ */
     @media (max-width: 768px) {
@@ -781,6 +926,9 @@
         .btn-action { font-size: 0.5rem; padding: 0.1rem 0.3rem; min-height: 22px; }
         .btn-sm { padding: 0.15rem 0.5rem; font-size: 0.55rem; min-height: 24px; }
         .badge-status { font-size: 0.4rem; padding: 0.1rem 0.3rem; }
+        .upload-area { padding: 1rem; }
+        .upload-area i { font-size: 1.5rem; }
+        .upload-area p { font-size: 0.75rem; }
     }
 
     @media (max-width: 480px) {
@@ -798,6 +946,11 @@
         .modal-header .modal-title { font-size: 0.85rem !important; }
         .form-control, .form-select { font-size: 0.7rem !important; padding: 0.3rem 0.5rem !important; }
         .btn-modal-submit, .btn-modal-close { font-size: 0.65rem !important; padding: 0.2rem 0.7rem !important; min-height: 28px; }
+        .btn-bulk-upload { font-size: 0.55rem; padding: 0.15rem 0.5rem; min-height: 24px; }
+        .btn-template-download { font-size: 0.65rem; padding: 0.2rem 0.6rem; min-height: 28px; }
+        .upload-area { padding: 0.75rem; }
+        .upload-area i { font-size: 1.2rem; }
+        .upload-area p { font-size: 0.65rem; }
     }
 
     @media (max-width: 360px) {
@@ -943,9 +1096,14 @@
     <div class="panel-card">
         <div class="panel-card-header">
             <h3><i class="fa-solid fa-cubes"></i> Departments</h3>
-            <button type="button" class="btn-primary-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addDeptModal">
-                <i class="fa-solid fa-plus"></i> Add Department
-            </button>
+            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                <button type="button" class="btn-bulk-upload btn-sm" data-bs-toggle="modal" data-bs-target="#bulkUploadDeptModal">
+                    <i class="fa-solid fa-upload"></i> Bulk Upload
+                </button>
+                <button type="button" class="btn-primary-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addDeptModal">
+                    <i class="fa-solid fa-plus"></i> Add Department
+                </button>
+            </div>
         </div>
         <div class="panel-card-body">
             <div class="table-responsive">
@@ -1131,6 +1289,66 @@
     </div>
 </div>
 
+<!-- ============================================================
+     BULK UPLOAD DEPARTMENTS MODAL
+============================================================ -->
+<div class="modal fade" id="bulkUploadDeptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);">
+                <h5 class="modal-title text-white"><i class="fa-solid fa-upload me-2"></i> Bulk Upload Departments</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Download Template -->
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" style="font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">
+                        <i class="fa-solid fa-file-excel me-1" style="color: #28A745;"></i> Download Template
+                    </label>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="{% url 'departments_download_template' %}" class="btn-template-download" style="display: inline-flex; padding: 0.3rem 1.2rem; font-size: 0.75rem; min-height: 34px;">
+                            <i class="fa-solid fa-download me-1"></i> Download Template
+                        </a>
+                        <span style="font-size: 0.7rem; color: var(--text-muted); align-self: center;">
+                            Excel file with "Unit Code" and "Department Name" columns
+                        </span>
+                    </div>
+                    <div class="form-text">Download the template, add your departments with existing Unit Codes, and upload the file below.</div>
+                </div>
+
+                <!-- Upload File -->
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">
+                        <i class="fa-solid fa-cloud-upload-alt me-1" style="color: var(--settings-primary);"></i> Upload Excel/CSV File <span class="text-danger">*</span>
+                    </label>
+                    <div class="upload-area" id="bulkUploadArea" onclick="document.getElementById('bulkFile').click()">
+                        <i class="fa-solid fa-cloud-upload-alt"></i>
+                        <p>Click to select or drag &amp; drop your file</p>
+                        <p style="font-size: 0.7rem; color: var(--text-muted);">Supported: .xlsx, .xls, .csv</p>
+                        <div class="file-name" id="bulkFileName">No file selected</div>
+                    </div>
+                    <input type="file" id="bulkFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleBulkFileSelect(event)">
+                    <div class="form-text">Unit Code must exist in the system. Departments with duplicate names will be skipped. Departments are created as ACTIVE by default.</div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-bar-container" id="bulkProgressBar">
+                    <div class="progress-bar-fill" id="bulkProgressFill"></div>
+                </div>
+
+                <!-- Upload Result -->
+                <div class="upload-result" id="bulkUploadResult"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn-modal-submit" id="bulkUploadBtn" onclick="submitBulkUpload()" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);">
+                    <i class="fa-solid fa-upload me-1"></i> Upload
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Confirm Modal -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1281,6 +1499,204 @@
                 }
             }
         });
+
+        // ============================================================
+        // BULK UPLOAD - DEPARTMENTS
+        // ============================================================
+        var selectedFile = null;
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+        function getCsrfToken() {
+            var name = 'csrftoken';
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    return decodeURIComponent(cookie.substring(name.length + 1));
+                }
+            }
+            return '';
+        }
+
+        csrfToken = getCsrfToken();
+
+        window.handleBulkFileSelect = function(event) {
+            var file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                document.getElementById('bulkFileName').textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
+                document.getElementById('bulkUploadResult').innerHTML = '';
+            } else {
+                selectedFile = null;
+                document.getElementById('bulkFileName').textContent = 'No file selected';
+            }
+        };
+
+        // Drag and drop support
+        var uploadArea = document.getElementById('bulkUploadArea');
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.borderColor = 'var(--settings-primary)';
+                this.style.background = 'rgba(255,107,0,0.05)';
+            });
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '';
+                this.style.background = '';
+            });
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '';
+                this.style.background = '';
+                var files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    var file = files[0];
+                    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+                        selectedFile = file;
+                        document.getElementById('bulkFile').files = files;
+                        document.getElementById('bulkFileName').textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
+                        document.getElementById('bulkUploadResult').innerHTML = '';
+                    } else {
+                        showAlert('Please upload an Excel or CSV file.', 'error');
+                    }
+                }
+            });
+        }
+
+        window.submitBulkUpload = function() {
+            if (!selectedFile) {
+                showAlert('Please select an Excel/CSV file to upload', 'error');
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('excel_file', selectedFile);
+            formData.append('csrfmiddlewaretoken', csrfToken);
+
+            var btn = document.getElementById('bulkUploadBtn');
+            var progressBar = document.getElementById('bulkProgressBar');
+            var progressFill = document.getElementById('bulkProgressFill');
+            var resultDiv = document.getElementById('bulkUploadResult');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Uploading...';
+            progressBar.classList.add('active');
+            progressFill.style.width = '30%';
+            resultDiv.innerHTML = '';
+
+            fetch("{% url 'departments_bulk_upload' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(function(response) {
+                progressFill.style.width = '70%';
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                progressFill.style.width = '100%';
+                setTimeout(function() {
+                    progressBar.classList.remove('active');
+                    progressFill.style.width = '0%';
+                }, 1000);
+
+                if (data.success) {
+                    var html = '<div style="font-weight:600; margin-bottom:0.5rem;">✅ Upload Complete</div>';
+                    if (data.added_count > 0) {
+                        html += '<div class="success-item">✅ ' + data.added_count + ' departments added successfully</div>';
+                        if (data.added_depts && data.added_depts.length > 0) {
+                            html += '<div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.2rem;">Added: ' + data.added_depts.join(', ') + '</div>';
+                        }
+                    }
+                    if (data.skipped_count > 0) {
+                        html += '<div class="warning-item">⚠️ ' + data.skipped_count + ' entries skipped</div>';
+                        if (data.errors && data.errors.length > 0) {
+                            html += '<div style="margin-top:0.5rem;"><strong>Errors:</strong></div>';
+                            data.errors.forEach(function(err) {
+                                html += '<div class="error-item">• ' + err + '</div>';
+                            });
+                        }
+                    }
+                    if (data.added_count === 0 && data.skipped_count === 0) {
+                        html += '<div class="warning-item">No departments were added or skipped. Please check your file.</div>';
+                    }
+                    resultDiv.innerHTML = html;
+                    showAlert(data.message || 'Bulk upload completed successfully!', 'success');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    var html = '<div style="font-weight:600; color:var(--danger-color); margin-bottom:0.5rem;">❌ Upload Failed</div>';
+                    if (data.errors && data.errors.length > 0) {
+                        data.errors.forEach(function(err) {
+                            html += '<div class="error-item">• ' + err + '</div>';
+                        });
+                    } else {
+                        html += '<div class="error-item">' + (data.message || 'Unknown error occurred') + '</div>';
+                    }
+                    resultDiv.innerHTML = html;
+                    showAlert(data.message || 'Bulk upload failed', 'error');
+                }
+
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-upload me-1"></i> Upload';
+            })
+            .catch(function(error) {
+                progressFill.style.width = '100%';
+                setTimeout(function() {
+                    progressBar.classList.remove('active');
+                    progressFill.style.width = '0%';
+                }, 1000);
+                resultDiv.innerHTML = '<div class="error-item">❌ Error: ' + error.message + '</div>';
+                showAlert('Error: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-upload me-1"></i> Upload';
+            });
+        };
+
+        function showAlert(message, type) {
+            var alertContainer = document.querySelector('.alert-container');
+            if (!alertContainer) {
+                // Create container if it doesn't exist
+                var container = document.createElement('div');
+                container.className = 'alert-container';
+                container.style.cssText = 'position:fixed; top:20px; right:20px; z-index:9999; max-width:400px; width:100%;';
+                document.body.appendChild(container);
+                alertContainer = container;
+            }
+
+            var alertDiv = document.createElement('div');
+            var bgColor = type === 'success' ? '#22C55E' : type === 'error' ? '#EF4444' : '#F59E0B';
+            var textColor = type === 'warning' ? '#1A1A2E' : '#FFFFFF';
+            alertDiv.style.cssText = 'padding:0.75rem 1rem; border-radius:12px; margin-bottom:0.5rem; box-shadow:0 4px 20px rgba(0,0,0,0.15); display:flex; align-items:center; gap:0.5rem; animation:slideIn 0.3s ease; font-size:0.85rem; background:' + bgColor + '; color:' + textColor + ';';
+
+            var iconMap = {
+                'success': 'fa-circle-check',
+                'error': 'fa-circle-xmark',
+                'warning': 'fa-triangle-exclamation'
+            };
+            var icon = iconMap[type] || 'fa-circle-info';
+
+            alertDiv.innerHTML =
+                '<i class="fa-solid ' + icon + '"></i>' +
+                '<span style="white-space:pre-line;">' + message + '</span>' +
+                '<button onclick="this.parentElement.remove()" style="background:transparent; border:none; color:inherit; cursor:pointer; font-size:1rem; margin-left:auto; opacity:0.7;">&times;</button>';
+
+            alertContainer.appendChild(alertDiv);
+
+            setTimeout(function() {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
 
         // ============================================================
         // THEME SYNC FOR FORM ELEMENTS

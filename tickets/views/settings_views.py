@@ -10,6 +10,9 @@ Settings Views (GET) - All settings page views
 - Dept Employees
 - Audit Logs
 - Audit Log Excel Download
+- Unit Head Management
+- Screen Master
+- Screen Mapping
 """
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -90,7 +93,7 @@ def settings_communication(request):
         'schedule': schedule,
         'selected_frequencies': schedule.frequency if isinstance(schedule.frequency, list) else [schedule.frequency],
         'units': Unit.objects.filter(is_active=True).order_by('code'),
-        'unit_heads': UnitHead.objects.select_related('unit').order_by('unit__code'),
+        'unit_heads': UnitHead.objects.select_related('unit', 'user').order_by('unit__code'),
         'report_choices': EmailSchedule.REPORT_CHOICES,
         'frequency_choices': EmailSchedule.FREQUENCY_CHOICES,
         'additional_email_list': [email.strip() for email in schedule.additional_emails.replace(';', ',').split(',') if email.strip()],
@@ -119,7 +122,7 @@ def settings_employees_page(request):
 
 
 # ============================================================
-# DEPARTMENT CREDENTIALS
+# DEPARTMENT CREDENTIALS - ✅ FIXED
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='tickets:login')
@@ -128,18 +131,36 @@ def settings_credentials_page(request):
     Manage department credentials
     URL: /admin/settings/credentials/
     """
-    all_credentials, credentials_by_unit = _get_credentials_data()
+    # ✅ FIX: Get all active units
+    units = Unit.objects.filter(is_active=True).order_by('code')
+    credentials_by_unit = []
+
+    for unit in units:
+        # Get credentials for this unit with department relation
+        creds = DepartmentCredential.objects.filter(
+            unit=unit
+        ).select_related('department', 'unit').order_by('department__name')
+        
+        if creds.exists():
+            credentials_by_unit.append({
+                'unit': unit,
+                'credentials': creds
+            })
+
+    # Get all credentials for the table (optional - for backward compatibility)
+    all_credentials = DepartmentCredential.objects.all().select_related('unit', 'department').order_by('unit__code', 'department__name')
+
     context = {
-        'all_units': Unit.objects.filter(is_active=True).order_by('code'),
+        'all_units': units,
         'credentials': all_credentials,
-        'credentials_by_unit': credentials_by_unit,
+        'credentials_by_unit': credentials_by_unit,  # ✅ This is what the template expects
         'employee_users': User.objects.filter(is_staff=False, is_active=True).order_by('username'),
     }
     return render(request, 'admin_panel/credentials.html', context)
 
 
 # ============================================================
-# DEPARTMENT-WISE EMPLOYEE VIEW
+# DEPARTMENT-WISE EMPLOYEE VIEW - ✅ FIXED
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='tickets:login')
@@ -148,12 +169,73 @@ def settings_dept_employees(request):
     View employees organized by department (tree view)
     URL: /admin/settings/dept-employees/
     """
-    all_credentials, credentials_by_unit = _get_credentials_data()
+    # ✅ Build the data structure directly
+    units = Unit.objects.filter(is_active=True).order_by('code')
+    credentials_by_unit = []
+    
+    for unit in units:
+        # Get departments for this unit
+        departments = Department.objects.filter(unit=unit, is_active=True).order_by('name')
+        
+        unit_data = {
+            'unit': unit,
+            'credentials': []
+        }
+        
+        for dept in departments:
+            unit_data['credentials'].append({
+                'department': dept
+            })
+        
+        credentials_by_unit.append(unit_data)
+    
     context = {
-        'all_units': Unit.objects.filter(is_active=True).order_by('code'),
+        'all_units': units,
         'credentials_by_unit': credentials_by_unit,
     }
     return render(request, 'admin_panel/dept_employees.html', context)
+
+
+# ============================================================
+# UNIT HEAD MANAGEMENT - NEW
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='tickets:login')
+def settings_unit_heads_page(request):
+    """
+    Manage Unit Heads - View all unit heads with their user accounts
+    URL: /custom-admin/settings/unit-heads/
+    """
+    # Get all unit heads with related user and unit data
+    unit_heads = UnitHead.objects.all().select_related('user', 'unit').order_by('unit__code')
+    
+    # Get available units that don't have a unit head
+    available_units = Unit.objects.filter(
+        is_active=True
+    ).exclude(
+        id__in=UnitHead.objects.filter(is_active=True).values_list('unit_id', flat=True)
+    ).order_by('code')
+    
+    # Get all active units for dropdown
+    all_units = Unit.objects.filter(is_active=True).order_by('code')
+    
+    # Get users who are not already unit heads (for dropdown)
+    existing_unit_head_user_ids = UnitHead.objects.values_list('user_id', flat=True)
+    available_users = User.objects.filter(
+        is_active=True,
+        is_staff=False
+    ).exclude(
+        id__in=existing_unit_head_user_ids
+    ).order_by('username')
+    
+    context = {
+        'unit_heads': unit_heads,
+        'available_units': available_units,
+        'all_units': all_units,
+        'available_users': available_users,
+        'total_unit_heads': unit_heads.count(),
+    }
+    return render(request, 'admin_panel/settings_unit_heads.html', context)
 
 
 # ============================================================
@@ -421,3 +503,35 @@ def settings_screen_master(request):
         'total_screens': screens.count(),
     }
     return render(request, 'admin_panel/settings_screen_master.html', context)
+
+
+# ============================================================
+# SCREEN MAPPING SETTINGS PAGE
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='tickets:login')
+def settings_screen_mapping_page(request):
+    """
+    Screen Mapping Management Page
+    URL: /custom-admin/settings/screen-mapping/
+    """
+    # Get all screen mappings with related screen data
+    mappings = ScreenMapping.objects.all().select_related('screen').order_by('erp_user_id', 'screen__screen_name')
+    
+    # Get all active screens for dropdown
+    screens = ScreenMaster.objects.filter(is_active=True).order_by('screen_name')
+    
+    # Get all unique ERP User IDs from mappings for dropdown
+    erp_user_ids = ScreenMapping.objects.values_list('erp_user_id', flat=True).distinct().order_by('erp_user_id')
+    
+    # Get all ERP User IDs from ERPHolderMapping for reference
+    all_erp_ids = ERPHolderMapping.objects.values_list('erp_user_id', flat=True).distinct().order_by('erp_user_id')
+    
+    context = {
+        'mappings': mappings,
+        'screens': screens,
+        'erp_user_ids': erp_user_ids,
+        'all_erp_ids': all_erp_ids,
+        'total_mappings': mappings.count(),
+    }
+    return render(request, 'admin_panel/settings_screen_mapping.html', context)

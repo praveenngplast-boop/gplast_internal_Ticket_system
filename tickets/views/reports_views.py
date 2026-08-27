@@ -2,6 +2,7 @@
 
 """
 Reports Views - Reports, Export, Download Excel
+Admin and Unit Head reports
 """
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -23,7 +24,7 @@ import logging
 from tickets.models import (
     Unit, Department, Ticket, TicketHistory, EmployeeMaster,
     AdminContact, AdminNotificationEmail, SettingsAuditLog,
-    ERPHolderMapping
+    ERPHolderMapping, UnitHead
 )
 from tickets.forms import AdminTicketForm, CloseTicketForm
 from tickets.utils import send_ticket_email
@@ -34,6 +35,9 @@ from .utils import (
     reopen_ticket_logic,
     generate_admin_ticket_list_html,
 )
+
+# ✅ NEW: Unit Head helper functions
+from .unit_head_views import get_unit_head_unit, is_unit_head
 
 logger = logging.getLogger(__name__)
 
@@ -50,21 +54,51 @@ def _aging_category(days):
     return '>60 Days'
 
 
+# ============================================================
+# ESCALATED AGING REPORT - Admin & Unit Head
+# ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
 def escalated_aging_report(request):
-    """Show and export currently escalated tickets grouped by age."""
+    """
+    Show and export currently escalated tickets grouped by age.
+    Accessible by Admin (all units) and Unit Head (their unit only)
+    """
     now = timezone.now()
-    unit_id = request.GET.get('unit', '').strip()
+    
+    # ✅ Check if user is Unit Head
+    user_is_unit_head = is_unit_head(request.user)
+    user_is_admin = request.user.is_staff
+    
+    # ✅ Unit Heads can only see their unit
+    if user_is_unit_head and not user_is_admin:
+        unit = get_unit_head_unit(request.user)
+        if not unit:
+            messages.error(request, "Your unit head profile is not properly configured.")
+            return redirect('employee_dashboard')
+        
+        # Force filter to their unit
+        tickets_qs = Ticket.objects.filter(
+            status='Escalated', 
+            escalated_at__isnull=False,
+            unit=unit
+        ).select_related('department').order_by('escalated_at')
+        
+        # Override unit_id for the context
+        unit_id = str(unit.id)
+    else:
+        # Admin - full access
+        tickets_qs = Ticket.objects.filter(
+            status='Escalated', 
+            escalated_at__isnull=False
+        ).select_related('department').order_by('escalated_at')
+        
+        unit_id = request.GET.get('unit', '').strip()
+    
     department_id = request.GET.get('department', '').strip()
     priority = request.GET.get('priority', '').strip()
     start_date = request.GET.get('start_date', '').strip()
     end_date = request.GET.get('end_date', '').strip()
     selected_category = request.GET.get('aging_category', '').strip()
-
-    tickets_qs = Ticket.objects.filter(
-        status='Escalated', escalated_at__isnull=False
-    ).select_related('department').order_by('escalated_at')
 
     if department_id:
         tickets_qs = tickets_qs.filter(department_id=department_id)
@@ -105,13 +139,15 @@ def escalated_aging_report(request):
     if selected_category in counts:
         rows = [row for row in rows if row['category'] == selected_category]
 
+    # ✅ EXPORT
     if 'export' in request.GET:
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
+        suffix = "_UnitHead" if user_is_unit_head and not user_is_admin else ""
         response['Content-Disposition'] = (
-            'attachment; filename=Escalated_Aging_Report_'
-            f'{now.strftime("%Y%m%d_%H%M%S")}.xlsx'
+            'attachment; filename=Escalated_Aging_Report'
+            f'{suffix}_{now.strftime("%Y%m%d_%H%M%S")}.xlsx'
         )
         workbook = openpyxl.Workbook()
         worksheet = workbook.active
@@ -141,6 +177,7 @@ def escalated_aging_report(request):
         workbook.save(response)
         return response
 
+    # ✅ Context
     context = {
         'aging_rows': rows,
         'aging_counts': counts,
@@ -160,6 +197,8 @@ def escalated_aging_report(request):
         'selected_category': selected_category,
         'chart_labels': list(counts.keys()),
         'chart_values': list(counts.values()),
+        'is_unit_head': user_is_unit_head,
+        'is_admin': user_is_admin,
     }
     filter_query = request.GET.copy()
     filter_query.pop('aging_category', None)
@@ -169,22 +208,38 @@ def escalated_aging_report(request):
 
 
 # ============================================================
-# REPORTS VIEW - COMPLETELY REWRITTEN
+# REPORTS VIEW - Admin & Unit Head
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
 def reports(request):
     """
-    Reports page with advanced filtering and export
+    Reports page with advanced filtering and export.
+    Admin: All units | Unit Head: Their unit only
     """
-    # ✅ Start with base queryset
-    tickets_qs = Ticket.objects.all()
+    # ✅ Check if user is Unit Head
+    user_is_unit_head = is_unit_head(request.user)
+    user_is_admin = request.user.is_staff
     
-    # ✅ Create a copy for unfiltered stats before applying filters
-    all_tickets_for_stats = tickets_qs
+    # ✅ Unit Heads can only see their unit
+    if user_is_unit_head and not user_is_admin:
+        unit = get_unit_head_unit(request.user)
+        if not unit:
+            messages.error(request, "Your unit head profile is not properly configured.")
+            return redirect('employee_dashboard')
+        
+        # Force filter to their unit
+        tickets_qs = Ticket.objects.filter(unit=unit)
+        all_tickets_for_stats = tickets_qs
+        
+        # Override unit_id for the context
+        unit_id = str(unit.id)
+    else:
+        # Admin - full access
+        tickets_qs = Ticket.objects.all()
+        all_tickets_for_stats = tickets_qs
+        unit_id = request.GET.get('unit', '').strip()
 
     # ✅ Get all filter parameters from GET
-    unit_id = request.GET.get('unit', '').strip()
     dept_id = request.GET.get('department', '').strip()
     priority = request.GET.get('priority', '').strip()
     status = request.GET.get('status', '').strip()
@@ -204,7 +259,6 @@ def reports(request):
     category = request.GET.get('category', 'all').strip()
     is_reopened = request.GET.get('is_reopened', '').strip()
     
-    # ✅ DEBUG - Log all filters
     logger.info(f"Filters received - category: {category}, unit: {unit_id}, status: {status}, priority: {priority}")
     
     # ============================================================
@@ -228,7 +282,7 @@ def reports(request):
     # ============================================================
     # APPLY STANDARD FILTERS
     # ============================================================
-    if unit_id:
+    if unit_id and (user_is_admin or not user_is_unit_head):
         tickets_qs = tickets_qs.filter(unit_id=unit_id)
     if dept_id:
         tickets_qs = tickets_qs.filter(department_id=dept_id)
@@ -257,7 +311,6 @@ def reports(request):
     # APPLY ERP ID FILTER
     # ============================================================
     if erp_id_filter:
-        # Get employee IDs with this ERP ID
         employee_ids = ERPHolderMapping.objects.filter(
             erp_user_id=erp_id_filter
         ).values_list('employee__employee_id', flat=True)
@@ -347,7 +400,6 @@ def reports(request):
         erp_id=Coalesce(Subquery(erp_subquery, output_field=CharField()), Value('Not Mapped'))
     )
     
-    # ✅ DEBUG - Log final count
     total_count = tickets_qs.count()
     logger.info(f"Total tickets after all filters: {total_count}")
     
@@ -363,8 +415,8 @@ def reports(request):
     # ============================================================
     # GET DATA FOR DROPDOWNS
     # ============================================================
-    units = Unit.objects.all()
-    departments = Department.objects.all()
+    units = Unit.objects.filter(is_active=True).order_by('code')
+    departments = Department.objects.all().order_by('name')
     employees = EmployeeMaster.objects.all().order_by('employee_name')
     erp_ids = ERPHolderMapping.objects.filter(
         erp_user_id__isnull=False
@@ -373,11 +425,12 @@ def reports(request):
     ).values_list('erp_user_id', flat=True).distinct().order_by('erp_user_id')
     
     # ============================================================
-    # EXPORT TO EXCEL - ✅ FIXED
+    # EXPORT TO EXCEL
     # ============================================================
     if 'export' in request.GET:
+        suffix = "_UnitHead" if user_is_unit_head and not user_is_admin else ""
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = f'attachment; filename=GPLAST_Report_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        response['Content-Disposition'] = f'attachment; filename=GPLAST_Report{suffix}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Tickets Report"
@@ -432,7 +485,7 @@ def reports(request):
                 t.ticket_number, t.status, t.unit.code if t.unit else '', t.unit.full_name if t.unit else '',
                 t.department.name if t.department else '', t.employee_id, t.erp_id, t.employee_name,
                 t.mobile, t.email, 
-                t.screen_number,  # ✅ FIXED: Use screen_number instead of get_screen_display
+                t.screen_number,
                 t.subject, t.description, t.priority,
                 t.error_type, t.created_by_role, ttc, t.admin_creation_reason or '',
                 t.assigned_person or '', t.hold_reason or '', t.main_error_type or 'N/A',
@@ -523,18 +576,31 @@ def reports(request):
         'selected_sub_error_type': sub_error_type,
         'selected_erp_id': erp_id_filter,
         'filter_query': filter_query.urlencode(),
+        'is_unit_head': user_is_unit_head,
+        'is_admin': user_is_admin,
+        'unit': get_unit_head_unit(request.user) if user_is_unit_head else None,
     }
     return render(request, 'admin_panel/reports.html', context)
 
 
 # ============================================================
-# DOWNLOAD TICKET EXCEL - ✅ FIXED
+# DOWNLOAD TICKET EXCEL - Admin & Unit Head
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
 def download_ticket_excel(request, pk):
-    """Export single ticket details to Excel"""
+    """
+    Export single ticket details to Excel.
+    Admin: All tickets | Unit Head: Only their unit's tickets
+    """
     ticket = get_object_or_404(Ticket, pk=pk)
+    
+    # ✅ Unit Head security check
+    user_is_unit_head = is_unit_head(request.user)
+    if user_is_unit_head and not request.user.is_staff:
+        unit = get_unit_head_unit(request.user)
+        if not unit or ticket.unit != unit:
+            messages.error(request, "You do not have permission to download this ticket.")
+            return redirect('employee_dashboard')
     
     erp_id = 'Not Mapped'
     if ticket.employee_id:
@@ -624,11 +690,10 @@ def download_ticket_excel(request, pk):
         ('Employee Name', ticket.employee_name),
         ('Employee ID', ticket.employee_id),
         ('ERP ID', erp_id),
-        ('Mobile', ticket.mobile),
-        ('Email', ticket.email),
+        ('Mobile', ticket.mobile or ''),
+        ('Email', ticket.email or ''),
         ('Unit', ticket.unit.full_name if ticket.unit else ''),
         ('Department', ticket.department.name if ticket.department else ''),
-        # ✅ FIXED: Use screen_number instead of get_screen_display
         ('Screen/Module', ticket.screen_number),
     ]
     
@@ -642,8 +707,6 @@ def download_ticket_excel(request, pk):
         ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
         row += 1
-    
-    row += 1
     
     row += 1
     
@@ -762,18 +825,35 @@ def download_ticket_excel(request, pk):
 
 
 # ============================================================
-# EXPORT CLOSED TICKETS (LAST 30 DAYS) TO EXCEL - ✅ FIXED
+# EXPORT CLOSED TICKETS (LAST 30 DAYS) - Admin & Unit Head
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
 def export_closed_tickets_30_days(request):
-    """Export closed tickets from the last 30 days to Excel"""
+    """
+    Export closed tickets from the last 30 days to Excel.
+    Admin: All units | Unit Head: Only their unit
+    """
     thirty_days_ago = timezone.now() - timedelta(days=30)
     
-    tickets_qs = Ticket.objects.filter(
-        status='Closed',
-        closed_at__gte=thirty_days_ago
-    ).order_by('-closed_at')
+    # ✅ Check if user is Unit Head
+    user_is_unit_head = is_unit_head(request.user)
+    
+    if user_is_unit_head and not request.user.is_staff:
+        unit = get_unit_head_unit(request.user)
+        if not unit:
+            messages.error(request, "Your unit head profile is not properly configured.")
+            return redirect('employee_dashboard')
+        
+        tickets_qs = Ticket.objects.filter(
+            unit=unit,
+            status='Closed',
+            closed_at__gte=thirty_days_ago
+        ).order_by('-closed_at')
+    else:
+        tickets_qs = Ticket.objects.filter(
+            status='Closed',
+            closed_at__gte=thirty_days_ago
+        ).order_by('-closed_at')
     
     current_tz = timezone.get_current_timezone()
     now_local = timezone.now().astimezone(current_tz)
@@ -789,10 +869,11 @@ def export_closed_tickets_30_days(request):
         for mapping in erp_mappings_qs:
             erp_mappings[mapping.employee.employee_id] = mapping.erp_user_id
     
+    suffix = "_UnitHead" if user_is_unit_head and not request.user.is_staff else ""
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = f'attachment; filename=Closed_Tickets_30_Days_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename=Closed_Tickets_30_Days{suffix}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -826,7 +907,7 @@ def export_closed_tickets_30_days(request):
     headers = [
         'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
         'Employee ID', 'ERP ID', 'Employee Name', 'Mobile', 'Email', 
-        'Screen/Module',  # ✅ This column will use screen_number
+        'Screen/Module',
         'Subject', 'Description', 'Priority', 'Error Type', 'Created By Role',
         'Admin Creation Reason', 'Assigned Person', 'Hold Reason',
         'Main Error Type', 'Sub Error Type', 'Closing Remarks', 'Closed By', 
@@ -862,8 +943,8 @@ def export_closed_tickets_30_days(request):
         row_data = [
             ticket.ticket_number, ticket.status, ticket.unit.code if ticket.unit else '',
             ticket.unit.full_name if ticket.unit else '', ticket.department.name if ticket.department else '',
-            ticket.employee_id, erp_id, ticket.employee_name, ticket.mobile, ticket.email,
-            ticket.screen_number,  # ✅ FIXED: Use screen_number instead of get_screen_display
+            ticket.employee_id, erp_id, ticket.employee_name, ticket.mobile or '', ticket.email or '',
+            ticket.screen_number,
             ticket.subject, ticket.description or '', ticket.priority,
             ticket.error_type or '', ticket.created_by_role, ticket.admin_creation_reason or '',
             ticket.assigned_person or '', ticket.hold_reason or '', ticket.main_error_type or 'N/A',

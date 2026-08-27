@@ -20,11 +20,33 @@ class Unit(models.Model):
         return f"{self.code} - {self.full_name}"
 
 
+# ============================================================
+# UNIT HEAD MODEL - UPDATED WITH USER FIELD (NULLABLE)
+# ============================================================
 class UnitHead(models.Model):
-    unit = models.OneToOneField(Unit, on_delete=models.CASCADE, related_name='head')
+    """
+    Unit Head model with link to Django User for authentication.
+    Each Unit Head has a corresponding User account for login.
+    """
+    # Link to Django User for authentication - NULLABLE for migration
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='unit_head_profile',
+        null=True,      # Allow null for existing rows
+        blank=True      # Allow blank in forms
+    )
+    unit = models.OneToOneField(
+        Unit, 
+        on_delete=models.CASCADE, 
+        related_name='head'
+    )
     name = models.CharField(max_length=150)
     email = models.EmailField()
     is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
         return f"{self.name} ({self.unit.code})"
@@ -260,15 +282,15 @@ class Ticket(models.Model):
     employee_id = models.CharField(max_length=50)
     employee_name = models.CharField(max_length=150)
     
-    # ✅ FIXED: Made mobile and email optional
+    # FIXED: Made mobile and email optional
     mobile = models.CharField(
         max_length=10, 
-        blank=True,      # ← Added
-        null=True        # ← Added
+        blank=True,
+        null=True
     )
     email = models.EmailField(
-        blank=True,      # ← Added
-        null=True        # ← Added
+        blank=True,
+        null=True
     )
     
     screen_number = models.CharField(max_length=50)
@@ -507,55 +529,67 @@ class SettingsAuditLog(models.Model):
 
 
 # ============================================================
-# ERP USER ID MAPPING MODEL
+# ✅ UPDATED: ERP USER ID MAPPING MODEL - WITH INDEPENDENT ERP IDs
 # ============================================================
 
 class ERPHolderMapping(models.Model):
     """
     Maps ERP User IDs to Employee IDs
-    One ERP User ID can have multiple Employee IDs mapped to it
-    No restrictions on department or unit
+    ERP ID can exist independently without employee mapping
+    One ERP User ID can be mapped to multiple Employee IDs
     """
     erp_user_id = models.CharField(
         max_length=50, 
         db_index=True,
+        unique=True,  # ✅ ERP ID must be unique
         verbose_name="ERP User ID",
-        help_text="ERP User ID (e.g., 0001, 0002)"
+        help_text="ERP User ID (e.g., 0001, 0002, HRD1223)"
     )
     employee = models.ForeignKey(
         EmployeeMaster, 
-        on_delete=models.CASCADE, 
+        on_delete=models.SET_NULL,  # ✅ Changed from CASCADE to SET_NULL
+        null=True,  # ✅ Allow NULL
+        blank=True,  # ✅ Allow blank
         related_name='erp_mappings',
         verbose_name="Employee",
-        help_text="Employee mapped to this ERP User ID"
+        help_text="Employee mapped to this ERP User ID (optional)"
+    )
+    is_mapped = models.BooleanField(
+        default=False,
+        verbose_name="Is Mapped",
+        help_text="True if this ERP ID is mapped to an employee"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.CharField(max_length=100, blank=True, null=True)
     
     class Meta:
-        unique_together = ['erp_user_id', 'employee']
-        ordering = ['erp_user_id', 'employee__employee_id']
-        verbose_name = 'ERP User ID Mapping'
-        verbose_name_plural = 'ERP User ID Mappings'
+        ordering = ['erp_user_id']
+        verbose_name = 'ERP User ID'
+        verbose_name_plural = 'ERP User IDs'
         indexes = [
             models.Index(fields=['erp_user_id']),
             models.Index(fields=['employee']),
+            models.Index(fields=['is_mapped']),
         ]
     
     def __str__(self):
-        return f"ERP {self.erp_user_id} → {self.employee.employee_id} ({self.employee.employee_name})"
+        if self.employee:
+            return f"ERP {self.erp_user_id} → {self.employee.employee_id} ({self.employee.employee_name})"
+        return f"ERP {self.erp_user_id} → (Not Mapped)"
     
     def get_employee_details(self):
-        return {
-            'employee_id': self.employee.employee_id,
-            'employee_name': self.employee.employee_name,
-            'mobile': self.employee.mobile or '',
-            'email': self.employee.email or '',
-            'unit_code': self.employee.unit.code if self.employee.unit else '',
-            'unit_name': self.employee.unit.full_name if self.employee.unit else '',
-            'department_name': self.employee.department.name if self.employee.department else '',
-        }
+        if self.employee:
+            return {
+                'employee_id': self.employee.employee_id,
+                'employee_name': self.employee.employee_name,
+                'mobile': self.employee.mobile or '',
+                'email': self.employee.email or '',
+                'unit_code': self.employee.unit.code if self.employee.unit else '',
+                'unit_name': self.employee.unit.full_name if self.employee.unit else '',
+                'department_name': self.employee.department.name if self.employee.department else '',
+            }
+        return None
 
 
 # ============================================================

@@ -13,13 +13,14 @@ urlpatterns = [
     # ✅ Root redirect
     path('', role_redirect, name='root_redirect'),
     
-    # ✅ Accounts
+    # ✅ Accounts (login, logout, password reset)
     path('accounts/', include('django.contrib.auth.urls')),
     
-    # ✅ Tickets app (custom URLs)
+    # ✅ Tickets app (all custom URLs including admin, employee, unit_head)
     path('', include('tickets.urls')),
 ]
 
+# ✅ Serve static and media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

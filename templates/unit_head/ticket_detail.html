@@ -1,0 +1,865 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ticket #{{ ticket.ticket_number }} - {{ unit_head_unit_code }} - GPLAST{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>
+    /* ============================================================
+       TICKET DETAIL STYLES - Matching Employee Theme
+    ============================================================ */
+    .ticket-detail-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .detail-header {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .detail-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .detail-header-left .icon-box {
+        width: 44px;
+        height: 44px;
+        background: rgba(255, 107, 0, 0.08);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--brand-orange);
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .detail-header-left h1 {
+        font-size: clamp(1rem, 1.6vw, 1.3rem);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        font-family: 'Fraunces', serif;
+    }
+
+    .detail-header-left .subtitle {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.1rem;
+    }
+
+    .detail-header-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-back {
+        border: 2px solid var(--border-color);
+        color: var(--text-secondary);
+        border-radius: 50px;
+        padding: 0.25rem 0.9rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: transparent;
+        min-height: 34px;
+    }
+
+    .btn-back:hover {
+        border-color: var(--brand-orange);
+        color: var(--brand-orange);
+    }
+
+    .btn-download {
+        background: var(--brand-gradient);
+        border: none;
+        color: white;
+        border-radius: 50px;
+        padding: 0.25rem 0.9rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        min-height: 34px;
+    }
+
+    .btn-download:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.25);
+        color: white;
+    }
+
+    /* ===== BADGES ===== */
+    .badge-status {
+        display: inline-block;
+        padding: 0.12rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-status-open { background: rgba(34, 197, 94, 0.12); color: #22C55E; border: 1px solid rgba(34, 197, 94, 0.15); }
+    .badge-status-assigned { background: rgba(59, 130, 246, 0.12); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.15); }
+    .badge-status-hold { background: rgba(245, 158, 11, 0.12); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.15); }
+    .badge-status-escalated { background: rgba(139, 92, 246, 0.12); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.15); }
+    .badge-status-closed { background: rgba(148, 163, 184, 0.12); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.15); }
+
+    .badge-priority {
+        display: inline-block;
+        padding: 0.12rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-priority-critical { background: rgba(239, 68, 68, 0.12); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.15); }
+    .badge-priority-high { background: rgba(245, 158, 11, 0.12); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.15); }
+    .badge-priority-medium { background: rgba(59, 130, 246, 0.12); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.15); }
+    .badge-priority-low { background: rgba(148, 163, 184, 0.12); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.15); }
+
+    .unit-badge-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--brand-gradient);
+        color: white;
+        padding: 0.1rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.5rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+    }
+
+    [data-theme="dark"] .badge-status-open { background: rgba(34, 197, 94, 0.15); color: #4ADE80; border-color: rgba(34, 197, 94, 0.2); }
+    [data-theme="dark"] .badge-status-assigned { background: rgba(59, 130, 246, 0.15); color: #60A5FA; border-color: rgba(59, 130, 246, 0.2); }
+    [data-theme="dark"] .badge-status-hold { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border-color: rgba(245, 158, 11, 0.2); }
+    [data-theme="dark"] .badge-status-escalated { background: rgba(139, 92, 246, 0.15); color: #A78BFA; border-color: rgba(139, 92, 246, 0.2); }
+    [data-theme="dark"] .badge-status-closed { background: rgba(148, 163, 184, 0.15); color: #94A3B8; border-color: rgba(148, 163, 184, 0.2); }
+    [data-theme="dark"] .badge-priority-critical { background: rgba(239, 68, 68, 0.15); color: #F87171; border-color: rgba(239, 68, 68, 0.2); }
+    [data-theme="dark"] .badge-priority-high { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border-color: rgba(245, 158, 11, 0.2); }
+    [data-theme="dark"] .badge-priority-medium { background: rgba(59, 130, 246, 0.15); color: #60A5FA; border-color: rgba(59, 130, 246, 0.2); }
+    [data-theme="dark"] .badge-priority-low { background: rgba(148, 163, 184, 0.15); color: #94A3B8; border-color: rgba(148, 163, 184, 0.2); }
+
+    /* ===== GRID ===== */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .detail-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-card:hover {
+        border-color: rgba(255, 107, 0, 0.08);
+        box-shadow: var(--shadow-md);
+    }
+
+    .detail-card .card-header {
+        padding: 0.5rem 1rem;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Inter', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .detail-card .card-header i {
+        color: var(--brand-orange);
+    }
+
+    .detail-card .card-body {
+        padding: 0.75rem 1rem;
+    }
+
+    /* ===== INFO ROWS ===== */
+    .info-row {
+        display: flex;
+        padding: 0.35rem 0;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.75rem;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-row .label {
+        width: 110px;
+        font-weight: 600;
+        color: var(--text-muted);
+        flex-shrink: 0;
+    }
+
+    .info-row .value {
+        flex: 1;
+        color: var(--text-primary);
+        word-break: break-word;
+    }
+
+    .info-row .value .mono {
+        font-family: monospace;
+        font-size: 0.7rem;
+    }
+
+    /* ===== DESCRIPTION ===== */
+    .desc-box {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 0.65rem 0.85rem;
+        margin-top: 0.25rem;
+        font-size: 0.78rem;
+        color: var(--text-primary);
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+        border: 1px solid var(--border-color);
+    }
+
+    /* ===== ATTACHMENTS ===== */
+    .attachments-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+    }
+
+    .attachment-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 0.2rem 0.6rem;
+        font-size: 0.65rem;
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .attachment-item:hover {
+        border-color: var(--brand-orange);
+        color: var(--brand-orange);
+    }
+
+    .attachment-item i {
+        color: var(--brand-orange);
+        font-size: 0.7rem;
+    }
+
+    /* ===== HISTORY ===== */
+    .history-item {
+        display: flex;
+        gap: 0.75rem;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .history-item:last-child {
+        border-bottom: none;
+    }
+
+    .history-item .h-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(255, 107, 0, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--brand-orange);
+        font-size: 0.55rem;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .history-item .h-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .history-item .h-action {
+        font-weight: 600;
+        font-size: 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .history-item .h-detail {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-top: 0.05rem;
+    }
+
+    .history-item .h-meta {
+        font-size: 0.55rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.1rem;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.25rem 0;
+        font-size: 0.7rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-item:last-child {
+        border-bottom: none;
+    }
+
+    .sidebar-item .label {
+        color: var(--text-muted);
+    }
+
+    .sidebar-item .value {
+        font-weight: 500;
+        color: var(--text-primary);
+        text-align: right;
+    }
+
+    .sidebar-section {
+        margin-bottom: 0.75rem;
+    }
+
+    .sidebar-section .section-title {
+        font-size: 0.55rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.35rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ===== STATUS TIMELINE ===== */
+    .timeline-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.2rem 0;
+    }
+
+    .timeline-item .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .timeline-item .dot-open { background: #22C55E; }
+    .timeline-item .dot-assigned { background: #3B82F6; }
+    .timeline-item .dot-hold { background: #F59E0B; }
+    .timeline-item .dot-escalated { background: #8B5CF6; }
+    .timeline-item .dot-closed { background: #94A3B8; }
+    .timeline-item .dot-created { background: #22C55E; }
+
+    .timeline-item .t-label {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    .timeline-item .t-time {
+        font-size: 0.55rem;
+        color: var(--text-muted);
+        margin-left: auto;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 992px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .detail-header {
+            padding: 0.75rem 1rem;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .detail-header-actions {
+            width: 100%;
+        }
+        .detail-header-actions .btn-back,
+        .detail-header-actions .btn-download {
+            flex: 1;
+            justify-content: center;
+        }
+        .info-row {
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+        .info-row .label {
+            width: 100%;
+        }
+        .sidebar-item {
+            flex-direction: column;
+            gap: 0.05rem;
+        }
+        .sidebar-item .value {
+            text-align: left;
+        }
+        .detail-card .card-body {
+            padding: 0.5rem 0.75rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .detail-header-left .icon-box {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+        .detail-header-left h1 {
+            font-size: 0.9rem;
+        }
+        .badge-status, .badge-priority {
+            font-size: 0.45rem;
+            padding: 0.08rem 0.4rem;
+        }
+        .desc-box {
+            font-size: 0.7rem;
+            padding: 0.5rem 0.65rem;
+        }
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--brand-orange-dark); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ticket-detail-wrapper">
+
+    <!-- ===== HEADER ===== -->
+    <div class="detail-header">
+        <div class="detail-header-left">
+            <div class="icon-box">
+                <i class="fa-solid fa-ticket"></i>
+            </div>
+            <div>
+                <h1>Ticket #{{ ticket.ticket_number }}</h1>
+                <div class="subtitle">
+                    <span class="badge-status badge-status-{{ ticket.status|lower }}">
+                        {{ ticket.status }}
+                    </span>
+                    <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
+                        {{ ticket.priority }}
+                    </span>
+                    <span class="unit-badge-sm">
+                        <i class="fa-solid fa-building"></i>
+                        {{ ticket.unit.code }}
+                    </span>
+                    <span style="font-size: 0.6rem;">
+                        <i class="fa-regular fa-clock"></i>
+                        {{ ticket.created_at|date:"d M Y, H:i" }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="detail-header-actions">
+            <a href="{% url 'unit_head_all_tickets' %}" class="btn-back">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+            <a href="{% url 'unit_head_download_ticket_excel' ticket.id %}" class="btn-download">
+                <i class="fa-solid fa-file-excel"></i> Download
+            </a>
+        </div>
+    </div>
+
+    <!-- ===== MAIN GRID ===== -->
+    <div class="detail-grid">
+
+        <!-- ===== LEFT COLUMN ===== -->
+        <div>
+
+            <!-- ===== TICKET INFO ===== -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-info-circle"></i> Ticket Information
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span class="label">Subject</span>
+                        <span class="value"><strong>{{ ticket.subject }}</strong></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Description</span>
+                        <span class="value">
+                            <div class="desc-box">{{ ticket.description|default:"No description provided." }}</div>
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Priority</span>
+                        <span class="value">
+                            <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
+                                {{ ticket.priority }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Error Type</span>
+                        <span class="value">{{ ticket.error_type|default:"Not Set" }}</span>
+                    </div>
+                    {% if ticket.status == 'Closed' %}
+                    <div class="info-row">
+                        <span class="label">Main Error</span>
+                        <span class="value">{{ ticket.main_error_type|default:"N/A" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Sub Error</span>
+                        <span class="value">{{ ticket.sub_error_type|default:"N/A" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Closing Remarks</span>
+                        <span class="value">{{ ticket.closing_remarks|default:"N/A" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Closed By</span>
+                        <span class="value">{{ ticket.closed_by|default:"N/A" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Closed At</span>
+                        <span class="value">{{ ticket.closed_at|date:"d M Y, H:i"|default:"N/A" }}</span>
+                    </div>
+                    {% endif %}
+                    {% if ticket.vendor_ticket_number %}
+                    <div class="info-row">
+                        <span class="label">Vendor Ticket</span>
+                        <span class="value"><span class="mono">{{ ticket.vendor_ticket_number }}</span></span>
+                    </div>
+                    {% endif %}
+                    {% if ticket.assigned_person %}
+                    <div class="info-row">
+                        <span class="label">Assigned To</span>
+                        <span class="value">{{ ticket.assigned_person }}</span>
+                    </div>
+                    {% endif %}
+                    {% if ticket.hold_reason %}
+                    <div class="info-row">
+                        <span class="label">Hold Reason</span>
+                        <span class="value">{{ ticket.hold_reason }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ===== EMPLOYEE INFO ===== -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-user"></i> Employee Details
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span class="label">Employee ID</span>
+                        <span class="value"><span class="mono">{{ ticket.employee_id }}</span></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Name</span>
+                        <span class="value">{{ ticket.employee_name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Mobile</span>
+                        <span class="value">{{ ticket.mobile|default:"N/A" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Email</span>
+                        <span class="value">{{ ticket.email|default:"N/A" }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Unit</span>
+                        <span class="value">{{ ticket.unit.full_name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Department</span>
+                        <span class="value">{{ ticket.department.name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Screen</span>
+                        <span class="value">
+                            {% if screen_object %}
+                                {{ screen_object.screen_name }} ({{ screen_object.screen_code }})
+                            {% else %}
+                                {{ ticket.screen_number }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% if erp_id %}
+                    <div class="info-row">
+                        <span class="label">ERP ID</span>
+                        <span class="value"><span class="mono">{{ erp_id }}</span></span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ===== ATTACHMENTS ===== -->
+            {% if attachments %}
+            <div class="detail-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-paperclip"></i> Attachments
+                </div>
+                <div class="card-body">
+                    <div class="attachments-list">
+                        {% for attachment in attachments %}
+                        <a href="{{ attachment.file.url }}" target="_blank" class="attachment-item">
+                            <i class="fa-solid fa-file"></i>
+                            {{ attachment.name }}
+                            <span style="font-size: 0.5rem; color: var(--text-muted);">
+                                ({{ attachment.file.size|filesizeformat }})
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ===== HISTORY ===== -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-clock-rotate-left"></i> History / Timeline
+                </div>
+                <div class="card-body" style="max-height: 450px; overflow-y: auto;">
+                    {% for entry in history %}
+                    <div class="history-item">
+                        <div class="h-icon">
+                            <i class="fa-solid fa-circle"></i>
+                        </div>
+                        <div class="h-content">
+                            <div class="h-action">{{ entry.action }}</div>
+                            {% if entry.remarks %}
+                            <div class="h-detail">{{ entry.remarks }}</div>
+                            {% endif %}
+                            <div class="h-meta">
+                                <span>{{ entry.performed_by }}</span>
+                                <span>&middot;</span>
+                                <span>{{ entry.timestamp|date:"d M Y, H:i" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div style="text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.75rem;">
+                        <i class="fa-regular fa-clock" style="display: block; font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+                        No history available
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== RIGHT COLUMN (SIDEBAR) ===== -->
+        <div>
+
+            <!-- ===== METADATA ===== -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-tag"></i> Metadata
+                </div>
+                <div class="card-body">
+                    <div class="sidebar-item">
+                        <span class="label">Created</span>
+                        <span class="value">{{ ticket.created_at|date:"d M Y, H:i" }}</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="label">Updated</span>
+                        <span class="value">{{ ticket.updated_at|date:"d M Y, H:i" }}</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="label">Created By</span>
+                        <span class="value">{{ ticket.created_by_user.username|default:"System" }}</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="label">Role</span>
+                        <span class="value">{{ ticket.created_by_role }}</span>
+                    </div>
+                    {% if ticket.status == 'Closed' and time_to_close %}
+                    <div class="sidebar-item">
+                        <span class="label">Time to Close</span>
+                        <span class="value">{{ time_to_close }}</span>
+                    </div>
+                    {% endif %}
+                    {% if ticket.escalated_at %}
+                    <div class="sidebar-item">
+                        <span class="label">Escalated</span>
+                        <span class="value">{{ ticket.escalated_at|date:"d M Y, H:i" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ===== STATUS TIMELINE ===== -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-road"></i> Status Timeline
+                </div>
+                <div class="card-body">
+                    <div class="sidebar-section">
+                        <div class="timeline-item">
+                            <span class="dot dot-created"></span>
+                            <span class="t-label">Created</span>
+                            <span class="t-time">{{ ticket.created_at|date:"d M Y, H:i" }}</span>
+                        </div>
+
+                        {% if ticket.assigned_person %}
+                        <div class="timeline-item">
+                            <span class="dot dot-assigned"></span>
+                            <span class="t-label">Assigned</span>
+                            <span class="t-time">{{ ticket.assigned_person }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if ticket.hold_reason %}
+                        <div class="timeline-item">
+                            <span class="dot dot-hold"></span>
+                            <span class="t-label">Hold</span>
+                            <span class="t-time" style="font-size: 0.5rem; max-width: 120px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ ticket.hold_reason }}">
+                                {{ ticket.hold_reason|truncatechars:15 }}
+                            </span>
+                        </div>
+                        {% endif %}
+
+                        {% if ticket.escalated_at %}
+                        <div class="timeline-item">
+                            <span class="dot dot-escalated"></span>
+                            <span class="t-label">Escalated</span>
+                            <span class="t-time">{{ ticket.escalated_at|date:"d M Y, H:i" }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if ticket.status == 'Closed' %}
+                        <div class="timeline-item">
+                            <span class="dot dot-closed"></span>
+                            <span class="t-label">Closed</span>
+                            <span class="t-time">{{ ticket.closed_at|date:"d M Y, H:i" }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== UNIT INFO ===== -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-building"></i> Unit
+                </div>
+                <div class="card-body" style="text-align: center; padding: 0.75rem;">
+                    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">
+                        {{ ticket.unit.full_name }}
+                    </div>
+                    <div style="font-size: 0.6rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-code"></i> {{ ticket.unit.code }}
+                    </div>
+                    <div style="font-size: 0.6rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                        <i class="fa-regular fa-layer-group"></i> {{ ticket.department.name }}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ============================================================
+    // THEME SYNC
+    // ============================================================
+    function updateTheme() {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var inputs = document.querySelectorAll('.form-control, .form-select');
+        inputs.forEach(function(input) {
+            if (isDark) {
+                input.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                input.style.borderColor = 'rgba(255,255,255,0.08)';
+                input.style.color = '#E8EDF5';
+                input.style.webkitTextFillColor = '#E8EDF5';
+            } else {
+                input.style.backgroundColor = '';
+                input.style.borderColor = '';
+                input.style.color = '';
+                input.style.webkitTextFillColor = '';
+            }
+        });
+    }
+
+    var themeToggle = document.getElementById('themeToggleFloating');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            setTimeout(updateTheme, 100);
+        });
+    }
+
+    var observer = new MutationObserver(function() {
+        updateTheme();
+    });
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+    setTimeout(updateTheme, 200);
+
+});
+</script>
+{% endblock %}

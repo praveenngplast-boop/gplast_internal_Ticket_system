@@ -24,6 +24,10 @@
         --settings-amber-soft: #FFFBEB;
         --settings-teal: #0F766E;
         --settings-teal-soft: #F0FDFA;
+        --settings-pink: #DB2777;
+        --settings-pink-soft: #FDF2F8;
+        --settings-indigo: #4F46E5;
+        --settings-indigo-soft: #EEF2FF;
         max-width: 1240px;
         margin: 0 auto;
         padding: 0 1rem 2rem;
@@ -218,6 +222,22 @@
         transform: translateY(-1px);
     }
 
+    /* ✅ NEW: Unit Head Management Card */
+    .settings-card--unit-head {
+        --card-accent: #8B5CF6;
+        --card-soft: #F5F3FF;
+    }
+
+    .settings-card--unit-head .settings-icon {
+        color: #8B5CF6;
+        background: #F5F3FF;
+    }
+
+    [data-theme="dark"] .settings-card--unit-head .settings-icon {
+        background: rgba(139, 92, 246, 0.15);
+        color: #A78BFA;
+    }
+
     .settings-footer {
         display: flex;
         align-items: center;
@@ -255,6 +275,16 @@
         background: linear-gradient(110deg, rgba(15, 118, 110, 0.18), var(--settings-surface));
     }
 
+    /* ✅ NEW: Dark mode support for Unit Head card */
+    [data-theme="dark"] .settings-card--unit-head {
+        background: var(--settings-surface);
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    [data-theme="dark"] .settings-card--unit-head:hover {
+        border-color: rgba(139, 92, 246, 0.5);
+    }
+
     @media (max-width: 900px) {
         .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
@@ -285,6 +315,9 @@
         </a>
     </header>
 
+    <!-- ============================================================
+         CONFIGURATION SECTION
+    ============================================================ -->
     <section class="settings-section" aria-labelledby="configuration-heading">
         <div class="settings-section-heading">
             <h2 id="configuration-heading">Configuration</h2>
@@ -309,6 +342,9 @@
         </div>
     </section>
 
+    <!-- ============================================================
+         PEOPLE & ACCESS SECTION
+    ============================================================ -->
     <section class="settings-section" aria-labelledby="people-heading">
         <div class="settings-section-heading">
             <h2 id="people-heading">People &amp; Access</h2>
@@ -320,6 +356,14 @@
                 <span class="settings-card-content"><h3>Employee Master</h3><p>Manage employees and assignment permissions.</p></span>
                 <span class="settings-card-action">Configure <i class="fa-solid fa-arrow-right"></i></span>
             </a>
+            
+            <!-- ✅ NEW: Unit Head Management Card -->
+            <a href="{% url 'settings_unit_heads_page' %}" class="settings-card settings-card--unit-head">
+                <span class="settings-icon"><i class="fa-solid fa-user-tie"></i></span>
+                <span class="settings-card-content"><h3>Unit Head Management</h3><p>Manage unit heads with login credentials and unit assignments.</p></span>
+                <span class="settings-card-action">Manage <i class="fa-solid fa-arrow-right"></i></span>
+            </a>
+            
             <a href="{% url 'settings_dept_employees' %}" class="settings-card" style="--card-accent: #0891B2; --card-soft: #ECFEFF;">
                 <span class="settings-icon"><i class="fa-solid fa-user-tie"></i></span>
                 <span class="settings-card-content"><h3>Department Employees</h3><p>View employees organized by department.</p></span>
@@ -333,6 +377,9 @@
         </div>
     </section>
 
+    <!-- ============================================================
+         SYSTEM RECORDS SECTION
+    ============================================================ -->
     <section class="settings-section" aria-labelledby="system-heading">
         <div class="settings-section-heading">
             <h2 id="system-heading">System Records</h2>
@@ -357,6 +404,9 @@
         </div>
     </section>
 
+    <!-- ============================================================
+         BACKUP & RECOVERY SECTION
+    ============================================================ -->
     <section class="settings-section" aria-labelledby="backup-heading">
         <div class="settings-section-heading">
             <h2 id="backup-heading">Backup &amp; Recovery</h2>

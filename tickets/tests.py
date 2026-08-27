@@ -11,10 +11,24 @@ from unittest.mock import patch
 from django.core import mail
 from tickets.email_utils import send_scheduled_reports
 
+
 class GPLASTTicketingTestCase(TestCase):
     def setUp(self):
-        self.employee_user = User.objects.create_user(username="testemp", password="password")
+        # Create employee user
+        self.employee_user = User.objects.create_user(
+            username="testemp", 
+            password="password",
+            email="testemp@gplast.com"
+        )
         
+        # Create admin user for tests
+        self.admin_user = User.objects.create_superuser(
+            username="adminuser",
+            password="adminpassword",
+            email="admin@gplast.com"
+        )
+        
+        # Create unit and department
         self.unit = Unit.objects.create(
             code="imd",
             full_name="injection moulding",
@@ -120,7 +134,7 @@ class GPLASTTicketingTestCase(TestCase):
             'department': self.department.id,
             'employee_id': 'EMP01',
             'employee_name': 'Test User',
-            'mobile': '123456789a',
+            'mobile': '123456789a',  # Invalid - contains letter
             'email': 'test@gplast.com',
             'screen_number': 'SCR-01',
             'subject': 'Short subject',
@@ -132,11 +146,18 @@ class GPLASTTicketingTestCase(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('mobile', form.errors)
 
+        # Test with 9 digits (invalid)
         form_data['mobile'] = '123456789'
         form = TicketForm(data=form_data)
         self.assertFalse(form.is_valid())
 
+        # Test with 10 digits (valid)
         form_data['mobile'] = '9876543210'
+        form = TicketForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+        # Test with empty mobile (valid - optional)
+        form_data['mobile'] = ''
         form = TicketForm(data=form_data)
         self.assertTrue(form.is_valid())
 
@@ -160,6 +181,24 @@ class GPLASTTicketingTestCase(TestCase):
         self.assertIn('description', form.errors)
 
         form_data['description'] = '12345678901234567890'
+        form = TicketForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_mobile_and_email_optional(self):
+        """Verify mobile and email fields are optional in ticket form"""
+        form_data = {
+            'unit': self.unit.id,
+            'department': self.department.id,
+            'employee_id': 'EMP01',
+            'employee_name': 'Test User',
+            'mobile': '',  # Empty - optional
+            'email': '',  # Empty - optional
+            'screen_number': 'SCR-01',
+            'subject': 'Test Subject',
+            'description': 'Description that is definitely long enough (over 20 chars)',
+            'priority': 'Low',
+            'error_type': 'New'
+        }
         form = TicketForm(data=form_data)
         self.assertTrue(form.is_valid())
 
@@ -227,12 +266,6 @@ class GPLASTTicketingTestCase(TestCase):
 
     def test_reopen_ticket_by_admin(self):
         """Verify only administrators can reopen closed tickets with remarks."""
-        admin_user = User.objects.create_superuser(
-            username="adminuser", 
-            password="adminpassword", 
-            email="admin@gplast.com"
-        )
-        
         ticket = Ticket.objects.create(
             ticket_number=generate_ticket_number(),
             unit=self.unit,
@@ -253,6 +286,7 @@ class GPLASTTicketingTestCase(TestCase):
             created_by_user=self.employee_user
         )
 
+        # Try reopening as employee (should fail)
         self.client.login(username="testemp", password="password")
         reopen_url = f"/admin/ticket/{ticket.id}/"
         
@@ -263,6 +297,7 @@ class GPLASTTicketingTestCase(TestCase):
             ticket.refresh_from_db()
             self.assertEqual(ticket.status, "Closed")
 
+            # Try reopening as admin without remarks (should fail)
             self.client.login(username="adminuser", password="adminpassword")
             
             response = self.client.post(reopen_url, {'action_type': 'Reopen', 'remarks': ''})
@@ -270,6 +305,7 @@ class GPLASTTicketingTestCase(TestCase):
             ticket.refresh_from_db()
             self.assertEqual(ticket.status, "Closed")
 
+            # Try reopening as admin with remarks (should succeed)
             response = self.client.post(reopen_url, {'action_type': 'Reopen', 'remarks': 'Issue still exists'})
             self.assertEqual(response.status_code, 302)
             ticket.refresh_from_db()
@@ -290,14 +326,19 @@ class ReportsViewTestCase(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.admin_user = User.objects.create_user(
-            username='reportadmin', password='password', is_staff=True,
+            username='reportadmin', 
+            password='password', 
+            is_staff=True,
             email='admin@example.com'
         )
         self.unit = Unit.objects.create(
-            code='rpt', full_name='Report Unit', created_by='TEST'
+            code='rpt', 
+            full_name='Report Unit', 
+            created_by='TEST'
         )
         self.department = Department.objects.create(
-            unit=self.unit, name='Report Department'
+            unit=self.unit, 
+            name='Report Department'
         )
 
     def create_ticket(self, number, status, sub_error_type):
@@ -342,9 +383,11 @@ class ReportsViewTestCase(TestCase):
         old_ticket = self.create_ticket('RPT004', 'Escalated', 'Database Error')
         old_ticket.escalated_at = timezone.now() - timezone.timedelta(days=20)
         old_ticket.save(update_fields=['escalated_at'])
+        
         recent_ticket = self.create_ticket('RPT005', 'Escalated', 'Database Error')
         recent_ticket.escalated_at = timezone.now() - timezone.timedelta(days=3)
         recent_ticket.save(update_fields=['escalated_at'])
+        
         self.create_ticket('RPT006', 'Closed', 'Database Error')
 
         request = self.factory.get('/custom-admin/reports/escalated-aging/')
@@ -363,6 +406,7 @@ class ReportsViewTestCase(TestCase):
         recent_ticket = self.create_ticket('RPT007', 'Escalated', 'Database Error')
         recent_ticket.escalated_at = timezone.now() - timezone.timedelta(days=3)
         recent_ticket.save(update_fields=['escalated_at'])
+        
         old_ticket = self.create_ticket('RPT008', 'Escalated', 'Database Error')
         old_ticket.escalated_at = timezone.now() - timezone.timedelta(days=20)
         old_ticket.save(update_fields=['escalated_at'])
@@ -382,12 +426,29 @@ class ReportsViewTestCase(TestCase):
 
     @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
     def test_scheduled_reports_scope_admins_and_unit_heads(self):
-        UnitHead.objects.create(unit=self.unit, name='Unit Head', email='head@example.com')
+        # ✅ FIXED: Create unit head with user field
+        unit_head_user = User.objects.create_user(
+            username='unitheaduser',
+            password='password',
+            email='head@example.com'
+        )
+        UnitHead.objects.create(
+            user=unit_head_user,  # ← REQUIRED: Link to User
+            unit=self.unit,
+            name='Unit Head',
+            email='head@example.com',
+            is_active=True
+        )
+        
         AdminNotificationEmail.objects.create(email='admin@example.com')
         self.create_ticket('RPT009', 'Open', 'Database Error')
+        
         schedule = EmailSchedule.objects.create(
-            enabled=True, reports=['open'], all_units=True,
-            send_unit_heads=True, send_admins=True,
+            enabled=True, 
+            reports=['open'], 
+            all_units=True,
+            send_unit_heads=True, 
+            send_admins=True,
             subject_template='Ticket Report - {{date}}',
         )
 

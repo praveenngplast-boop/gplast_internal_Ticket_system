@@ -21,11 +21,12 @@ from datetime import datetime, timedelta
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 import logging
+import json
 
 from tickets.models import (
     Unit, Department, Ticket, TicketHistory, EmployeeMaster,
     AdminContact, AdminNotificationEmail, SettingsAuditLog, ScreenMaster,
-    ERPHolderMapping, ReopenAttachment
+    ERPHolderMapping, ReopenAttachment, UnitHead
 )
 from tickets.forms import AdminTicketForm, CloseTicketForm
 from tickets.utils import send_ticket_email, validate_attachment
@@ -47,7 +48,7 @@ logger = logging.getLogger(__name__)
 # ADMIN DASHBOARD
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def admin_dashboard(request):
     """
     Admin dashboard showing:
@@ -60,6 +61,9 @@ def admin_dashboard(request):
     unviewed_count = Ticket.objects.filter(is_viewed=False).count()
     unviewed_tickets = Ticket.objects.filter(is_viewed=False).order_by('-created_at')[:10]
     
+    # ✅ NEW: Get total Unit Heads count
+    total_unit_heads = UnitHead.objects.filter(is_active=True).count()
+    
     kpis = {
         'total': all_tickets.count(), 
         'open': all_tickets.filter(status='Open').count(),
@@ -69,6 +73,7 @@ def admin_dashboard(request):
         'closed': all_tickets.filter(status='Closed').count(),
         'critical': all_tickets.filter(priority='Critical').count(),
         'unviewed': unviewed_count,
+        'unit_heads': total_unit_heads,
     }
     
     status_counts = list(all_tickets.values('status').annotate(count=Count('id')))
@@ -128,10 +133,10 @@ def admin_dashboard(request):
 
 
 # ============================================================
-# CREATE TICKET - ADMIN
+# CREATE TICKET - ADMIN (FIXED: Employee Details Fetch)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def create_ticket_admin(request):
     """
     Admin ticket creation with:
@@ -139,6 +144,7 @@ def create_ticket_admin(request):
     - Admin creation reason
     - Admin or Employee role selection
     - 3 attachment fields
+    - ✅ FIXED: Proper employee details fetch with ERP ID
     """
     employees = EmployeeMaster.objects.filter(is_active=True, can_assign_ticket=True).order_by('employee_name')
     
@@ -172,20 +178,28 @@ def create_ticket_admin(request):
             
             send_ticket_email(ticket, 'Created')
             messages.success(request, f'Ticket {ticket.ticket_number} created successfully by Admin!')
-            return redirect('admin_dashboard')  # ✅ FIXED: Removed 'tickets:'
+            return redirect('admin_dashboard')
         else:
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field}: {error}")
     else:
         form = AdminTicketForm()
+        # ✅ Set initial error_type choices for GET request
+        form.fields['error_type'].choices = [('', 'Select Error Type'), ('New', 'New'), ('Repeated', 'Repeated')]
     
-    from tickets.models import ScreenMaster
+    all_screens = ScreenMaster.objects.all().order_by('screen_name')
+    
+    # ✅ Get all units and departments for dropdown
+    units = Unit.objects.filter(is_active=True).order_by('code')
+    departments = Department.objects.filter(is_active=True).order_by('unit__code', 'name')
     
     return render(request, 'admin_panel/create_ticket.html', {
         'form': form,
         'employees': employees,
-        'all_screens': ScreenMaster.objects.all().order_by('screen_name'),
+        'all_screens': all_screens,
+        'units': units,
+        'departments': departments,
     })
 
 
@@ -193,7 +207,7 @@ def create_ticket_admin(request):
 # ALL TICKETS - ADMIN
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def all_tickets(request):
     """
     Admin ticket listing with filters, AJAX support, and pagination
@@ -407,10 +421,10 @@ def all_tickets(request):
 
 
 # ============================================================
-# TICKET DETAIL - ADMIN - ✅ FIXED
+# TICKET DETAIL - ADMIN
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def ticket_detail_admin(request, pk):
     """
     Admin ticket detail view with full ticket management
@@ -462,7 +476,6 @@ def ticket_detail_admin(request, pk):
             erp_id = erp_mapping.erp_user_id
 
     # ✅ FIXED: Only filter by screen_code, NOT by pk
-    # This fixes: ValueError: Field 'id' expected a number but got 'CFG0200'
     screen_object = ScreenMaster.objects.filter(screen_code=ticket.screen_number).first()
     
     if request.method == 'POST':
@@ -474,7 +487,7 @@ def ticket_detail_admin(request, pk):
                 assigned_person = request.POST.get('assigned_person', '').strip()
                 if not assigned_person: 
                     messages.error(request, "Assigned Person Name is mandatory.")
-                    return redirect('admin_ticket_detail', pk=ticket.id)  # ✅ FIXED: Removed 'tickets:'
+                    return redirect('admin_ticket_detail', pk=ticket.id)
                 ticket.status = 'Assigned'
                 ticket.assigned_person = assigned_person
                 ticket.save()
@@ -486,13 +499,13 @@ def ticket_detail_admin(request, pk):
                 )
                 send_ticket_email(ticket, 'Assigned', remarks=remarks, request=request)
                 messages.success(request, f'Ticket assigned to {assigned_person}.')
-                return redirect('admin_ticket_detail', pk=ticket.id)  # ✅ FIXED: Removed 'tickets:'
+                return redirect('admin_ticket_detail', pk=ticket.id)
                 
             elif action_type == 'Hold':
                 hold_reason = request.POST.get('hold_reason', '').strip()
                 if not hold_reason: 
                     messages.error(request, "Hold Reason is mandatory.")
-                    return redirect('admin_ticket_detail', pk=ticket.id)  # ✅ FIXED: Removed 'tickets:'
+                    return redirect('admin_ticket_detail', pk=ticket.id)
                 ticket.status = 'Hold'
                 ticket.hold_reason = hold_reason
                 ticket.save()
@@ -504,7 +517,7 @@ def ticket_detail_admin(request, pk):
                 )
                 send_ticket_email(ticket, 'Hold', remarks=hold_reason)
                 messages.success(request, 'Ticket placed on Hold.')
-                return redirect('admin_ticket_detail', pk=ticket.id)  # ✅ FIXED: Removed 'tickets:'
+                return redirect('admin_ticket_detail', pk=ticket.id)
                 
             elif action_type == 'Escalate':
                 vendor_ticket = request.POST.get('vendor_ticket_number', '').strip()
@@ -522,7 +535,7 @@ def ticket_detail_admin(request, pk):
                 )
                 send_ticket_email(ticket, 'Escalated', remarks=remark_str)
                 messages.success(request, 'Ticket escalated to ERP vendor.')
-                return redirect('admin_ticket_detail', pk=ticket.id)  # ✅ FIXED: Removed 'tickets:'
+                return redirect('admin_ticket_detail', pk=ticket.id)
                 
             elif action_type == 'Close':
                 close_form = CloseTicketForm(request.POST)
@@ -550,7 +563,7 @@ def ticket_detail_admin(request, pk):
                     )
                     send_ticket_email(ticket, 'Closed', remarks=closing_remarks)
                     messages.success(request, 'Ticket closed successfully.')
-                    return redirect('admin_ticket_detail', pk=ticket.id)  # ✅ FIXED: Removed 'tickets:'
+                    return redirect('admin_ticket_detail', pk=ticket.id)
                 else:
                     messages.error(request, 'Please fix the errors below.')
                     context = {
@@ -571,23 +584,23 @@ def ticket_detail_admin(request, pk):
             elif action_type == 'Reopen':
                 if not can_reopen: 
                     messages.error(request, "Cannot reopen - 48 hours elapsed.")
-                    return redirect('admin_ticket_detail', pk=ticket.id)  # ✅ FIXED: Removed 'tickets:'
+                    return redirect('admin_ticket_detail', pk=ticket.id)
                 remarks = request.POST.get('remarks', '').strip()
                 if not remarks: 
                     messages.error(request, "Reason for reopening is mandatory.")
-                    return redirect('admin_ticket_detail', pk=ticket.id)  # ✅ FIXED: Removed 'tickets:'
+                    return redirect('admin_ticket_detail', pk=ticket.id)
                 uploaded_files = request.FILES.getlist('reopen_attachments')
                 try:
                     for uploaded_file in uploaded_files:
                         validate_attachment(uploaded_file)
                 except ValidationError as error:
                     messages.error(request, str(error))
-                    return redirect('admin_ticket_detail', pk=ticket.id)  # ✅ FIXED: Removed 'tickets:'
+                    return redirect('admin_ticket_detail', pk=ticket.id)
                 reopen_ticket_logic(ticket, f"Admin {request.user.username}", remarks, uploaded_files)
                 messages.success(request, 'Ticket reopened successfully.')
-                return redirect('admin_ticket_detail', pk=ticket.id)  # ✅ FIXED: Removed 'tickets:'
+                return redirect('admin_ticket_detail', pk=ticket.id)
                 
-        return redirect('admin_ticket_detail', pk=ticket.id)  # ✅ FIXED: Removed 'tickets:'
+        return redirect('admin_ticket_detail', pk=ticket.id)
     
     context = {
         'ticket': ticket,
@@ -610,7 +623,7 @@ def ticket_detail_admin(request, pk):
 # ============================================================
 
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def get_notifications(request):
     """
     Get unviewed tickets for AJAX dropdown refresh
@@ -631,7 +644,7 @@ def get_notifications(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def mark_all_notifications_read(request):
     """
     Mark all tickets as viewed
@@ -650,7 +663,7 @@ def mark_all_notifications_read(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def mark_notification_read(request, ticket_id):
     """
     Mark a single ticket as viewed
@@ -672,34 +685,34 @@ def mark_notification_read(request, ticket_id):
 # ============================================================
 
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def test_notifications(request): 
     return render(request, 'admin_panel/test_notifications.html')
 
 
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def test_success_message(request): 
     messages.success(request, 'Test success message.')
     return redirect('test_notifications')
 
 
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def test_error_message(request): 
     messages.error(request, 'Test error message.')
     return redirect('test_notifications')
 
 
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def test_warning_message(request): 
     messages.warning(request, 'Test warning message.')
     return redirect('test_notifications')
 
 
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def test_info_message(request): 
     messages.info(request, 'Test info message.')
     return redirect('test_notifications')
@@ -710,7 +723,7 @@ def test_info_message(request):
 # ============================================================
 
 @login_required
-@user_passes_test(is_admin, login_url='login')  # ✅ FIXED: Removed 'tickets:'
+@user_passes_test(is_admin, login_url='login')
 def download_audit_log_excel(request):
     """
     Export filtered audit logs to Excel

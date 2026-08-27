@@ -789,6 +789,12 @@
             color: white;
         }
 
+        /* ===== UNIT HEAD ROLE BADGE ===== */
+        .role-badge.unit-head {
+            background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+            color: white;
+        }
+
         /* ===== BUTTONS ===== */
         .btn-logout {
             background: var(--bg-secondary);
@@ -1344,6 +1350,7 @@
             
             {% if user.is_authenticated %}
                 {% if user.is_staff %}
+                    <!-- ===== ADMIN NAVIGATION ===== -->
                     <a class="sidebar-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" 
                        href="{% url 'admin_dashboard' %}">
                         <i class="fa-solid fa-chart-pie"></i>
@@ -1362,7 +1369,23 @@
                         <span class="link-text">Create Ticket</span>
                         <span class="tooltip-text">Create Ticket</span>
                     </a>
+                {% elif is_unit_head %}
+                    <!-- ===== UNIT HEAD NAVIGATION ===== -->
+                    <a class="sidebar-link {% if request.resolver_match.url_name == 'unit_head_dashboard' %}active{% endif %}" 
+                       href="{% url 'unit_head_dashboard' %}">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span class="link-text">Dashboard</span>
+                        <span class="tooltip-text">Dashboard</span>
+                    </a>
+                    <a class="sidebar-link {% if request.resolver_match.url_name == 'unit_head_all_tickets' %}active{% endif %}" 
+                       href="{% url 'unit_head_all_tickets' %}">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span class="link-text">All Tickets</span>
+                        <span class="tooltip-text">All Tickets</span>
+                    </a>
+                    <!-- ❌ REMOVED: My Tickets for Unit Heads -->
                 {% else %}
+                    <!-- ===== EMPLOYEE NAVIGATION ===== -->
                     <a class="sidebar-link {% if request.resolver_match.url_name == 'employee_dashboard' %}active{% endif %}" 
                        href="{% url 'employee_dashboard' %}">
                         <i class="fa-solid fa-house"></i>
@@ -1385,21 +1408,30 @@
             {% endif %}
         </div>
 
-        {% if user.is_authenticated and user.is_staff %}
+        <!-- ===== REPORTS & SETTINGS SECTION ===== -->
+        {% if user.is_authenticated %}
         <div class="sidebar-section">
             <div class="sidebar-section-title">Management</div>
-            <a class="sidebar-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" 
-               href="{% url 'reports' %}">
+            
+            <!-- Reports - Available to Admin and Unit Head -->
+            {% if user.is_staff or is_unit_head %}
+            <a class="sidebar-link {% if request.resolver_match.url_name == 'reports' or request.resolver_match.url_name == 'unit_head_reports' %}active{% endif %}" 
+               href="{% if user.is_staff %}{% url 'reports' %}{% else %}{% url 'unit_head_reports' %}{% endif %}">
                 <i class="fa-solid fa-file-excel"></i>
                 <span class="link-text">Reports</span>
                 <span class="tooltip-text">Reports</span>
             </a>
+            {% endif %}
+            
+            <!-- Settings - Admin Only -->
+            {% if user.is_staff %}
             <a class="sidebar-link {% if request.resolver_match.url_name == 'settings_page' %}active{% endif %}" 
                href="{% url 'settings_page' %}">
                 <i class="fa-solid fa-sliders"></i>
                 <span class="link-text">Settings</span>
                 <span class="tooltip-text">Settings</span>
             </a>
+            {% endif %}
         </div>
         {% endif %}
 
@@ -1426,7 +1458,7 @@
                 <i class="fa-solid fa-bars"></i>
             </button>
             
-            <a href="{% if user.is_authenticated %}{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'employee_dashboard' %}{% endif %}{% else %}/{% endif %}" class="d-flex align-items-center">
+            <a href="{% if user.is_authenticated %}{% if user.is_staff %}{% url 'admin_dashboard' %}{% elif is_unit_head %}{% url 'unit_head_dashboard' %}{% else %}{% url 'employee_dashboard' %}{% endif %}{% else %}/{% endif %}" class="d-flex align-items-center">
                 <img src="{% static 'images/logo.png' %}" alt="GPLAST Logo" class="company-logo-nav" onerror="this.style.display='none';">
             </a>
         </div>
@@ -1435,14 +1467,18 @@
             <span class="navbar-page-title">
                 {% if request.resolver_match.url_name == 'admin_dashboard' %}Dashboard
                 {% elif request.resolver_match.url_name == 'employee_dashboard' %}Dashboard
+                {% elif request.resolver_match.url_name == 'unit_head_dashboard' %}Dashboard
                 {% elif request.resolver_match.url_name == 'all_tickets' %}All Tickets
+                {% elif request.resolver_match.url_name == 'unit_head_all_tickets' %}All Tickets
                 {% elif request.resolver_match.url_name == 'my_tickets' %}My Tickets
                 {% elif request.resolver_match.url_name == 'create_ticket_admin' %}Create Ticket
                 {% elif request.resolver_match.url_name == 'create_ticket' %}New Ticket
                 {% elif request.resolver_match.url_name == 'reports' %}Reports
+                {% elif request.resolver_match.url_name == 'unit_head_reports' %}Reports
                 {% elif request.resolver_match.url_name == 'settings_page' %}Settings
                 {% elif request.resolver_match.url_name == 'ticket_detail' %}Ticket Details
                 {% elif request.resolver_match.url_name == 'admin_ticket_detail' %}Ticket Details
+                {% elif request.resolver_match.url_name == 'unit_head_ticket_detail' %}Ticket Details
                 {% else %}GPLAST
                 {% endif %}
             </span>
@@ -1490,11 +1526,17 @@
                 <div class="user-info-wrapper">
                     <div class="user-avatar">{{ user.username|first|upper }}</div>
                     <div class="user-details">
-                        <span class="user-name">{{ user.username }}</span>
-                        <span class="user-role">{% if user.is_staff %}Administrator{% else %}Employee{% endif %}</span>
+                        <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                        <span class="user-role">
+                            {% if user.is_staff %}Administrator
+                            {% elif is_unit_head %}Unit Head - {{ unit_head_unit_code|default:'' }}
+                            {% else %}Employee{% endif %}
+                        </span>
                     </div>
                     {% if user.is_staff %}
                         <span class="role-badge admin">Admin</span>
+                    {% elif is_unit_head %}
+                        <span class="role-badge unit-head">Unit Head</span>
                     {% else %}
                         <span class="role-badge employee">Employee</span>
                     {% endif %}

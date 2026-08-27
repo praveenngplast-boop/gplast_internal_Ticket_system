@@ -2,10 +2,16 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.contrib.auth.models import User
-from tickets.models import Ticket, Unit, Department, AdminContact, AdminNotificationEmail, EmployeeMaster, DepartmentCredential, ERPHolderMapping
+from tickets.models import (
+    Ticket, Unit, Department, AdminContact, AdminNotificationEmail, 
+    EmployeeMaster, DepartmentCredential, ERPHolderMapping, UnitHead
+)
 from tickets.utils import validate_attachment
 
 
+# ============================================================
+# TICKET FORM
+# ============================================================
 class TicketForm(forms.ModelForm):
     class Meta:
         model = Ticket
@@ -137,6 +143,9 @@ class TicketForm(forms.ModelForm):
         return cleaned_data
 
 
+# ============================================================
+# ADMIN TICKET FORM
+# ============================================================
 class AdminTicketForm(TicketForm):
     class Meta(TicketForm.Meta):
         fields = TicketForm.Meta.fields + ['created_by_role', 'admin_creation_reason']
@@ -174,6 +183,212 @@ class AdminTicketForm(TicketForm):
         return cleaned_data
 
 
+# ============================================================
+# UNIT HEAD FORM - NEW
+# ============================================================
+class UnitHeadForm(forms.ModelForm):
+    """
+    Form for Admin to create/edit Unit Heads.
+    Creates or updates Django User account automatically.
+    """
+    username = forms.CharField(
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter username (e.g., imd_head)'
+        }),
+        label='Username'
+    )
+    
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter password (min 8 characters)'
+        }),
+        required=False,
+        label='Password'
+    )
+    
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm password'
+        }),
+        required=False,
+        label='Confirm Password'
+    )
+
+    class Meta:
+        model = UnitHead
+        fields = ['unit', 'name', 'email', 'is_active']
+        widgets = {
+            'unit': forms.Select(attrs={'class': 'form-select'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter full name'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter email address'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.is_edit = kwargs.pop('is_edit', False)
+        super().__init__(*args, **kwargs)
+        
+        self.fields['unit'].queryset = Unit.objects.filter(is_active=True)
+        
+        # If editing, password is not required
+        if self.is_edit:
+            self.fields['password'].required = False
+            self.fields['password'].help_text = 'Leave blank to keep current password'
+            self.fields['confirm_password'].required = False
+            # Auto-fill username from user object if exists
+            if self.instance and self.instance.pk and self.instance.user:
+                self.initial['username'] = self.instance.user.username
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip().lower()
+        
+        if not username:
+            raise ValidationError("Username is required.")
+        
+        if len(username) < 3:
+            raise ValidationError("Username must be at least 3 characters.")
+        
+        # Check for existing user (excluding current instance if editing)
+        existing_user = User.objects.filter(username=username)
+        if self.instance and self.instance.pk and self.instance.user:
+            existing_user = existing_user.exclude(pk=self.instance.user.pk)
+        
+        if existing_user.exists():
+            raise ValidationError(f"Username '{username}' is already taken. Please choose another.")
+        
+        return username
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        
+        # Password is not required when editing
+        if self.is_edit and not password:
+            return password
+        
+        # Password is required when creating new
+        if not self.is_edit and not password:
+            raise ValidationError("Password is required.")
+        
+        if password and len(password) < 8:
+            raise ValidationError("Password must be at least 8 characters.")
+        
+        return password
+
+    def clean_confirm_password(self):
+        password = self.cleaned_data.get('password')
+        confirm_password = self.cleaned_data.get('confirm_password')
+        
+        # Skip validation if both are empty (editing case)
+        if self.is_edit and not password and not confirm_password:
+            return confirm_password
+        
+        if password != confirm_password:
+            raise ValidationError("Passwords do not match.")
+        
+        return confirm_password
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        
+        if not email:
+            raise ValidationError("Email is required.")
+        
+        if '@' not in email or '.' not in email:
+            raise ValidationError("Please enter a valid email address.")
+        
+        # Check for existing email (excluding current instance)
+        existing = UnitHead.objects.filter(email=email)
+        if self.instance and self.instance.pk:
+            existing = existing.exclude(pk=self.instance.pk)
+        
+        # Also check if email is used by another user
+        if self.instance and self.instance.pk and self.instance.user:
+            existing_user = User.objects.filter(email=email).exclude(pk=self.instance.user.pk)
+        else:
+            existing_user = User.objects.filter(email=email)
+        
+        if existing.exists() or existing_user.exists():
+            raise ValidationError("This email is already in use.")
+        
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        unit = cleaned_data.get('unit')
+        
+        if not unit:
+            raise ValidationError({"unit": "Please select a unit for this Unit Head."})
+        
+        # Check if unit already has a head
+        existing = UnitHead.objects.filter(unit=unit)
+        if self.instance and self.instance.pk:
+            existing = existing.exclude(pk=self.instance.pk)
+        
+        if existing.exists():
+            raise ValidationError({
+                "unit": f"This unit already has a head: {existing.first().name}"
+            })
+        
+        return cleaned_data
+
+    def save(self, commit=True):
+        unit_head = super().save(commit=False)
+        
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+        email = self.cleaned_data.get('email')
+        name = self.cleaned_data.get('name')
+        
+        # Check if user exists (editing case)
+        user = None
+        if self.instance and self.instance.pk:
+            user = self.instance.user
+        
+        if user:
+            # Update existing user
+            user.username = username
+            user.email = email
+            user.first_name = name.split()[0] if name else ''
+            user.last_name = ' '.join(name.split()[1:]) if name and len(name.split()) > 1 else ''
+            
+            # Update password if provided
+            if password:
+                user.set_password(password)
+            
+            if commit:
+                user.save()
+        else:
+            # Create new user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            user.first_name = name.split()[0] if name else ''
+            user.last_name = ' '.join(name.split()[1:]) if name and len(name.split()) > 1 else ''
+            user.is_staff = False  # Unit Heads are NOT admins
+            user.is_superuser = False
+            
+            if commit:
+                user.save()
+        
+        # Link user to unit_head
+        unit_head.user = user
+        
+        if commit:
+            unit_head.save()
+        
+        return unit_head
+
+
+# ============================================================
+# ADMIN PASSWORD CHANGE FORM
+# ============================================================
 class AdminPasswordChangeForm(PasswordChangeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -181,6 +396,9 @@ class AdminPasswordChangeForm(PasswordChangeForm):
             field.widget.attrs.update({'class': 'form-control', 'placeholder': f"Enter {field.label}"})
 
 
+# ============================================================
+# ADMIN SET USER PASSWORD FORM
+# ============================================================
 class AdminSetUserPasswordForm(SetPasswordForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -188,6 +406,9 @@ class AdminSetUserPasswordForm(SetPasswordForm):
             field.widget.attrs.update({'class': 'form-control', 'placeholder': f"Enter {field.label}"})
 
 
+# ============================================================
+# USER SELECTION FORM
+# ============================================================
 class UserSelectionForm(forms.Form):
     user = forms.ModelChoiceField(
         queryset=User.objects.filter(is_staff=False).order_by('username'), 
@@ -196,6 +417,9 @@ class UserSelectionForm(forms.Form):
     )
 
 
+# ============================================================
+# ADMIN CONTACT FORM
+# ============================================================
 class AdminContactForm(forms.ModelForm):
     class Meta:
         model = AdminContact
@@ -207,6 +431,9 @@ class AdminContactForm(forms.ModelForm):
             field.widget.attrs.update({'class': 'form-control'})
 
 
+# ============================================================
+# UNIT FORM
+# ============================================================
 class UnitForm(forms.ModelForm):
     class Meta:
         model = Unit
@@ -227,6 +454,9 @@ class UnitForm(forms.ModelForm):
         return code
 
 
+# ============================================================
+# DEPARTMENT FORM - ✅ WITH DUPLICATE VALIDATION
+# ============================================================
 class DepartmentForm(forms.ModelForm):
     class Meta:
         model = Department
@@ -234,7 +464,7 @@ class DepartmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['unit'].queryset = Unit.objects.all()
+        self.fields['unit'].queryset = Unit.objects.filter(is_active=True)
         for name, field in self.fields.items():
             if name == 'is_active':
                 field.widget.attrs.update({'class': 'form-check-input'})
@@ -243,7 +473,37 @@ class DepartmentForm(forms.ModelForm):
             else:
                 field.widget.attrs.update({'class': 'form-control', 'placeholder': 'Enter Department Name'})
 
+    def clean(self):
+        cleaned_data = super().clean()
+        unit = cleaned_data.get('unit')
+        name = cleaned_data.get('name')
+        
+        # ✅ Validate duplicate department name in the same unit (case-insensitive)
+        if unit and name:
+            # Trim whitespace
+            name = name.strip()
+            
+            # Check for existing department with same name in the same unit
+            existing = Department.objects.filter(
+                unit=unit,
+                name__iexact=name
+            )
+            
+            # If editing, exclude the current instance
+            if self.instance and self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)
+            
+            if existing.exists():
+                raise ValidationError(
+                    f'A department named "{name}" already exists in unit "{unit.code}". Please use a different name.'
+                )
+        
+        return cleaned_data
 
+
+# ============================================================
+# ADMIN NOTIFICATION EMAIL FORM
+# ============================================================
 class AdminNotificationEmailForm(forms.ModelForm):
     class Meta:
         model = AdminNotificationEmail
@@ -255,6 +515,9 @@ class AdminNotificationEmailForm(forms.ModelForm):
         self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})
 
 
+# ============================================================
+# DEPARTMENT CREDENTIAL FORM
+# ============================================================
 class DepartmentCredentialForm(forms.ModelForm):
     class Meta:
         model = DepartmentCredential

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load ticket_filters %}  <!-- ADD THIS LINE -->
 {% block title %}Admin Dashboard - GPLAST{% endblock %}
 
 {% block extra_head %}
@@ -63,6 +64,73 @@
         --error-roadmap: #A78BFA;
         --error-gpl: #34D399;
         --error-other: rgba(255,255,255,0.3);
+    }
+
+    /* Aging Badge Styles */
+    .aging-badge {
+        display: inline-block;
+        padding: 0.08rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.5rem;
+        font-weight: 600;
+        white-space: nowrap;
+        font-family: 'Inter', sans-serif;
+        min-width: 40px;
+        text-align: center;
+    }
+
+    .aging-fresh {
+        background: rgba(34, 197, 94, 0.12);
+        color: #22C55E;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .aging-medium {
+        background: rgba(245, 158, 11, 0.12);
+        color: #F59E0B;
+        border: 1px solid rgba(245, 158, 11, 0.15);
+    }
+
+    .aging-old {
+        background: rgba(239, 68, 68, 0.12);
+        color: #EF4444;
+        border: 1px solid rgba(239, 68, 68, 0.15);
+    }
+
+    .aging-very-old {
+        background: rgba(139, 92, 246, 0.12);
+        color: #8B5CF6;
+        border: 1px solid rgba(139, 92, 246, 0.15);
+    }
+
+    .aging-unknown {
+        background: rgba(148, 163, 184, 0.12);
+        color: #94A3B8;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    [data-theme="dark"] .aging-fresh {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ADE80;
+        border-color: rgba(34, 197, 94, 0.2);
+    }
+
+    [data-theme="dark"] .aging-medium {
+        background: rgba(245, 158, 11, 0.15);
+        color: #FBBF24;
+        border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    [data-theme="dark"] .aging-old {
+        background: rgba(239, 68, 68, 0.15);
+        color: #F87171;
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    [data-theme="dark"] .aging-very-old {
+        background: rgba(139, 92, 246, 0.15);
+        color: #A78BFA;
+        border-color: rgba(139, 92, 246, 0.2);
     }
 
     .dashboard-container {
@@ -259,7 +327,7 @@
     .btn-view {
         padding: 0.2rem 0.8rem !important;
         border-radius: 50px !important;
-        font-size: 0.65rem !important;
+        font-size: 0.6rem !important;
         font-weight: 600 !important;
         transition: all 0.4s ease !important;
         background: var(--brand-gradient) !important;
@@ -271,7 +339,7 @@
         gap: 4px !important;
         text-decoration: none !important;
         box-shadow: 0 2px 8px rgba(255, 107, 0, 0.2) !important;
-        min-width: 55px !important;
+        min-width: 50px !important;
         justify-content: center !important;
     }
 
@@ -596,7 +664,7 @@
         display: inline-block;
         padding: 0.15rem 0.5rem;
         border-radius: 50px;
-        font-size: 0.55rem;
+        font-size: 0.5rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.3px;
@@ -668,7 +736,7 @@
     .modal-body .table td {
         color: var(--text-primary) !important;
         border-color: var(--border-color) !important;
-        font-size: 0.75rem !important;
+        font-size: 0.7rem !important;
         vertical-align: middle !important;
         padding: 0.5rem !important;
         background: transparent !important;
@@ -688,13 +756,13 @@
     }
 
     .modal-body .badge-custom {
-        font-size: 0.55rem !important;
+        font-size: 0.5rem !important;
         padding: 0.15rem 0.5rem !important;
     }
 
     .modal-body .btn-view {
         padding: 0.15rem 0.6rem !important;
-        font-size: 0.6rem !important;
+        font-size: 0.55rem !important;
         min-width: 50px !important;
     }
 
@@ -748,7 +816,7 @@
     .modal-loading i { font-size: 2rem; color: var(--brand-orange); margin-bottom: 1rem; display: block; }
     .modal-loading p { color: var(--text-secondary) !important; font-family: 'Inter', sans-serif; }
 
-    /* ✅ NEW: Error Type Badge in KPI */
+    /* Error Type Badge in KPI */
     .badge-error-type {
         display: inline-flex;
         align-items: center;
@@ -793,6 +861,7 @@
         .kpi-value { font-size: 1.2rem; }
         .dashboard-header .d-flex { flex-direction: column; align-items: stretch; }
         .dashboard-header .btn { width: 100%; justify-content: center; }
+        .aging-badge { font-size: 0.45rem; padding: 0.05rem 0.4rem; min-width: 35px; }
     }
 
     @media (max-width: 768px) {
@@ -807,8 +876,8 @@
         .click-hint { font-size: 0.4rem; bottom: 4px; right: 6px; }
         .chart-legend-item { font-size: 0.5rem; }
         .chart-legend-item .legend-color { width: 8px; height: 8px; }
-        .badge-custom { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
-        .btn-view { font-size: 0.55rem; padding: 0.15rem 0.5rem; min-width: 45px; }
+        .badge-custom { font-size: 0.45rem; padding: 0.1rem 0.4rem; }
+        .btn-view { font-size: 0.5rem; padding: 0.15rem 0.5rem; min-width: 45px; }
         .btn-view i { display: none; }
         .glass-header { padding: 0.4rem 0.75rem; }
         .glass-header h6 { font-size: 0.75rem; }
@@ -818,10 +887,11 @@
         .chart-empty i { font-size: 1.5rem; }
         .chart-empty p { font-size: 0.7rem; }
         .modal-body { padding: 0.75rem !important; max-height: 350px; }
-        .modal-body .table td { font-size: 0.6rem !important; padding: 0.2rem !important; }
+        .modal-body .table td { font-size: 0.55rem !important; padding: 0.2rem !important; }
         .modal-header .modal-title { font-size: 0.95rem !important; }
         .badge-error-type { font-size: 0.4rem !important; padding: 0.05rem 0.25rem !important; }
         .badge-error-type .sub-text { font-size: 0.3rem; }
+        .aging-badge { font-size: 0.4rem; padding: 0.05rem 0.3rem; min-width: 30px; }
     }
 
     @media (max-width: 576px) {
@@ -840,6 +910,8 @@
         .modal-footer .btn { width: 100%; justify-content: center; }
         .badge-error-type { font-size: 0.35rem !important; padding: 0.05rem 0.2rem !important; }
         .badge-error-type .sub-text { font-size: 0.25rem; }
+        .aging-badge { font-size: 0.35rem; padding: 0.03rem 0.25rem; min-width: 25px; }
+        .modal-body .table td { font-size: 0.5rem !important; padding: 0.15rem !important; }
     }
 
     @media (max-width: 400px) {
@@ -855,6 +927,7 @@
         .chart-legend-item .legend-color { width: 6px; height: 6px; }
         .modal-footer { flex-direction: column; gap: 0.5rem; }
         .modal-footer .btn { width: 100%; justify-content: center; }
+        .aging-badge { font-size: 0.3rem; padding: 0.02rem 0.15rem; min-width: 20px; }
     }
 
     [data-theme="dark"] .kpi-card {
@@ -1142,7 +1215,6 @@
             </div>
         </div>
 
-        <!-- ✅ UPDATED: Error Type Chart with Main and Sub Error Types -->
         <div class="col-12 col-lg-6">
             <div class="panel-card">
                 <div class="glass-header">
@@ -1282,81 +1354,6 @@
             }
         };
 
-        function drillDownWithFilter(filterType, filterValue, filterLabel) {
-            forceCleanupBackdrops();
-
-            var modalEl = document.getElementById('adminDrillDownModal');
-            var modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
-
-            var modalBody = document.getElementById('adminDrillDownModalBody');
-            var statusLabel = document.getElementById('adminDrillDownStatusLabel');
-            var viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
-
-            statusLabel.textContent = filterLabel;
-
-            var url = "{% url 'all_tickets' %}?ajax=1";
-            
-            if (filterType === 'unit') {
-                viewAllBtn.href = "{% url 'all_tickets' %}?unit=" + encodeURIComponent(filterValue);
-                url += "&unit=" + encodeURIComponent(filterValue);
-            } else if (filterType === 'priority') {
-                viewAllBtn.href = "{% url 'all_tickets' %}?priority=" + encodeURIComponent(filterValue);
-                url += "&priority=" + encodeURIComponent(filterValue);
-            } else if (filterType === 'errorType') {
-                viewAllBtn.href = "{% url 'all_tickets' %}?main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
-                url += "&main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
-                statusLabel.textContent = 'Main Error: ' + filterValue + ' (Closed Tickets)';
-            } else if (filterType === 'subErrorType') {
-                viewAllBtn.href = "{% url 'all_tickets' %}?sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
-                url += "&sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
-                statusLabel.textContent = 'Sub Error: ' + filterValue + ' (Closed Tickets)';
-            } else {
-                viewAllBtn.href = "{% url 'all_tickets' %}";
-            }
-
-            modalBody.innerHTML = `
-                <div class="modal-loading">
-                    <i class="fa-solid fa-spinner fa-spin"></i>
-                    <p>Loading tickets...</p>
-                </div>
-            `;
-
-            modal.show();
-
-            fetch(url, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(function(response) {
-                if (!response.ok) throw new Error('Server returned ' + response.status);
-                return response.json();
-            })
-            .then(function(data) {
-                if (data.success === false) throw new Error(data.message || 'Server error');
-                if (data.html) {
-                    modalBody.innerHTML = data.html;
-                } else {
-                    modalBody.innerHTML = `
-                        <div class="text-center py-4" style="color: var(--text-muted);">
-                            <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
-                            <p>No tickets found</p>
-                        </div>
-                    `;
-                }
-            })
-            .catch(function(error) {
-                modalBody.innerHTML = `
-                    <div class="text-center py-4" style="color: #EF4444;">
-                        <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
-                        <p><strong>Error loading tickets</strong></p>
-                        <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
-                        <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownWithFilter('${filterType}', '${filterValue}', '${filterLabel}')">
-                            <i class="fa-solid fa-rotate me-1"></i>Retry
-                        </button>
-                    </div>
-                `;
-            });
-        }
-
         window.drillDownAdminTickets = drillDownAdminTickets;
         window.drillDownWithFilter = drillDownWithFilter;
 
@@ -1385,13 +1382,11 @@
             var statusColors = ['#22C55E', '#3B82F6', '#F59E0B', '#8B5CF6', '#94A3B8'];
             var unitColors = ['#FF6B00', '#FFB800', '#3B82F6', '#22C55E', '#8B5CF6', '#EF4444', '#F59E0B', '#06B6D4', '#EC4899'];
             var priorityColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E'];
-            // ✅ Updated error type colors - Purple for Roadmap, Green for GPL, others gray
             var errorTypeColors = ['#8B5CF6', '#10B981', '#94A3B8', '#F59E0B', '#EF4444', '#3B82F6', '#EC4899', '#06B6D4'];
 
             var statusData = chartsData.status || {};
             var unitData = chartsData.units || [];
             var priorityData = chartsData.priority || {};
-            // ✅ Use mainErrorType from charts_data (new field in admin_views.py)
             var errorTypeData = chartsData.mainErrorType || chartsData.errorType || {};
 
             var statusLabels = Object.keys(statusData);
@@ -1483,7 +1478,6 @@
         var statusColors = ['#22C55E', '#3B82F6', '#F59E0B', '#8B5CF6', '#94A3B8'];
         var unitColors = ['#FF6B00', '#FFB800', '#3B82F6', '#22C55E', '#8B5CF6', '#EF4444', '#F59E0B', '#06B6D4', '#EC4899'];
         var priorityColors = ['#EF4444', '#F59E0B', '#3B82F6', '#22C55E'];
-        // ✅ Updated error type colors
         var errorTypeColors = ['#8B5CF6', '#10B981', '#94A3B8', '#F59E0B', '#EF4444', '#3B82F6', '#EC4899', '#06B6D4'];
 
         createChart('statusChart', chartsData.status || {}, statusColors, 'doughnut', 'status');
@@ -1496,7 +1490,6 @@
         }
         createChart('unitChart', unitChartData, unitColors, 'doughnut', 'unit');
         createChart('priorityChart', chartsData.priority || {}, priorityColors, 'pie', 'priority');
-        // ✅ Use mainErrorType from charts_data
         createChart('errorTypeChart', chartsData.mainErrorType || chartsData.errorType || {}, errorTypeColors, 'doughnut', 'errorType');
 
         setTimeout(initChartsWithLegends, 500);
@@ -1566,6 +1559,10 @@
         }
     });
 
+    // ============================================================
+    // DRILL DOWN FUNCTIONS - WITH AGING
+    // ============================================================
+
     function drillDownAdminTickets(filterValue) {
         forceCleanupBackdrops();
 
@@ -1620,6 +1617,9 @@
             if (data.success === false) throw new Error(data.message || 'Server error');
             if (data.html) {
                 modalBody.innerHTML = data.html;
+                if (data.count !== undefined) {
+                    statusLabel.textContent = (statusMap[filterValue] || filterValue || 'All Tickets') + ` (${data.count})`;
+                }
             } else {
                 modalBody.innerHTML = `
                     <div class="text-center py-4" style="color: var(--text-muted);">
@@ -1636,6 +1636,84 @@
                     <p><strong>Error loading tickets</strong></p>
                     <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
                     <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownAdminTickets('${filterValue}')">
+                        <i class="fa-solid fa-rotate me-1"></i>Retry
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    function drillDownWithFilter(filterType, filterValue, filterLabel) {
+        forceCleanupBackdrops();
+
+        var modalEl = document.getElementById('adminDrillDownModal');
+        var modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+
+        var modalBody = document.getElementById('adminDrillDownModalBody');
+        var statusLabel = document.getElementById('adminDrillDownStatusLabel');
+        var viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
+
+        statusLabel.textContent = filterLabel;
+
+        var url = "{% url 'all_tickets' %}?ajax=1";
+        
+        if (filterType === 'unit') {
+            viewAllBtn.href = "{% url 'all_tickets' %}?unit=" + encodeURIComponent(filterValue);
+            url += "&unit=" + encodeURIComponent(filterValue);
+        } else if (filterType === 'priority') {
+            viewAllBtn.href = "{% url 'all_tickets' %}?priority=" + encodeURIComponent(filterValue);
+            url += "&priority=" + encodeURIComponent(filterValue);
+        } else if (filterType === 'errorType') {
+            viewAllBtn.href = "{% url 'all_tickets' %}?main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+            url += "&main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+            statusLabel.textContent = 'Main Error: ' + filterValue + ' (Closed Tickets)';
+        } else if (filterType === 'subErrorType') {
+            viewAllBtn.href = "{% url 'all_tickets' %}?sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+            url += "&sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+            statusLabel.textContent = 'Sub Error: ' + filterValue + ' (Closed Tickets)';
+        } else {
+            viewAllBtn.href = "{% url 'all_tickets' %}";
+        }
+
+        modalBody.innerHTML = `
+            <div class="modal-loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading tickets...</p>
+            </div>
+        `;
+
+        modal.show();
+
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(response) {
+            if (!response.ok) throw new Error('Server returned ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success === false) throw new Error(data.message || 'Server error');
+            if (data.html) {
+                modalBody.innerHTML = data.html;
+                if (data.count !== undefined) {
+                    statusLabel.textContent = filterLabel + ` (${data.count})`;
+                }
+            } else {
+                modalBody.innerHTML = `
+                    <div class="text-center py-4" style="color: var(--text-muted);">
+                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
+                        <p>No tickets found</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(function(error) {
+            modalBody.innerHTML = `
+                <div class="text-center py-4" style="color: #EF4444;">
+                    <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
+                    <p><strong>Error loading tickets</strong></p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
+                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownWithFilter('${filterType}', '${filterValue}', '${filterLabel}')">
                         <i class="fa-solid fa-rotate me-1"></i>Retry
                     </button>
                 </div>

@@ -3,6 +3,7 @@
 
 {% block title %}Screen Mapping - GPLAST Admin{% endblock %}
 
+
 {% block extra_head %}
 <style>
     :root {
@@ -228,6 +229,32 @@
         color: #fff;
         transform: scale(1.05);
     }
+
+    /* ✅ Bulk Upload Button */
+    .btn-bulk-upload {
+        background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        padding: 0.4rem 1.2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--smap-transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 36px;
+        box-shadow: 0 2px 12px rgba(139, 92, 246, 0.2);
+        font-family: 'Inter', sans-serif;
+        text-decoration: none;
+    }
+    
+    .btn-bulk-upload:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(139, 92, 246, 0.35);
+        color: #fff;
+    }
     
     /* ===== FILTER BAR ===== */
     .filter-bar {
@@ -264,24 +291,81 @@
         font-family: 'Inter', sans-serif;
     }
     
-    .filter-bar select,
-    .filter-bar input {
-        padding: 0.3rem 0.6rem;
-        border: 2px solid var(--smap-border);
-        border-radius: 8px;
-        font-size: 0.7rem;
-        background: var(--smap-bg-card);
-        color: var(--smap-text-primary);
-        transition: var(--smap-transition);
-        font-family: 'Inter', sans-serif;
-        min-height: 32px;
+    /* ============================================================
+       DARK MODE - SELECT DROPDOWN FIX
+       ============================================================ */
+    [data-theme="dark"] .filter-bar select,
+    [data-theme="dark"] .filter-bar input {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        color: #E8EDF5 !important;
     }
-    
-    .filter-bar select:focus,
-    .filter-bar input:focus {
-        border-color: var(--smap-orange);
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(255,107,0,0.08);
+
+    [data-theme="dark"] .filter-bar select option,
+    [data-theme="dark"] .filter-bar select optgroup {
+        background-color: #1A1A2E !important;
+        color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .filter-bar select:focus,
+    [data-theme="dark"] .filter-bar input:focus {
+        border-color: var(--smap-orange) !important;
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.15) !important;
+        outline: none !important;
+    }
+
+    /* ============================================================
+       DARK MODE - MODAL SELECT DROPDOWN FIX
+       ============================================================ */
+    [data-theme="dark"] .modal-box select,
+    [data-theme="dark"] .modal-box input,
+    [data-theme="dark"] .modal-box .form-control {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .modal-box select option,
+    [data-theme="dark"] .modal-box select optgroup {
+        background-color: #1A1A2E !important;
+        color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] .modal-box select:focus,
+    [data-theme="dark"] .modal-box input:focus {
+        border-color: var(--smap-orange) !important;
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.15) !important;
+        outline: none !important;
+    }
+
+    /* ============================================================
+       DARK MODE - GENERAL SELECT FIX
+       ============================================================ */
+    [data-theme="dark"] select,
+    [data-theme="dark"] input,
+    [data-theme="dark"] .form-control,
+    [data-theme="dark"] .form-select {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+        color: #E8EDF5 !important;
+        -webkit-text-fill-color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] select option,
+    [data-theme="dark"] select optgroup,
+    [data-theme="dark"] .form-select option {
+        background-color: #1A1A2E !important;
+        color: #E8EDF5 !important;
+        -webkit-text-fill-color: #E8EDF5 !important;
+    }
+
+    [data-theme="dark"] select:focus,
+    [data-theme="dark"] input:focus,
+    [data-theme="dark"] .form-control:focus,
+    [data-theme="dark"] .form-select:focus {
+        border-color: var(--smap-orange) !important;
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.15) !important;
+        outline: none !important;
     }
     
     /* ===== TABLE ===== */
@@ -706,6 +790,201 @@
         font-size: 0.85rem;
     }
     
+    /* ===== DARK MODE TABLE OVERRIDES ===== */
+    [data-theme="dark"] .smap-table thead {
+        background: rgba(255,255,255,0.02);
+    }
+    
+    [data-theme="dark"] .smap-table th {
+        color: #A8B8D8 !important;
+        border-color: rgba(255,255,255,0.06);
+        background: #1A1A2E;
+    }
+    
+    [data-theme="dark"] .smap-table td {
+        color: #E8EDF5 !important;
+        border-color: rgba(255,255,255,0.04);
+    }
+    
+    [data-theme="dark"] .smap-table tbody tr:hover {
+        background: rgba(255,107,0,0.05);
+    }
+    
+    [data-theme="dark"] .smap-table .erp-id-cell {
+        color: var(--smap-orange) !important;
+    }
+    
+    [data-theme="dark"] .smap-table .count-badge.zero {
+        background: rgba(255,255,255,0.08);
+        color: #6A7A9A;
+    }
+    
+    /* ===== DARK MODE MODAL OVERRIDES ===== */
+    [data-theme="dark"] .modal-box {
+        background: #1A1A2E;
+        border-color: rgba(255,255,255,0.06);
+    }
+    
+    [data-theme="dark"] .modal-box .modal-header {
+        border-color: rgba(255,255,255,0.06);
+    }
+    
+    [data-theme="dark"] .modal-box .modal-header h5 {
+        color: #E8EDF5;
+    }
+    
+    [data-theme="dark"] .modal-box .modal-body .modal-table th {
+        color: #A8B8D8 !important;
+        border-color: rgba(255,255,255,0.06);
+        background: #1A1A2E;
+    }
+    
+    [data-theme="dark"] .modal-box .modal-body .modal-table td {
+        color: #E8EDF5 !important;
+        border-color: rgba(255,255,255,0.04);
+    }
+    
+    [data-theme="dark"] .modal-box .modal-body .modal-table tbody tr:hover {
+        background: rgba(255,107,0,0.05);
+    }
+    
+    [data-theme="dark"] .modal-box .modal-body .modal-table .screen-code-cell {
+        background: rgba(255,107,0,0.12);
+    }
+    
+    [data-theme="dark"] .modal-box .modal-footer {
+        border-color: rgba(255,255,255,0.06);
+    }
+    
+    /* ===== DARK MODE FILTER BAR ===== */
+    [data-theme="dark"] .filter-bar {
+        background: #1A1A2E;
+        border-color: rgba(255,255,255,0.06);
+    }
+    
+    [data-theme="dark"] .filter-bar .filter-group label {
+        color: #6A7A9A;
+    }
+    
+    /* ===== DARK MODE BUTTONS ===== */
+    [data-theme="dark"] .btn-back {
+        border-color: rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.7);
+    }
+    
+    [data-theme="dark"] .btn-back:hover {
+        border-color: var(--smap-orange);
+        color: var(--smap-orange);
+    }
+    
+    [data-theme="dark"] .btn-outline {
+        border-color: rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.7);
+    }
+    
+    [data-theme="dark"] .btn-outline:hover {
+        border-color: var(--smap-orange);
+        color: var(--smap-orange);
+    }
+    
+    [data-theme="dark"] .modal-close-btn {
+        border-color: rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.7);
+    }
+    
+    [data-theme="dark"] .modal-close-btn:hover {
+        border-color: var(--smap-danger);
+        color: var(--smap-danger);
+    }
+
+    [data-theme="dark"] .btn-bulk-upload {
+        background: linear-gradient(135deg, #7C3AED, #6D28D9);
+        box-shadow: 0 2px 12px rgba(139, 92, 246, 0.3);
+    }
+    
+    [data-theme="dark"] .btn-bulk-upload:hover {
+        box-shadow: 0 6px 24px rgba(139, 92, 246, 0.5);
+    }
+    
+    /* ===== BULK UPLOAD UPLOAD AREA ===== */
+    .upload-area {
+        border: 2px dashed var(--smap-border);
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: var(--smap-transition);
+        cursor: pointer;
+        background: var(--smap-bg-card);
+    }
+
+    .upload-area:hover {
+        border-color: var(--smap-orange);
+        background: rgba(255,107,0,0.02);
+    }
+
+    .upload-area i {
+        font-size: 2rem;
+        color: var(--smap-orange);
+        opacity: 0.5;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-area p {
+        margin: 0;
+        color: var(--smap-text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .upload-area .file-name {
+        font-weight: 600;
+        color: var(--smap-orange);
+        margin-top: 0.3rem;
+    }
+
+    .upload-result {
+        max-height: 200px;
+        overflow-y: auto;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+
+    .upload-result .success-item { color: var(--smap-success); }
+    .upload-result .error-item { color: var(--smap-danger); }
+
+    .progress-bar-container {
+        width: 100%;
+        height: 6px;
+        background: var(--smap-border);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    .progress-bar-container.active { display: block; }
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+        border-radius: 4px;
+        width: 0%;
+        transition: width 0.5s ease;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
         .smap-header .d-flex {
@@ -715,7 +994,8 @@
         }
         .smap-header .d-flex .btn-back,
         .smap-header .d-flex .btn-orange,
-        .smap-header .d-flex .btn-outline {
+        .smap-header .d-flex .btn-outline,
+        .smap-header .d-flex .btn-bulk-upload {
             width: 100%;
             justify-content: center;
         }
@@ -769,6 +1049,9 @@
             min-width: unset;
             width: 100%;
         }
+        .upload-area {
+            padding: 1rem;
+        }
     }
     
     @media (max-width: 480px) {
@@ -776,7 +1059,7 @@
         .smap-header { padding: 0.75rem 1rem; }
         .smap-header h1 { font-size: 0.95rem; }
         .smap-header .subtitle { font-size: 0.65rem; }
-        .btn-back, .btn-orange, .btn-outline {
+        .btn-back, .btn-orange, .btn-outline, .btn-bulk-upload {
             font-size: 0.65rem;
             padding: 0.3rem 0.8rem;
             min-height: 30px;
@@ -796,6 +1079,8 @@
         }
         .modal-box .modal-header h5 { font-size: 0.9rem; }
         .pagination-btn { font-size: 0.5rem; padding: 0.1rem 0.3rem; min-width: 22px; min-height: 22px; }
+        .upload-area i { font-size: 1.5rem; }
+        .upload-area p { font-size: 0.75rem; }
     }
     
     /* ===== SCROLLBAR ===== */
@@ -813,6 +1098,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const ADD_URL = '{% url "screen_mapping_add" %}';
     const REMOVE_URL = '{% url "screen_mapping_remove" %}';
     const DELETE_ERP_URL = '{% url "screen_mapping_delete_erp" %}';
+    const BULK_UPLOAD_URL = '{% url "screen_mapping_bulk_upload" %}';
 
     // ============================================================
     // SHOW TOAST
@@ -840,7 +1126,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // VIEW SCREENS MODAL
     // ============================================================
     window.viewScreens = function(erpId) {
-        // ✅ FIX: Get the screens data from the hidden div using JSON string
         const screensDataEl = document.getElementById('screensData');
         if (!screensDataEl) {
             console.error('screensData element not found');
@@ -849,12 +1134,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let screens = {};
         try {
-            // ✅ Parse the JSON string from data attribute
             const jsonData = screensDataEl.getAttribute('data-screens');
             screens = JSON.parse(jsonData);
         } catch(e) {
             console.error('Error parsing screens data:', e);
-            console.error('Raw data:', screensDataEl.getAttribute('data-screens'));
             showToast('Error loading screens data', 'error');
             return;
         }
@@ -864,14 +1147,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const body = document.getElementById('viewModalBody');
         const title = document.getElementById('viewModalTitle');
         
-        // Set title
         title.innerHTML = `
             <i class="fas fa-id-badge" style="color:var(--smap-orange);"></i> 
             ERP User ID: ${erpId}
             <span class="erp-badge">${erpScreens.length} screens</span>
         `;
         
-        // Build table
         if (erpScreens.length === 0) {
             body.innerHTML = `
                 <div style="text-align:center; padding:2rem; color:var(--smap-text-muted);">
@@ -926,9 +1207,7 @@ document.addEventListener('DOMContentLoaded', function() {
             body.innerHTML = html;
         }
         
-        // Store ERP ID for Add button in footer
         document.getElementById('viewModalErpId').value = erpId;
-        
         modal.classList.add('active');
     };
 
@@ -936,9 +1215,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('viewModal').classList.remove('active');
     };
 
-    // ============================================================
-    // ADD SCREEN TO ERP (from modal footer)
-    // ============================================================
     window.addScreenFromModal = function() {
         const erpId = document.getElementById('viewModalErpId').value;
         closeViewModal();
@@ -1059,9 +1335,165 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // ============================================================
+    // ✅ BULK UPLOAD
+    // ============================================================
+    var selectedFile = null;
+
+    window.openBulkUploadModal = function() {
+        document.getElementById('bulkUploadModal').classList.add('active');
+        document.getElementById('bulkFileName').textContent = 'No file selected';
+        document.getElementById('bulkUploadResult').innerHTML = '';
+        document.getElementById('bulkProgressBar').classList.remove('active');
+        document.getElementById('bulkProgressFill').style.width = '0%';
+        selectedFile = null;
+        document.getElementById('bulkFile').value = '';
+    };
+
+    window.closeBulkUploadModal = function() {
+        document.getElementById('bulkUploadModal').classList.remove('active');
+    };
+
+    window.handleBulkFileSelect = function(event) {
+        var file = event.target.files[0];
+        if (file) {
+            selectedFile = file;
+            document.getElementById('bulkFileName').textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
+            document.getElementById('bulkUploadResult').innerHTML = '';
+        } else {
+            selectedFile = null;
+            document.getElementById('bulkFileName').textContent = 'No file selected';
+        }
+    };
+
+    // Drag and drop support
+    document.addEventListener('DOMContentLoaded', function() {
+        var uploadArea = document.getElementById('bulkUploadArea');
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.borderColor = 'var(--smap-orange)';
+                this.style.background = 'rgba(255,107,0,0.05)';
+            });
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '';
+                this.style.background = '';
+            });
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '';
+                this.style.background = '';
+                var files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    var file = files[0];
+                    if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+                        selectedFile = file;
+                        document.getElementById('bulkFile').files = files;
+                        document.getElementById('bulkFileName').textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
+                        document.getElementById('bulkUploadResult').innerHTML = '';
+                    } else {
+                        showToast('Please upload an Excel or CSV file.', 'error');
+                    }
+                }
+            });
+        }
+    });
+
+    window.submitBulkUpload = function() {
+        if (!selectedFile) {
+            showToast('Please select an Excel/CSV file to upload', 'error');
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('excel_file', selectedFile);
+        formData.append('csrfmiddlewaretoken', CSRF);
+
+        var btn = document.getElementById('bulkUploadBtn');
+        var progressBar = document.getElementById('bulkProgressBar');
+        var progressFill = document.getElementById('bulkProgressFill');
+        var resultDiv = document.getElementById('bulkUploadResult');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Uploading...';
+        progressBar.classList.add('active');
+        progressFill.style.width = '30%';
+        resultDiv.innerHTML = '';
+
+        fetch(BULK_UPLOAD_URL, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(function(response) {
+            progressFill.style.width = '70%';
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            progressFill.style.width = '100%';
+            setTimeout(function() {
+                progressBar.classList.remove('active');
+                progressFill.style.width = '0%';
+            }, 1000);
+
+            if (data.success) {
+                var html = '<div style="font-weight:600; margin-bottom:0.5rem;">✅ Upload Complete</div>';
+                if (data.added_count > 0) {
+                    html += '<div class="success-item">✅ ' + data.added_count + ' mappings added successfully</div>';
+                }
+                if (data.skipped_count > 0) {
+                    html += '<div class="error-item">⚠️ ' + data.skipped_count + ' rows skipped</div>';
+                }
+                if (data.errors && data.errors.length > 0) {
+                    html += '<div style="margin-top:0.5rem;"><strong>Errors:</strong></div>';
+                    data.errors.forEach(function(err) {
+                        html += '<div class="error-item">• ' + err + '</div>';
+                    });
+                }
+                resultDiv.innerHTML = html;
+                showToast(data.message || 'Bulk upload completed successfully!', 'success');
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+            } else {
+                var html = '<div style="font-weight:600; color:var(--smap-danger); margin-bottom:0.5rem;">❌ Upload Failed</div>';
+                if (data.errors && data.errors.length > 0) {
+                    data.errors.forEach(function(err) {
+                        html += '<div class="error-item">• ' + err + '</div>';
+                    });
+                } else {
+                    html += '<div class="error-item">' + (data.message || 'Unknown error occurred') + '</div>';
+                }
+                resultDiv.innerHTML = html;
+                showToast(data.message || 'Bulk upload failed', 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload';
+        })
+        .catch(function(error) {
+            progressFill.style.width = '100%';
+            setTimeout(function() {
+                progressBar.classList.remove('active');
+                progressFill.style.width = '0%';
+            }, 1000);
+            resultDiv.innerHTML = '<div class="error-item">❌ Error: ' + error.message + '</div>';
+            showToast('Error: ' + error.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload';
+        });
+    };
+
+    // ============================================================
     // MODAL CLOSE ON OVERLAY CLICK
     // ============================================================
-    ['addModal', 'removeModal', 'viewModal'].forEach(id => {
+    ['addModal', 'removeModal', 'viewModal', 'bulkUploadModal'].forEach(id => {
         document.getElementById(id).addEventListener('click', function(e) {
             if (e.target === this) this.classList.remove('active');
         });
@@ -1072,7 +1504,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================================
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
-            ['addModal', 'removeModal', 'viewModal'].forEach(id => {
+            ['addModal', 'removeModal', 'viewModal', 'bulkUploadModal'].forEach(id => {
                 document.getElementById(id).classList.remove('active');
             });
         }
@@ -1172,6 +1604,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <a href="{% url 'screen_mapping_export_excel' %}{% if erp_filter %}?erp_user_id={{ erp_filter }}{% endif %}" class="btn-outline">
                     <i class="fas fa-download"></i> Export
                 </a>
+                <!-- ✅ Bulk Upload Button -->
+                <button class="btn-bulk-upload" onclick="openBulkUploadModal()">
+                    <i class="fas fa-upload"></i> Bulk Upload
+                </button>
                 <button class="btn-orange" onclick="openAddModal()">
                     <i class="fas fa-plus"></i> Add Mapping
                 </button>
@@ -1391,6 +1827,74 @@ document.addEventListener('DOMContentLoaded', function() {
             </button>
             <button style="background:linear-gradient(135deg,#dc2626,#ef4444); color:#fff; border:none; border-radius:50px; padding:0.25rem 1.2rem; font-size:0.75rem; font-weight:600; cursor:pointer; min-height:32px;" onclick="submitRemove()">
                 <i class="fas fa-unlink"></i> Remove
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     ✅ BULK UPLOAD MODAL
+============================================================ -->
+<div class="modal-overlay" id="bulkUploadModal">
+    <div class="modal-box" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED); padding: 1rem 1.5rem; border-radius: 18px 18px 0 0; margin: -1.5rem -2rem 1rem -2rem; border-bottom: none;">
+            <h5 class="modal-title text-white" style="color: #fff !important; margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-upload"></i> Bulk Upload Screen Mappings
+            </h5>
+            <button class="modal-close-btn" onclick="closeBulkUploadModal()" style="background: transparent; border: 2px solid rgba(255,255,255,0.3); color: #fff;">
+                <i class="fas fa-times"></i> Close
+            </button>
+        </div>
+        <div class="modal-body" style="padding-top: 0;">
+            <!-- Download Template -->
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" style="font-weight: 600; color: var(--smap-text-secondary); font-size: 0.85rem;">
+                    <i class="fas fa-file-excel me-1" style="color: #28A745;"></i> Download Template
+                </label>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <a href="{% url 'screen_mapping_download_template' %}" class="btn-outline" style="display: inline-flex; background: linear-gradient(135deg, #1F4E79, #2F5597); color: #fff; border: none; padding: 0.35rem 1.2rem; font-size: 0.75rem; border-radius: 50px; text-decoration: none; gap: 0.3rem;">
+                        <i class="fas fa-download"></i> Download Template
+                    </a>
+                    <span style="font-size: 0.7rem; color: var(--smap-text-muted); align-self: center;">
+                        Excel file with columns: ERP User ID, Screen Code
+                    </span>
+                </div>
+                <div class="form-text" style="font-size: 0.6rem; color: var(--smap-text-muted); margin-top: 0.2rem;">
+                    Download the template, add your screen mappings, and upload the file below.
+                </div>
+            </div>
+
+            <!-- Upload File -->
+            <div class="form-group">
+                <label class="form-label" style="font-weight: 600; color: var(--smap-text-secondary); font-size: 0.85rem;">
+                    <i class="fas fa-cloud-upload-alt me-1" style="color: var(--smap-orange);"></i> Upload Excel/CSV File <span class="text-danger">*</span>
+                </label>
+                <div class="upload-area" id="bulkUploadArea" onclick="document.getElementById('bulkFile').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to select or drag &amp; drop your file</p>
+                    <p style="font-size: 0.7rem; color: var(--smap-text-muted);">Supported: .xlsx, .xls, .csv</p>
+                    <div class="file-name" id="bulkFileName">No file selected</div>
+                </div>
+                <input type="file" id="bulkFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleBulkFileSelect(event)">
+                <div class="form-text" style="font-size: 0.6rem; color: var(--smap-text-muted); margin-top: 0.2rem;">
+                    ERP User ID must exist. Screen Code must exist in Screen Master. Duplicate mappings will be skipped.
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar-container" id="bulkProgressBar">
+                <div class="progress-bar-fill" id="bulkProgressFill"></div>
+            </div>
+
+            <!-- Upload Result -->
+            <div class="upload-result" id="bulkUploadResult"></div>
+        </div>
+        <div class="modal-footer" style="border-top: 1px solid var(--smap-border); padding-top: 1rem; display: flex; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="modal-close-btn" onclick="closeBulkUploadModal()" style="min-height: 32px; padding: 0.25rem 1rem; font-size: 0.75rem;">
+                Cancel
+            </button>
+            <button class="modal-add-btn" id="bulkUploadBtn" onclick="submitBulkUpload()" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED); border: none; color: #fff; min-height: 32px; padding: 0.25rem 1.2rem; font-size: 0.75rem; font-weight: 600; border-radius: 50px; cursor: pointer; transition: var(--smap-transition); box-shadow: 0 2px 12px rgba(139, 92, 246, 0.2);">
+                <i class="fas fa-upload me-1"></i> Upload
             </button>
         </div>
     </div>

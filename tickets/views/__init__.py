@@ -44,6 +44,18 @@ from .employee_views import (
     export_filtered_my_tickets_excel,
 )
 
+# ✅ Import Unit Head Views
+from .unit_head_views import (
+    unit_head_dashboard,
+    unit_head_all_tickets,
+    unit_head_my_tickets,
+    unit_head_ticket_detail,
+    unit_head_reports,
+    unit_head_download_ticket_excel,
+    unit_head_export_closed_tickets_30_days,
+    unit_head_export_filtered_tickets_excel,
+)
+
 from .settings_views import (
     settings_page,
     settings_units_departments,
@@ -92,6 +104,21 @@ from .settings_action import (
     screen_mapping_export_excel,
     settings_screen_mapping_page,
     ajax_get_screens_for_erp,
+    screen_mapping_bulk_upload,
+    screen_mapping_download_template,
+    # Unit Head Management
+    settings_unit_heads_page,
+    settings_unit_heads,
+    # ✅ ERP MAPPING VIEWS - Import from settings_action
+    erp_mapping_page,
+    erp_mapping_add,
+    erp_mapping_remove,
+    erp_mapping_unmap,
+    erp_mapping_export_excel,
+    erp_mapping_bulk_upload,
+    erp_mapping_download_template,
+    erp_mapping_list,
+    erp_mapping_search_employees,
 )
 
 from .ajax_views import (
@@ -99,19 +126,30 @@ from .ajax_views import (
     get_departments_by_unit,
     get_employee_details as ajax_get_employee_details,
     get_employees_by_department,
+    get_unit_head_details,
+    get_unit_dashboard_stats,
+    get_unit_tickets_ajax,
+    get_ticket_statistics,
+    get_closed_tickets_30_days,
+    get_error_type_statistics,
+    get_ticket_by_number,
+    search_tickets_ajax,
 )
 
 # ============================================================
-# ERP USER ID MAPPING VIEWS
+# ❌ REMOVE THIS BLOCK - It's now imported from settings_action above
 # ============================================================
-from .erp_mapping_views import (
-    erp_mapping_page,
-    erp_mapping_add,
-    erp_mapping_remove,
-    erp_mapping_list,
-    erp_mapping_search_employees,
-    erp_mapping_export_excel,
-)
+# from .erp_mapping_views import (
+#     erp_mapping_page,
+#     erp_mapping_add,
+#     erp_mapping_remove,
+#     erp_mapping_unmap,
+#     erp_mapping_list,
+#     erp_mapping_search_employees,
+#     erp_mapping_export_excel,
+#     erp_mapping_bulk_upload,
+#     erp_mapping_download_template,
+# )
 
 # Export all views
 __all__ = [
@@ -152,6 +190,16 @@ __all__ = [
     'export_filtered_tickets_excel',
     'export_filtered_my_tickets_excel',
     
+    # Unit Head views
+    'unit_head_dashboard',
+    'unit_head_all_tickets',
+    'unit_head_my_tickets',
+    'unit_head_ticket_detail',
+    'unit_head_reports',
+    'unit_head_download_ticket_excel',
+    'unit_head_export_closed_tickets_30_days',
+    'unit_head_export_filtered_tickets_excel',
+    
     # Settings views
     'settings_page',
     'settings_email_reports',
@@ -188,18 +236,33 @@ __all__ = [
     'screen_mapping_export_excel',
     'settings_screen_mapping_page',
     'ajax_get_screens_for_erp',
+    'screen_mapping_bulk_upload',
+    'screen_mapping_download_template',
+    'settings_unit_heads_page',
+    'settings_unit_heads',
+    
+    # ERP USER ID MAPPING VIEWS
+    'erp_mapping_page',
+    'erp_mapping_add',
+    'erp_mapping_remove',
+    'erp_mapping_unmap',
+    'erp_mapping_list',
+    'erp_mapping_search_employees',
+    'erp_mapping_export_excel',
+    'erp_mapping_bulk_upload',
+    'erp_mapping_download_template',
     
     # AJAX views
     'get_units',
     'get_departments_by_unit',
     'ajax_get_employee_details',
     'get_employees_by_department',
-    
-    # ERP USER ID MAPPING VIEWS
-    'erp_mapping_page',
-    'erp_mapping_add',
-    'erp_mapping_remove',
-    'erp_mapping_list',
-    'erp_mapping_search_employees',
-    'erp_mapping_export_excel',
+    'get_unit_head_details',
+    'get_unit_dashboard_stats',
+    'get_unit_tickets_ajax',
+    'get_ticket_statistics',
+    'get_closed_tickets_30_days',
+    'get_error_type_statistics',
+    'get_ticket_by_number',
+    'search_tickets_ajax',
 ]

@@ -35,8 +35,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'gplast_ticket.urls'
 
-# gplast_ticket/settings.py
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -48,12 +46,15 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                # Add this line - points to tickets/context_processors.py
+                # ✅ Added: Notification count context processor
                 'tickets.context_processors.notification_count',
+                # ✅ NEW: Unit Head context processor
+                'tickets.context_processors.unit_head_context',
             ],
         },
     },
 ]
+
 WSGI_APPLICATION = 'gplast_ticket.wsgi.application'
 
 DATABASES = {

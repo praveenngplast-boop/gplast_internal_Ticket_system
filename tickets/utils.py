@@ -1,590 +1,291 @@
-import logging
-import os
-import base64
-from datetime import datetime
-from email.utils import parseaddr
-from django.core.mail import EmailMultiAlternatives
+# tickets/utils.py
+
+"""
+Utility functions for tickets app
+"""
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.utils import timezone
-from django.contrib.staticfiles import finders
-from django.contrib.staticfiles.storage import staticfiles_storage
-from django.templatetags.static import static
-from django.apps import apps
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+import logging
 
 logger = logging.getLogger(__name__)
 
 
-def get_logo_html():
+# ============================================================
+# USER ROLE CHECKS
+# ============================================================
+
+def is_admin(user):
     """
-    Get logo HTML with proper base64 encoding or fallback
+    Check if user is a superuser/admin
     """
-    logo_base64 = None
-    
-    # Try multiple paths to find the logo
-    logo_paths = [
-        'images/gplast-logo.png',
-        'img/gplast-logo.png',
-        'logo.png',
-        'images/logo.png',
-        'img/logo.png',
-        'gplast-logo.png',
-    ]
-    
-    for path in logo_paths:
-        logo_path = finders.find(path)
-        if logo_path:
-            break
-    
-    # If not found in static, try the static files storage
-    if not logo_path:
-        try:
-            # Try to get from static files storage
-            if staticfiles_storage.exists('images/gplast-logo.png'):
-                logo_path = staticfiles_storage.path('images/gplast-logo.png')
-        except:
-            pass
-    
-    if logo_path:
-        try:
-            with open(logo_path, 'rb') as f:
-                logo_data = f.read()
-                logo_base64 = base64.b64encode(logo_data).decode('utf-8')
-                return f"""
-                <div style="text-align: center; margin-bottom: 10px;">
-                    <img src="data:image/png;base64,{logo_base64}" 
-                         alt="GPLAST Logo" 
-                         style="max-height: 60px; width: auto; display: inline-block;"
-                         border="0">
-                </div>
-                """
-        except Exception as e:
-            logger.warning(f"Could not load logo from static: {e}")
-    
-    # Try using the static URL as fallback (works if logo is served via web server)
-    try:
-        logo_url = static('images/gplast-logo.png')
-        if logo_url:
-            return f"""
-            <div style="text-align: center; margin-bottom: 10px;">
-                <img src="{logo_url}" 
-                     alt="GPLAST Logo" 
-                     style="max-height: 60px; width: auto; display: inline-block;"
-                     border="0">
-            </div>
-            """
-    except:
-        pass
-    
-    # Final fallback: Use company name with styling
-    return """
-    <div style="text-align: center; margin-bottom: 10px;">
-        <div style="display: inline-block; background: linear-gradient(135deg, #FF6B00, #FF8C38); 
-                    padding: 8px 25px; border-radius: 8px; color: #ffffff; 
-                    font-size: 24px; font-weight: 700; font-family: Arial, sans-serif;">
-            GPLAST
-        </div>
-    </div>
+    if not user.is_authenticated:
+        return False
+    return user.is_superuser or user.is_staff
+
+
+def is_employee(user):
     """
-
-
-def get_footer_logo_html():
+    Check if user is an employee (not admin, not unit head)
     """
-    Get footer logo or fallback
-    """
-    logo_base64 = None
-    
-    # Try multiple paths to find the logo
-    logo_paths = [
-        '../static/images/logo.png',
-        'img/gplast-logo.png',
-        'logo.png',
-        'images/logo.png',
-        'img/logo.png',
-        'gplast-logo.png',
-    ]
-    
-    for path in logo_paths:
-        logo_path = finders.find(path)
-        if logo_path:
-            break
-    
-    if not logo_path:
-        try:
-            if staticfiles_storage.exists('images/gplast-logo.png'):
-                logo_path = staticfiles_storage.path('images/gplast-logo.png')
-        except:
-            pass
-    
-    if logo_path:
-        try:
-            with open(logo_path, 'rb') as f:
-                logo_data = f.read()
-                logo_base64 = base64.b64encode(logo_data).decode('utf-8')
-                return f"""
-                <div style="margin-bottom: 8px;">
-                    <img src="data:image/png;base64,{logo_base64}" 
-                         alt="GPLAST" 
-                         style="max-height: 30px; width: auto; display: inline-block; opacity: 0.7;"
-                         border="0">
-                </div>
-                """
-        except Exception as e:
-            logger.warning(f"Could not load footer logo: {e}")
-    
-    # Try using the static URL as fallback
-    try:
-        logo_url = static('images/gplast-logo.png')
-        if logo_url:
-            return f"""
-            <div style="margin-bottom: 8px;">
-                <img src="{logo_url}" 
-                     alt="GPLAST" 
-                     style="max-height: 30px; width: auto; display: inline-block; opacity: 0.7;"
-                     border="0">
-            </div>
-            """
-    except:
-        pass
-    
-    return """
-    <div style="margin-bottom: 8px;">
-        <span style="font-size: 18px; font-weight: 700; color: #FF6B00; opacity: 0.7;">
-            GPLAST
-        </span>
-    </div>
-    """
-
-
-def send_ticket_email(ticket, action, remarks=None, request=None, attachments=None):
-    """
-    Send email notification for ticket actions.
-    
-    TO: The configured backend email address
-    CC: All Notification Emails configured in Settings and ticket participants
-    """
-    # Import here to avoid circular import
-    from tickets.models import AdminNotificationEmail, EmployeeMaster
-    
-    # Get notification emails from database
-    notification_emails = list(AdminNotificationEmail.objects.values_list('email', flat=True))
-    employee_email = ticket.email
-    default_email = settings.DEFAULT_FROM_EMAIL
-    to_emails = [default_email] if default_email else []
-    cc_emails = list(notification_emails)
-
-    if employee_email and employee_email not in to_emails:
-        cc_emails.append(employee_email)
-
-    if action == 'Assigned' and ticket.assigned_person:
-        assigned_employee = EmployeeMaster.objects.filter(
-            employee_name=ticket.assigned_person,
-            is_active=True,
-        ).exclude(email='').first()
-        if assigned_employee:
-            cc_emails.append(assigned_employee.email)
-    to_keys = {(parseaddr(email)[1] or email).strip().lower() for email in to_emails}
-    cc_emails = list(dict.fromkeys(
-        email for email in cc_emails
-        if (parseaddr(email)[1] or email).strip().lower() not in to_keys
-    ))
-    
-    # If no notification emails exist, use a default from settings
-    if not notification_emails:
-        # Use DEFAULT_FROM_EMAIL as fallback
-        logger.warning(f"No AdminNotificationEmail records found. Using DEFAULT_FROM_EMAIL as To: {default_email}")
-    
-    # If still no recipients, log and return
-    if not to_emails and not cc_emails:
-        logger.error("No recipients found. Cannot send email. Please configure AdminNotificationEmail or check DEFAULT_FROM_EMAIL.")
-        return
-    
-    # Log what we're doing
-    logger.info(f"Preparing to send email for ticket {ticket.ticket_number}")
-    logger.info(f"TO: {to_emails}")
-    logger.info(f"CC: {cc_emails}")
-    
-    subject = f"[GPLAST] Ticket {ticket.ticket_number} - {action}"
-    
-    if request:
-        ticket_url = request.build_absolute_uri(f'/ticket/{ticket.id}/')
-    else:
-        try:
-            from django.contrib.sites.models import Site
-            site = Site.objects.get_current()
-            ticket_url = f"http://{site.domain}/ticket/{ticket.id}/"
-        except:
-            ticket_url = f"/ticket/{ticket.id}/"
-    
-    # Get logos
-    logo_html = get_logo_html()
-    footer_logo_html = get_footer_logo_html()
-    
-    # Status badge colors
-    status_colors = {
-        'Open': '#22C55E',
-        'Assigned': '#3B82F6',
-        'Hold': '#F59E0B',
-        'Escalated': '#EF4444',
-        'Closed': '#6B7280',
-    }
-    status_color = status_colors.get(ticket.status, '#6B7280')
-    
-    # Priority badge colors
-    priority_colors = {
-        'Critical': '#EF4444',
-        'High': '#F59E0B',
-        'Medium': '#3B82F6',
-        'Low': '#6B7280',
-    }
-    priority_color = priority_colors.get(ticket.priority, '#6B7280')
-    
-    # Status text color
-    status_text_color = '#1a202c' if ticket.status == 'Hold' else '#ffffff'
-    priority_text_color = '#1a202c' if ticket.priority == 'High' else '#ffffff'
-    
-    # Format dates for display
-    created_at_str = timezone.localtime(ticket.created_at).strftime('%Y-%m-%d %H:%M') if ticket.created_at else 'N/A'
-    closed_at_str = timezone.localtime(ticket.closed_at).strftime('%Y-%m-%d %H:%M') if ticket.closed_at else ''
-    unit_name = ticket.unit.full_name if ticket.unit else 'N/A'
-    dept_name = ticket.department.name if ticket.department else 'N/A'
-    
-    # Build remarks HTML
-    remarks_html = ""
-    if remarks:
-        remarks_html = f"""
-        <h3 style="color: #1a202c; margin: 15px 0 8px 0; font-size: 15px;">Remarks</h3>
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 10px 0;">
-            <tr>
-                <td style="background: #fffbeb; padding: 14px 16px; border-left: 4px solid #F59E0B; border-radius: 4px;">
-                    <p style="margin: 0; color: #78350f; font-size: 13px; line-height: 1.6;">{remarks}</p>
-                </td>
-            </tr>
-        </table>
-        """
-    
-    # Build assigned person HTML
-    assigned_html = ""
-    if ticket.assigned_person:
-        assigned_html = f"""
-        <tr>
-            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #4a5568; background: #edf2f7;">Assigned To</td>
-            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1a202c;">{ticket.assigned_person}</td>
-        </tr>
-        """
-    
-    # Build closed at HTML
-    closed_html = ""
-    if ticket.closed_at:
-        closed_html = f"""
-        <tr>
-            <td style="padding: 8px 14px; font-size: 13px; font-weight: 600; color: #4a5568; background: #edf2f7; border-radius: 0 0 0 8px;">Closed</td>
-            <td style="padding: 8px 14px; font-size: 13px; color: #1a202c; border-radius: 0 0 8px 0;">{closed_at_str}</td>
-        </tr>
-        """
-    
-    # HTML Email Content
-    html_content = f"""
-    <!DOCTYPE html>
-    <html xmlns="http://www.w3.org/1999/xhtml">
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Ticket {ticket.ticket_number} - {action}</title>
-    </head>
-    <body style="margin: 0; padding: 20px; font-family: Arial, Helvetica, sans-serif; background-color: #f7fafc;">
-    
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border-collapse: collapse; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            
-            <!-- HEADER WITH LOGO -->
-            <tr>
-                <td style="background: linear-gradient(135deg, #e94560, #c0392b); padding: 20px 20px 15px 20px; border-radius: 12px 12px 0 0; text-align: center;">
-                    <!-- Logo -->
-                    {logo_html}
-                    <h1 style="margin: 5px 0 0 0; font-size: 22px; font-weight: 700; color: #ffffff;">Ticket {action}</h1>
-                    <p style="margin: 5px 0 0 0; font-size: 13px; color: rgba(255,255,255,0.9);">GPLAST Support System</p>
-                    <span style="display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 16px; border-radius: 50px; color: #ffffff; font-size: 14px; font-weight: 600; margin-top: 8px;">#{ticket.ticket_number}</span>
-                </td>
-            </tr>
-            
-            <!-- BODY -->
-            <tr>
-                <td style="padding: 25px 20px;">
-                    
-                    <!-- Greeting -->
-                    <p style="font-size: 15px; color: #4a5568; margin-bottom: 15px;">Hello <strong style="color: #1a202c;">{ticket.employee_name or 'User'}</strong>,</p>
-                    
-                    <p style="color: #4a5568; margin-bottom: 20px; font-size: 14px;">
-                        This is to inform you that ticket <strong>#{ticket.ticket_number}</strong> 
-                        has been <strong>{action.lower()}</strong> successfully.
-                    </p>
-                    
-                    <!-- Status and Priority Badges -->
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 15px 0;">
-                        <tr>
-                            <td style="padding: 0 10px 5px 0; width: auto;">
-                                <table cellpadding="0" cellspacing="0" border="0">
-                                    <tr>
-                                        <td style="padding: 6px 16px; border-radius: 50px; font-size: 13px; font-weight: 600; background: {status_color}; color: {status_text_color};">
-                                            {ticket.status}
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                            <td style="padding: 0 0 5px 0; width: auto;">
-                                <table cellpadding="0" cellspacing="0" border="0">
-                                    <tr>
-                                        <td style="padding: 4px 14px; border-radius: 50px; font-size: 12px; font-weight: 600; background: {priority_color}; color: {priority_text_color};">
-                                            {ticket.priority} Priority
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <!-- Ticket Details -->
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 15px 0; background: #f7fafc; border-radius: 8px; border-collapse: collapse;">
-                        <tr>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #4a5568; width: 120px; background: #edf2f7;">Ticket Number</td>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1a202c;"><strong>#{ticket.ticket_number}</strong></td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #4a5568; background: #edf2f7;">Subject</td>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1a202c;">{ticket.subject}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #4a5568; background: #edf2f7;">Status</td>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1a202c;">{ticket.status}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #4a5568; background: #edf2f7;">Priority</td>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1a202c;">{ticket.priority}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #4a5568; background: #edf2f7;">Unit</td>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1a202c;">{unit_name}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #4a5568; background: #edf2f7;">Department</td>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1a202c;">{dept_name}</td>
-                        </tr>
-                        {assigned_html}
-                        <tr>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #4a5568; background: #edf2f7;">Created By</td>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1a202c;">{ticket.employee_name or 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #4a5568; background: #edf2f7;">Contact</td>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1a202c;">{ticket.email or 'N/A'}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #4a5568; background: #edf2f7; border-radius: 0 0 0 8px;">Created</td>
-                            <td style="padding: 8px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #1a202c; border-radius: 0 0 8px 0;">{created_at_str}</td>
-                        </tr>
-                        {closed_html}
-                    </table>
-                    
-                    <!-- Description -->
-                    <h3 style="color: #1a202c; margin: 20px 0 8px 0; font-size: 15px;">Description</h3>
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 10px 0;">
-                        <tr>
-                            <td style="background: #f7fafc; padding: 14px 16px; border-left: 4px solid #e94560; border-radius: 4px;">
-                                <p style="margin: 0; color: #2d3748; font-size: 13px; line-height: 1.6;">{ticket.description or 'No description provided.'}</p>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    {remarks_html}
-                    
-                    <!-- View Ticket Button -->
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px;">
-                        <tr>
-                            <td align="center">
-                                <table cellpadding="0" cellspacing="0" border="0" style="border-radius: 50px; background: #e94560;">
-                                    <tr>
-                                        <td style="padding: 12px 28px; text-align: center; border-radius: 50px;">
-                                            <a href="{ticket_url}" style="display: inline-block; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; font-family: Arial, sans-serif;">View Ticket Details</a>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <!-- Fallback URL -->
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 12px;">
-                        <tr>
-                            <td align="center" style="font-size: 11px; color: #718096;">
-                                Or copy this link into your browser:<br>
-                                <a href="{ticket_url}" style="color: #e94560; word-break: break-all; text-decoration: underline;">{ticket_url}</a>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            
-            <!-- FOOTER -->
-            <tr>
-                <td style="background: #f7fafc; padding: 15px 20px; text-align: center; font-size: 11px; color: #718096; border-top: 1px solid #e2e8f0; border-radius: 0 0 12px 12px;">
-                    <!-- Footer Logo -->
-                    {footer_logo_html}
-                    <p style="margin: 0 0 3px 0;">
-                        This is an automated notification from <strong>GPLAST ERP System</strong>.<br>
-                        For support, contact: <a href="mailto:erpimd@gplast.com" style="color: #e94560; text-decoration: none;">erpimd@gplast.com</a>
-                    </p>
-                    <p style="margin: 3px 0 0 0; font-size: 10px; color: #a0aec0;">
-                        &copy; {timezone.now().year} GPLAST. All rights reserved.
-                    </p>
-                </td>
-            </tr>
-        </table>
-        
-    </body>
-    </html>
-    """
-    
-    # Plain text version
-    text_content = f"""
-    GPLAST TICKET NOTIFICATION
-    ========================================
-    
-    Ticket Number: {ticket.ticket_number}
-    Status: {ticket.status}
-    Priority: {ticket.priority}
-    Subject: {ticket.subject}
-    Action: {action}
-    
-    ----------------------------------------
-    Employee Details:
-    * Employee ID: {ticket.employee_id or 'N/A'}
-    * Employee Name: {ticket.employee_name or 'N/A'}
-    * Mobile: {ticket.mobile or 'N/A'}
-    * Email: {ticket.email or 'N/A'}
-    
-    ----------------------------------------
-    Ticket Details:
-    * Unit: {ticket.unit.code if ticket.unit else 'N/A'}
-    * Department: {ticket.department.name if ticket.department else 'N/A'}
-    * Created: {timezone.localtime(ticket.created_at).strftime('%d-%m-%Y %I:%M %p') if ticket.created_at else 'N/A'}
-    * Description: {ticket.description[:200] + '...' if ticket.description and len(ticket.description) > 200 else ticket.description or 'N/A'}
-    
-    {f'Remarks: {remarks}' if remarks else ''}
-    
-    ----------------------------------------
-    View Ticket: {ticket_url}
-    ========================================
-    This is an automated notification from GPLAST Ticketing System.
-    Please do not reply to this email.
-    ========================================
-    """
-    
-    try:
-        email = EmailMultiAlternatives(
-            subject=subject,
-            body=text_content,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=to_emails,
-            cc=cc_emails,
-        )
-        email.attach_alternative(html_content, "text/html")
-        for attachment in attachments or []:
-            attachment.open('rb')
-            try:
-                email.attach(attachment.name.rsplit('/', 1)[-1], attachment.read(), getattr(attachment, 'content_type', None))
-            finally:
-                attachment.close()
-        email.send(fail_silently=False)
-        
-        logger.info(f"Email sent for ticket {ticket.ticket_number} - Action: {action}")
-        logger.info(f"TO: {to_emails}")
-        logger.info(f"CC: {cc_emails}")
-        
-    except Exception as e:
-        logger.error(f"Failed to send email for ticket {ticket.ticket_number}: {str(e)}")
-
-
-def get_status_color(status):
-    colors = {
-        'Open': '#22C55E',
-        'Assigned': '#3B82F6',
-        'Hold': '#F59E0B',
-        'Escalated': '#8B5CF6',
-        'Closed': '#94A3B8',
-    }
-    return colors.get(status, '#6B7280')
-
-
-def get_priority_color(priority):
-    colors = {
-        'Critical': '#EF4444',
-        'High': '#F59E0B',
-        'Medium': '#3B82F6',
-        'Low': '#94A3B8',
-    }
-    return colors.get(priority, '#6B7280')
-
-
-def validate_attachment(file):
-    MAX_FILE_SIZE = 5 * 1024 * 1024
-    ALLOWED_EXTENSIONS = [
-        '.pdf', '.doc', '.docx', '.xls', '.xlsx', 
-        '.txt', '.csv', '.jpg', '.jpeg', '.png', 
-        '.gif', '.bmp', '.zip', '.rar', '.7z'
-    ]
-    
-    if file.size > MAX_FILE_SIZE:
-        raise ValidationError(f"File size exceeds 5MB limit. Current size: {file.size / (1024 * 1024):.2f}MB")
-    
-    file_name = file.name
-    file_extension = os.path.splitext(file_name)[1].lower()
-    
-    if file_extension not in ALLOWED_EXTENSIONS:
-        raise ValidationError(f"File type '{file_extension}' is not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}")
-    
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser or user.is_staff:
+        return False
+    # Check if user is a unit head
+    from tickets.models import UnitHead
+    if UnitHead.objects.filter(user=user, is_active=True).exists():
+        return False
     return True
 
 
-def get_file_size_display(file):
-    if hasattr(file, 'size'):
-        size = file.size
-    elif hasattr(file, 'file') and hasattr(file.file, 'size'):
-        size = file.file.size
-    else:
-        return "Unknown"
-    
-    if size < 1024:
-        return f"{size} B"
-    elif size < 1024 * 1024:
-        return f"{size / 1024:.1f} KB"
-    elif size < 1024 * 1024 * 1024:
-        return f"{size / (1024 * 1024):.1f} MB"
-    else:
-        return f"{size / (1024 * 1024 * 1024):.1f} GB"
+def is_unit_head(user):
+    """
+    Check if user is a unit head
+    """
+    if not user.is_authenticated:
+        return False
+    from tickets.models import UnitHead
+    return UnitHead.objects.filter(user=user, is_active=True).exists()
 
 
-def generate_ticket_number():
-    """Generate a unique ticket number using apps.get_model to avoid circular import"""
-    Ticket = apps.get_model('tickets', 'Ticket')
+def get_user_role(user):
+    """
+    Get user's role: 'admin', 'unit_head', or 'employee'
+    """
+    if not user.is_authenticated:
+        return None
+    if user.is_superuser or user.is_staff:
+        return 'admin'
+    if is_unit_head(user):
+        return 'unit_head'
+    return 'employee'
+
+
+# ============================================================
+# IP ADDRESS UTILITY
+# ============================================================
+
+def get_client_ip(request):
+    """
+    Get client IP address from request
+    """
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+# ============================================================
+# FORMATTING UTILITIES
+# ============================================================
+
+def format_timedelta_display(timedelta):
+    """
+    Format timedelta for display
+    """
+    if not timedelta:
+        return ""
+    days = timedelta.days
+    hours = timedelta.seconds // 3600
+    minutes = (timedelta.seconds % 3600) // 60
+    if days > 0:
+        return f"{days}d {hours}h {minutes}m"
+    elif hours > 0:
+        return f"{hours}h {minutes}m"
+    else:
+        return f"{minutes}m"
+
+
+def truncate_text(text, max_length=100):
+    """
+    Truncate text to max_length
+    """
+    if not text:
+        return ""
+    if len(text) <= max_length:
+        return text
+    return text[:max_length] + "..."
+
+
+# ============================================================
+# EMAIL UTILITIES
+# ============================================================
+
+def send_ticket_email(subject, message, recipient_list, html_template=None, context=None):
+    """
+    Send email with optional HTML template
+    """
+    try:
+        if html_template and context:
+            html_message = render_to_string(html_template, context)
+            plain_message = strip_tags(html_message)
+        else:
+            html_message = None
+            plain_message = message
+        
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipient_list,
+            html_message=html_message,
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Error sending email: {e}")
+        return False
+
+
+# ============================================================
+# VALIDATION UTILITIES
+# ============================================================
+
+def validate_attachment(file):
+    """
+    Validate file attachment
+    """
+    # Max file size: 5MB
+    MAX_FILE_SIZE = 5 * 1024 * 1024
+    ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.png', '.jpg', '.jpeg', '.gif']
     
-    all_tickets = Ticket.objects.all()
-    highest_num = 0
+    if file.size > MAX_FILE_SIZE:
+        return False, "File size exceeds 5MB limit"
     
-    for ticket in all_tickets:
-        ticket_num = ticket.ticket_number
-        try:
-            if ticket_num.startswith('TKT-') or ticket_num.startswith('GPLAST-'):
-                parts = ticket_num.split('-')
-                if len(parts) >= 3:
-                    num = int(parts[-1])
-                    if num > highest_num:
-                        highest_num = num
-            elif ticket_num.isdigit():
-                num = int(ticket_num)
-                if num > highest_num:
-                    highest_num = num
-        except (ValueError, IndexError):
-            continue
+    import os
+    ext = os.path.splitext(file.name)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        return False, f"File type {ext} not allowed"
     
-    next_num = highest_num + 1
-    return f"{next_num:04d}"
+    return True, "OK"
+
+
+# ============================================================
+# REOPEN TICKET LOGIC
+# ============================================================
+
+def reopen_ticket_logic(ticket, user, remarks=None):
+    """
+    Logic for reopening a ticket
+    Returns (success, message)
+    """
+    from tickets.models import TicketHistory
+    from django.utils import timezone
+    
+    if ticket.status != 'Closed':
+        return False, "Ticket is not closed."
+    
+    if not ticket.can_reopen():
+        return False, "Ticket cannot be reopened after 48 hours."
+    
+    # Reopen the ticket
+    ticket.status = 'Open'
+    ticket.closed_at = None
+    ticket.closed_by = None
+    ticket.closing_remarks = None
+    ticket.main_error_type = None
+    ticket.sub_error_type = None
+    ticket.save()
+    
+    # Add history
+    TicketHistory.objects.create(
+        ticket=ticket,
+        action=f"Reopened by {user.get_full_name() or user.username}",
+        remarks=remarks or "Ticket reopened",
+        performed_by=str(user.id)
+    )
+    
+    return True, "Ticket reopened successfully."
+
+
+# ============================================================
+# EMPLOYEE DIRECTORY UTILITY
+# ============================================================
+
+def _get_employee_directory_data(request):
+    """
+    Get employee directory data with search
+    """
+    from tickets.models import EmployeeMaster
+    
+    search = request.GET.get('search', '').strip()
+    
+    employees = EmployeeMaster.objects.all().select_related('unit', 'department').order_by('employee_id')
+    
+    if search:
+        employees = employees.filter(
+            models.Q(employee_id__icontains=search) |
+            models.Q(employee_name__icontains=search) |
+            models.Q(mobile__icontains=search) |
+            models.Q(email__icontains=search)
+        )
+    
+    return employees, search
+
+
+def _get_contact_data():
+    """
+    Get contact data
+    """
+    from tickets.models import AdminContact
+    return AdminContact.objects.first()
+
+
+def _get_credentials_data():
+    """
+    Get credentials data
+    """
+    from tickets.models import DepartmentCredential, Unit
+    
+    all_credentials = DepartmentCredential.objects.all().select_related('unit', 'department').order_by('unit__code', 'department__name')
+    
+    credentials_by_unit = []
+    for unit in Unit.objects.filter(is_active=True).order_by('code'):
+        creds = all_credentials.filter(unit=unit)
+        if creds.exists():
+            credentials_by_unit.append({
+                'unit': unit,
+                'credentials': creds
+            })
+    
+    return all_credentials, credentials_by_unit
+
+
+# ============================================================
+# SETTINGS AUDIT UTILITY
+# ============================================================
+
+def log_settings_change(request, action_type, setting_type, setting_name, 
+                        old_value=None, new_value=None, change_summary=None, remarks=None):
+    """
+    Log a settings change to the audit log
+    """
+    from tickets.models import SettingsAuditLog
+    
+    try:
+        performed_by = request.user if request.user.is_authenticated else None
+        performed_by_name = request.user.username if request.user.is_authenticated else 'System'
+        
+        ip_address = get_client_ip(request)
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        
+        SettingsAuditLog.objects.create(
+            performed_by=performed_by,
+            performed_by_name=performed_by_name,
+            action_type=action_type,
+            setting_type=setting_type,
+            setting_name=setting_name[:200],
+            old_value=old_value[:500] if old_value else None,
+            new_value=new_value[:500] if new_value else None,
+            change_summary=change_summary[:500] if change_summary else '',
+            ip_address=ip_address,
+            user_agent=user_agent,
+            remarks=remarks[:500] if remarks else '',
+        )
+    except Exception as e:
+        print(f"Error logging settings change: {e}")

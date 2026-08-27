@@ -2,20 +2,25 @@
 
 from django.urls import path
 from . import views
-from tickets.views import erp_mapping_views
+from tickets.views.settings_action import erp_mapping_views
 from tickets.views.reports_views import (
     reports,
     download_ticket_excel,
     export_closed_tickets_30_days,
     escalated_aging_report,
 )
-# Import the few action views used directly by these URL patterns.
+from tickets.views import unit_head_views
 from tickets.views.settings_action import (
     screen_mapping_delete_erp,
     screen_master_download_template,
     screen_master_bulk_upload,
+    # Department bulk upload imports
+    departments_bulk_upload,
+    departments_download_template,
+    # ✅ NEW: Credentials bulk upload imports
+    credentials_bulk_upload,
+    credentials_download_template,
 )
-
 
 
 urlpatterns = [
@@ -45,9 +50,9 @@ urlpatterns = [
     path('custom-admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('custom-admin/create-ticket/', views.create_ticket_admin, name='create_ticket_admin'),
     path('custom-admin/tickets/', views.all_tickets, name='all_tickets'),
-    path('custom-admin/ticket/<int:pk>/', views.ticket_detail_admin, name='admin_ticket_detail'),
+    path('custom-admin/ticket/<int:pk>//', views.ticket_detail_admin, name='admin_ticket_detail'),
     
-    # ✅ REPORTS URLS - Using imported reports_views functions
+    # REPORTS URLS
     path('custom-admin/reports/', reports, name='reports'),
     path('custom-admin/reports/escalated-aging/', escalated_aging_report, name='escalated_aging_report'),
     path('custom-admin/download-ticket/<int:pk>/excel/', download_ticket_excel, name='admin_download_ticket_excel'),
@@ -90,16 +95,36 @@ urlpatterns = [
     path('custom-admin/settings/credentials/download/', views.download_credentials, name='download_credentials'),
 
     # ============================================================
+    # UNIT HEAD MANAGEMENT
+    # ============================================================
+    path('custom-admin/settings/unit-heads/', views.settings_unit_heads_page, name='settings_unit_heads_page'),
+    path('custom-admin/settings/unit-heads/handler/', views.settings_unit_heads, name='settings_unit_heads'),
+
+    # ============================================================
     # ERP USER ID MAPPING URLS
     # ============================================================
     path('custom-admin/settings/erp-mapping/', erp_mapping_views.erp_mapping_page, name='settings_erp_mapping'),
     path('custom-admin/settings/erp-mapping/add/', erp_mapping_views.erp_mapping_add, name='settings_erp_mapping_add'),
     path('custom-admin/settings/erp-mapping/remove/', erp_mapping_views.erp_mapping_remove, name='settings_erp_mapping_remove'),
-    
+    path('custom-admin/settings/erp-mapping/unmap/', erp_mapping_views.erp_mapping_unmap, name='settings_erp_mapping_unmap'),
     path('custom-admin/settings/erp-mapping/export-excel/', erp_mapping_views.erp_mapping_export_excel, name='settings_erp_mapping_export_excel'),
+    path('custom-admin/settings/erp-mapping/bulk-upload/', erp_mapping_views.erp_mapping_bulk_upload, name='settings_erp_mapping_bulk_upload'),
+    path('custom-admin/settings/erp-mapping/download-template/', erp_mapping_views.erp_mapping_download_template, name='settings_erp_mapping_download_template'),
     
+    # AJAX URLs
     path('ajax/get-erp-mappings/', erp_mapping_views.erp_mapping_list, name='settings_erp_mapping_list'),
     path('ajax/search-employees/', erp_mapping_views.erp_mapping_search_employees, name='settings_erp_mapping_search_employees'),
+
+    # ============================================================
+    # UNIT HEAD PANEL - VIEW ONLY (NO CREATE TICKET, NO MY TICKETS)
+    # ============================================================
+    path('unit-head/dashboard/', unit_head_views.unit_head_dashboard, name='unit_head_dashboard'),
+    path('unit-head/tickets/', unit_head_views.unit_head_all_tickets, name='unit_head_all_tickets'),
+    # ❌ REMOVED: path('unit-head/my-tickets/', unit_head_views.unit_head_my_tickets, name='unit_head_my_tickets'),
+    path('unit-head/ticket/<int:ticket_id>/', unit_head_views.unit_head_ticket_detail, name='unit_head_ticket_detail'),
+    path('unit-head/reports/', unit_head_views.unit_head_reports, name='unit_head_reports'),
+    path('unit-head/ticket/<int:ticket_id>/download/', unit_head_views.unit_head_download_ticket_excel, name='unit_head_download_ticket_excel'),
+    path('unit-head/export/closed-30-days/', unit_head_views.unit_head_export_closed_tickets_30_days, name='unit_head_export_closed_30_days'),
 
     # ============================================================
     # TEST NOTIFICATION URLS
@@ -122,13 +147,28 @@ urlpatterns = [
     path('custom-admin/settings/screen-master/bulk-upload/', screen_master_bulk_upload, name='screen_master_bulk_upload'),
 
     # ============================================================
-    # SCREEN MAPPING URLS
+    # SCREEN MAPPING URLS - ✅ WITH BULK UPLOAD
     # ============================================================
     path('custom-admin/settings/screen-mapping/', views.settings_screen_mapping_page, name='settings_screen_mapping'),
     path('custom-admin/settings/screen-mapping/add/', views.screen_mapping_add, name='screen_mapping_add'),
     path('custom-admin/settings/screen-mapping/remove/', views.screen_mapping_remove, name='screen_mapping_remove'),
     path('custom-admin/settings/screen-mapping/delete-erp/', screen_mapping_delete_erp, name='screen_mapping_delete_erp'),
     path('custom-admin/settings/screen-mapping/export/', views.screen_mapping_export_excel, name='screen_mapping_export_excel'),
+    # Screen Mapping Bulk Upload URLs
+    path('custom-admin/settings/screen-mapping/bulk-upload/', views.screen_mapping_bulk_upload, name='screen_mapping_bulk_upload'),
+    path('custom-admin/settings/screen-mapping/download-template/', views.screen_mapping_download_template, name='screen_mapping_download_template'),
+
+    # ============================================================
+    # ✅ NEW: DEPARTMENTS BULK UPLOAD URLS
+    # ============================================================
+    path('custom-admin/settings/departments/bulk-upload/', departments_bulk_upload, name='departments_bulk_upload'),
+    path('custom-admin/settings/departments/download-template/', departments_download_template, name='departments_download_template'),
+
+    # ============================================================
+    # ✅ NEW: CREDENTIALS BULK UPLOAD URLS
+    # ============================================================
+    path('custom-admin/settings/credentials/bulk-upload/', credentials_bulk_upload, name='credentials_bulk_upload'),
+    path('custom-admin/settings/credentials/download-template/', credentials_download_template, name='credentials_download_template'),
 
     # ============================================================
     # AJAX ENDPOINTS

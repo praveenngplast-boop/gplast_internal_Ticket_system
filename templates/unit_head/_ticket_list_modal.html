@@ -1,0 +1,359 @@
+<!-- templates/unit_head/_ticket_list_modal.html -->
+<!-- Reusable ticket list partial for Unit Head modals and AJAX responses -->
+<!-- WITH AGING COLUMN -->
+
+{% load static %}
+{% load ticket_filters %}  <!-- ADD THIS LINE -->
+
+<div class="uh-ticket-list-container">
+    {% if tickets %}
+        <div class="table-responsive">
+            <table class="table table-sm uh-ticket-list-table">
+                <thead>
+                    <tr>
+                        <th>Ticket #</th>
+                        <th>Subject</th>
+                        <th>Employee</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Created</th>
+                        <th>Aging</th>  <!-- NEW COLUMN -->
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'unit_head_ticket_detail' ticket.id %}" class="ticket-link">
+                                #{{ ticket.ticket_number }}
+                            </a>
+                        </td>
+                        <td class="ticket-subject" title="{{ ticket.subject }}">
+                            {{ ticket.subject|truncatechars:40 }}
+                        </td>
+                        <td>{{ ticket.employee_name|default:ticket.employee_id }}</td>
+                        <td>
+                            <span class="badge-sm badge-sm-status-{{ ticket.status|lower }}">
+                                {{ ticket.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge-sm badge-sm-priority-{{ ticket.priority|lower }}">
+                                {{ ticket.priority }}
+                            </span>
+                        </td>
+                        <td class="ticket-date">
+                            {{ ticket.created_at|date:"d M Y, H:i" }}
+                            <span style="display: block; font-size: 0.45rem; color: var(--text-muted);">
+                                {{ ticket.created_at|date:"H:i:s" }}
+                            </span>
+                        </td>
+                        <td>
+                            <!-- AGING BADGE -->
+                            <span class="aging-badge {{ ticket.created_at|aging_color }}" 
+                                  title="Created: {{ ticket.created_at|date:'d-m-Y H:i:s' }}">
+                                {{ ticket.created_at|aging }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'unit_head_ticket_detail' ticket.id %}" class="btn-uh-action" title="View Ticket">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            {% if ticket.status != 'Closed' %}
+                            <a href="{% url 'unit_head_ticket_detail' ticket.id %}#update" class="btn-uh-action" title="Update Ticket">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="fa-regular fa-ticket" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+            <p class="mb-0" style="font-size: 0.85rem;">No tickets found.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    /* ===== TICKET LIST STYLES ===== */
+    .uh-ticket-list-container {
+        padding: 0.5rem 0;
+    }
+
+    .uh-ticket-list-table {
+        font-size: 0.7rem;
+        margin-bottom: 0;
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-card);
+    }
+
+    .uh-ticket-list-table thead {
+        background: var(--bg-secondary);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .uh-ticket-list-table th {
+        padding: 0.4rem 0.6rem;
+        text-align: left;
+        font-size: 0.5rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border-color);
+        white-space: nowrap;
+        background: var(--bg-secondary);
+    }
+
+    .uh-ticket-list-table td {
+        padding: 0.35rem 0.6rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+        background: var(--bg-card);
+    }
+
+    .uh-ticket-list-table tbody tr {
+        transition: all 0.3s ease;
+        background: var(--bg-card);
+    }
+
+    .uh-ticket-list-table tbody tr:hover {
+        background: rgba(139, 92, 246, 0.06);
+    }
+
+    .uh-ticket-list-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    [data-theme="dark"] .uh-ticket-list-table {
+        background: #1A1A2E;
+    }
+
+    [data-theme="dark"] .uh-ticket-list-table thead {
+        background: #1E1E36;
+    }
+
+    [data-theme="dark"] .uh-ticket-list-table th {
+        color: #A8B8D8 !important;
+        border-color: rgba(255, 255, 255, 0.06);
+        background: #1E1E36;
+    }
+
+    [data-theme="dark"] .uh-ticket-list-table td {
+        color: #E8EDF5 !important;
+        border-color: rgba(255, 255, 255, 0.04);
+        background: #1A1A2E;
+    }
+
+    [data-theme="dark"] .uh-ticket-list-table tbody tr {
+        background: #1A1A2E;
+    }
+
+    [data-theme="dark"] .uh-ticket-list-table tbody tr:hover {
+        background: rgba(139, 92, 246, 0.08);
+    }
+
+    .uh-ticket-list-table .ticket-link {
+        font-weight: 700;
+        color: #8B5CF6;
+        text-decoration: none;
+        font-family: monospace;
+        font-size: 0.7rem;
+        transition: all 0.3s ease;
+    }
+
+    .uh-ticket-list-table .ticket-link:hover {
+        color: #7C3AED;
+        text-decoration: underline;
+    }
+
+    .uh-ticket-list-table .ticket-subject {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .uh-ticket-list-table .ticket-date {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    .uh-ticket-list-table .badge-sm {
+        font-size: 0.45rem;
+        padding: 0.08rem 0.35rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+
+    /* ===== AGING BADGE STYLES ===== */
+    .aging-badge {
+        display: inline-block;
+        padding: 0.08rem 0.4rem;
+        border-radius: 50px;
+        font-size: 0.5rem;
+        font-weight: 600;
+        white-space: nowrap;
+        font-family: 'Inter', sans-serif;
+        min-width: 35px;
+        text-align: center;
+    }
+
+    .aging-fresh {
+        background: rgba(34, 197, 94, 0.12);
+        color: #22C55E;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .aging-medium {
+        background: rgba(245, 158, 11, 0.12);
+        color: #F59E0B;
+        border: 1px solid rgba(245, 158, 11, 0.15);
+    }
+
+    .aging-old {
+        background: rgba(239, 68, 68, 0.12);
+        color: #EF4444;
+        border: 1px solid rgba(239, 68, 68, 0.15);
+    }
+
+    .aging-very-old {
+        background: rgba(139, 92, 246, 0.12);
+        color: #8B5CF6;
+        border: 1px solid rgba(139, 92, 246, 0.15);
+    }
+
+    .aging-unknown {
+        background: rgba(148, 163, 184, 0.12);
+        color: #94A3B8;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    [data-theme="dark"] .aging-fresh {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ADE80;
+        border-color: rgba(34, 197, 94, 0.2);
+    }
+
+    [data-theme="dark"] .aging-medium {
+        background: rgba(245, 158, 11, 0.15);
+        color: #FBBF24;
+        border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    [data-theme="dark"] .aging-old {
+        background: rgba(239, 68, 68, 0.15);
+        color: #F87171;
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    [data-theme="dark"] .aging-very-old {
+        background: rgba(139, 92, 246, 0.15);
+        color: #A78BFA;
+        border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    .badge-sm-status-open { background: rgba(34, 197, 94, 0.12); color: #22C55E; }
+    .badge-sm-status-assigned { background: rgba(59, 130, 246, 0.12); color: #3B82F6; }
+    .badge-sm-status-hold { background: rgba(245, 158, 11, 0.12); color: #F59E0B; }
+    .badge-sm-status-escalated { background: rgba(139, 92, 246, 0.12); color: #8B5CF6; }
+    .badge-sm-status-closed { background: rgba(148, 163, 184, 0.12); color: #94A3B8; }
+
+    .badge-sm-priority-critical { background: rgba(239, 68, 68, 0.12); color: #EF4444; }
+    .badge-sm-priority-high { background: rgba(245, 158, 11, 0.12); color: #F59E0B; }
+    .badge-sm-priority-medium { background: rgba(59, 130, 246, 0.12); color: #3B82F6; }
+    .badge-sm-priority-low { background: rgba(148, 163, 184, 0.12); color: #94A3B8; }
+
+    [data-theme="dark"] .badge-sm-status-open { background: rgba(34, 197, 94, 0.15); color: #4ADE80; }
+    [data-theme="dark"] .badge-sm-status-assigned { background: rgba(59, 130, 246, 0.15); color: #60A5FA; }
+    [data-theme="dark"] .badge-sm-status-hold { background: rgba(245, 158, 11, 0.15); color: #FBBF24; }
+    [data-theme="dark"] .badge-sm-status-escalated { background: rgba(139, 92, 246, 0.15); color: #A78BFA; }
+    [data-theme="dark"] .badge-sm-status-closed { background: rgba(148, 163, 184, 0.15); color: #94A3B8; }
+    [data-theme="dark"] .badge-sm-priority-critical { background: rgba(239, 68, 68, 0.15); color: #F87171; }
+    [data-theme="dark"] .badge-sm-priority-high { background: rgba(245, 158, 11, 0.15); color: #FBBF24; }
+    [data-theme="dark"] .badge-sm-priority-medium { background: rgba(59, 130, 246, 0.15); color: #60A5FA; }
+    [data-theme="dark"] .badge-sm-priority-low { background: rgba(148, 163, 184, 0.15); color: #94A3B8; }
+
+    .btn-uh-action {
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        font-size: 0.5rem;
+        font-weight: 500;
+        border: 2px solid var(--border-color);
+        background: transparent;
+        color: var(--text-secondary);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        min-height: 22px;
+        text-decoration: none;
+    }
+
+    .btn-uh-action:hover {
+        border-color: #8B5CF6;
+        color: #8B5CF6;
+        transform: translateY(-1px);
+    }
+
+    .btn-uh-action i { font-size: 0.45rem; }
+
+    [data-theme="dark"] .btn-uh-action {
+        border-color: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    [data-theme="dark"] .btn-uh-action:hover {
+        border-color: #8B5CF6;
+        color: #8B5CF6;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .uh-ticket-list-table th,
+        .uh-ticket-list-table td {
+            padding: 0.2rem 0.3rem;
+            font-size: 0.55rem;
+        }
+        .uh-ticket-list-table .ticket-link { font-size: 0.55rem; }
+        .uh-ticket-list-table .ticket-subject { max-width: 100px; }
+        .badge-sm { font-size: 0.4rem; padding: 0.05rem 0.25rem; }
+        .btn-uh-action { font-size: 0.4rem; padding: 0.05rem 0.2rem; min-height: 18px; }
+        .btn-uh-action i { display: none; }
+        .aging-badge { font-size: 0.4rem; padding: 0.05rem 0.3rem; min-width: 30px; }
+    }
+
+    @media (max-width: 480px) {
+        .uh-ticket-list-table .ticket-subject { max-width: 60px; }
+        .uh-ticket-list-table .ticket-date { font-size: 0.5rem; }
+        .aging-badge { font-size: 0.35rem; padding: 0.03rem 0.2rem; min-width: 25px; }
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: #8B5CF6; border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: #7C3AED; }
+
+    [data-theme="dark"] ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    [data-theme="dark"] ::-webkit-scrollbar-thumb {
+        background: rgba(139, 92, 246, 0.5);
+    }
+</style>

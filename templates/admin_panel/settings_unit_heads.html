@@ -1,0 +1,1253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Unit Head Management - GPLAST Admin{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<style>
+    :root {
+        --uh-primary: #8B5CF6;
+        --uh-primary-dark: #7C3AED;
+        --uh-primary-light: #A78BFA;
+        --uh-primary-soft: rgba(139, 92, 246, 0.08);
+        --uh-primary-border: rgba(139, 92, 246, 0.15);
+        --uh-bg-card: var(--bg-card);
+        --uh-text-primary: var(--text-primary);
+        --uh-text-secondary: var(--text-secondary);
+        --uh-text-muted: var(--text-muted);
+        --uh-border: var(--border-color);
+        --uh-shadow: var(--shadow-md);
+        --uh-radius: 12px;
+        --uh-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .uh-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .uh-header {
+        background: var(--uh-bg-card);
+        border: 1px solid var(--uh-border);
+        border-radius: var(--uh-radius);
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--uh-shadow);
+        position: relative;
+        overflow: hidden;
+        transition: var(--uh-transition);
+    }
+
+    .uh-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--uh-primary), var(--uh-primary-light), var(--uh-primary));
+        background-size: 200% 100%;
+        animation: shimmerMove 3s ease infinite;
+    }
+
+    @keyframes shimmerMove {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    .uh-header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .uh-header-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .uh-header-title .icon-box {
+        width: 48px;
+        height: 48px;
+        background: var(--uh-primary-soft);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--uh-primary);
+        font-size: 1.4rem;
+        flex-shrink: 0;
+        transition: var(--uh-transition);
+    }
+
+    .uh-header-title h1 {
+        font-size: clamp(1.1rem, 2vw, 1.5rem);
+        font-weight: 700;
+        color: var(--uh-text-primary);
+        margin: 0;
+        font-family: 'Fraunces', serif;
+    }
+
+    .uh-header-title .subtitle {
+        font-size: clamp(0.7rem, 1vw, 0.8rem);
+        color: var(--uh-text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .uh-header-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-uh-primary {
+        background: linear-gradient(135deg, var(--uh-primary), var(--uh-primary-dark));
+        border: none;
+        color: white;
+        border-radius: 50px;
+        padding: 0.3rem 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: var(--uh-transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        min-height: 36px;
+        cursor: pointer;
+        box-shadow: 0 2px 12px rgba(139, 92, 246, 0.2);
+    }
+
+    .btn-uh-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+        color: white;
+    }
+
+    .btn-uh-secondary {
+        border: 2px solid var(--uh-border);
+        color: var(--uh-text-secondary);
+        border-radius: 50px;
+        padding: 0.3rem 0.9rem;
+        font-size: 0.75rem;
+        transition: var(--uh-transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: transparent;
+        min-height: 36px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .btn-uh-secondary:hover {
+        border-color: var(--uh-primary);
+        color: var(--uh-primary);
+        transform: translateY(-2px);
+    }
+
+    [data-theme="dark"] .btn-uh-secondary {
+        border-color: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    [data-theme="dark"] .btn-uh-secondary:hover {
+        border-color: var(--uh-primary);
+        color: var(--uh-primary);
+    }
+
+    /* ===== PANEL CARD ===== */
+    .uh-panel {
+        background: var(--uh-bg-card);
+        border: 1px solid var(--uh-border);
+        border-radius: var(--uh-radius);
+        overflow: hidden;
+        box-shadow: var(--uh-shadow);
+        transition: var(--uh-transition);
+        margin-bottom: 1.5rem;
+    }
+
+    .uh-panel:hover {
+        border-color: rgba(139, 92, 246, 0.1);
+        box-shadow: var(--shadow-lg);
+    }
+
+    [data-theme="dark"] .uh-panel {
+        background: #1A1A2E;
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .uh-panel-header {
+        padding: 0.75rem 1.25rem;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--uh-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    [data-theme="dark"] .uh-panel-header {
+        background: #1E1E36;
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .uh-panel-header h3 {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--uh-text-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Fraunces', serif;
+    }
+
+    .uh-panel-header h3 i {
+        color: var(--uh-primary);
+    }
+
+    .uh-panel-body {
+        padding: 0.75rem 1.25rem;
+        background: var(--uh-bg-card);
+        overflow-x: auto;
+    }
+
+    [data-theme="dark"] .uh-panel-body {
+        background: #1A1A2E;
+    }
+
+    /* ===== TABLE ===== */
+    .uh-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+        background: var(--uh-bg-card);
+    }
+
+    .uh-table thead {
+        background: var(--bg-secondary);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .uh-table th {
+        padding: 0.4rem 0.6rem;
+        text-align: left;
+        font-size: 0.5rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--uh-text-secondary);
+        border-bottom: 2px solid var(--uh-border);
+        white-space: nowrap;
+        background: var(--bg-secondary);
+    }
+
+    .uh-table td {
+        padding: 0.35rem 0.6rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--uh-border);
+        color: var(--uh-text-primary);
+        transition: var(--uh-transition);
+        background: var(--uh-bg-card);
+    }
+
+    .uh-table tbody tr {
+        transition: var(--uh-transition);
+        background: var(--uh-bg-card);
+    }
+
+    .uh-table tbody tr:hover {
+        background: var(--uh-primary-soft);
+    }
+
+    .uh-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    [data-theme="dark"] .uh-table {
+        background: #1A1A2E;
+    }
+
+    [data-theme="dark"] .uh-table thead {
+        background: #1E1E36;
+    }
+
+    [data-theme="dark"] .uh-table th {
+        color: #A8B8D8 !important;
+        border-color: rgba(255, 255, 255, 0.06);
+        background: #1E1E36;
+    }
+
+    [data-theme="dark"] .uh-table td {
+        color: #E8EDF5 !important;
+        border-color: rgba(255, 255, 255, 0.04);
+        background: #1A1A2E;
+    }
+
+    [data-theme="dark"] .uh-table tbody tr {
+        background: #1A1A2E;
+    }
+
+    [data-theme="dark"] .uh-table tbody tr:hover {
+        background: rgba(139, 92, 246, 0.06);
+    }
+
+    /* ===== BADGES ===== */
+    .badge-uh-status {
+        display: inline-block;
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        font-size: 0.45rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-uh-active {
+        background: rgba(34, 197, 94, 0.12);
+        color: #22C55E;
+        border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .badge-uh-inactive {
+        background: rgba(239, 68, 68, 0.08);
+        color: #EF4444;
+        border: 1px solid rgba(239, 68, 68, 0.1);
+    }
+
+    [data-theme="dark"] .badge-uh-active {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ADE80;
+        border-color: rgba(34, 197, 94, 0.2);
+    }
+
+    [data-theme="dark"] .badge-uh-inactive {
+        background: rgba(239, 68, 68, 0.12);
+        color: #F87171;
+        border-color: rgba(239, 68, 68, 0.15);
+    }
+
+    /* ===== ACTION BUTTONS ===== */
+    .btn-uh-action {
+        padding: 0.1rem 0.4rem;
+        border-radius: 50px;
+        font-size: 0.5rem;
+        font-weight: 500;
+        border: 2px solid var(--uh-border);
+        background: transparent;
+        color: var(--uh-text-secondary);
+        transition: var(--uh-transition);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        min-height: 22px;
+    }
+
+    .btn-uh-action:hover {
+        border-color: var(--uh-primary);
+        color: var(--uh-primary);
+        transform: translateY(-1px);
+    }
+
+    .btn-uh-action i { font-size: 0.45rem; }
+
+    .btn-uh-action-danger:hover {
+        border-color: #EF4444;
+        color: #EF4444;
+    }
+
+    .btn-uh-action-success:hover {
+        border-color: #22C55E;
+        color: #22C55E;
+    }
+
+    [data-theme="dark"] .btn-uh-action {
+        border-color: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    [data-theme="dark"] .btn-uh-action:hover {
+        border-color: var(--uh-primary);
+        color: var(--uh-primary);
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .uh-empty {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: var(--uh-text-muted);
+    }
+
+    .uh-empty i {
+        font-size: 2rem;
+        opacity: 0.2;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .uh-empty p {
+        font-size: 0.8rem;
+        margin: 0;
+    }
+
+    /* ===== PASSWORD WRAPPER ===== */
+    .password-wrapper {
+        position: relative;
+    }
+
+    .password-wrapper .form-control {
+        padding-right: 45px !important;
+    }
+
+    .password-toggle-icon {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: var(--text-muted);
+        z-index: 10;
+        background: transparent;
+        border: none;
+        padding: 6px 8px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        transition: var(--uh-transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .password-toggle-icon:hover {
+        color: var(--uh-primary);
+        background: rgba(139, 92, 246, 0.05);
+    }
+
+    [data-theme="dark"] .password-toggle-icon {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    [data-theme="dark"] .password-toggle-icon:hover {
+        color: var(--uh-primary);
+        background: rgba(139, 92, 246, 0.08);
+    }
+
+    /* ===== MODAL ===== */
+    .modal-content {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--uh-border) !important;
+        border-radius: var(--uh-radius) !important;
+    }
+
+    [data-theme="dark"] .modal-content {
+        background: #1A1A2E !important;
+        border-color: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--uh-border) !important;
+        padding: 0.75rem 1.25rem !important;
+    }
+
+    [data-theme="dark"] .modal-header {
+        border-color: rgba(255, 255, 255, 0.06) !important;
+        background: rgba(139, 92, 246, 0.05) !important;
+    }
+
+    .modal-header .modal-title {
+        color: var(--uh-text-primary) !important;
+        font-family: 'Fraunces', serif !important;
+        font-weight: 700 !important;
+    }
+
+    .modal-header .modal-title i {
+        color: var(--uh-primary) !important;
+    }
+
+    .modal-body {
+        padding: 1.25rem !important;
+        color: var(--uh-text-primary) !important;
+    }
+
+    [data-theme="dark"] .modal-body {
+        color: #E8EDF5 !important;
+        background: #1A1A2E !important;
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--uh-border) !important;
+        padding: 0.75rem 1.25rem !important;
+    }
+
+    [data-theme="dark"] .modal-footer {
+        border-color: rgba(255, 255, 255, 0.06) !important;
+        background: rgba(139, 92, 246, 0.03) !important;
+    }
+
+    .modal .btn-close {
+        filter: brightness(0) invert(1) !important;
+        opacity: 0.7 !important;
+    }
+
+    .modal .btn-close:hover {
+        opacity: 1 !important;
+    }
+
+    /* ===== FORM ELEMENTS ===== */
+    .form-control, .form-select {
+        background-color: var(--bg-input) !important;
+        border: 2px solid var(--uh-border) !important;
+        color: var(--uh-text-primary) !important;
+        border-radius: 8px !important;
+        padding: 0.4rem 0.7rem !important;
+        font-size: 0.8rem !important;
+        transition: var(--uh-transition) !important;
+        width: 100%;
+        -webkit-text-fill-color: var(--uh-text-primary) !important;
+    }
+
+    [data-theme="dark"] .form-control,
+    [data-theme="dark"] .form-select {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        color: #E8EDF5 !important;
+        -webkit-text-fill-color: #E8EDF5 !important;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--uh-primary) !important;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.08) !important;
+        outline: none !important;
+    }
+
+    .form-label {
+        color: var(--uh-text-secondary) !important;
+        font-weight: 600 !important;
+        font-size: 0.75rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+
+    [data-theme="dark"] .form-label {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    .form-label .required {
+        color: #EF4444;
+        font-size: 0.8rem;
+    }
+
+    .form-label .optional-text {
+        color: var(--uh-text-muted);
+        font-weight: 400;
+        font-size: 0.7rem;
+    }
+
+    .form-text {
+        color: var(--uh-text-muted) !important;
+        font-size: 0.6rem !important;
+        margin-top: 0.1rem !important;
+    }
+
+    .form-check-label {
+        color: var(--uh-text-secondary);
+    }
+
+    .form-check-input {
+        background-color: var(--bg-input) !important;
+        border-color: var(--uh-border) !important;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--uh-primary) !important;
+        border-color: var(--uh-primary) !important;
+    }
+
+    /* ===== MODAL BUTTONS ===== */
+    .btn-modal-close {
+        background: var(--bg-input) !important;
+        border: 2px solid var(--uh-border) !important;
+        color: var(--uh-text-secondary) !important;
+        border-radius: 50px !important;
+        padding: 0.25rem 1rem !important;
+        font-size: 0.75rem !important;
+        transition: var(--uh-transition) !important;
+        min-height: 34px;
+    }
+
+    .btn-modal-close:hover {
+        border-color: var(--uh-primary) !important;
+        color: var(--uh-text-primary) !important;
+    }
+
+    [data-theme="dark"] .btn-modal-close {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    [data-theme="dark"] .btn-modal-close:hover {
+        border-color: var(--uh-primary) !important;
+        color: #FFFFFF !important;
+    }
+
+    .btn-modal-submit {
+        border-radius: 50px !important;
+        padding: 0.25rem 1rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        transition: var(--uh-transition) !important;
+        min-height: 34px;
+        background: var(--uh-primary) !important;
+    }
+
+    .btn-modal-submit:hover {
+        background: var(--uh-primary-dark) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* ===== CONFIRM MODAL ===== */
+    #confirmModal .modal-header {
+        background: linear-gradient(135deg, #EF4444, #DC2626) !important;
+        border: none !important;
+        border-radius: var(--uh-radius) var(--uh-radius) 0 0 !important;
+    }
+
+    #confirmModal .modal-header .modal-title {
+        color: #FFFFFF !important;
+    }
+
+    #confirmModal .modal-header .modal-title i {
+        color: #FFFFFF !important;
+    }
+
+    #confirmModal .btn-close {
+        filter: brightness(0) invert(1) !important;
+    }
+
+    .btn-confirm-yes {
+        border-radius: 50px !important;
+        padding: 0.25rem 1.5rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        transition: var(--uh-transition) !important;
+        min-height: 34px;
+        background: #EF4444 !important;
+    }
+
+    .btn-confirm-yes:hover {
+        background: #DC2626 !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .btn-confirm-cancel {
+        border-radius: 50px !important;
+        padding: 0.25rem 1.5rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        color: var(--uh-text-secondary) !important;
+        border: 2px solid var(--uh-border) !important;
+        transition: var(--uh-transition) !important;
+        min-height: 34px;
+        background: transparent !important;
+    }
+
+    .btn-confirm-cancel:hover {
+        border-color: var(--uh-primary) !important;
+        color: var(--uh-text-primary) !important;
+    }
+
+    [data-theme="dark"] .btn-confirm-cancel {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    [data-theme="dark"] .btn-confirm-cancel:hover {
+        border-color: var(--uh-primary) !important;
+        color: #FFFFFF !important;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .uh-header-content { flex-direction: column; align-items: stretch; }
+        .uh-header-actions { width: 100%; }
+        .uh-header-actions .btn-uh-secondary { flex: 1; justify-content: center; }
+        .uh-panel-body { padding: 0.5rem; }
+        .uh-table td, .uh-table th { padding: 0.25rem 0.3rem; font-size: 0.6rem; }
+        .btn-uh-action { font-size: 0.45rem; padding: 0.08rem 0.25rem; min-height: 18px; }
+        .btn-uh-action i { display: none; }
+        .badge-uh-status { font-size: 0.4rem; padding: 0.05rem 0.25rem; }
+        .password-toggle-icon { font-size: 0.8rem; padding: 4px 6px; }
+    }
+
+    @media (max-width: 480px) {
+        .uh-header { padding: 0.75rem; }
+        .uh-header-title .icon-box { width: 36px; height: 36px; font-size: 1rem; }
+        .uh-header-title h1 { font-size: 0.95rem; }
+        .uh-header-title .subtitle { font-size: 0.6rem; }
+        .uh-table td, .uh-table th { padding: 0.15rem 0.2rem; font-size: 0.5rem; }
+        .btn-uh-action { font-size: 0.4rem; padding: 0.05rem 0.2rem; min-height: 16px; }
+        .badge-uh-status { font-size: 0.35rem; padding: 0.05rem 0.2rem; }
+        .modal-body { padding: 0.75rem !important; }
+        .form-control, .form-select { font-size: 0.7rem !important; padding: 0.3rem 0.5rem !important; }
+        .btn-modal-submit, .btn-modal-close { font-size: 0.65rem !important; padding: 0.2rem 0.7rem !important; min-height: 28px; }
+        .password-toggle-icon { font-size: 0.7rem; padding: 3px 5px; }
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--uh-primary); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--uh-primary-dark); }
+
+    [data-theme="dark"] ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    [data-theme="dark"] ::-webkit-scrollbar-thumb {
+        background: rgba(139, 92, 246, 0.5);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="uh-container">
+
+    <!-- ===== HEADER ===== -->
+    <div class="uh-header">
+        <div class="uh-header-content">
+            <div class="uh-header-title">
+                <div class="icon-box">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+                <div>
+                    <h1>Unit Head Management</h1>
+                    <div class="subtitle">
+                        <i class="fa-regular fa-user"></i>
+                        <span>Manage unit heads with login credentials and unit assignments</span>
+                        <span class="badge" style="background: rgba(139, 92, 246, 0.08); color: var(--uh-primary); font-size: 0.55rem; padding: 0.1rem 0.5rem; border-radius: 50px; border: 1px solid rgba(139, 92, 246, 0.1);">
+                            {{ unit_heads.count }} Unit Heads
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="uh-header-actions">
+                <a href="{% url 'settings_page' %}" class="btn-uh-secondary">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Settings
+                </a>
+                <button type="button" class="btn-uh-primary" data-bs-toggle="modal" data-bs-target="#addUnitHeadModal">
+                    <i class="fa-solid fa-plus"></i> Add Unit Head
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== UNIT HEADS LIST ===== -->
+    <div class="uh-panel">
+        <div class="uh-panel-header">
+            <h3><i class="fa-solid fa-list-ul"></i> Unit Heads</h3>
+            <span style="font-size: 0.7rem; color: var(--uh-text-muted);">
+                {{ unit_heads.count }} total
+            </span>
+        </div>
+        <div class="uh-panel-body">
+            <div style="overflow-x: auto;">
+                <table class="uh-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Unit</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for uh in unit_heads %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><strong>{{ uh.name }}</strong></td>
+                            <td><span style="font-family: monospace; font-size: 0.7rem; color: var(--uh-primary);">{{ uh.user.username }}</span></td>
+                            <td>
+                                <span style="font-weight: 600; color: var(--uh-text-primary);">
+                                    {{ uh.unit.code }}
+                                </span>
+                            </td>
+                            <td style="font-size: 0.65rem;">{{ uh.email }}</td>
+                            <td>
+                                <span class="badge-uh-status {% if uh.is_active %}badge-uh-active{% else %}badge-uh-inactive{% endif %}">
+                                    {% if uh.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td class="text-center" style="white-space: nowrap;">
+                                <!-- Edit Button -->
+                                <button type="button" class="btn-uh-action" data-bs-toggle="modal" data-bs-target="#editUnitHeadModal"
+                                        data-id="{{ uh.id }}"
+                                        data-username="{{ uh.user.username }}"
+                                        data-name="{{ uh.name }}"
+                                        data-email="{{ uh.email }}"
+                                        data-unit="{{ uh.unit_id }}"
+                                        data-active="{{ uh.is_active|yesno:'true,false' }}">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+
+                                <!-- Toggle Active/Inactive -->
+                                <form method="POST" action="{% url 'settings_unit_heads' %}" class="d-inline confirm-form" data-confirm="{% if uh.is_active %}Deactivate{% else %}Activate{% endif %} Unit Head {{ uh.name }}?">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="toggle_unit_head">
+                                    <input type="hidden" name="unit_head_id" value="{{ uh.id }}">
+                                    <button type="submit" class="btn-uh-action {% if uh.is_active %}btn-uh-action-danger{% else %}btn-uh-action-success{% endif %}">
+                                        <i class="fa-solid {% if uh.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Delete - Only if Inactive -->
+                                {% if uh.is_active %}
+                                    <span class="btn-uh-action" style="border-color: #F59E0B; color: #F59E0B; cursor: not-allowed; opacity: 0.6; pointer-events: none;">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                        <span style="font-size: 0.4rem; margin-left: 2px;">Deactivate first</span>
+                                    </span>
+                                {% else %}
+                                    <form method="POST" action="{% url 'settings_unit_heads' %}" class="d-inline confirm-form" data-confirm="⚠️ Permanently delete Unit Head {{ uh.name }}? This will remove their login access and unit head privileges.">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete_unit_head">
+                                        <input type="hidden" name="unit_head_id" value="{{ uh.id }}">
+                                        <button type="submit" class="btn-uh-action btn-uh-action-danger" style="border-color: #EF4444; color: #EF4444;">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="uh-empty">
+                                    <i class="fa-regular fa-user-tie"></i>
+                                    <p>No unit heads found. Click "Add Unit Head" to create one.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     ADD UNIT HEAD MODAL - WITH PASSWORD TOGGLE
+============================================================ -->
+<div class="modal fade" id="addUnitHeadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'settings_unit_heads' %}" id="addUnitHeadForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_unit_head">
+                <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);">
+                    <h5 class="modal-title text-white"><i class="fa-solid fa-user-plus me-2"></i>Add Unit Head</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Username <span class="required">*</span></label>
+                            <input type="text" name="username" class="form-control" placeholder="e.g., imd_head" required>
+                            <div class="form-text" id="addUsernameFeedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Name <span class="required">*</span></label>
+                            <input type="text" name="name" class="form-control" placeholder="Full Name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password <span class="required">*</span></label>
+                            <div class="password-wrapper">
+                                <input type="password" name="password" id="addPassword" class="form-control" placeholder="Min 8 characters" required minlength="8">
+                                <button type="button" class="password-toggle-icon" data-toggle="addPassword">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Minimum 8 characters</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Confirm Password <span class="required">*</span></label>
+                            <div class="password-wrapper">
+                                <input type="password" name="confirm_password" id="addConfirmPassword" class="form-control" placeholder="Confirm password" required>
+                                <button type="button" class="password-toggle-icon" data-toggle="addConfirmPassword">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text text-danger" id="addPasswordError" style="display:none;">Passwords do not match</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email <span class="required">*</span></label>
+                            <input type="email" name="email" class="form-control" placeholder="email@example.com" required>
+                            <div class="form-text" id="addEmailFeedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Unit <span class="required">*</span></label>
+                            <select name="unit" class="form-select" required>
+                                <option value="">-- Select Unit --</option>
+                                {% for unit in all_units %}
+                                <option value="{{ unit.id }}">{{ unit.code }} - {{ unit.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text" id="addUnitFeedback"></div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_active" id="add_is_active" class="form-check-input" checked>
+                                <label class="form-check-label" for="add_is_active">
+                                    <i class="fa-solid fa-circle-check me-1" style="color: var(--uh-primary);"></i>
+                                    Active
+                                </label>
+                                <div class="form-text">Unit head can login and access the unit head panel</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-modal-submit" id="addSubmitBtn">Add Unit Head</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     EDIT UNIT HEAD MODAL - WITH PASSWORD TOGGLE
+============================================================ -->
+<div class="modal fade" id="editUnitHeadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'settings_unit_heads' %}" id="editUnitHeadForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit_unit_head">
+                <input type="hidden" name="unit_head_id" id="edit_uh_id">
+                <div class="modal-header" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);">
+                    <h5 class="modal-title text-white"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Unit Head</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Username <span class="required">*</span></label>
+                            <input type="text" name="username" id="edit_uh_username" class="form-control" required>
+                            <div class="form-text" id="editUsernameFeedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Name <span class="required">*</span></label>
+                            <input type="text" name="name" id="edit_uh_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password <span class="optional-text">(Optional)</span></label>
+                            <div class="password-wrapper">
+                                <input type="password" name="password" id="editPassword" class="form-control" placeholder="Leave blank to keep current">
+                                <button type="button" class="password-toggle-icon" data-toggle="editPassword">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Leave blank to keep current password</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Confirm Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" name="confirm_password" id="editConfirmPassword" class="form-control" placeholder="Confirm new password">
+                                <button type="button" class="password-toggle-icon" data-toggle="editConfirmPassword">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text text-danger" id="editPasswordError" style="display:none;">Passwords do not match</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email <span class="required">*</span></label>
+                            <input type="email" name="email" id="edit_uh_email" class="form-control" required>
+                            <div class="form-text" id="editEmailFeedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Unit <span class="required">*</span></label>
+                            <select name="unit" id="edit_uh_unit" class="form-select" required>
+                                <option value="">-- Select Unit --</option>
+                                {% for unit in all_units %}
+                                <option value="{{ unit.id }}">{{ unit.code }} - {{ unit.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text" id="editUnitFeedback"></div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_active" id="edit_is_active" class="form-check-input">
+                                <label class="form-check-label" for="edit_is_active">
+                                    <i class="fa-solid fa-circle-check me-1" style="color: var(--uh-primary);"></i>
+                                    Active
+                                </label>
+                                <div class="form-text">Unit head can login and access the unit head panel</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-modal-submit" id="editSubmitBtn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     CONFIRM MODAL
+============================================================ -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-3">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>Confirm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p id="confirmModalBody" class="mb-0">Are you sure?</p>
+            </div>
+            <div class="modal-footer border-0 d-flex justify-content-end gap-2 pb-4">
+                <button type="button" class="btn-confirm-cancel" id="confirmModalCancelBtn">Cancel</button>
+                <button type="button" class="btn-confirm-yes" id="confirmModalYesBtn">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ============================================================
+    // PASSWORD TOGGLE FUNCTION - FIXED
+    // ============================================================
+    document.querySelectorAll('.password-toggle-icon').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var targetId = this.getAttribute('data-toggle');
+            if (!targetId) return;
+            
+            var input = document.getElementById(targetId);
+            if (!input) return;
+            
+            var isPassword = input.getAttribute('type') === 'password';
+            input.setAttribute('type', isPassword ? 'text' : 'password');
+            
+            var icon = this.querySelector('i');
+            if (icon) {
+                icon.className = isPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+            }
+            
+            input.focus();
+        });
+    });
+
+    // ============================================================
+    // PREFILL EDIT MODAL
+    // ============================================================
+    document.getElementById('editUnitHeadModal').addEventListener('show.bs.modal', function(e) {
+        var btn = e.relatedTarget;
+        document.getElementById('edit_uh_id').value = btn.getAttribute('data-id');
+        document.getElementById('edit_uh_username').value = btn.getAttribute('data-username');
+        document.getElementById('edit_uh_name').value = btn.getAttribute('data-name');
+        document.getElementById('edit_uh_email').value = btn.getAttribute('data-email');
+        document.getElementById('edit_uh_unit').value = btn.getAttribute('data-unit');
+        
+        // Reset password fields
+        document.getElementById('editPassword').value = '';
+        document.getElementById('editConfirmPassword').value = '';
+        document.getElementById('editPasswordError').style.display = 'none';
+        
+        var isActive = btn.getAttribute('data-active') === 'true';
+        document.getElementById('edit_is_active').checked = isActive;
+    });
+
+    // ============================================================
+    // PASSWORD VALIDATION - ADD
+    // ============================================================
+    var addForm = document.getElementById('addUnitHeadForm');
+    var addPassword = document.getElementById('addPassword');
+    var addConfirm = document.getElementById('addConfirmPassword');
+    var addPasswordError = document.getElementById('addPasswordError');
+
+    addForm.addEventListener('submit', function(e) {
+        if (addPassword.value !== addConfirm.value) {
+            e.preventDefault();
+            addPasswordError.style.display = 'block';
+            addConfirm.style.borderColor = '#EF4444';
+            return false;
+        }
+        addPasswordError.style.display = 'none';
+        addConfirm.style.borderColor = '';
+    });
+
+    addConfirm.addEventListener('input', function() {
+        if (this.value.length > 0 && this.value !== addPassword.value) {
+            addPasswordError.style.display = 'block';
+            this.style.borderColor = '#EF4444';
+        } else {
+            addPasswordError.style.display = 'none';
+            this.style.borderColor = '';
+        }
+    });
+
+    // ============================================================
+    // PASSWORD VALIDATION - EDIT
+    // ============================================================
+    var editForm = document.getElementById('editUnitHeadForm');
+    var editPassword = document.getElementById('editPassword');
+    var editConfirm = document.getElementById('editConfirmPassword');
+    var editPasswordError = document.getElementById('editPasswordError');
+
+    editForm.addEventListener('submit', function(e) {
+        // Only validate if password fields are filled
+        if (editPassword.value || editConfirm.value) {
+            if (editPassword.value !== editConfirm.value) {
+                e.preventDefault();
+                editPasswordError.style.display = 'block';
+                editConfirm.style.borderColor = '#EF4444';
+                return false;
+            }
+        }
+        editPasswordError.style.display = 'none';
+        editConfirm.style.borderColor = '';
+    });
+
+    editConfirm.addEventListener('input', function() {
+        if (this.value.length > 0 && this.value !== editPassword.value) {
+            editPasswordError.style.display = 'block';
+            this.style.borderColor = '#EF4444';
+        } else {
+            editPasswordError.style.display = 'none';
+            this.style.borderColor = '';
+        }
+    });
+
+    // ============================================================
+    // CONFIRMATION MODAL
+    // ============================================================
+    var confirmModalEl = document.getElementById('confirmModal');
+    var confirmBody = document.getElementById('confirmModalBody');
+    var confirmYesBtn = document.getElementById('confirmModalYesBtn');
+    var confirmCancelBtn = document.getElementById('confirmModalCancelBtn');
+    var currentFormToSubmit = null;
+    var isProcessing = false;
+
+    document.querySelectorAll('form[data-confirm]').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            var message = this.getAttribute('data-confirm');
+            if (message) {
+                e.preventDefault();
+                e.stopPropagation();
+                currentFormToSubmit = this;
+                confirmBody.textContent = message || 'Are you sure?';
+                var modal = new bootstrap.Modal(confirmModalEl);
+                modal.show();
+            }
+        });
+    });
+
+    if (confirmYesBtn) {
+        confirmYesBtn.addEventListener('click', function() {
+            if (isProcessing || !currentFormToSubmit) return;
+            isProcessing = true;
+            var form = currentFormToSubmit;
+            currentFormToSubmit = null;
+            var modalInstance = bootstrap.Modal.getInstance(confirmModalEl);
+            if (modalInstance) modalInstance.hide();
+            setTimeout(function() {
+                if (form && form.tagName === 'FORM') {
+                    form.submit();
+                }
+                isProcessing = false;
+            }, 300);
+        });
+    }
+
+    if (confirmCancelBtn) {
+        confirmCancelBtn.addEventListener('click', function() {
+            currentFormToSubmit = null;
+            var modalInstance = bootstrap.Modal.getInstance(confirmModalEl);
+            if (modalInstance) modalInstance.hide();
+        });
+    }
+
+    confirmModalEl.addEventListener('hidden.bs.modal', function() {
+        currentFormToSubmit = null;
+        isProcessing = false;
+    });
+
+    // ============================================================
+    // THEME SYNC
+    // ============================================================
+    function updateTheme() {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var inputs = document.querySelectorAll('.form-control, .form-select');
+        inputs.forEach(function(input) {
+            if (isDark) {
+                input.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                input.style.borderColor = 'rgba(255,255,255,0.08)';
+                input.style.color = '#E8EDF5';
+                input.style.webkitTextFillColor = '#E8EDF5';
+            } else {
+                input.style.backgroundColor = '';
+                input.style.borderColor = '';
+                input.style.color = '';
+                input.style.webkitTextFillColor = '';
+            }
+        });
+    }
+
+    var themeToggle = document.getElementById('themeToggleFloating');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            setTimeout(updateTheme, 100);
+        });
+    }
+
+    var observer = new MutationObserver(function() {
+        updateTheme();
+    });
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+    setTimeout(updateTheme, 200);
+
+});
+</script>
+{% endblock %}

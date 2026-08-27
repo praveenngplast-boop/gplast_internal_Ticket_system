@@ -17,6 +17,9 @@ from ..utils import is_admin
 
 logger = logging.getLogger(__name__)
 
+# Default screen type if not specified
+DEFAULT_SCREEN_TYPE = 'ALL'
+
 
 # ============================================================
 # SCREEN MASTER - ADD
@@ -29,12 +32,17 @@ def screen_master_add(request):
 
     screen_name = request.POST.get('screen_name', '').strip()
     screen_code = request.POST.get('screen_code', '').strip().upper()
-    screen_type = request.POST.get('screen_type', 'ALL').strip()
+    screen_type = request.POST.get('screen_type', '').strip().upper()
 
     if not screen_name:
         return JsonResponse({'success': False, 'message': 'Screen Name is required'})
     if not screen_code:
         return JsonResponse({'success': False, 'message': 'Screen Code is required'})
+
+    # ✅ If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
+    valid_types = ['ALL', 'ENTRY', 'CONFIGURATION', 'QUERY']
+    if not screen_type or screen_type not in valid_types:
+        screen_type = DEFAULT_SCREEN_TYPE
 
     # Duplicate check
     if ScreenMaster.objects.filter(screen_name__iexact=screen_name).exists():
@@ -82,7 +90,7 @@ def screen_master_edit(request):
     screen_id = request.POST.get('screen_id', '').strip()
     screen_name = request.POST.get('screen_name', '').strip()
     screen_code = request.POST.get('screen_code', '').strip().upper()
-    screen_type = request.POST.get('screen_type', 'ALL').strip()
+    screen_type = request.POST.get('screen_type', '').strip().upper()
 
     if not screen_id:
         return JsonResponse({'success': False, 'message': 'Screen ID is required'})
@@ -90,6 +98,11 @@ def screen_master_edit(request):
         return JsonResponse({'success': False, 'message': 'Screen Name is required'})
     if not screen_code:
         return JsonResponse({'success': False, 'message': 'Screen Code is required'})
+
+    # ✅ If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
+    valid_types = ['ALL', 'ENTRY', 'CONFIGURATION', 'QUERY']
+    if not screen_type or screen_type not in valid_types:
+        screen_type = DEFAULT_SCREEN_TYPE
 
     try:
         screen = ScreenMaster.objects.get(id=screen_id)
@@ -240,7 +253,7 @@ def screen_master_download_excel(request):
 def screen_master_download_template(request):
     """
     Download Excel template for bulk screen upload
-    Columns: Screen Code, Screen Name, Screen Type
+    Columns: Screen Code, Screen Name, Screen Type (Optional - defaults to General/ALL)
     """
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=Screen_Upload_Template.xlsx'
@@ -254,7 +267,7 @@ def screen_master_download_template(request):
     header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
     header_alignment = Alignment(horizontal='center', vertical='center')
     
-    headers = ['Screen Code', 'Screen Name', 'Screen Type']
+    headers = ['Screen Code', 'Screen Name', 'Screen Type (Optional)']
     for col_idx, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_idx)
         cell.value = header
@@ -265,10 +278,10 @@ def screen_master_download_template(request):
     # Sample data
     samples = [
         ['SO-001', 'Sales Order Entry', 'ENTRY'],
-        ['PO-001', 'Purchase Order Entry', 'ENTRY'],
+        ['PO-001', 'Purchase Order Entry', ''],
         ['INV-001', 'Inventory Report', 'QUERY'],
         ['USR-001', 'User Management', 'CONFIGURATION'],
-        ['GEN-001', 'General Dashboard', 'ALL'],
+        ['GEN-001', 'General Dashboard', ''],  # Empty = General/ALL
     ]
     for row_idx, row in enumerate(samples, 2):
         for col_idx, val in enumerate(row, 1):
@@ -279,13 +292,19 @@ def screen_master_download_template(request):
     # Notes
     note_row = len(samples) + 3
     note_cell = ws.cell(row=note_row, column=1)
-    note_cell.value = "Mandatory: Screen Code, Screen Name, Screen Type (ALL/ENTRY/CONFIGURATION/QUERY)"
+    note_cell.value = "Mandatory: Screen Code, Screen Name | Screen Type is OPTIONAL - Leave empty for 'General' (ALL)"
     note_cell.font = Font(name='Calibri', size=10, italic=True, color='FF0000')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=3)
     
+    note_row2 = len(samples) + 4
+    note_cell2 = ws.cell(row=note_row2, column=1)
+    note_cell2.value = "Valid Types: ALL (General), ENTRY (Data Entry), CONFIGURATION, QUERY (Report/Query)"
+    note_cell2.font = Font(name='Calibri', size=10, italic=True, color='0066CC')
+    ws.merge_cells(start_row=note_row2, start_column=1, end_row=note_row2, end_column=3)
+    
     # Column widths
     for col in range(1, 4):
-        ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 25
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 28
     
     wb.save(response)
     return response
@@ -299,6 +318,7 @@ def screen_master_download_template(request):
 def screen_master_bulk_upload(request):
     """
     Bulk upload screens from Excel
+    Screen Type column is OPTIONAL - defaults to 'General' (ALL) if empty
     """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
@@ -316,9 +336,10 @@ def screen_master_bulk_upload(request):
         if df.empty:
             return JsonResponse({'success': False, 'message': 'The uploaded file is empty.'})
         
-        # Find required columns
-        required_columns = ['Screen Code', 'Screen Name', 'Screen Type']
+        # Find required columns (case insensitive)
+        required_columns = ['Screen Code', 'Screen Name']
         missing_columns = []
+        
         for col in required_columns:
             found = False
             for existing_col in df.columns:
@@ -339,32 +360,35 @@ def screen_master_bulk_upload(request):
         errors = []
         valid_types = ['ALL', 'ENTRY', 'CONFIGURATION', 'QUERY']
         
+        # Find column indices
+        col_code = None
+        col_name = None
+        col_type = None
+        
+        for col in df.columns:
+            col_lower = col.strip().lower()
+            if 'screen code' in col_lower or 'code' in col_lower and 'screen' in col_lower:
+                col_code = col
+            elif 'screen name' in col_lower or 'name' in col_lower and 'screen' in col_lower:
+                col_name = col
+            elif 'screen type' in col_lower or 'type' in col_lower:
+                col_type = col
+        
         for idx, row in df.iterrows():
             row_num = idx + 2
             
-            # Find columns
-            screen_code = None
-            screen_name = None
-            screen_type = 'ALL'
-            
-            for col in df.columns:
-                col_lower = col.strip().lower()
-                if 'screen code' in col_lower or 'code' in col_lower:
-                    screen_code = str(row.get(col, '')).strip()
-                elif 'screen name' in col_lower or 'name' in col_lower:
-                    screen_name = str(row.get(col, '')).strip()
-                elif 'screen type' in col_lower or 'type' in col_lower:
-                    screen_type = str(row.get(col, '')).strip().upper()
+            screen_code = str(row.get(col_code, '')).strip() if col_code else ''
+            screen_name = str(row.get(col_name, '')).strip() if col_name else ''
+            screen_type = str(row.get(col_type, '')).strip().upper() if col_type else ''
             
             if not screen_code or not screen_name:
                 errors.append(f'Row {row_num}: Screen Code and Screen Name are required')
                 skipped_count += 1
                 continue
             
-            if screen_type not in valid_types:
-                errors.append(f'Row {row_num}: Invalid Screen Type "{screen_type}". Use ALL/ENTRY/CONFIGURATION/QUERY')
-                skipped_count += 1
-                continue
+            # ✅ If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
+            if not screen_type or screen_type not in valid_types:
+                screen_type = DEFAULT_SCREEN_TYPE
             
             if ScreenMaster.objects.filter(screen_code__iexact=screen_code).exists():
                 errors.append(f'Row {row_num}: Screen Code "{screen_code}" already exists')

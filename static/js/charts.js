@@ -35,8 +35,10 @@
         },
         // ✅ NEW: Error Type Colors - Roadmap Error (Purple), GPL Error (Green)
         errorType: {
+            // Main Error Types
             'Roadmap Error': '#8B5CF6',
             'GPL Error': '#10B981',
+            // Roadmap Sub-Errors
             'Database Error': '#8B5CF6',
             'Logic / Functional Error': '#A78BFA',
             'Application Error': '#7C3AED',
@@ -49,13 +51,14 @@
             'Access / Permission Error': '#EF4444',
             'Master Data / Configuration Error': '#6366F1',
             'Other ERP Error': '#94A3B8',
+            // GPL Sub-Errors
             'User / Data Entry Error': '#10B981',
             'Process / Procedure Error': '#34D399',
             'Master Data Error': '#059669',
             'Other GPL Error': '#047857',
+            // Legacy error types
             'New': '#22C55E',
             'Repeated': '#F59E0B',
-            // Legacy error types
             'ERP Error': '#EF4444',
             'Data Entry Error': '#F59E0B',
             'DB Error': '#3B82F6',
@@ -505,9 +508,9 @@
         });
     }
 
-    // ============================================
-    // ✅ UPDATED: CREATE ERROR TYPE CHART
-    // ============================================
+    /**
+     * ✅ UPDATED: CREATE ERROR TYPE CHART
+     */
     function createErrorTypeChart(canvasId, data, drillDownFunction) {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return null;
@@ -597,6 +600,107 @@
                             usePointStyle: true,
                             pointStyleWidth: 10,
                             boxWidth: 12,
+                        }
+                    }
+                },
+                onClick: function(event, elements) {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const label = this.data.labels[index];
+                        if (drillDownFunction) {
+                            drillDownFunction(label);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * ✅ NEW: Create a Unit Head Dashboard Status Chart
+     */
+    function createUnitHeadStatusChart(canvasId, data, drillDownFunction) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+
+        const chartData = parseDict(data || {});
+        if (chartData.labels.length === 0) {
+            // Show empty state
+            const container = document.getElementById(canvasId + 'Container') || ctx.parentElement;
+            if (container) {
+                let emptyMsg = container.querySelector('.chart-empty-msg');
+                if (!emptyMsg) {
+                    emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'chart-empty-msg';
+                    emptyMsg.style.cssText = `
+                        text-align: center;
+                        padding: 1.5rem 1rem;
+                        color: var(--text-muted);
+                    `;
+                    emptyMsg.innerHTML = `
+                        <i class="fa-regular fa-chart-bar" style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+                        <p style="margin: 0; font-size: 0.8rem;">No ticket data available</p>
+                    `;
+                    container.appendChild(emptyMsg);
+                }
+                ctx.style.display = 'none';
+            }
+            return null;
+        }
+
+        const theme = getThemeColors();
+        
+        return new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Tickets',
+                    data: chartData.values,
+                    backgroundColor: chartData.labels.map(label => 
+                        COLORS.status[label] || COLORS.grey
+                    ),
+                    borderWidth: 2,
+                    borderColor: chartData.labels.map(label => 
+                        COLORS.status[label] || COLORS.grey
+                    ),
+                    borderRadius: 4,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        padding: 10,
+                        titleFont: { family: 'Poppins, Inter, sans-serif', size: 12, weight: 'bold' },
+                        bodyFont: { family: 'Poppins, Inter, sans-serif', size: 11 },
+                        cornerRadius: 6,
+                        backgroundColor: 'rgba(26, 42, 108, 0.95)',
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed + ' tickets';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { 
+                            stepSize: 1, 
+                            font: { size: 9 },
+                            color: theme.textColor
+                        },
+                        grid: { color: theme.gridColor }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { 
+                            font: { size: 9 },
+                            color: theme.textColor
                         }
                     }
                 },
@@ -703,7 +807,8 @@
             department: null,
             deptStatus: null,
             deptPriority: null,
-            errorType: null  // ✅ ERROR TYPE CHART
+            errorType: null,
+            unitHeadStatus: null  // ✅ NEW: Unit Head Status Chart
         };
 
         // Admin Dashboard Charts
@@ -739,9 +844,8 @@
                 );
             }
 
-            // ✅ UPDATED: Error Type Chart - uses mainErrorType or errorType
+            // Error Type Chart
             if (document.getElementById('errorTypeChart')) {
-                // Use mainErrorType first, fallback to errorType
                 const errorData = data.mainErrorType || data.errorType || {};
                 charts.errorType = createErrorTypeChart(
                     'errorTypeChart',
@@ -801,6 +905,23 @@
             }
         }
 
+        // ✅ NEW: Unit Head Dashboard Charts
+        if (config.unitHeadCharts) {
+            const data = config.unitHeadCharts;
+            
+            // Unit Head Status Chart
+            if (document.getElementById('statusChart')) {
+                charts.unitHeadStatus = createUnitHeadStatusChart(
+                    'statusChart', data.status,
+                    function(status) {
+                        if (config.drillDown) {
+                            config.drillDown.status(status);
+                        }
+                    }
+                );
+            }
+        }
+
         // Setup theme watching and resize
         watchThemeChanges();
         setupResizeHandler();
@@ -824,7 +945,8 @@
     window.createDepartmentChart = createDepartmentChart;
     window.createDeptStatusChart = createDeptStatusChart;
     window.createDeptPriorityChart = createDeptPriorityChart;
-    window.createErrorTypeChart = createErrorTypeChart;  // ✅ EXPOSED
+    window.createErrorTypeChart = createErrorTypeChart;
+    window.createUnitHeadStatusChart = createUnitHeadStatusChart;  // ✅ NEW
     window.updateAllCharts = updateAllCharts;
 
 })();
