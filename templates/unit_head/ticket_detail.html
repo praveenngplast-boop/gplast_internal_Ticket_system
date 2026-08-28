@@ -418,6 +418,100 @@
         margin-left: auto;
     }
 
+    /* ===== PRIORITY CHANGE FORM STYLES ===== */
+    .priority-form-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .priority-form-group label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        display: block;
+        margin-bottom: 0.2rem;
+    }
+
+    .priority-form-group .form-control,
+    .priority-form-group .form-select {
+        width: 100%;
+        padding: 0.3rem 0.5rem;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        color: var(--text-primary);
+        font-size: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .priority-form-group .form-control:focus,
+    .priority-form-group .form-select:focus {
+        border-color: var(--brand-orange);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.1);
+    }
+
+    .priority-form-group .form-control::placeholder {
+        color: var(--text-muted);
+        font-size: 0.7rem;
+    }
+
+    .btn-change-priority {
+        width: 100%;
+        padding: 0.35rem 0.5rem;
+        background: var(--brand-gradient);
+        border: none;
+        border-radius: 6px;
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .btn-change-priority:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 107, 0, 0.25);
+    }
+
+    .btn-change-priority:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .current-priority-display {
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.3rem 0.5rem;
+        background: var(--bg-secondary);
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .priority-disabled-msg {
+        text-align: center;
+        padding: 1rem;
+        color: var(--text-muted);
+    }
+
+    .priority-disabled-msg i {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+        opacity: 0.3;
+    }
+
+    .priority-disabled-msg .msg-text {
+        font-size: 0.75rem;
+    }
+
     /* ===== RESPONSIVE ===== */
     @media (max-width: 992px) {
         .detail-grid {
@@ -455,6 +549,9 @@
         }
         .detail-card .card-body {
             padding: 0.5rem 0.75rem;
+        }
+        .current-priority-display {
+            flex-wrap: wrap;
         }
     }
 
@@ -745,6 +842,72 @@
                 </div>
             </div>
 
+            <!-- ============================================================
+                 PRIORITY CHANGE SECTION - NEW
+                 ============================================================ -->
+            {% if ticket.status != 'Closed' %}
+            <div class="detail-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-arrow-up-wide-short"></i> Change Priority
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'unit_head_ticket_detail' ticket.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="ChangePriority">
+                        
+                        <!-- Current Priority -->
+                        <div class="priority-form-group">
+                            <label>Current Priority</label>
+                            <div class="current-priority-display">
+                                <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
+                                    {{ ticket.priority }}
+                                </span>
+                                <span style="font-size: 0.6rem; color: var(--text-muted);">
+                                    <i class="fa-solid fa-arrow-right"></i> Change to:
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- New Priority Dropdown -->
+                        <div class="priority-form-group">
+                            <label for="new_priority">New Priority <span style="color: #EF4444;">*</span></label>
+                            <select name="new_priority" id="new_priority" class="form-select" required>
+                                <option value="">Select Priority</option>
+                                <option value="Critical">Critical</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Reason for Change -->
+                        <div class="priority-form-group">
+                            <label for="priority_reason">Reason for Change <span style="color: #EF4444;">*</span></label>
+                            <textarea name="priority_reason" id="priority_reason" class="form-control" rows="2" placeholder="Why is the priority changing?" required></textarea>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-change-priority">
+                            <i class="fa-solid fa-save"></i> Change Priority
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <!-- Show disabled message for closed tickets -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <i class="fa-solid fa-arrow-up-wide-short"></i> Change Priority
+                </div>
+                <div class="card-body">
+                    <div class="priority-disabled-msg">
+                        <i class="fa-solid fa-lock"></i>
+                        <div class="msg-text">Priority cannot be changed for closed tickets.</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- ===== STATUS TIMELINE ===== -->
             <div class="detail-card">
                 <div class="card-header">
@@ -859,6 +1022,20 @@ document.addEventListener('DOMContentLoaded', function() {
         attributeFilter: ['data-theme']
     });
     setTimeout(updateTheme, 200);
+
+    // ============================================================
+    // PRIORITY CHANGE - AUTO-SELECT CURRENT PRIORITY? (Optional)
+    // ============================================================
+    // You can uncomment this to highlight the current priority
+    // var currentPriority = '{{ ticket.priority }}';
+    // var select = document.getElementById('new_priority');
+    // if (select) {
+    //     for (var i = 0; i < select.options.length; i++) {
+    //         if (select.options[i].value === currentPriority) {
+    //             select.options[i].selected = true;
+    //         }
+    //     }
+    // }
 
 });
 </script>

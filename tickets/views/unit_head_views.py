@@ -4,6 +4,7 @@
 Unit Head Views - Dashboard, All Tickets, My Tickets, Ticket Detail, Reports
 Unit Heads can only see tickets from their assigned unit.
 VIEW ONLY - No actions (Assign, Hold, Escalate, Close, Reopen)
+BUT CAN CHANGE PRIORITY for non-closed tickets
 """
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -393,15 +394,16 @@ def unit_head_my_tickets(request):
 
 
 # ============================================================
-# UNIT HEAD - TICKET DETAIL (VIEW ONLY - NO ACTIONS)
+# UNIT HEAD - TICKET DETAIL (UPDATED WITH PRIORITY CHANGE)
 # ============================================================
 @login_required
 @unit_head_required
 def unit_head_ticket_detail(request, ticket_id):
     """
-    Unit Head ticket detail view - VIEW ONLY
+    Unit Head ticket detail view - VIEW ONLY except Priority Change
     - Only if ticket belongs to their unit
     - No action buttons (Assign, Hold, Escalate, Close, Reopen)
+    - CAN CHANGE PRIORITY for non-closed tickets
     - Shows ticket info, employee details, attachments, history
     """
     unit = get_unit_head_unit(request.user)
@@ -445,6 +447,54 @@ def unit_head_ticket_detail(request, ticket_id):
     
     # Get screen object (view only)
     screen_object = ScreenMaster.objects.filter(screen_code=ticket.screen_number).first()
+    
+    # ============================================================
+    # HANDLE PRIORITY CHANGE POST REQUEST
+    # ============================================================
+    if request.method == 'POST':
+        action_type = request.POST.get('action_type')
+        
+        if action_type == 'ChangePriority':
+            # Check if ticket is closed
+            if ticket.status == 'Closed':
+                messages.error(request, "Cannot change priority of a closed ticket.")
+                return redirect('unit_head_ticket_detail', ticket_id=ticket.id)
+            
+            new_priority = request.POST.get('new_priority', '').strip()
+            priority_reason = request.POST.get('priority_reason', '').strip()
+            
+            # Validate priority
+            valid_priorities = ['Critical', 'High', 'Medium', 'Low']
+            if new_priority not in valid_priorities:
+                messages.error(request, "Invalid priority selected.")
+                return redirect('unit_head_ticket_detail', ticket_id=ticket.id)
+            
+            # Validate reason
+            if not priority_reason:
+                messages.error(request, "Please provide a reason for changing priority.")
+                return redirect('unit_head_ticket_detail', ticket_id=ticket.id)
+            
+            with transaction.atomic():
+                # Get old priority
+                old_priority = ticket.priority
+                
+                # Update priority
+                ticket.priority = new_priority
+                ticket.save()
+                
+                # Create history entry
+                history_remark = f"Priority changed from {old_priority} to {new_priority}. Reason: {priority_reason}"
+                TicketHistory.objects.create(
+                    ticket=ticket,
+                    action="Priority Changed",
+                    remarks=history_remark,
+                    performed_by=f"Unit Head {unit_head.name}"
+                )
+                
+                messages.success(request, f'Priority changed from {old_priority} to {new_priority}.')
+                return redirect('unit_head_ticket_detail', ticket_id=ticket.id)
+        
+        return redirect('unit_head_ticket_detail', ticket_id=ticket.id)
     
     context = {
         'ticket': ticket,

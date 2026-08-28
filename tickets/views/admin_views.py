@@ -176,7 +176,12 @@ def create_ticket_admin(request):
                     performed_by=hist_perf
                 )
             
-            send_ticket_email(ticket, 'Created')
+            # ============================================================
+            # EMAIL SENDING DISABLED - COMMENTED OUT
+            # ============================================================
+            # send_ticket_email(ticket, 'Created')
+            # ============================================================
+            
             messages.success(request, f'Ticket {ticket.ticket_number} created successfully by Admin!')
             return redirect('admin_dashboard')
         else:
@@ -421,13 +426,14 @@ def all_tickets(request):
 
 
 # ============================================================
-# TICKET DETAIL - ADMIN
+# TICKET DETAIL - ADMIN (UPDATED WITH PRIORITY CHANGE)
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='login')
 def ticket_detail_admin(request, pk):
     """
     Admin ticket detail view with full ticket management
+    Includes: Assign, Hold, Escalate, Close, Reopen, and Change Priority
     """
     ticket = get_object_or_404(Ticket, pk=pk)
     
@@ -497,7 +503,11 @@ def ticket_detail_admin(request, pk):
                     remarks=remarks, 
                     performed_by=f"Admin {request.user.username}"
                 )
-                send_ticket_email(ticket, 'Assigned', remarks=remarks, request=request)
+                # ============================================================
+                # EMAIL SENDING DISABLED - COMMENTED OUT
+                # ============================================================
+                # send_ticket_email(ticket, 'Assigned', remarks=remarks, request=request)
+                # ============================================================
                 messages.success(request, f'Ticket assigned to {assigned_person}.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
@@ -515,7 +525,11 @@ def ticket_detail_admin(request, pk):
                     remarks=f"Reason: {hold_reason}", 
                     performed_by=f"Admin {request.user.username}"
                 )
-                send_ticket_email(ticket, 'Hold', remarks=hold_reason)
+                # ============================================================
+                # EMAIL SENDING DISABLED - COMMENTED OUT
+                # ============================================================
+                # send_ticket_email(ticket, 'Hold', remarks=hold_reason)
+                # ============================================================
                 messages.success(request, 'Ticket placed on Hold.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
@@ -533,7 +547,11 @@ def ticket_detail_admin(request, pk):
                     remarks=remark_str, 
                     performed_by=f"Admin {request.user.username}"
                 )
-                send_ticket_email(ticket, 'Escalated', remarks=remark_str)
+                # ============================================================
+                # EMAIL SENDING DISABLED - COMMENTED OUT
+                # ============================================================
+                # send_ticket_email(ticket, 'Escalated', remarks=remark_str)
+                # ============================================================
                 messages.success(request, 'Ticket escalated to ERP vendor.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
@@ -561,7 +579,11 @@ def ticket_detail_admin(request, pk):
                         remarks=f"Main Error: {main_error_type} | Sub Error: {sub_error_type} | {closing_remarks}", 
                         performed_by=f"Admin {request.user.username}"
                     )
-                    send_ticket_email(ticket, 'Closed', remarks=closing_remarks)
+                    # ============================================================
+                    # EMAIL SENDING DISABLED - COMMENTED OUT
+                    # ============================================================
+                    # send_ticket_email(ticket, 'Closed', remarks=closing_remarks)
+                    # ============================================================
                     messages.success(request, 'Ticket closed successfully.')
                     return redirect('admin_ticket_detail', pk=ticket.id)
                 else:
@@ -598,6 +620,48 @@ def ticket_detail_admin(request, pk):
                     return redirect('admin_ticket_detail', pk=ticket.id)
                 reopen_ticket_logic(ticket, f"Admin {request.user.username}", remarks, uploaded_files)
                 messages.success(request, 'Ticket reopened successfully.')
+                return redirect('admin_ticket_detail', pk=ticket.id)
+                
+            # ============================================================
+            # NEW: PRIORITY CHANGE ACTION
+            # ============================================================
+            elif action_type == 'ChangePriority':
+                # Check if ticket is closed
+                if ticket.status == 'Closed':
+                    messages.error(request, "Cannot change priority of a closed ticket.")
+                    return redirect('admin_ticket_detail', pk=ticket.id)
+                
+                new_priority = request.POST.get('new_priority', '').strip()
+                priority_reason = request.POST.get('priority_reason', '').strip()
+                
+                # Validate priority
+                valid_priorities = ['Critical', 'High', 'Medium', 'Low']
+                if new_priority not in valid_priorities:
+                    messages.error(request, "Invalid priority selected.")
+                    return redirect('admin_ticket_detail', pk=ticket.id)
+                
+                # Validate reason
+                if not priority_reason:
+                    messages.error(request, "Please provide a reason for changing priority.")
+                    return redirect('admin_ticket_detail', pk=ticket.id)
+                
+                # Get old priority
+                old_priority = ticket.priority
+                
+                # Update priority
+                ticket.priority = new_priority
+                ticket.save()
+                
+                # Create history entry
+                history_remark = f"Priority changed from {old_priority} to {new_priority}. Reason: {priority_reason}"
+                TicketHistory.objects.create(
+                    ticket=ticket,
+                    action="Priority Changed",
+                    remarks=history_remark,
+                    performed_by=f"Admin {request.user.username}"
+                )
+                
+                messages.success(request, f'Priority changed from {old_priority} to {new_priority}.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
         return redirect('admin_ticket_detail', pk=ticket.id)

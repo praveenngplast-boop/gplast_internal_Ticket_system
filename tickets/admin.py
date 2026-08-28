@@ -3,11 +3,11 @@ from tickets.models import (
     Unit, 
     Department, 
     AdminContact, 
-    AdminNotificationEmail, 
+    # AdminNotificationEmail,  # COMMENTED - Email related model
     Ticket, 
     TicketHistory, 
     UnitHead, 
-    EmailSchedule,
+    # EmailSchedule,  # COMMENTED - Email related model
     EmployeeMaster,
     DepartmentCredential,
     SettingsAuditLog,
@@ -50,14 +50,14 @@ class AdminContactAdmin(admin.ModelAdmin):
 
 
 # ============================================================
-# ADMIN NOTIFICATION EMAIL ADMIN
+# ADMIN NOTIFICATION EMAIL ADMIN - COMMENTED OUT (Email sending disabled)
 # ============================================================
-@admin.register(AdminNotificationEmail)
-class AdminNotificationEmailAdmin(admin.ModelAdmin):
-    list_display = ('email', 'is_active', 'created_at')
-    search_fields = ('email',)
-    list_filter = ('is_active',)
-    readonly_fields = ('created_at',)
+# @admin.register(AdminNotificationEmail)
+# class AdminNotificationEmailAdmin(admin.ModelAdmin):
+#     list_display = ('email', 'is_active', 'created_at')
+#     search_fields = ('email',)
+#     list_filter = ('is_active',)
+#     readonly_fields = ('created_at',)
 
 
 # ============================================================
@@ -89,15 +89,15 @@ class UnitHeadAdmin(admin.ModelAdmin):
 
 
 # ============================================================
-# EMAIL SCHEDULE ADMIN
+# EMAIL SCHEDULE ADMIN - COMMENTED OUT (Email sending disabled)
 # ============================================================
-@admin.register(EmailSchedule)
-class EmailScheduleAdmin(admin.ModelAdmin):
-    list_display = ('enabled', 'frequency', 'send_time', 'updated_at', 'last_sent_at')
-    list_filter = ('enabled', 'frequency')
-    search_fields = ('subject_template',)
-    readonly_fields = ('updated_at', 'last_sent_at')
-    filter_horizontal = ('units',)
+# @admin.register(EmailSchedule)
+# class EmailScheduleAdmin(admin.ModelAdmin):
+#     list_display = ('enabled', 'frequency', 'send_time', 'updated_at', 'last_sent_at')
+#     list_filter = ('enabled', 'frequency')
+#     search_fields = ('subject_template',)
+#     readonly_fields = ('updated_at', 'last_sent_at')
+#     filter_horizontal = ('units',)
 
 
 # ============================================================
@@ -178,10 +178,10 @@ class TicketAdmin(admin.ModelAdmin):
             'fields': ('created_by_user', 'created_by_role', 'admin_creation_reason', 'created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
-        ('Notifications', {
-            'fields': ('is_viewed', 'viewed_at', 'notification_sent'),
-            'classes': ('collapse',)
-        }),
+        # ('Notifications', {  # COMMENTED - Email notification related
+        #     'fields': ('is_viewed', 'viewed_at', 'notification_sent'),
+        #     'classes': ('collapse',)
+        # }),
     )
 
 

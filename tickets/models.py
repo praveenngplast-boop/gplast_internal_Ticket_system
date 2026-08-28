@@ -436,6 +436,55 @@ class Ticket(models.Model):
         from datetime import timedelta
         time_since_close = timezone.now() - self.closed_at
         return time_since_close.total_seconds() <= 48 * 3600
+    
+    # ============================================================
+    # NEW: PRIORITY CHANGE HELPER METHODS
+    # ============================================================
+    
+    def change_priority(self, new_priority, reason, performed_by):
+        """
+        Change ticket priority and create history entry.
+        Returns the old priority value.
+        """
+        if self.is_closed():
+            raise ValueError("Cannot change priority of a closed ticket.")
+        
+        old_priority = self.priority
+        self.priority = new_priority
+        self.save()
+        
+        # Create history entry
+        TicketHistory.objects.create(
+            ticket=self,
+            action="Priority Changed",
+            remarks=f"Priority changed from {old_priority} to {new_priority}. Reason: {reason}",
+            performed_by=performed_by
+        )
+        
+        return old_priority
+    
+    def get_priority_display(self):
+        """Get priority with styling class"""
+        priority_map = {
+            'Critical': 'badge-priority-critical',
+            'High': 'badge-priority-high',
+            'Medium': 'badge-priority-medium',
+            'Low': 'badge-priority-low',
+        }
+        return {
+            'value': self.priority,
+            'class': priority_map.get(self.priority, '')
+        }
+    
+    def get_allowed_priority_changes(self):
+        """
+        Get list of allowed priority changes based on status.
+        Unit Heads can change priority for: Open, Assigned, Hold, Escalated
+        Cannot change for: Closed
+        """
+        if self.is_closed():
+            return []
+        return ['Critical', 'High', 'Medium', 'Low']
 
 
 class TicketHistory(models.Model):
