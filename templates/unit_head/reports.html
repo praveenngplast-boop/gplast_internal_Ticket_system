@@ -352,6 +352,93 @@
     }
 
     /* ============================================================
+       DEPARTMENT WISE SUMMARY SECTION
+    ============================================================ */
+    .uh-dept-summary {
+        background: var(--uh-report-card-bg);
+        border: 1px solid var(--uh-report-border);
+        border-radius: var(--uh-report-radius);
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--uh-report-shadow);
+        transition: var(--uh-report-transition);
+    }
+
+    .uh-dept-summary:hover {
+        border-color: var(--uh-report-primary-border);
+    }
+
+    .uh-dept-summary .dept-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--uh-report-text-secondary);
+        font-family: 'Inter', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .uh-dept-summary .dept-title i {
+        color: var(--uh-report-primary);
+    }
+
+    .uh-dept-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .uh-dept-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--uh-report-border);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        text-align: center;
+        transition: var(--uh-report-transition);
+        cursor: pointer;
+    }
+
+    .uh-dept-card:hover {
+        border-color: var(--uh-report-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 107, 0, 0.1);
+    }
+
+    .uh-dept-card .dept-name {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--uh-report-text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .uh-dept-card .dept-count {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--uh-report-primary);
+        font-family: 'Fraunces', serif;
+    }
+
+    .uh-dept-card .dept-label {
+        font-size: 0.5rem;
+        color: var(--uh-report-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    [data-theme="dark"] .uh-dept-card {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    [data-theme="dark"] .uh-dept-card:hover {
+        background: rgba(255, 107, 0, 0.05);
+    }
+
+    /* ============================================================
        TABLE - Only Reports Data (No Charts)
     ============================================================ */
     .uh-table-wrapper {
@@ -533,6 +620,15 @@
     [data-theme="dark"] .badge-sm-priority-medium { background: rgba(59, 130, 246, 0.15); color: #60A5FA; }
     [data-theme="dark"] .badge-sm-priority-low { background: rgba(148, 163, 184, 0.15); color: #94A3B8; }
 
+    .uh-table .dept-name-td {
+        font-size: 0.6rem;
+        color: var(--uh-report-text-secondary);
+        max-width: 100px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     /* ============================================================
        VIEW ONLY BUTTONS
     ============================================================ */
@@ -648,6 +744,9 @@
         .uh-kpi-grid {
             grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
         }
+        .uh-dept-grid {
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        }
     }
 
     @media (max-width: 768px) {
@@ -657,6 +756,7 @@
         .uh-report-actions .btn-uh-back,
         .uh-report-actions .btn-uh-export { flex: 1; justify-content: center; }
         .uh-kpi-grid { grid-template-columns: repeat(3, 1fr); }
+        .uh-dept-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
         .uh-filters .filter-row { flex-direction: column; }
         .uh-filters .filter-group { min-width: 100%; }
         .uh-filters .filter-actions { width: 100%; }
@@ -670,6 +770,8 @@
         .btn-uh-view i { display: none; }
         .uh-pagination { flex-direction: column; }
         .uh-table-scroll { max-height: 400px; }
+        .uh-dept-card .dept-name { font-size: 0.55rem; }
+        .uh-dept-card .dept-count { font-size: 0.9rem; }
     }
 
     @media (max-width: 480px) {
@@ -677,7 +779,10 @@
         .uh-report-header-title h1 { font-size: 0.95rem; }
         .uh-kpi-grid { grid-template-columns: repeat(2, 1fr); }
         .uh-kpi-card .kpi-number { font-size: 1.1rem; }
+        .uh-dept-grid { grid-template-columns: repeat(2, 1fr); }
         .uh-table-scroll { max-height: 350px; }
+        .uh-dept-card .dept-name { font-size: 0.5rem; }
+        .uh-dept-card .dept-count { font-size: 0.8rem; }
     }
 
     ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -773,6 +878,32 @@
         </div>
     </div>
 
+    <!-- ============================================================
+         DEPARTMENT WISE SUMMARY (NEW)
+         ============================================================ -->
+    {% if department_stats %}
+    <div class="uh-dept-summary">
+        <div class="dept-title">
+            <i class="fa-solid fa-building"></i>
+            Department-wise Ticket Distribution
+            <span style="font-size: 0.55rem; font-weight: 400; color: var(--uh-report-text-muted);">
+                (Click any department to filter)
+            </span>
+        </div>
+        <div class="uh-dept-grid">
+            {% for dept in department_stats %}
+            <a href="{% url 'unit_head_reports' %}?department={{ dept.name|urlencode }}" 
+               class="uh-dept-card" 
+               title="Click to filter by {{ dept.name }}">
+                <div class="dept-name">{{ dept.name }}</div>
+                <div class="dept-count">{{ dept.count }}</div>
+                <div class="dept-label">Tickets</div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- ===== FILTERS ===== -->
     <div class="uh-filters">
         <form method="GET" action="{% url 'unit_head_reports' %}" id="filterForm">
@@ -802,6 +933,18 @@
                 </div>
 
                 <div class="filter-group">
+                    <label for="department">Department</label>
+                    <select name="department" id="department" class="form-select">
+                        <option value="">All Departments</option>
+                        {% for dept in all_departments %}
+                        <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
                     <label for="date_from">Date From</label>
                     <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
                 </div>
@@ -821,7 +964,7 @@
                     <button type="submit" class="btn-filter">
                         <i class="fa-solid fa-filter"></i> Apply
                     </button>
-                    {% if selected_status or selected_priority or date_from or date_to or search_query %}
+                    {% if selected_status or selected_priority or selected_department or date_from or date_to or search_query %}
                     <a href="{% url 'unit_head_reports' %}" class="btn-filter-outline">
                         <i class="fa-solid fa-times"></i> Clear
                     </a>
@@ -848,6 +991,7 @@
                         <th>Ticket #</th>
                         <th>Subject</th>
                         <th>Employee</th>
+                        <th>Department</th>
                         <th>Status</th>
                         <th>Priority</th>
                         <th>Created</th>
@@ -860,6 +1004,7 @@
                         <td><span class="ticket-number"><a href="{% url 'unit_head_ticket_detail' ticket.id %}">#{{ ticket.ticket_number }}</a></span></td>
                         <td style="max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ ticket.subject }}</td>
                         <td>{{ ticket.employee_name|default:ticket.employee_id }}</td>
+                        <td class="dept-name-td">{{ ticket.department.name|default:"N/A" }}</td>
                         <td><span class="badge-sm badge-sm-status-{{ ticket.status|lower }}">{{ ticket.status }}</span></td>
                         <td><span class="badge-sm badge-sm-priority-{{ ticket.priority|lower }}">{{ ticket.priority }}</span></td>
                         <td style="font-size: 0.6rem;">{{ ticket.created_at|date:"d M Y, H:i" }}</td>
@@ -871,11 +1016,11 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="uh-empty-state">
                                 <i class="fa-regular fa-ticket"></i>
                                 <p>No tickets found for this unit.</p>
-                                {% if search_query or selected_status or selected_priority %}
+                                {% if search_query or selected_status or selected_priority or selected_department %}
                                 <p style="font-size: 0.65rem; margin-top: 0.25rem;">Try adjusting your filters.</p>
                                 {% endif %}
                             </div>

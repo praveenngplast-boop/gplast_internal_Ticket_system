@@ -917,6 +917,30 @@
                 </div>
             </div>
         </div>
+
+        <!-- ============================================================
+             CHART 3: DEPARTMENT DISTRIBUTION (NEW)
+             ============================================================ -->
+        <div class="col-12 col-lg-6">
+            <div class="panel-card">
+                <div class="glass-header">
+                    <h6><i class="fa-solid fa-building me-2"></i>Department Distribution <span style="font-size: 0.5rem; font-weight: 400; color: var(--text-muted);">(Click segments to filter)</span></h6>
+                    <a href="{% url 'unit_head_all_tickets' %}" class="btn-outline-custom btn-sm">
+                        <i class="fa-solid fa-arrow-right"></i> View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="chart-wrapper" id="deptChartWrapper">
+                        <canvas id="deptChart"></canvas>
+                        <div id="deptEmpty" class="chart-empty" style="display:none;">
+                            <i class="fa-solid fa-building"></i>
+                            <p>No department data available</p>
+                        </div>
+                        <span class="chart-hint"><i class="fa-regular fa-hand-pointer me-1"></i>Click segments to filter</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -977,11 +1001,14 @@
 
         const hasStatusData = chartsData.status && Object.keys(chartsData.status).length > 0;
         const hasPriorityData = chartsData.priority && Object.keys(chartsData.priority).length > 0;
+        const hasDeptData = chartsData.department && Object.keys(chartsData.department).length > 0;
 
         const statusEmpty = document.getElementById('statusEmpty');
         const priorityEmpty = document.getElementById('priorityEmpty');
+        const deptEmpty = document.getElementById('deptEmpty');
         const statusCanvas = document.getElementById('statusChart');
         const priorityCanvas = document.getElementById('priorityChart');
+        const deptCanvas = document.getElementById('deptChart');
 
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const textColor = isDark ? '#E8EDF5' : '#1A2A6C';
@@ -1122,6 +1149,77 @@
             priorityEmpty.style.display = 'flex';
         }
 
+        // ============================================================
+        // CHART 3: DEPARTMENT DISTRIBUTION - PIE CHART
+        // ============================================================
+        // Department colors - 10 distinct colors
+        const deptColors = [
+            '#FF6B00', '#8B5CF6', '#3B82F6', '#22C55E', '#F59E0B',
+            '#EF4444', '#EC4899', '#14B8A6', '#F97316', '#6366F1'
+        ];
+
+        if (deptCanvas && hasDeptData) {
+            const deptLabels = Object.keys(chartsData.department);
+            const deptValues = Object.values(chartsData.department);
+            
+            // Assign colors based on index
+            const colors = deptLabels.map((_, index) => deptColors[index % deptColors.length]);
+
+            const ctx = deptCanvas.getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: deptLabels,
+                    datasets: [{
+                        data: deptValues,
+                        backgroundColor: colors,
+                        borderColor: isDark ? '#1A1A2E' : '#FFFFFF',
+                        borderWidth: 3,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Inter, sans-serif', size: 10, weight: '500' },
+                                padding: 12,
+                                color: textColor,
+                                usePointStyle: true,
+                                pointStyleWidth: 12,
+                                boxWidth: 14,
+                                boxHeight: 14
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                                    return context.label + ': ' + context.parsed + ' tickets (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    },
+                    onClick: function(event, elements) {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = this.data.labels[index];
+                            drillDownUnitTicketsByDepartment(label);
+                        }
+                    }
+                }
+            });
+            deptCanvas.chart = chart;
+        } else if (deptCanvas && deptEmpty) {
+            deptCanvas.style.display = 'none';
+            deptEmpty.style.display = 'flex';
+        }
+
         // Chart resize handler
         function resizeCharts() {
             document.querySelectorAll('.chart-wrapper canvas').forEach(canvas => {
@@ -1184,10 +1282,12 @@
         // Make functions global
         window.drillDownUnitTickets = drillDownUnitTickets;
         window.drillDownUnitTicketsByPriority = drillDownUnitTicketsByPriority;
+        window.drillDownUnitTicketsByDepartment = drillDownUnitTicketsByDepartment;
 
         console.log('✅ Unit Head Dashboard loaded with drill-down enabled');
         console.log('📊 Status data:', hasStatusData ? 'Available' : 'None');
         console.log('📊 Priority data:', hasPriorityData ? 'Available' : 'None');
+        console.log('📊 Department data:', hasDeptData ? 'Available' : 'None');
     });
 
     // ============================================================
@@ -1346,6 +1446,76 @@
         });
     }
 
+    // ============================================================
+    // DRILL DOWN BY DEPARTMENT (UPDATED - uses department parameter)
+    // ============================================================
+    function drillDownUnitTicketsByDepartment(departmentName) {
+        forceCleanupBackdrops();
+
+        const modalEl = document.getElementById('drillDownModal');
+        const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+
+        const modalBody = document.getElementById('drillDownModalBody');
+        const statusLabel = document.getElementById('drillDownStatusLabel');
+        const viewAllBtn = document.getElementById('drillDownViewAllBtn');
+
+        statusLabel.textContent = 'Department: ' + departmentName;
+        viewAllBtn.href = "{% url 'unit_head_all_tickets' %}?department=" + encodeURIComponent(departmentName);
+
+        modalBody.innerHTML = `
+            <div class="modal-loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading ${departmentName} tickets...</p>
+            </div>
+        `;
+
+        modal.show();
+
+        // Use department parameter to filter by department name
+        let url = "{% url 'unit_head_all_tickets' %}?ajax=1&department=" + encodeURIComponent(departmentName);
+        url += "&_=" + Date.now();
+
+        console.log('Fetching department tickets:', url);
+
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Server returned ' + response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Department data response:', data);
+            if (data.success === false) throw new Error(data.message || 'Server error');
+            if (data.html) {
+                modalBody.innerHTML = data.html;
+                if (data.count !== undefined) {
+                    statusLabel.textContent = 'Department: ' + departmentName + ` (${data.count})`;
+                }
+            } else {
+                modalBody.innerHTML = `
+                    <div class="text-center py-4" style="color: var(--text-muted);">
+                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
+                        <p>No tickets found for department: ${departmentName}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Department drill-down error:', error);
+            modalBody.innerHTML = `
+                <div class="text-center py-4" style="color: #EF4444;">
+                    <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
+                    <p><strong>Error loading tickets</strong></p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
+                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownUnitTicketsByDepartment('${departmentName}')">
+                        <i class="fa-solid fa-rotate me-1"></i>Retry
+                    </button>
+                </div>
+            `;
+        });
+    }
+
     function forceCleanupBackdrops() {
         document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
             backdrop.remove();
@@ -1355,4 +1525,4 @@
         document.body.style.paddingRight = '';
     }
 </script>
-{% endblock %}  
+{% endblock %}

@@ -76,7 +76,7 @@ def unit_head_required(view_func):
 
 
 # ============================================================
-# UNIT HEAD DASHBOARD
+# UNIT HEAD DASHBOARD - UPDATED WITH DEPARTMENT CHART
 # ============================================================
 @login_required
 @unit_head_required
@@ -84,7 +84,7 @@ def unit_head_dashboard(request):
     """
     Unit Head dashboard showing:
     - KPIs for tickets from their unit only
-    - Charts: Status, Priority
+    - Charts: Status, Priority, Department Distribution
     - Recent tickets from their unit
     """
     unit = get_unit_head_unit(request.user)
@@ -116,6 +116,18 @@ def unit_head_dashboard(request):
     prio_counts = list(unit_tickets.values('priority').annotate(count=Count('id')))
     chart_priority = {item['priority']: item['count'] for item in prio_counts}
     
+    # ============================================================
+    # NEW: Department Distribution Chart
+    # ============================================================
+    dept_counts = list(
+        unit_tickets
+        .filter(department__isnull=False)
+        .values('department_id', 'department__name')
+        .annotate(count=Count('id'))
+        .order_by('department__name')
+    )
+    chart_department = {item['department__name']: item['count'] for item in dept_counts}
+    
     # Monthly chart (last 12 months)
     twelve_months_ago = timezone.now() - timedelta(days=365)
     monthly_counts = {}
@@ -136,6 +148,7 @@ def unit_head_dashboard(request):
     charts_data = {
         'status': chart_status,
         'priority': chart_priority,
+        'department': chart_department,  # NEW
         'monthly': chart_monthly,
     }
     
@@ -156,7 +169,7 @@ def unit_head_dashboard(request):
 
 
 # ============================================================
-# UNIT HEAD - ALL TICKETS (VIEW ONLY) - WITH AGING SUPPORT
+# UNIT HEAD - ALL TICKETS (VIEW ONLY) - WITH DEPARTMENT FILTER
 # ============================================================
 @login_required
 @unit_head_required
@@ -191,6 +204,11 @@ def unit_head_all_tickets(request):
     main_error_type = request.GET.get('main_error_type', '').strip()
     sub_error_type = request.GET.get('sub_error_type', '').strip()
     
+    # ============================================================
+    # NEW: Department filter for drill-down
+    # ============================================================
+    department = request.GET.get('department', '').strip()
+    
     # Apply filters
     if status:
         tickets_qs = tickets_qs.filter(status=status)
@@ -202,6 +220,12 @@ def unit_head_all_tickets(request):
         tickets_qs = tickets_qs.filter(main_error_type=main_error_type)
     if sub_error_type and sub_error_type != '' and sub_error_type != 'All':
         tickets_qs = tickets_qs.filter(sub_error_type=sub_error_type)
+    
+    # ============================================================
+    # NEW: Apply department filter
+    # ============================================================
+    if department:
+        tickets_qs = tickets_qs.filter(department__name__icontains=department)
     
     if date_from:
         try:
@@ -223,12 +247,14 @@ def unit_head_all_tickets(request):
         except ValueError:
             pass
     
+    # Search filter (now also searches department name)
     if search:
         tickets_qs = tickets_qs.filter(
             Q(ticket_number__icontains=search) |
             Q(subject__icontains=search) |
             Q(employee_name__icontains=search) |
-            Q(employee_id__icontains=search)
+            Q(employee_id__icontains=search) |
+            Q(department__name__icontains=search)  # NEW: Search department name
         )
     
     # ============================================================
@@ -280,6 +306,7 @@ def unit_head_all_tickets(request):
         'search_query': search,
         'selected_main_error_type': main_error_type,
         'selected_sub_error_type': sub_error_type,
+        'selected_department': department,  # NEW
         'filter_query': filter_query.urlencode(),
     }
     return render(request, 'unit_head/all_tickets.html', context)
@@ -733,7 +760,7 @@ def unit_head_download_ticket_excel(request, ticket_id):
 
 
 # ============================================================
-# UNIT HEAD - REPORTS (VIEW ONLY - NO CHARTS)
+# UNIT HEAD - REPORTS (FIXED DEPARTMENT FILTER)
 # ============================================================
 @login_required
 @unit_head_required
@@ -741,7 +768,7 @@ def unit_head_reports(request):
     """
     Unit Head reports view - VIEW ONLY
     - Unit-specific reports with KPIs and data table only
-    - NO CHARTS (removed per requirement)
+    - NOW WITH DEPARTMENT FILTER (FIXED: handles both ID and name)
     """
     unit = get_unit_head_unit(request.user)
     unit_head = get_unit_head_object(request.user)
@@ -761,6 +788,22 @@ def unit_head_reports(request):
     date_to = request.GET.get('date_to', '').strip()
     search = request.GET.get('search', '').strip()
     
+    # ============================================================
+    # FIXED: Department filter - handles both ID and name
+    # ============================================================
+    department_param = request.GET.get('department', '').strip()
+    department_id = None
+    
+    if department_param:
+        try:
+            # Try to parse as integer (ID)
+            department_id = int(department_param)
+        except ValueError:
+            # If not a number, try to find by name
+            dept = Department.objects.filter(name__iexact=department_param, unit=unit).first()
+            if dept:
+                department_id = dept.id
+    
     tickets_qs = unit_tickets.all()
     
     if status:
@@ -771,6 +814,13 @@ def unit_head_reports(request):
         tickets_qs = tickets_qs.filter(main_error_type=main_error_type)
     if sub_error_type and sub_error_type != '' and sub_error_type != 'All':
         tickets_qs = tickets_qs.filter(sub_error_type=sub_error_type)
+    
+    # ============================================================
+    # Apply department filter using ID
+    # ============================================================
+    if department_id:
+        tickets_qs = tickets_qs.filter(department_id=department_id)
+    
     if date_from:
         try:
             date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
@@ -806,6 +856,23 @@ def unit_head_reports(request):
         'closed': unit_tickets.filter(status='Closed').count(),
         'critical': unit_tickets.filter(priority='Critical').count(),
     }
+    
+    # ============================================================
+    # Get department stats for the unit
+    # ============================================================
+    dept_stats = (
+        unit_tickets
+        .values('department_id', 'department__name')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    department_stats = [
+        {'id': item['department_id'], 'name': item['department__name'] or 'Unassigned', 'count': item['count']}
+        for item in dept_stats
+    ]
+    
+    # Get all departments in the unit for dropdown
+    all_departments = Department.objects.filter(unit=unit, is_active=True).order_by('name')
     
     # Pagination
     paginator = Paginator(tickets_qs, 15)
@@ -843,6 +910,12 @@ def unit_head_reports(request):
         'search_query': search,
         'total_filtered': tickets_qs.count(),
         'filter_query': filter_query.urlencode(),
+        # ============================================================
+        # Department data for template
+        # ============================================================
+        'department_stats': department_stats,
+        'all_departments': all_departments,
+        'selected_department': str(department_id) if department_id else '',  # Convert to string for template
     }
     return render(request, 'unit_head/reports.html', context)
 

@@ -1,64 +1,178 @@
 {% load static %}
-{% load ticket_filters %}  <!-- ADD THIS LINE -->
+{% load ticket_filters %}
 
-<div class="table-responsive">
-    <table class="table table-hover align-middle">
-        <thead>
-            <tr>
-                <th>Ticket #</th>
-                <th>Subject</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Created</th>
-                <th>Aging</th>  <!-- NEW COLUMN -->
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for ticket in tickets %}
-            <tr>
-                <td><strong>{{ ticket.ticket_number }}</strong></td>
-                <td>{{ ticket.subject|truncatechars:30 }}</td>
-                <td>
-                    <span class="badge-custom badge-status-{{ ticket.status|lower }}">
-                        {{ ticket.status }}
-                    </span>
-                </td>
-                <td>
-                    <span class="badge-priority {% if ticket.priority == 'Critical' %}badge-priority-critical{% elif ticket.priority == 'High' %}badge-priority-high{% elif ticket.priority == 'Medium' %}badge-priority-medium{% else %}badge-priority-low{% endif %}">
-                        {{ ticket.priority }}
-                    </span>
-                </td>
-                <td>
-                    <div style="font-size: 0.65rem; color: var(--text-secondary);">
-                        {{ ticket.created_at|date:"d M Y" }}
-                        <span style="display: block; font-size: 0.5rem; color: var(--text-muted);">{{ ticket.created_at|date:"H:i" }}</span>
-                    </div>
-                </td>
-                <td>
-                    <span class="aging-badge {{ ticket.created_at|aging_color }}" 
-                          title="Created: {{ ticket.created_at|date:'d-m-Y H:i:s' }}">
-                        {{ ticket.created_at|aging }}
-                    </span>
-                </td>
-                <td>
-                    <!-- ✅ FIXED: Use 'ticket_detail' for employee view -->
-                    <a href="{% url 'ticket_detail' ticket_id=ticket.id %}" class="btn-view btn-sm">
-                        <i class="fa-solid fa-eye"></i> View
-                    </a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7" class="text-center text-muted py-4">No tickets found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="uh-ticket-list-container">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle uh-ticket-list-table">
+            <thead>
+                <tr>
+                    <th>Ticket #</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Created</th>
+                    <th>Aging</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ticket in tickets %}
+                <tr>
+                    <td><strong>{{ ticket.ticket_number }}</strong></td>
+                    <td>{{ ticket.subject|truncatechars:30 }}</td>
+                    <td>
+                        <span class="badge-custom badge-status-{{ ticket.status|lower }}">
+                            {{ ticket.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge-priority {% if ticket.priority == 'Critical' %}badge-priority-critical{% elif ticket.priority == 'High' %}badge-priority-high{% elif ticket.priority == 'Medium' %}badge-priority-medium{% else %}badge-priority-low{% endif %}">
+                            {{ ticket.priority }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary);">
+                            {{ ticket.created_at|date:"d M Y" }}
+                            <span style="display: block; font-size: 0.5rem; color: var(--text-muted);">{{ ticket.created_at|date:"H:i" }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="aging-badge {{ ticket.created_at|aging_color }}" 
+                              title="Created: {{ ticket.created_at|date:'d-m-Y H:i:s' }}">
+                            {{ ticket.created_at|aging }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'ticket_detail' ticket_id=ticket.id %}" class="btn-view btn-sm">
+                            <i class="fa-solid fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No tickets found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <style>
-    /* Aging Badge Styles */
+    /* ============================================================
+       CONTAINER - LIGHT & DARK MODE
+    ============================================================ */
+    .uh-ticket-list-container {
+        padding: 0.5rem 0;
+        background: var(--bg-card);
+        border-radius: 8px;
+    }
+
+    /* ============================================================
+       DARK MODE - FULL CONTAINER BACKGROUND
+    ============================================================ */
+    [data-theme="dark"] .uh-ticket-list-container {
+        background: #1A1A2E;
+    }
+
+    /* ============================================================
+       TABLE RESPONSIVE WRAPPER
+    ============================================================ */
+    .table-responsive {
+        background: var(--bg-card);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    [data-theme="dark"] .table-responsive {
+        background: #1A1A2E;
+    }
+
+    /* ============================================================
+       TABLE STYLES - LIGHT MODE
+    ============================================================ */
+    .uh-ticket-list-table {
+        background: var(--bg-card);
+        color: var(--text-primary);
+        margin-bottom: 0;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .uh-ticket-list-table thead {
+        background: var(--bg-secondary);
+    }
+
+    .uh-ticket-list-table th {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border-color);
+        background: var(--bg-secondary);
+    }
+
+    .uh-ticket-list-table td {
+        padding: 0.5rem 0.75rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+
+    .uh-ticket-list-table tbody tr {
+        background: var(--bg-card);
+        transition: all 0.3s ease;
+    }
+
+    .uh-ticket-list-table tbody tr:hover {
+        background: rgba(255, 107, 0, 0.04) !important;
+    }
+
+    .uh-ticket-list-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* ============================================================
+       TABLE STYLES - DARK MODE
+    ============================================================ */
+    [data-theme="dark"] .uh-ticket-list-table {
+        background: #1A1A2E;
+    }
+
+    [data-theme="dark"] .uh-ticket-list-table thead {
+        background: #1E1E36;
+    }
+
+    [data-theme="dark"] .uh-ticket-list-table th {
+        color: #A8B8D8 !important;
+        border-color: rgba(255, 255, 255, 0.06);
+        background: #1E1E36;
+    }
+
+    [data-theme="dark"] .uh-ticket-list-table td {
+        color: #E8EDF5 !important;
+        border-color: rgba(255, 255, 255, 0.04);
+        background: #1A1A2E;
+    }
+
+    [data-theme="dark"] .uh-ticket-list-table tbody tr {
+        background: #1A1A2E;
+    }
+
+    [data-theme="dark"] .uh-ticket-list-table tbody tr:hover {
+        background: rgba(255, 107, 0, 0.08) !important;
+    }
+
+    [data-theme="dark"] .text-muted {
+        color: #6A7A9A !important;
+    }
+
+    /* ============================================================
+       AGING BADGE STYLES - LIGHT MODE
+    ============================================================ */
     .aging-badge {
         display: inline-block;
         padding: 0.08rem 0.4rem;
@@ -101,74 +215,42 @@
         border: 1px solid rgba(148, 163, 184, 0.15);
     }
 
+    /* ============================================================
+       AGING BADGE STYLES - DARK MODE (FIXED)
+    ============================================================ */
     [data-theme="dark"] .aging-fresh {
-        background: rgba(34, 197, 94, 0.15);
+        background: rgba(34, 197, 94, 0.2);
         color: #4ADE80;
-        border-color: rgba(34, 197, 94, 0.2);
+        border: 1px solid rgba(34, 197, 94, 0.25);
     }
 
     [data-theme="dark"] .aging-medium {
-        background: rgba(245, 158, 11, 0.15);
+        background: rgba(245, 158, 11, 0.2);
         color: #FBBF24;
-        border-color: rgba(245, 158, 11, 0.2);
+        border: 1px solid rgba(245, 158, 11, 0.25);
     }
 
     [data-theme="dark"] .aging-old {
-        background: rgba(239, 68, 68, 0.15);
+        background: rgba(239, 68, 68, 0.2);
         color: #F87171;
-        border-color: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.25);
     }
 
     [data-theme="dark"] .aging-very-old {
-        background: rgba(139, 92, 246, 0.15);
+        background: rgba(139, 92, 246, 0.2);
         color: #A78BFA;
-        border-color: rgba(139, 92, 246, 0.2);
+        border: 1px solid rgba(139, 92, 246, 0.25);
     }
 
-    .badge-priority-critical { 
-        background: #EF4444; 
-        color: white; 
-        padding: 0.15rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        display: inline-block;
+    [data-theme="dark"] .aging-unknown {
+        background: rgba(148, 163, 184, 0.2);
+        color: #94A3B8;
+        border: 1px solid rgba(148, 163, 184, 0.25);
     }
-    .badge-priority-high { 
-        background: #F59E0B; 
-        color: #1A1A2E;
-        padding: 0.15rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        display: inline-block;
-    }
-    .badge-priority-medium { 
-        background: #3B82F6; 
-        color: white;
-        padding: 0.15rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        display: inline-block;
-    }
-    .badge-priority-low { 
-        background: #94A3B8; 
-        color: white;
-        padding: 0.15rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        display: inline-block;
-    }
+
+    /* ============================================================
+       STATUS BADGES - LIGHT MODE
+    ============================================================ */
     .badge-custom {
         display: inline-block;
         padding: 0.15rem 0.5rem;
@@ -180,12 +262,99 @@
         transition: all 0.3s ease;
         white-space: nowrap;
     }
+
     .badge-status-open { background: #22C55E; color: white; }
     .badge-status-assigned { background: #3B82F6; color: white; }
     .badge-status-hold { background: #F59E0B; color: white; }
     .badge-status-escalated { background: #8B5CF6; color: white; }
     .badge-status-closed { background: #94A3B8; color: white; }
-    
+
+    /* ============================================================
+       STATUS BADGES - DARK MODE (FIXED)
+    ============================================================ */
+    [data-theme="dark"] .badge-status-open { 
+        background: rgba(34, 197, 94, 0.25); 
+        color: #4ADE80; 
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    [data-theme="dark"] .badge-status-assigned { 
+        background: rgba(59, 130, 246, 0.25); 
+        color: #60A5FA; 
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    [data-theme="dark"] .badge-status-hold { 
+        background: rgba(245, 158, 11, 0.25); 
+        color: #FBBF24; 
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    [data-theme="dark"] .badge-status-escalated { 
+        background: rgba(139, 92, 246, 0.25); 
+        color: #A78BFA; 
+        border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+    [data-theme="dark"] .badge-status-closed { 
+        background: rgba(148, 163, 184, 0.25); 
+        color: #94A3B8; 
+        border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    /* ============================================================
+       PRIORITY BADGES - LIGHT MODE
+    ============================================================ */
+    .badge-priority {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-priority-critical { 
+        background: #EF4444; 
+        color: white; 
+    }
+    .badge-priority-high { 
+        background: #F59E0B; 
+        color: #1A1A2E;
+    }
+    .badge-priority-medium { 
+        background: #3B82F6; 
+        color: white;
+    }
+    .badge-priority-low { 
+        background: #94A3B8; 
+        color: white;
+    }
+
+    /* ============================================================
+       PRIORITY BADGES - DARK MODE (FIXED)
+    ============================================================ */
+    [data-theme="dark"] .badge-priority-critical { 
+        background: rgba(239, 68, 68, 0.25); 
+        color: #F87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    [data-theme="dark"] .badge-priority-high { 
+        background: rgba(245, 158, 11, 0.25); 
+        color: #FBBF24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    [data-theme="dark"] .badge-priority-medium { 
+        background: rgba(59, 130, 246, 0.25); 
+        color: #60A5FA;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    [data-theme="dark"] .badge-priority-low { 
+        background: rgba(148, 163, 184, 0.25); 
+        color: #94A3B8;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    /* ============================================================
+       VIEW BUTTON - LIGHT & DARK MODE
+    ============================================================ */
     .btn-view {
         padding: 0.2rem 0.8rem !important;
         border-radius: 50px !important;
@@ -201,18 +370,37 @@
         box-shadow: 0 2px 8px rgba(255, 107, 0, 0.2) !important;
         transition: all 0.3s ease !important;
     }
+
     .btn-view:hover {
         transform: translateY(-2px) !important;
         box-shadow: 0 4px 20px rgba(255, 107, 0, 0.35) !important;
         color: #FFFFFF !important;
     }
 
-    /* Table hover effect */
+    /* ============================================================
+       TABLE HOVER EFFECT - LIGHT & DARK MODE
+    ============================================================ */
     .table-hover tbody tr:hover {
         background: rgba(255, 107, 0, 0.04) !important;
     }
 
     [data-theme="dark"] .table-hover tbody tr:hover {
         background: rgba(255, 107, 0, 0.08) !important;
+    }
+
+    /* ============================================================
+       SCROLLBAR
+    ============================================================ */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: #E55A00; }
+
+    [data-theme="dark"] ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    [data-theme="dark"] ::-webkit-scrollbar-thumb {
+        background: rgba(255, 107, 0, 0.5);
     }
 </style>

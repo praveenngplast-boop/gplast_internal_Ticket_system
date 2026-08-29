@@ -208,7 +208,7 @@ def escalated_aging_report(request):
 
 
 # ============================================================
-# REPORTS VIEW - Admin & Unit Head
+# REPORTS VIEW - Admin & Unit Head (UPDATED WITH DEPARTMENT)
 # ============================================================
 @login_required
 def reports(request):
@@ -416,13 +416,36 @@ def reports(request):
     # GET DATA FOR DROPDOWNS
     # ============================================================
     units = Unit.objects.filter(is_active=True).order_by('code')
-    departments = Department.objects.all().order_by('name')
+    
+    # ✅ Get departments for the unit (for Unit Head, only their unit's departments)
+    if user_is_unit_head and not user_is_admin:
+        all_departments = Department.objects.filter(unit=unit, is_active=True).order_by('name')
+    else:
+        all_departments = Department.objects.filter(is_active=True).order_by('name')
+    
     employees = EmployeeMaster.objects.all().order_by('employee_name')
     erp_ids = ERPHolderMapping.objects.filter(
         erp_user_id__isnull=False
     ).exclude(
         erp_user_id__exact=''
     ).values_list('erp_user_id', flat=True).distinct().order_by('erp_user_id')
+    
+    # ============================================================
+    # DEPARTMENT STATS FOR UNIT HEAD REPORT
+    # ============================================================
+    department_stats = []
+    if user_is_unit_head and not user_is_admin:
+        # Get department-wise ticket counts for the unit
+        dept_counts = (
+            Ticket.objects.filter(unit=unit)
+            .values('department_id', 'department__name')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        )
+        department_stats = [
+            {'name': item['department__name'] or 'Unassigned', 'count': item['count']}
+            for item in dept_counts
+        ]
     
     # ============================================================
     # EXPORT TO EXCEL
@@ -549,7 +572,7 @@ def reports(request):
         'escalated_count': escalated_count,
         'closed_count': closed_count,
         'units': units,
-        'departments': departments,
+        'departments': all_departments,
         'employees': employees,
         'erp_ids': erp_ids,
         'category': category,
@@ -579,6 +602,10 @@ def reports(request):
         'is_unit_head': user_is_unit_head,
         'is_admin': user_is_admin,
         'unit': get_unit_head_unit(request.user) if user_is_unit_head else None,
+        # NEW: Department stats for Unit Head
+        'department_stats': department_stats,
+        'all_departments': all_departments,
+        'selected_department_id': dept_id,
     }
     return render(request, 'admin_panel/reports.html', context)
 
