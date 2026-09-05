@@ -20,11 +20,12 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from datetime import datetime
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+import logging
 
 from tickets.models import (
     Unit, Department, AdminContact, AdminNotificationEmail, 
@@ -39,6 +40,8 @@ from .utils import (
     _get_employee_directory_data,
     _get_credentials_data,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================
@@ -122,7 +125,7 @@ def settings_employees_page(request):
 
 
 # ============================================================
-# DEPARTMENT CREDENTIALS - ✅ FIXED
+# DEPARTMENT CREDENTIALS
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='tickets:login')
@@ -131,12 +134,10 @@ def settings_credentials_page(request):
     Manage department credentials
     URL: /admin/settings/credentials/
     """
-    # ✅ FIX: Get all active units
     units = Unit.objects.filter(is_active=True).order_by('code')
     credentials_by_unit = []
 
     for unit in units:
-        # Get credentials for this unit with department relation
         creds = DepartmentCredential.objects.filter(
             unit=unit
         ).select_related('department', 'unit').order_by('department__name')
@@ -147,20 +148,19 @@ def settings_credentials_page(request):
                 'credentials': creds
             })
 
-    # Get all credentials for the table (optional - for backward compatibility)
     all_credentials = DepartmentCredential.objects.all().select_related('unit', 'department').order_by('unit__code', 'department__name')
 
     context = {
         'all_units': units,
         'credentials': all_credentials,
-        'credentials_by_unit': credentials_by_unit,  # ✅ This is what the template expects
+        'credentials_by_unit': credentials_by_unit,
         'employee_users': User.objects.filter(is_staff=False, is_active=True).order_by('username'),
     }
     return render(request, 'admin_panel/credentials.html', context)
 
 
 # ============================================================
-# DEPARTMENT-WISE EMPLOYEE VIEW - ✅ FIXED
+# DEPARTMENT-WISE EMPLOYEE VIEW
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='tickets:login')
@@ -169,8 +169,10 @@ def settings_dept_employees(request):
     View employees organized by department (tree view)
     URL: /admin/settings/dept-employees/
     """
-    # ✅ Build the data structure directly
+    # Get all active units
     units = Unit.objects.filter(is_active=True).order_by('code')
+    
+    # Build the data structure for the tree view
     credentials_by_unit = []
     
     for unit in units:
@@ -183,8 +185,15 @@ def settings_dept_employees(request):
         }
         
         for dept in departments:
+            # Get employee count for this department (for badge)
+            employee_count = EmployeeMaster.objects.filter(
+                department=dept,
+                is_active=True
+            ).count()
+            
             unit_data['credentials'].append({
-                'department': dept
+                'department': dept,
+                'employee_count': employee_count
             })
         
         credentials_by_unit.append(unit_data)
@@ -197,7 +206,7 @@ def settings_dept_employees(request):
 
 
 # ============================================================
-# UNIT HEAD MANAGEMENT - NEW
+# UNIT HEAD MANAGEMENT
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='tickets:login')
@@ -206,20 +215,16 @@ def settings_unit_heads_page(request):
     Manage Unit Heads - View all unit heads with their user accounts
     URL: /custom-admin/settings/unit-heads/
     """
-    # Get all unit heads with related user and unit data
     unit_heads = UnitHead.objects.all().select_related('user', 'unit').order_by('unit__code')
     
-    # Get available units that don't have a unit head
     available_units = Unit.objects.filter(
         is_active=True
     ).exclude(
         id__in=UnitHead.objects.filter(is_active=True).values_list('unit_id', flat=True)
     ).order_by('code')
     
-    # Get all active units for dropdown
     all_units = Unit.objects.filter(is_active=True).order_by('code')
     
-    # Get users who are not already unit heads (for dropdown)
     existing_unit_head_user_ids = UnitHead.objects.values_list('user_id', flat=True)
     available_users = User.objects.filter(
         is_active=True,
@@ -250,7 +255,6 @@ def settings_audit_log(request):
     """
     logs = SettingsAuditLog.objects.all()
     
-    # Filters
     action_type = request.GET.get('action', '')
     setting_type = request.GET.get('setting_type', '')
     performed_by = request.GET.get('performed_by', '')
@@ -283,12 +287,10 @@ def settings_audit_log(request):
             Q(performed_by_name__icontains=search)
         )
     
-    # Pagination - 10 logs per page
     paginator = Paginator(logs, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Get unique admins for filter dropdown
     admins = SettingsAuditLog.objects.values_list('performed_by_name', flat=True).distinct()
     
     context = {
@@ -318,7 +320,6 @@ def download_audit_log_excel(request):
     """
     logs = SettingsAuditLog.objects.all()
     
-    # Apply filters (same as settings_audit_log)
     action_type = request.GET.get('action', '')
     setting_type = request.GET.get('setting_type', '')
     performed_by = request.GET.get('performed_by', '')
@@ -351,7 +352,6 @@ def download_audit_log_excel(request):
             Q(performed_by_name__icontains=search)
         )
     
-    # Create Excel response
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
@@ -361,7 +361,6 @@ def download_audit_log_excel(request):
     ws = wb.active
     ws.title = "Audit Log"
     
-    # ========== STYLES ==========
     title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
     header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
     data_font = Font(name='Calibri', size=10)
@@ -374,17 +373,13 @@ def download_audit_log_excel(request):
         bottom=Side(style='thin', color='D0D0D0')
     )
     
-    # Get the current timezone from Django settings
     current_tz = timezone.get_current_timezone()
-    
-    # Convert current time to local timezone for header
     now_utc = timezone.now()
     if timezone.is_naive(now_utc):
         now_utc = timezone.make_aware(now_utc, timezone.utc)
     now_local = now_utc.astimezone(current_tz)
     report_time = now_local.strftime('%d-%b-%Y %I:%M:%S %p')
     
-    # ========== TITLE WITH REPORT TIME AND ENTRIES COUNT ==========
     ws.merge_cells('A1:K1')
     ws['A1'] = f"GPLAST SETTINGS AUDIT LOG - Generated: {report_time}  |  Total Entries: {logs.count()}"
     ws['A1'].font = title_font
@@ -392,7 +387,6 @@ def download_audit_log_excel(request):
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 45
     
-    # ========== HEADERS ==========
     headers = ['ID', 'Action', 'Setting Type', 'Setting Name', 'Old Value', 'New Value', 
                'Change Summary', 'Performed By', 'IP Address', 'Remarks', 'Created At']
     for col_idx, header in enumerate(headers, 1):
@@ -404,7 +398,6 @@ def download_audit_log_excel(request):
         cell.border = thin_border
     ws.row_dimensions[3].height = 30
     
-    # ========== DATA ==========
     row_idx = 4
     
     for log in logs:
@@ -448,7 +441,6 @@ def download_audit_log_excel(request):
         ws.cell(row=row_idx, column=10).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         ws.cell(row=row_idx, column=10).border = thin_border
         
-        # ========== Convert UTC to Local Timezone ==========
         if log.created_at:
             if timezone.is_naive(log.created_at):
                 utc_time = timezone.make_aware(log.created_at, timezone.utc)
@@ -465,19 +457,9 @@ def download_audit_log_excel(request):
         
         row_idx += 1
     
-    # ========== SET COLUMN WIDTHS ==========
     column_widths = {
-        'A': 10,   # ID
-        'B': 20,   # Action
-        'C': 20,   # Setting Type
-        'D': 30,   # Setting Name
-        'E': 35,   # Old Value
-        'F': 35,   # New Value
-        'G': 40,   # Change Summary
-        'H': 22,   # Performed By
-        'I': 18,   # IP Address
-        'J': 35,   # Remarks
-        'K': 25,   # Created At
+        'A': 10, 'B': 20, 'C': 20, 'D': 30, 'E': 35,
+        'F': 35, 'G': 40, 'H': 22, 'I': 18, 'J': 35, 'K': 25
     }
     
     for col_letter, width in column_widths.items():
@@ -515,16 +497,9 @@ def settings_screen_mapping_page(request):
     Screen Mapping Management Page
     URL: /custom-admin/settings/screen-mapping/
     """
-    # Get all screen mappings with related screen data
     mappings = ScreenMapping.objects.all().select_related('screen').order_by('erp_user_id', 'screen__screen_name')
-    
-    # Get all active screens for dropdown
     screens = ScreenMaster.objects.filter(is_active=True).order_by('screen_name')
-    
-    # Get all unique ERP User IDs from mappings for dropdown
     erp_user_ids = ScreenMapping.objects.values_list('erp_user_id', flat=True).distinct().order_by('erp_user_id')
-    
-    # Get all ERP User IDs from ERPHolderMapping for reference
     all_erp_ids = ERPHolderMapping.objects.values_list('erp_user_id', flat=True).distinct().order_by('erp_user_id')
     
     context = {
@@ -535,3 +510,54 @@ def settings_screen_mapping_page(request):
         'total_mappings': mappings.count(),
     }
     return render(request, 'admin_panel/settings_screen_mapping.html', context)
+
+
+# ============================================================
+# AJAX: GET EMPLOYEES BY DEPARTMENT - ✅ FIXED
+# ============================================================
+@login_required
+def get_employees_by_department(request):
+    """
+    AJAX endpoint to get employees by department ID
+    URL: /ajax/get-employees-by-department/
+    """
+    department_id = request.GET.get('department_id')
+    
+    if not department_id:
+        return JsonResponse({
+            'success': False,
+            'message': 'Department ID is required',
+            'employees': [],
+            'count': 0
+        })
+    
+    try:
+        # Get employees for the department
+        employees = EmployeeMaster.objects.filter(
+            department_id=department_id,
+            is_active=True
+        ).values(
+            'id',
+            'employee_id',
+            'employee_name',
+            'mobile',
+            'email',
+            'is_active'
+        ).order_by('employee_name')
+        
+        employee_list = list(employees)
+        
+        return JsonResponse({
+            'success': True,
+            'employees': employee_list,
+            'count': len(employee_list)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching employees by department: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': str(e),
+            'employees': [],
+            'count': 0
+        })

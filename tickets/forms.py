@@ -57,24 +57,17 @@ class TicketForm(forms.ModelForm):
         ]
         self.fields['error_type'].choices = EMPLOYEE_ERROR_TYPE_CHOICES
 
-    # ============================================================
-    # ✅ FIXED: clean_mobile - Handles None and empty values
-    # ============================================================
     def clean_mobile(self):
         mobile = self.cleaned_data.get('mobile')
         
-        # Allow None or empty string
         if mobile is None or mobile == '':
             return None
         
-        # Remove whitespace
         mobile = mobile.strip()
         
-        # If empty after stripping, return None
         if mobile == '':
             return None
         
-        # Now safe to validate
         if not mobile.isdigit():
             raise ValidationError("Mobile number must contain only digits.")
         
@@ -83,24 +76,17 @@ class TicketForm(forms.ModelForm):
         
         return mobile
 
-    # ============================================================
-    # ✅ FIXED: clean_email - Handles None and empty values
-    # ============================================================
     def clean_email(self):
         email = self.cleaned_data.get('email')
         
-        # Allow None or empty string
         if email is None or email == '':
             return None
         
-        # Remove whitespace
         email = email.strip()
         
-        # If empty after stripping, return None
         if email == '':
             return None
         
-        # Validate email format
         if '@' not in email or '.' not in email:
             raise ValidationError("Please enter a valid email address.")
         
@@ -235,12 +221,10 @@ class UnitHeadForm(forms.ModelForm):
         
         self.fields['unit'].queryset = Unit.objects.filter(is_active=True)
         
-        # If editing, password is not required
         if self.is_edit:
             self.fields['password'].required = False
             self.fields['password'].help_text = 'Leave blank to keep current password'
             self.fields['confirm_password'].required = False
-            # Auto-fill username from user object if exists
             if self.instance and self.instance.pk and self.instance.user:
                 self.initial['username'] = self.instance.user.username
 
@@ -253,7 +237,6 @@ class UnitHeadForm(forms.ModelForm):
         if len(username) < 3:
             raise ValidationError("Username must be at least 3 characters.")
         
-        # Check for existing user (excluding current instance if editing)
         existing_user = User.objects.filter(username=username)
         if self.instance and self.instance.pk and self.instance.user:
             existing_user = existing_user.exclude(pk=self.instance.user.pk)
@@ -266,11 +249,9 @@ class UnitHeadForm(forms.ModelForm):
     def clean_password(self):
         password = self.cleaned_data.get('password')
         
-        # Password is not required when editing
         if self.is_edit and not password:
             return password
         
-        # Password is required when creating new
         if not self.is_edit and not password:
             raise ValidationError("Password is required.")
         
@@ -283,7 +264,6 @@ class UnitHeadForm(forms.ModelForm):
         password = self.cleaned_data.get('password')
         confirm_password = self.cleaned_data.get('confirm_password')
         
-        # Skip validation if both are empty (editing case)
         if self.is_edit and not password and not confirm_password:
             return confirm_password
         
@@ -301,12 +281,10 @@ class UnitHeadForm(forms.ModelForm):
         if '@' not in email or '.' not in email:
             raise ValidationError("Please enter a valid email address.")
         
-        # Check for existing email (excluding current instance)
         existing = UnitHead.objects.filter(email=email)
         if self.instance and self.instance.pk:
             existing = existing.exclude(pk=self.instance.pk)
         
-        # Also check if email is used by another user
         if self.instance and self.instance.pk and self.instance.user:
             existing_user = User.objects.filter(email=email).exclude(pk=self.instance.user.pk)
         else:
@@ -324,7 +302,6 @@ class UnitHeadForm(forms.ModelForm):
         if not unit:
             raise ValidationError({"unit": "Please select a unit for this Unit Head."})
         
-        # Check if unit already has a head
         existing = UnitHead.objects.filter(unit=unit)
         if self.instance and self.instance.pk:
             existing = existing.exclude(pk=self.instance.pk)
@@ -344,26 +321,22 @@ class UnitHeadForm(forms.ModelForm):
         email = self.cleaned_data.get('email')
         name = self.cleaned_data.get('name')
         
-        # Check if user exists (editing case)
         user = None
         if self.instance and self.instance.pk:
             user = self.instance.user
         
         if user:
-            # Update existing user
             user.username = username
             user.email = email
             user.first_name = name.split()[0] if name else ''
             user.last_name = ' '.join(name.split()[1:]) if name and len(name.split()) > 1 else ''
             
-            # Update password if provided
             if password:
                 user.set_password(password)
             
             if commit:
                 user.save()
         else:
-            # Create new user
             user = User.objects.create_user(
                 username=username,
                 email=email,
@@ -371,13 +344,12 @@ class UnitHeadForm(forms.ModelForm):
             )
             user.first_name = name.split()[0] if name else ''
             user.last_name = ' '.join(name.split()[1:]) if name and len(name.split()) > 1 else ''
-            user.is_staff = False  # Unit Heads are NOT admins
+            user.is_staff = False
             user.is_superuser = False
             
             if commit:
                 user.save()
         
-        # Link user to unit_head
         unit_head.user = user
         
         if commit:
@@ -478,18 +450,14 @@ class DepartmentForm(forms.ModelForm):
         unit = cleaned_data.get('unit')
         name = cleaned_data.get('name')
         
-        # ✅ Validate duplicate department name in the same unit (case-insensitive)
         if unit and name:
-            # Trim whitespace
             name = name.strip()
             
-            # Check for existing department with same name in the same unit
             existing = Department.objects.filter(
                 unit=unit,
                 name__iexact=name
             )
             
-            # If editing, exclude the current instance
             if self.instance and self.instance.pk:
                 existing = existing.exclude(pk=self.instance.pk)
             
@@ -553,7 +521,7 @@ class DepartmentCredentialForm(forms.ModelForm):
 
 
 # ============================================================
-# CLOSE TICKET FORM - Used for admin closing tickets
+# CLOSE TICKET FORM - FIXED
 # ============================================================
 class CloseTicketForm(forms.Form):
     """
@@ -589,38 +557,37 @@ class CloseTicketForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Set sub_error_type choices based on main_error_type if provided
-        main_error = self.data.get('main_error_type') if self.data else None
+        # ✅ Define sub-error choices for each main error type
+        self.roadmap_sub_errors = [
+            ('', '-- Select Sub Error Type --'),
+            ('Database Error', 'Database Error'),
+            ('Logic / Functional Error', 'Logic / Functional Error'),
+            ('Application Error', 'Application Error'),
+            ('Calculation Error', 'Calculation Error'),
+            ('Report / Print Error', 'Report / Print Error'),
+            ('Workflow / Approval Error', 'Workflow / Approval Error'),
+            ('Integration / API Error', 'Integration / API Error'),
+            ('Barcode Error', 'Barcode Error'),
+            ('Performance Error', 'Performance Error'),
+            ('Access / Permission Error', 'Access / Permission Error'),
+            ('Master Data / Configuration Error', 'Master Data / Configuration Error'),
+            ('Other ERP Error', 'Other ERP Error'),
+        ]
         
-        if main_error == 'Roadmap Error':
-            self.fields['sub_error_type'].choices = [
-                ('', '-- Select Sub Error Type --'),
-                ('Database Error', 'Database Error'),
-                ('Logic / Functional Error', 'Logic / Functional Error'),
-                ('Application Error', 'Application Error'),
-                ('Calculation Error', 'Calculation Error'),
-                ('Report / Print Error', 'Report / Print Error'),
-                ('Workflow / Approval Error', 'Workflow / Approval Error'),
-                ('Integration / API Error', 'Integration / API Error'),
-                ('Barcode Error', 'Barcode Error'),
-                ('Performance Error', 'Performance Error'),
-                ('Access / Permission Error', 'Access / Permission Error'),
-                ('Master Data / Configuration Error', 'Master Data / Configuration Error'),
-                ('Other ERP Error', 'Other ERP Error'),
-            ]
-            self.fields['sub_error_type'].required = True
-        elif main_error == 'GPL Error':
-            self.fields['sub_error_type'].choices = [
-                ('', '-- Select Sub Error Type --'),
-                ('User / Data Entry Error', 'User / Data Entry Error'),
-                ('Process / Procedure Error', 'Process / Procedure Error'),
-                ('Master Data Error', 'Master Data Error'),
-                ('Other GPL Error', 'Other GPL Error'),
-            ]
-            self.fields['sub_error_type'].required = True
-        else:
-            self.fields['sub_error_type'].choices = [('', '-- Select Sub Error Type --')]
-            self.fields['sub_error_type'].required = False
+        self.gpl_sub_errors = [
+            ('', '-- Select Sub Error Type --'),
+            ('User / Data Entry Error', 'User / Data Entry Error'),
+            ('Process / Procedure Error', 'Process / Procedure Error'),
+            ('Master Data Error', 'Master Data Error'),
+            ('Other GPL Error', 'Other GPL Error'),
+        ]
+        
+        # ✅ Set initial sub_error_type choices
+        self.fields['sub_error_type'].choices = [('', '-- Select Sub Error Type --')]
+        
+        # ✅ If data is bound and main_error_type is set, update sub_error_type choices
+        if self.data and self.data.get('main_error_type'):
+            self._update_sub_error_choices(self.data.get('main_error_type'))
         
         # Add widget classes
         for name, field in self.fields.items():
@@ -630,15 +597,31 @@ class CloseTicketForm(forms.Form):
                 if isinstance(field.widget, forms.Select):
                     field.widget.attrs.update({'class': 'form-select'})
     
+    def _update_sub_error_choices(self, main_error_type):
+        """Update sub_error_type choices based on main_error_type"""
+        if main_error_type == 'Roadmap Error':
+            self.fields['sub_error_type'].choices = self.roadmap_sub_errors
+            self.fields['sub_error_type'].required = True
+        elif main_error_type == 'GPL Error':
+            self.fields['sub_error_type'].choices = self.gpl_sub_errors
+            self.fields['sub_error_type'].required = True
+        else:
+            self.fields['sub_error_type'].choices = [('', '-- Select Sub Error Type --')]
+            self.fields['sub_error_type'].required = False
+    
     def clean(self):
         cleaned_data = super().clean()
         main_error = cleaned_data.get('main_error_type')
         sub_error = cleaned_data.get('sub_error_type')
         closing_remarks = cleaned_data.get('closing_remarks')
         
+        # ✅ Update sub_error_type choices based on main_error_type
+        if main_error:
+            self._update_sub_error_choices(main_error)
+        
         # Validate sub_error_type when main_error_type is selected
         if main_error and main_error in ['Roadmap Error', 'GPL Error']:
-            if not sub_error:
+            if not sub_error or sub_error == '':
                 raise ValidationError({
                     'sub_error_type': 'Please select a sub-error type for the selected error category.'
                 })
@@ -674,10 +657,8 @@ class ERPHolderMappingForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Only show active employees
         self.fields['employee'].queryset = EmployeeMaster.objects.filter(is_active=True).order_by('employee_id')
         
-        # Add help text
         self.fields['erp_user_id'].help_text = "Enter the ERP User ID (e.g., 0001, 0002)"
         self.fields['employee'].help_text = "Select the employee to map to this ERP User ID"
 
@@ -693,7 +674,6 @@ class ERPHolderMappingForm(forms.ModelForm):
         employee = cleaned_data.get('employee')
         
         if erp_user_id and employee:
-            # Check if mapping already exists (for update)
             instance = self.instance
             exists = ERPHolderMapping.objects.filter(
                 erp_user_id=erp_user_id,

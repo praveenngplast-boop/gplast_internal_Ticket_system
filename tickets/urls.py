@@ -39,7 +39,7 @@ urlpatterns = [
     path('create-ticket/', views.create_ticket, name='create_ticket'),
     path('my-tickets/', views.my_tickets, name='my_tickets'),
     path('ticket/<int:ticket_id>/', views.ticket_detail, name='ticket_detail'),
-    path('all-tickets/', views.all_tickets, name='all_tickets'),
+    path('all-tickets/', views.employee_all_tickets, name='employee_all_tickets'),
     path('ticket/<int:ticket_id>/update/', views.update_ticket_status, name='update_ticket_status'),
     path('ticket/<int:ticket_id>/download/', views.download_individual_ticket_excel, name='employee_download_ticket_excel'),
     path('export/closed-30-days/', views.employee_export_closed_tickets_30_days, name='employee_export_closed_30_days'),
@@ -178,4 +178,9 @@ urlpatterns = [
     path('ajax/get-employee/', views.ajax_get_employee_details, name='ajax_get_employee_details'),
     path('ajax/get-employees-by-department/', views.get_employees_by_department, name='get_employees_by_department'),
     path('ajax/get-screens-for-erp/', views.ajax_get_screens_for_erp, name='ajax_get_screens_for_erp'),
+    
+    # ============================================================
+    # ✅ NEW: TARGET DATE URL (Update target date for assigned tickets)
+    # ============================================================
+    path('ticket/<int:ticket_id>/update-target-date/', views.update_target_date, name='update_target_date'),
 ]

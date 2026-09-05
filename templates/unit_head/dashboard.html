@@ -1,760 +1,20 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load ticket_filters %}
+
 {% block title %}Unit Head Dashboard - {{ unit_head_unit_code }} - GPLAST{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-    :root {
-        --chart-text-color: #1A2A6C;
-        --chart-grid-color: rgba(0, 0, 0, 0.06);
-        --chart-border-color: #E8EDF5;
-        --card-bg: #FFFFFF;
-        --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
-        --shadow-md: 0 4px 24px rgba(0,0,0,0.10);
-        --brand-orange: #FF6B00;
-        --brand-gradient: linear-gradient(135deg, #FF6B00, #FF8C38);
-        --status-open: #22C55E;
-        --status-assigned: #3B82F6;
-        --status-hold: #F59E0B;
-        --status-escalated: #8B5CF6;
-        --status-closed: #94A3B8;
-        --status-critical: #EF4444;
-        --text-primary: #1A2A6C;
-        --text-secondary: #4A5A7A;
-        --text-muted: #8A9AB8;
-        --bg-card: #FFFFFF;
-        --bg-secondary: #F8FAFF;
-        --border-color: #E8EDF5;
-        --border-light: #F0F4FF;
-        --error-roadmap: #8B5CF6;
-        --error-gpl: #10B981;
-        --error-other: #94A3B8;
-    }
-
-    [data-theme="dark"] {
-        --chart-text-color: #E8EDF5;
-        --chart-grid-color: rgba(255, 255, 255, 0.06);
-        --chart-border-color: rgba(255, 255, 255, 0.08);
-        --card-bg: #1A1A2E;
-        --shadow-sm: 0 2px 12px rgba(0,0,0,0.3);
-        --shadow-md: 0 4px 24px rgba(0,0,0,0.4);
-        --text-primary: #E8EDF5;
-        --text-secondary: #A8B8D8;
-        --text-muted: #6A7A9A;
-        --bg-card: #1A1A2E;
-        --bg-secondary: rgba(255, 255, 255, 0.03);
-        --border-color: rgba(255, 255, 255, 0.08);
-        --border-light: rgba(255, 255, 255, 0.04);
-        --error-roadmap: #A78BFA;
-        --error-gpl: #34D399;
-        --error-other: rgba(255,255,255,0.3);
-    }
-
-    /* Aging Badge Styles */
-    .aging-badge {
-        display: inline-block;
-        padding: 0.08rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.55rem;
-        font-weight: 600;
-        white-space: nowrap;
-        font-family: 'Inter', sans-serif;
-        min-width: 45px;
-        text-align: center;
-    }
-
-    .aging-fresh {
-        background: rgba(34, 197, 94, 0.12);
-        color: #22C55E;
-        border: 1px solid rgba(34, 197, 94, 0.15);
-    }
-
-    .aging-medium {
-        background: rgba(245, 158, 11, 0.12);
-        color: #F59E0B;
-        border: 1px solid rgba(245, 158, 11, 0.15);
-    }
-
-    .aging-old {
-        background: rgba(239, 68, 68, 0.12);
-        color: #EF4444;
-        border: 1px solid rgba(239, 68, 68, 0.15);
-    }
-
-    .aging-very-old {
-        background: rgba(139, 92, 246, 0.12);
-        color: #8B5CF6;
-        border: 1px solid rgba(139, 92, 246, 0.15);
-    }
-
-    .aging-unknown {
-        background: rgba(148, 163, 184, 0.12);
-        color: #94A3B8;
-        border: 1px solid rgba(148, 163, 184, 0.15);
-    }
-
-    [data-theme="dark"] .aging-fresh {
-        background: rgba(34, 197, 94, 0.15);
-        color: #4ADE80;
-        border-color: rgba(34, 197, 94, 0.2);
-    }
-
-    [data-theme="dark"] .aging-medium {
-        background: rgba(245, 158, 11, 0.15);
-        color: #FBBF24;
-        border-color: rgba(245, 158, 11, 0.2);
-    }
-
-    [data-theme="dark"] .aging-old {
-        background: rgba(239, 68, 68, 0.15);
-        color: #F87171;
-        border-color: rgba(239, 68, 68, 0.2);
-    }
-
-    [data-theme="dark"] .aging-very-old {
-        background: rgba(139, 92, 246, 0.15);
-        color: #A78BFA;
-        border-color: rgba(139, 92, 246, 0.2);
-    }
-
-    .dashboard-container {
-        animation: fadeInUp 0.6s ease;
-        padding: 0 0.5rem;
-        max-width: 1400px;
-        margin: 0 auto;
-    }
-
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .text-primary { color: var(--brand-orange) !important; }
-    .text-muted { color: var(--text-muted) !important; }
-    .text-success { color: var(--status-open) !important; }
-    .text-danger { color: var(--status-critical) !important; }
-
-    /* Header */
-    .dashboard-header {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease;
-    }
-
-    .dashboard-header:hover {
-        box-shadow: var(--shadow-md);
-    }
-
-    .header-title {
-        font-size: clamp(1.2rem, 2.5vw, 1.8rem);
-        font-weight: 700;
-        color: var(--text-primary);
-        font-family: 'Fraunces', serif;
-    }
-
-    .header-subtitle {
-        font-size: clamp(0.75rem, 1.5vw, 0.9rem);
-        color: var(--text-secondary);
-    }
-
-    .unit-badge {
-        display: inline-block;
-        background: rgba(139, 92, 246, 0.08);
-        border: 1px solid rgba(139, 92, 246, 0.15);
-        border-radius: 50px;
-        padding: 0.2rem 0.8rem;
-        font-size: 0.7rem;
-        color: #8B5CF6;
-        font-weight: 600;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .unit-badge i { margin-right: 0.4rem; color: #8B5CF6; }
-
-    /* Buttons */
-    .btn-primary-custom {
-        background: var(--brand-gradient) !important;
-        border: none !important;
-        color: #FFFFFF !important;
-        transition: all 0.4s ease;
-        border-radius: 50px !important;
-        padding: 0.5rem 1.5rem !important;
-        font-size: 0.9rem !important;
-        font-weight: 500 !important;
-        font-family: 'Inter', sans-serif;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none !important;
-        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.25) !important;
-    }
-
-    .btn-primary-custom:hover {
-        transform: translateY(-3px) !important;
-        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.35) !important;
-        color: #FFFFFF !important;
-    }
-
-    .btn-outline-custom {
-        background: transparent !important;
-        border: 2px solid var(--brand-orange) !important;
-        color: var(--brand-orange) !important;
-        border-radius: 50px !important;
-        padding: 0.3rem 1rem !important;
-        font-size: 0.75rem !important;
-        font-weight: 500 !important;
-        transition: all 0.4s ease;
-        font-family: 'Inter', sans-serif;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        text-decoration: none !important;
-    }
-
-    .btn-outline-custom:hover {
-        background: var(--brand-gradient) !important;
-        color: #FFFFFF !important;
-        border-color: transparent !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.25) !important;
-    }
-
-    .btn-outline-custom:hover i { color: #FFFFFF !important; }
-    .btn-outline-custom i { color: var(--brand-orange) !important; transition: color 0.3s ease; }
-
-    .btn-view {
-        padding: 0.15rem 0.6rem !important;
-        border-radius: 50px !important;
-        font-size: 0.55rem !important;
-        font-weight: 600 !important;
-        transition: all 0.4s ease !important;
-        background: var(--brand-gradient) !important;
-        color: #FFFFFF !important;
-        border: 2px solid transparent !important;
-        white-space: nowrap !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-        text-decoration: none !important;
-        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.2) !important;
-        min-width: 50px !important;
-        justify-content: center !important;
-    }
-
-    .btn-view:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.35) !important;
-        color: #FFFFFF !important;
-    }
-
-    /* KPI Cards */
-    .kpi-card {
-        background: var(--bg-card) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 14px !important;
-        transition: all 0.4s ease;
-        position: relative;
-        overflow: hidden;
-        cursor: pointer;
-        padding: 0.75rem 1rem !important;
-        color: var(--text-primary) !important;
-        box-shadow: var(--shadow-sm);
-        height: 100%;
-        min-height: 80px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .kpi-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--brand-gradient);
-        opacity: 0;
-        transition: all 0.4s ease;
-    }
-
-    .kpi-card:hover::before { opacity: 1; }
-    .kpi-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-md);
-        border-color: rgba(255, 107, 0, 0.2) !important;
-    }
-    .kpi-card:active { transform: scale(0.95) !important; }
-
-    .kpi-value {
-        font-size: clamp(1.3rem, 2.2vw, 1.8rem);
-        font-weight: 700;
-        line-height: 1.2;
-        transition: all 0.3s ease;
-        color: var(--text-primary) !important;
-    }
-
-    .kpi-card:hover .kpi-value { transform: scale(1.05); }
-
-    .kpi-label {
-        font-size: 0.6rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-secondary);
-        font-weight: 500;
-        margin-top: 0.15rem;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .kpi-label i { color: var(--text-muted) !important; }
-
-    .kpi-open .kpi-value { color: var(--status-open) !important; }
-    .kpi-assigned .kpi-value { color: var(--status-assigned) !important; }
-    .kpi-hold .kpi-value { color: var(--status-hold) !important; }
-    .kpi-escalated .kpi-value { color: var(--status-escalated) !important; }
-    .kpi-closed .kpi-value { color: var(--status-closed) !important; }
-    .kpi-critical .kpi-value { color: var(--status-critical) !important; }
-    .kpi-total .kpi-value { color: var(--text-primary) !important; }
-
-    .kpi-critical {
-        border-color: rgba(239, 68, 68, 0.2) !important;
-        animation: criticalPulse 3s ease-in-out infinite;
-    }
-
-    @keyframes criticalPulse {
-        0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
-        50% { border-color: rgba(239, 68, 68, 0.4); }
-    }
-
-    .click-hint {
-        position: absolute;
-        bottom: 6px;
-        right: 10px;
-        font-size: 0.45rem;
-        color: var(--text-muted);
-        opacity: 0;
-        transition: all 0.3s ease;
-    }
-
-    .kpi-card:hover .click-hint { opacity: 0.6; }
-
-    .kpi-filter-badge {
-        position: absolute;
-        top: 6px;
-        right: 10px;
-        font-size: 0.45rem;
-        padding: 0.1rem 0.5rem;
-        border-radius: 50px;
-        background: rgba(255, 107, 0, 0.08);
-        color: var(--brand-orange);
-        border: 1px solid rgba(255, 107, 0, 0.1);
-        opacity: 0;
-        transition: all 0.3s ease;
-    }
-
-    .kpi-card:hover .kpi-filter-badge { opacity: 1; }
-
-    /* Chart Cards */
-    .panel-card {
-        background: var(--bg-card) !important;
-        border: 1px solid var(--border-color) !important;
-        box-shadow: var(--shadow-sm) !important;
-        transition: all 0.4s ease;
-        border-radius: 16px !important;
-        overflow: hidden;
-        height: 100%;
-        min-height: 350px;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .panel-card:hover {
-        box-shadow: var(--shadow-md) !important;
-        transform: translateY(-4px);
-        border-color: rgba(255, 107, 0, 0.15) !important;
-    }
-
-    .glass-header {
-        background: rgba(255, 107, 0, 0.03) !important;
-        border-bottom: 1px solid var(--border-color) !important;
-        padding: 0.6rem 1.25rem;
-        flex-shrink: 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .glass-header h6 {
-        color: var(--text-primary) !important;
-        font-weight: 700 !important;
-        font-family: 'Fraunces', serif;
-        font-size: 0.85rem;
-        margin: 0;
-    }
-
-    .glass-header h6 i { color: var(--brand-orange) !important; }
-
-    .card-body {
-        padding: 0.75rem 1rem;
-        background: transparent;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .chart-wrapper {
-        position: relative;
-        width: 100%;
-        flex: 1;
-        min-height: 220px;
-        max-height: 280px;
-        padding: 0.25rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .chart-wrapper canvas {
-        max-width: 100% !important;
-        max-height: 100% !important;
-        width: 100% !important;
-        height: 100% !important;
-        cursor: pointer;
-    }
-
-    .chart-wrapper .chart-hint {
-        position: absolute;
-        bottom: 4px;
-        right: 8px;
-        font-size: 0.45rem;
-        color: var(--text-muted);
-        opacity: 0.2;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-    }
-
-    .chart-wrapper:hover .chart-hint { opacity: 0.5; }
-
-    .chart-empty {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 180px;
-        color: var(--text-muted);
-        text-align: center;
-        padding: 1rem;
-    }
-
-    .chart-empty i { font-size: 2rem; color: var(--brand-orange); opacity: 0.3; margin-bottom: 0.5rem; }
-    .chart-empty p { font-size: 0.8rem; margin: 0; font-family: 'Inter', sans-serif; }
-
-    /* Badges */
-    .badge-custom {
-        display: inline-block;
-        padding: 0.15rem 0.6rem;
-        border-radius: 50px;
-        font-size: 0.5rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-    }
-
-    .badge-custom:hover { transform: scale(1.05); }
-
-    .badge-status-open { background: var(--status-open); color: white; }
-    .badge-status-assigned { background: var(--status-assigned); color: white; }
-    .badge-status-hold { background: var(--status-hold); color: white; }
-    .badge-status-escalated { background: var(--status-escalated); color: white; }
-    .badge-status-closed { background: var(--status-closed); color: white; }
-
-    /* Modal */
-    .modal-content {
-        background: var(--bg-card) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 16px !important;
-        box-shadow: var(--shadow-md) !important;
-        color: var(--text-primary) !important;
-    }
-
-    .modal-header {
-        border-bottom: 1px solid var(--border-color) !important;
-        background: rgba(255, 107, 0, 0.03) !important;
-        border-radius: 16px 16px 0 0 !important;
-        padding: 1rem 1.5rem !important;
-    }
-
-    .modal-header .modal-title {
-        color: var(--text-primary) !important;
-        font-weight: 700 !important;
-        font-family: 'Fraunces', serif !important;
-        font-size: 1.1rem !important;
-    }
-
-    .modal-header .modal-title i { color: var(--brand-orange) !important; }
-
-    .modal-body {
-        padding: 1.25rem !important;
-        background: var(--bg-secondary) !important;
-        color: var(--text-primary) !important;
-        max-height: 500px;
-        overflow-y: auto;
-    }
-
-    .modal-footer {
-        border-top: 1px solid var(--border-color) !important;
-        background: rgba(255, 107, 0, 0.02) !important;
-        border-radius: 0 0 16px 16px !important;
-        padding: 0.75rem 1.5rem !important;
-    }
-
-    .btn-close-custom {
-        background: var(--bg-secondary) !important;
-        border: 2px solid var(--border-color) !important;
-        color: var(--text-secondary) !important;
-        border-radius: 50px !important;
-        padding: 0.3rem 1.2rem !important;
-        font-size: 0.8rem !important;
-        font-weight: 500 !important;
-        transition: all 0.3s ease !important;
-        text-decoration: none !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        font-family: 'Inter', sans-serif !important;
-    }
-
-    .btn-close-custom:hover {
-        background: var(--bg-card) !important;
-        border-color: var(--brand-orange) !important;
-        color: var(--text-primary) !important;
-        transform: translateY(-2px) !important;
-    }
-
-    .btn-close-custom i { color: var(--text-muted) !important; transition: color 0.3s ease; }
-    .btn-close-custom:hover i { color: var(--brand-orange) !important; }
-
-    .btn-view-all {
-        background: var(--brand-gradient) !important;
-        border: none !important;
-        color: #FFFFFF !important;
-        padding: 0.3rem 1.2rem !important;
-        border-radius: 50px !important;
-        font-weight: 600 !important;
-        font-size: 0.8rem !important;
-        transition: all 0.3s ease !important;
-        font-family: 'Inter', sans-serif !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-        text-decoration: none !important;
-        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2) !important;
-    }
-
-    .btn-view-all:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 28px rgba(255, 107, 0, 0.3) !important;
-        color: #FFFFFF !important;
-    }
-
-    .btn-view-all i { color: #FFFFFF !important; }
-
-    .modal-header .btn-close {
-        color: var(--text-primary) !important;
-        opacity: 0.7 !important;
-        background: transparent !important;
-        transition: all 0.3s ease !important;
-        filter: none !important;
-        background-image: none !important;
-        font-size: 1.5rem !important;
-        padding: 0.5rem !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 40px !important;
-        height: 40px !important;
-        border-radius: 50% !important;
-        border: 2px solid transparent !important;
-    }
-
-    .modal-header .btn-close::before {
-        content: '✕';
-        font-size: 1.2rem;
-        font-weight: 300;
-        color: var(--text-primary);
-        display: block;
-        line-height: 1;
-        transition: all 0.3s ease;
-    }
-
-    .modal-header .btn-close:hover {
-        opacity: 1 !important;
-        transform: rotate(90deg) scale(1.1) !important;
-        background: rgba(255, 107, 0, 0.08) !important;
-        border-color: var(--brand-orange) !important;
-    }
-
-    .modal-loading {
-        text-align: center;
-        padding: 2rem;
-        color: var(--text-muted);
-    }
-    .modal-loading i { font-size: 2rem; color: var(--brand-orange); margin-bottom: 1rem; display: block; }
-    .modal-loading p { color: var(--text-secondary) !important; font-family: 'Inter', sans-serif; }
-
-    /* Responsive */
-    @media (max-width: 992px) {
-        .panel-card { min-height: 300px; }
-        .chart-wrapper { min-height: 200px; max-height: 240px; }
-        .dashboard-header { padding: 1rem; }
-        .kpi-card { min-height: 70px; padding: 0.6rem 0.8rem !important; }
-        .kpi-value { font-size: 1.2rem; }
-        .aging-badge { font-size: 0.5rem; padding: 0.05rem 0.4rem; min-width: 40px; }
-    }
-
-    @media (max-width: 768px) {
-        .dashboard-container { padding: 0 0.25rem; }
-        .dashboard-header { padding: 0.75rem; flex-direction: column; align-items: stretch; }
-        .dashboard-header .d-flex { flex-direction: column; gap: 0.5rem; }
-        .dashboard-header .btn { width: 100%; justify-content: center; }
-        .panel-card { min-height: 280px; }
-        .chart-wrapper { min-height: 180px; max-height: 210px; }
-        .kpi-card { min-height: 65px; padding: 0.5rem 0.6rem !important; }
-        .kpi-value { font-size: 1.1rem; }
-        .kpi-label { font-size: 0.55rem; }
-        .kpi-filter-badge { font-size: 0.4rem; padding: 0.05rem 0.3rem; top: 4px; right: 6px; }
-        .click-hint { font-size: 0.4rem; bottom: 4px; right: 6px; }
-        .badge-custom { font-size: 0.45rem; padding: 0.08rem 0.4rem; }
-        .btn-view { font-size: 0.45rem; padding: 0.08rem 0.4rem; min-width: 40px; }
-        .btn-view i { display: none; }
-        .glass-header { padding: 0.4rem 0.75rem; }
-        .glass-header h6 { font-size: 0.75rem; }
-        .card-body { padding: 0.5rem; }
-        .modal-body { padding: 0.75rem !important; max-height: 350px; }
-        .modal-body .table td { font-size: 0.6rem !important; padding: 0.2rem !important; }
-        .modal-header .modal-title { font-size: 0.95rem !important; }
-        .chart-wrapper .chart-hint { content: 'Click →'; font-size: 0.4rem; bottom: 3px; right: 6px; }
-        .chart-empty { min-height: 140px; }
-        .chart-empty i { font-size: 1.5rem; }
-        .chart-empty p { font-size: 0.7rem; }
-        .aging-badge { font-size: 0.4rem; padding: 0.05rem 0.3rem; min-width: 35px; }
-    }
-
-    @media (max-width: 576px) {
-        .kpi-card { min-height: 60px; padding: 0.4rem 0.5rem !important; }
-        .kpi-value { font-size: 0.95rem; }
-        .kpi-label { font-size: 0.5rem; letter-spacing: 0.3px; }
-        .panel-card { min-height: 260px; }
-        .chart-wrapper { min-height: 160px; max-height: 190px; }
-        .header-title { font-size: 1rem; }
-        .header-subtitle { font-size: 0.7rem; }
-        .unit-badge { font-size: 0.6rem; padding: 0.1rem 0.6rem; }
-        .btn-primary-custom { font-size: 0.75rem !important; padding: 0.3rem 1rem !important; }
-        .btn-outline-custom { font-size: 0.65rem !important; padding: 0.2rem 0.8rem !important; }
-        .badge-custom { font-size: 0.4rem; padding: 0.05rem 0.3rem; }
-        .btn-view { font-size: 0.4rem; padding: 0.05rem 0.3rem; min-width: 32px; }
-        .aging-badge { font-size: 0.35rem; padding: 0.03rem 0.25rem; min-width: 30px; }
-    }
-
-    @media (max-width: 360px) {
-        .badge-custom { font-size: 0.35rem; padding: 0.03rem 0.2rem; }
-        .btn-view { font-size: 0.35rem; padding: 0.03rem 0.2rem; min-width: 28px; }
-        .aging-badge { font-size: 0.3rem; padding: 0.02rem 0.15rem; min-width: 25px; }
-    }
-
-    /* Dark Mode Specific */
-    [data-theme="dark"] .kpi-card {
-        border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-
-    [data-theme="dark"] .kpi-card:hover {
-        border-color: rgba(255, 107, 0, 0.3) !important;
-    }
-
-    [data-theme="dark"] .panel-card {
-        border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-
-    [data-theme="dark"] .panel-card:hover {
-        border-color: rgba(255, 107, 0, 0.2) !important;
-    }
-
-    [data-theme="dark"] .glass-header {
-        background: rgba(255, 107, 0, 0.04) !important;
-    }
-
-    [data-theme="dark"] .modal-content {
-        border-color: rgba(255, 255, 255, 0.08) !important;
-    }
-
-    [data-theme="dark"] .modal-header {
-        background: rgba(255, 107, 0, 0.05) !important;
-        border-bottom-color: rgba(255, 255, 255, 0.06) !important;
-    }
-
-    [data-theme="dark"] .modal-body {
-        background: var(--bg-secondary) !important;
-    }
-
-    [data-theme="dark"] .modal-footer {
-        border-top-color: rgba(255, 255, 255, 0.06) !important;
-        background: rgba(255, 107, 0, 0.03) !important;
-    }
-
-    [data-theme="dark"] .modal-header .btn-close::before {
-        color: rgba(255, 255, 255, 0.8) !important;
-    }
-
-    [data-theme="dark"] .modal-header .btn-close:hover {
-        background: rgba(255, 107, 0, 0.15) !important;
-        border-color: var(--brand-orange) !important;
-    }
-
-    [data-theme="dark"] .btn-close-custom {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        color: var(--text-secondary) !important;
-    }
-
-    [data-theme="dark"] .btn-close-custom:hover {
-        background: rgba(255, 255, 255, 0.08) !important;
-        border-color: var(--brand-orange) !important;
-        color: var(--text-primary) !important;
-    }
-
-    [data-theme="dark"] .btn-close-custom i {
-        color: var(--text-muted) !important;
-    }
-
-    [data-theme="dark"] .btn-close-custom:hover i {
-        color: var(--brand-orange) !important;
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
-    ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 8px; }
-    ::-webkit-scrollbar-thumb:hover { background: #E55A00; }
-
-    ::selection { background: var(--brand-orange); color: white; }
-</style>
+<link rel="stylesheet" href="{% static 'css/unit_head/dashboard.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
 
-    <!-- Header -->
+    <!-- ============================================================
+         HEADER
+         ============================================================ -->
     <div class="dashboard-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
@@ -791,7 +51,9 @@
         </div>
     </div>
 
-    <!-- KPI Section -->
+    <!-- ============================================================
+         KPI SECTION
+         ============================================================ -->
     <div class="row g-3 mb-4">
         <div class="col-12">
             <h6 class="fw-bold mb-2" style="color: var(--text-primary); font-size: 0.8rem; font-family: 'Fraunces', serif;">
@@ -811,6 +73,7 @@
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View All</span>
             </div>
         </div>
+
         <!-- Open -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             <div class="kpi-card kpi-open" onclick="drillDownUnitTickets('Open')">
@@ -820,6 +83,7 @@
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Open</span>
             </div>
         </div>
+
         <!-- Assigned -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             <div class="kpi-card kpi-assigned" onclick="drillDownUnitTickets('Assigned')">
@@ -829,6 +93,7 @@
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Assigned</span>
             </div>
         </div>
+
         <!-- Hold -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             <div class="kpi-card kpi-hold" onclick="drillDownUnitTickets('Hold')">
@@ -838,6 +103,7 @@
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Hold</span>
             </div>
         </div>
+
         <!-- Escalated -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             <div class="kpi-card kpi-escalated" onclick="drillDownUnitTickets('Escalated')">
@@ -847,6 +113,7 @@
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Escalated</span>
             </div>
         </div>
+
         <!-- Closed -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             <div class="kpi-card kpi-closed" onclick="drillDownUnitTickets('Closed')">
@@ -856,6 +123,7 @@
                 <span class="kpi-filter-badge"><i class="fa-regular fa-eye me-1"></i>View Closed</span>
             </div>
         </div>
+
         <!-- Critical -->
         <div class="col-12">
             <div class="kpi-card kpi-critical" onclick="drillDownUnitTickets('Critical')">
@@ -872,9 +140,11 @@
         </div>
     </div>
 
-    <!-- Charts Section -->
+    <!-- ============================================================
+         CHARTS SECTION
+         ============================================================ -->
     <div class="row g-4 mb-4">
-        <!-- Chart 1: Status -->
+        <!-- Chart 1: Status Distribution -->
         <div class="col-12 col-lg-6">
             <div class="panel-card">
                 <div class="glass-header">
@@ -896,7 +166,7 @@
             </div>
         </div>
 
-        <!-- Chart 2: Priority -->
+        <!-- Chart 2: Priority Distribution -->
         <div class="col-12 col-lg-6">
             <div class="panel-card">
                 <div class="glass-header">
@@ -918,9 +188,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-             CHART 3: DEPARTMENT DISTRIBUTION (NEW)
-             ============================================================ -->
+        <!-- Chart 3: Department Distribution -->
         <div class="col-12 col-lg-6">
             <div class="panel-card">
                 <div class="glass-header">
@@ -945,7 +213,9 @@
 
 </div>
 
-<!-- Modal -->
+<!-- ============================================================
+     DRILL DOWN MODAL
+     ============================================================ -->
 <div class="modal fade" id="drillDownModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -974,555 +244,563 @@
     </div>
 </div>
 
+<!-- ============================================================
+     DATA & SCRIPTS
+     ============================================================ -->
 {{ charts_data|json_script:"charts-data" }}
 
+<!-- Pass the all-tickets URL as a data attribute -->
+<span id="unitHeadAllTicketsUrl" data-url="{% url 'unit_head_all_tickets' %}" style="display:none;"></span>
+
+<script src="{% static 'js/unit_head/dashboard.js' %}"></script>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-
-        function forceCleanupBackdrops() {
-            document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-                backdrop.remove();
-            });
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
+// ============================================================
+// DRILL DOWN FUNCTION - BY STATUS
+// ============================================================
+function drillDownUnitTickets(filter) {
+    var modal = new bootstrap.Modal(document.getElementById('drillDownModal'));
+    var body = document.getElementById('drillDownModalBody');
+    var label = document.getElementById('drillDownStatusLabel');
+    
+    var filterLabels = {
+        'all': 'All Unit Tickets',
+        'Open': 'Open Tickets',
+        'Assigned': 'Assigned Tickets',
+        'Hold': 'Hold Tickets',
+        'Escalated': 'Escalated Tickets',
+        'Closed': 'Closed Tickets',
+        'Critical': 'Critical Priority Tickets'
+    };
+    label.textContent = filterLabels[filter] || filter;
+    
+    body.innerHTML = '<div class="modal-loading"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading tickets...</p></div>';
+    modal.show();
+    
+    var baseUrl = document.getElementById('unitHeadAllTicketsUrl').getAttribute('data-url');
+    var url = baseUrl + '?ajax=1&filter=' + encodeURIComponent(filter) + '&_=' + Date.now();
+    
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    })
+    .then(function(response) {
+        if (response.status === 302 || response.status === 401) {
+            throw new Error('Your session has expired. Please login again.');
         }
-
-        // Load Chart Data
-        let chartsData = {};
-        try {
-            const dataElement = document.getElementById('charts-data');
-            if (dataElement) {
-                chartsData = JSON.parse(dataElement.textContent);
-            }
-        } catch (e) {
-            console.error('Error parsing chart data:', e);
+        if (!response.ok) throw new Error('Network error: ' + response.status);
+        return response.json();
+    })
+    .then(function(data) {
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load tickets');
         }
-
-        const hasStatusData = chartsData.status && Object.keys(chartsData.status).length > 0;
-        const hasPriorityData = chartsData.priority && Object.keys(chartsData.priority).length > 0;
-        const hasDeptData = chartsData.department && Object.keys(chartsData.department).length > 0;
-
-        const statusEmpty = document.getElementById('statusEmpty');
-        const priorityEmpty = document.getElementById('priorityEmpty');
-        const deptEmpty = document.getElementById('deptEmpty');
-        const statusCanvas = document.getElementById('statusChart');
-        const priorityCanvas = document.getElementById('priorityChart');
-        const deptCanvas = document.getElementById('deptChart');
-
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const textColor = isDark ? '#E8EDF5' : '#1A2A6C';
-
-        // Chart 1: Status - Doughnut with Drill Down
-        if (statusCanvas && hasStatusData) {
-            const statusLabels = Object.keys(chartsData.status);
-            const statusValues = Object.values(chartsData.status);
-            const statusColors = {
-                'Open': '#22C55E',
-                'Assigned': '#3B82F6',
-                'Hold': '#F59E0B',
-                'Escalated': '#8B5CF6',
-                'Closed': '#94A3B8'
-            };
-            const colors = statusLabels.map(label => statusColors[label] || '#6B7280');
-
-            const ctx = statusCanvas.getContext('2d');
-            const chart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: statusLabels,
-                    datasets: [{
-                        data: statusValues,
-                        backgroundColor: colors,
-                        borderColor: isDark ? '#1A1A2E' : '#FFFFFF',
-                        borderWidth: 3,
-                        hoverOffset: 15
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'bottom',
-                            labels: {
-                                font: { family: 'Inter, sans-serif', size: 11, weight: '500' },
-                                padding: 14,
-                                color: textColor,
-                                usePointStyle: true,
-                                pointStyleWidth: 12,
-                                boxWidth: 14,
-                                boxHeight: 14
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
-                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                                }
-                            }
-                        }
-                    },
-                    cutout: '60%',
-                    onClick: function(event, elements) {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const label = this.data.labels[index];
-                            drillDownUnitTickets(label);
-                        }
-                    }
-                }
-            });
-            statusCanvas.chart = chart;
-        } else if (statusCanvas && statusEmpty) {
-            statusCanvas.style.display = 'none';
-            statusEmpty.style.display = 'flex';
-        }
-
-        // Chart 2: Priority - Pie with Drill Down
-        if (priorityCanvas && hasPriorityData) {
-            const priorityLabels = Object.keys(chartsData.priority);
-            const priorityValues = Object.values(chartsData.priority);
-            const priorityColors = {
-                'Critical': '#EF4444',
-                'High': '#F59E0B',
-                'Medium': '#3B82F6',
-                'Low': '#94A3B8'
-            };
-            const colors = priorityLabels.map(label => priorityColors[label] || '#6B7280');
-
-            const ctx = priorityCanvas.getContext('2d');
-            const chart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: priorityLabels,
-                    datasets: [{
-                        data: priorityValues,
-                        backgroundColor: colors,
-                        borderColor: isDark ? '#1A1A2E' : '#FFFFFF',
-                        borderWidth: 3,
-                        hoverOffset: 15
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'bottom',
-                            labels: {
-                                font: { family: 'Inter, sans-serif', size: 11, weight: '500' },
-                                padding: 14,
-                                color: textColor,
-                                usePointStyle: true,
-                                pointStyleWidth: 12,
-                                boxWidth: 14,
-                                boxHeight: 14
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
-                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                                }
-                            }
-                        }
-                    },
-                    onClick: function(event, elements) {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const label = this.data.labels[index];
-                            drillDownUnitTicketsByPriority(label);
-                        }
-                    }
-                }
-            });
-            priorityCanvas.chart = chart;
-        } else if (priorityCanvas && priorityEmpty) {
-            priorityCanvas.style.display = 'none';
-            priorityEmpty.style.display = 'flex';
-        }
-
-        // ============================================================
-        // CHART 3: DEPARTMENT DISTRIBUTION - PIE CHART
-        // ============================================================
-        // Department colors - 10 distinct colors
-        const deptColors = [
-            '#FF6B00', '#8B5CF6', '#3B82F6', '#22C55E', '#F59E0B',
-            '#EF4444', '#EC4899', '#14B8A6', '#F97316', '#6366F1'
-        ];
-
-        if (deptCanvas && hasDeptData) {
-            const deptLabels = Object.keys(chartsData.department);
-            const deptValues = Object.values(chartsData.department);
+        
+        var html = '';
+        if (data.tickets && data.tickets.length > 0) {
+            html += '<div class="table-responsive"><table class="table table-hover align-middle">';
+            html += '<thead><tr>';
+            html += '<th>Ticket #</th><th>Subject</th><th>Employee</th><th>Status</th><th>Priority</th>';
+            html += '<th>Target Date</th>';
+            html += '<th>Created</th><th>Action</th>';
+            html += '</tr></thead><tbody>';
             
-            // Assign colors based on index
-            const colors = deptLabels.map((_, index) => deptColors[index % deptColors.length]);
-
-            const ctx = deptCanvas.getContext('2d');
-            const chart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: deptLabels,
-                    datasets: [{
-                        data: deptValues,
-                        backgroundColor: colors,
-                        borderColor: isDark ? '#1A1A2E' : '#FFFFFF',
-                        borderWidth: 3,
-                        hoverOffset: 15
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'bottom',
-                            labels: {
-                                font: { family: 'Inter, sans-serif', size: 10, weight: '500' },
-                                padding: 12,
-                                color: textColor,
-                                usePointStyle: true,
-                                pointStyleWidth: 12,
-                                boxWidth: 14,
-                                boxHeight: 14
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
-                                    return context.label + ': ' + context.parsed + ' tickets (' + percentage + '%)';
-                                }
-                            }
-                        }
-                    },
-                    onClick: function(event, elements) {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const label = this.data.labels[index];
-                            drillDownUnitTicketsByDepartment(label);
-                        }
-                    }
-                }
+            data.tickets.forEach(function(ticket) {
+                var statusClass = ticket.status.toLowerCase();
+                var priorityClass = ticket.priority.toLowerCase();
+                var targetDate = ticket.target_date ? new Date(ticket.target_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Not Set';
+                var createdDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+                
+                html += '<tr>';
+                html += '<td><strong>' + ticket.ticket_number + '</strong></td>';
+                html += '<td>' + (ticket.subject ? ticket.subject.substring(0, 30) + (ticket.subject.length > 30 ? '...' : '') : '') + '</td>';
+                html += '<td>' + (ticket.employee_name || 'N/A') + '</td>';
+                html += '<td><span class="badge-custom badge-status-' + statusClass + '">' + ticket.status + '</span></td>';
+                html += '<td><span class="badge-priority badge-priority-' + priorityClass + '">' + ticket.priority + '</span></td>';
+                html += '<td><span style="font-size: 0.75rem; ' + (ticket.target_date ? 'color: var(--brand-orange); font-weight: 600;' : 'color: var(--text-muted);') + '">' + targetDate + '</span></td>';
+                html += '<td style="font-size:0.65rem;">' + createdDate + '</td>';
+                html += '<td>';
+                html += '<a href="/unit-head/ticket/' + ticket.id + '/" class="btn-view btn-sm" target="_blank">';
+                html += '<i class="fa-solid fa-eye"></i> View';
+                html += '</a>';
+                html += '</td>';
+                html += '</tr>';
             });
-            deptCanvas.chart = chart;
-        } else if (deptCanvas && deptEmpty) {
-            deptCanvas.style.display = 'none';
-            deptEmpty.style.display = 'flex';
-        }
-
-        // Chart resize handler
-        function resizeCharts() {
-            document.querySelectorAll('.chart-wrapper canvas').forEach(canvas => {
-                if (canvas.chart) { canvas.chart.resize(); }
-            });
-        }
-
-        let resizeTimeout;
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(resizeCharts, 250);
-        });
-
-        // Theme change handler for charts
-        function updateChartColors() {
-            const isDarkNow = document.documentElement.getAttribute('data-theme') === 'dark';
-            const newColor = isDarkNow ? '#E8EDF5' : '#1A2A6C';
-
-            document.querySelectorAll('.chart-wrapper canvas').forEach(canvas => {
-                if (canvas.chart) {
-                    const chart = canvas.chart;
-                    if (chart.options.plugins && chart.options.plugins.legend) {
-                        chart.options.plugins.legend.labels.color = newColor;
-                        chart.update();
-                    }
-                }
-            });
-        }
-
-        const themeToggleBtn = document.getElementById('themeToggleFloating');
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', function() {
-                setTimeout(updateChartColors, 150);
-            });
-        }
-
-        const themeObserver = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.attributeName === 'data-theme') {
-                    setTimeout(updateChartColors, 150);
-                }
-            });
-        });
-        themeObserver.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-theme']
-        });
-
-        // Modal cleanup
-        const modalEl = document.getElementById('drillDownModal');
-        if (modalEl) {
-            modalEl.addEventListener('hidden.bs.modal', function() {
-                forceCleanupBackdrops();
-            });
-            modalEl.addEventListener('hide.bs.modal', function() {
-                setTimeout(forceCleanupBackdrops, 50);
-            });
-        }
-
-        // Make functions global
-        window.drillDownUnitTickets = drillDownUnitTickets;
-        window.drillDownUnitTicketsByPriority = drillDownUnitTicketsByPriority;
-        window.drillDownUnitTicketsByDepartment = drillDownUnitTicketsByDepartment;
-
-        console.log('✅ Unit Head Dashboard loaded with drill-down enabled');
-        console.log('📊 Status data:', hasStatusData ? 'Available' : 'None');
-        console.log('📊 Priority data:', hasPriorityData ? 'Available' : 'None');
-        console.log('📊 Department data:', hasDeptData ? 'Available' : 'None');
-    });
-
-    // ============================================================
-    // DRILL DOWN FUNCTIONS
-    // ============================================================
-
-    function drillDownUnitTickets(status) {
-        forceCleanupBackdrops();
-
-        const modalEl = document.getElementById('drillDownModal');
-        const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
-
-        const modalBody = document.getElementById('drillDownModalBody');
-        const statusLabel = document.getElementById('drillDownStatusLabel');
-        const viewAllBtn = document.getElementById('drillDownViewAllBtn');
-
-        const statusMap = {
-            'all': 'All Unit Tickets',
-            'Open': 'Open Tickets',
-            'Assigned': 'Assigned Tickets',
-            'Hold': 'Hold Tickets',
-            'Escalated': 'Escalated Tickets',
-            'Closed': 'Closed Tickets',
-            'Critical': 'Critical Priority Tickets'
-        };
-        statusLabel.textContent = statusMap[status] || status || 'All Unit Tickets';
-
-        let filterParam = 'status';
-        let filterValue = status;
-
-        if (status === 'Critical') {
-            filterParam = 'priority';
-            filterValue = 'Critical';
-        } else if (status === 'all') {
-            filterParam = '';
-            filterValue = '';
-        }
-
-        if (filterParam && filterValue) {
-            viewAllBtn.href = "{% url 'unit_head_all_tickets' %}?" + filterParam + "=" + encodeURIComponent(filterValue);
+            
+            html += '</tbody></table></div>';
+            html += '<div style="text-align: center; margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted);">';
+            html += '<i class="fa-regular fa-clock me-1"></i>Showing ' + data.tickets.length + ' tickets';
+            html += '</div>';
         } else {
-            viewAllBtn.href = "{% url 'unit_head_all_tickets' %}";
+            html = '<div class="modal-empty"><i class="fa-regular fa-circle-check"></i><p>No tickets found for this filter.</p></div>';
         }
-
-        modalBody.innerHTML = `
-            <div class="modal-loading">
-                <i class="fa-solid fa-spinner fa-spin"></i>
-                <p>Loading tickets...</p>
-            </div>
-        `;
-
-        modal.show();
-
-        let url = "{% url 'unit_head_all_tickets' %}?ajax=1";
-        if (filterParam && filterValue) {
-            url += "&" + filterParam + "=" + encodeURIComponent(filterValue);
+        body.innerHTML = html;
+    })
+    .catch(function(error) {
+        console.error('Drill-down error:', error);
+        var errorHtml = '<div class="modal-error">';
+        errorHtml += '<i class="fa-solid fa-circle-exclamation"></i>';
+        errorHtml += '<p><strong>Error loading tickets</strong></p>';
+        errorHtml += '<p style="font-size: 0.85rem; color: var(--text-muted);">' + error.message + '</p>';
+        if (error.message.includes('session') || error.message.includes('login')) {
+            errorHtml += '<a href="/login/?next=' + encodeURIComponent(window.location.pathname) + '" class="btn-view-all mt-2" style="display: inline-flex; align-items: center; gap: 0.3rem;">';
+            errorHtml += '<i class="fa-solid fa-right-to-bracket"></i> Login Again';
+            errorHtml += '</a>';
+        } else {
+            errorHtml += '<button class="btn btn-primary-custom btn-sm mt-2" onclick="window.location.reload();">';
+            errorHtml += '<i class="fa-solid fa-rotate me-1"></i>Refresh Page';
+            errorHtml += '</button>';
         }
-        url += "&_=" + Date.now();
+        errorHtml += '</div>';
+        body.innerHTML = errorHtml;
+    });
+}
 
-        fetch(url, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Server returned ' + response.status);
-            return response.json();
-        })
-        .then(data => {
-            if (data.success === false) throw new Error(data.message || 'Server error');
-            if (data.html) {
-                modalBody.innerHTML = data.html;
-                if (data.count !== undefined) {
-                    statusLabel.textContent = (statusMap[status] || status || 'All Unit Tickets') + ` (${data.count})`;
-                }
-            } else {
-                modalBody.innerHTML = `
-                    <div class="text-center py-4" style="color: var(--text-muted);">
-                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
-                        <p>No tickets found with status: ${statusLabel.textContent}</p>
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            modalBody.innerHTML = `
-                <div class="text-center py-4" style="color: #EF4444;">
-                    <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
-                    <p><strong>Error loading tickets</strong></p>
-                    <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
-                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownUnitTickets('${status}')">
-                        <i class="fa-solid fa-rotate me-1"></i>Retry
-                    </button>
-                </div>
-            `;
-        });
-    }
+// ============================================================
+// DRILL DOWN FUNCTION - BY PRIORITY
+// ============================================================
+function drillDownUnitTicketsByPriority(priority) {
+    var modal = new bootstrap.Modal(document.getElementById('drillDownModal'));
+    var body = document.getElementById('drillDownModalBody');
+    var label = document.getElementById('drillDownStatusLabel');
+    
+    label.textContent = 'Priority: ' + priority;
+    
+    body.innerHTML = '<div class="modal-loading"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading tickets...</p></div>';
+    modal.show();
+    
+    var baseUrl = document.getElementById('unitHeadAllTicketsUrl').getAttribute('data-url');
+    var url = baseUrl + '?ajax=1&priority=' + encodeURIComponent(priority) + '&_=' + Date.now();
+    
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    })
+    .then(function(response) {
+        if (response.status === 302 || response.status === 401) {
+            throw new Error('Your session has expired. Please login again.');
+        }
+        if (!response.ok) throw new Error('Network error: ' + response.status);
+        return response.json();
+    })
+    .then(function(data) {
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load tickets');
+        }
+        
+        var html = '';
+        if (data.tickets && data.tickets.length > 0) {
+            html += '<div class="table-responsive"><table class="table table-hover align-middle">';
+            html += '<thead><tr>';
+            html += '<th>Ticket #</th><th>Subject</th><th>Employee</th><th>Status</th><th>Priority</th>';
+            html += '<th>Target Date</th>';
+            html += '<th>Created</th><th>Action</th>';
+            html += '</tr></thead><tbody>';
+            
+            data.tickets.forEach(function(ticket) {
+                var statusClass = ticket.status.toLowerCase();
+                var priorityClass = ticket.priority.toLowerCase();
+                var targetDate = ticket.target_date ? new Date(ticket.target_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Not Set';
+                var createdDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+                
+                html += '<tr>';
+                html += '<td><strong>' + ticket.ticket_number + '</strong></td>';
+                html += '<td>' + (ticket.subject ? ticket.subject.substring(0, 30) + (ticket.subject.length > 30 ? '...' : '') : '') + '</td>';
+                html += '<td>' + (ticket.employee_name || 'N/A') + '</td>';
+                html += '<td><span class="badge-custom badge-status-' + statusClass + '">' + ticket.status + '</span></td>';
+                html += '<td><span class="badge-priority badge-priority-' + priorityClass + '">' + ticket.priority + '</span></td>';
+                html += '<td><span style="font-size: 0.75rem; ' + (ticket.target_date ? 'color: var(--brand-orange); font-weight: 600;' : 'color: var(--text-muted);') + '">' + targetDate + '</span></td>';
+                html += '<td style="font-size:0.65rem;">' + createdDate + '</td>';
+                html += '<td>';
+                html += '<a href="/unit-head/ticket/' + ticket.id + '/" class="btn-view btn-sm" target="_blank">';
+                html += '<i class="fa-solid fa-eye"></i> View';
+                html += '</a>';
+                html += '</td>';
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            html += '<div style="text-align: center; margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted);">';
+            html += '<i class="fa-regular fa-clock me-1"></i>Showing ' + data.tickets.length + ' tickets';
+            html += '</div>';
+        } else {
+            html = '<div class="modal-empty"><i class="fa-regular fa-circle-check"></i><p>No tickets found for this priority.</p></div>';
+        }
+        body.innerHTML = html;
+    })
+    .catch(function(error) {
+        console.error('Priority drill-down error:', error);
+        var errorHtml = '<div class="modal-error">';
+        errorHtml += '<i class="fa-solid fa-circle-exclamation"></i>';
+        errorHtml += '<p><strong>Error loading tickets</strong></p>';
+        errorHtml += '<p style="font-size: 0.85rem; color: var(--text-muted);">' + error.message + '</p>';
+        if (error.message.includes('session') || error.message.includes('login')) {
+            errorHtml += '<a href="/login/?next=' + encodeURIComponent(window.location.pathname) + '" class="btn-view-all mt-2" style="display: inline-flex; align-items: center; gap: 0.3rem;">';
+            errorHtml += '<i class="fa-solid fa-right-to-bracket"></i> Login Again';
+            errorHtml += '</a>';
+        } else {
+            errorHtml += '<button class="btn btn-primary-custom btn-sm mt-2" onclick="window.location.reload();">';
+            errorHtml += '<i class="fa-solid fa-rotate me-1"></i>Refresh Page';
+            errorHtml += '</button>';
+        }
+        errorHtml += '</div>';
+        body.innerHTML = errorHtml;
+    });
+}
 
-    function drillDownUnitTicketsByPriority(priority) {
-        forceCleanupBackdrops();
+// ============================================================
+// DRILL DOWN FUNCTION - BY DEPARTMENT
+// ============================================================
+function drillDownUnitTicketsByDepartment(departmentName) {
+    var modal = new bootstrap.Modal(document.getElementById('drillDownModal'));
+    var body = document.getElementById('drillDownModalBody');
+    var label = document.getElementById('drillDownStatusLabel');
+    
+    label.textContent = 'Department: ' + departmentName;
+    
+    body.innerHTML = '<div class="modal-loading"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading tickets...</p></div>';
+    modal.show();
+    
+    var baseUrl = document.getElementById('unitHeadAllTicketsUrl').getAttribute('data-url');
+    var url = baseUrl + '?ajax=1&department=' + encodeURIComponent(departmentName) + '&_=' + Date.now();
+    
+    console.log('Fetching department tickets:', url);
+    
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    })
+    .then(function(response) {
+        if (response.status === 302 || response.status === 401) {
+            throw new Error('Your session has expired. Please login again.');
+        }
+        if (!response.ok) throw new Error('Network error: ' + response.status);
+        return response.json();
+    })
+    .then(function(data) {
+        console.log('Department data response:', data);
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load tickets');
+        }
+        
+        var html = '';
+        if (data.tickets && data.tickets.length > 0) {
+            html += '<div class="table-responsive"><table class="table table-hover align-middle">';
+            html += '<thead><tr>';
+            html += '<th>Ticket #</th><th>Subject</th><th>Employee</th><th>Status</th><th>Priority</th>';
+            html += '<th>Target Date</th>';
+            html += '<th>Created</th><th>Action</th>';
+            html += '</tr></thead><tbody>';
+            
+            data.tickets.forEach(function(ticket) {
+                var statusClass = ticket.status.toLowerCase();
+                var priorityClass = ticket.priority.toLowerCase();
+                var targetDate = ticket.target_date ? new Date(ticket.target_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Not Set';
+                var createdDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+                
+                html += '<tr>';
+                html += '<td><strong>' + ticket.ticket_number + '</strong></td>';
+                html += '<td>' + (ticket.subject ? ticket.subject.substring(0, 30) + (ticket.subject.length > 30 ? '...' : '') : '') + '</td>';
+                html += '<td>' + (ticket.employee_name || 'N/A') + '</td>';
+                html += '<td><span class="badge-custom badge-status-' + statusClass + '">' + ticket.status + '</span></td>';
+                html += '<td><span class="badge-priority badge-priority-' + priorityClass + '">' + ticket.priority + '</span></td>';
+                html += '<td><span style="font-size: 0.75rem; ' + (ticket.target_date ? 'color: var(--brand-orange); font-weight: 600;' : 'color: var(--text-muted);') + '">' + targetDate + '</span></td>';
+                html += '<td style="font-size:0.65rem;">' + createdDate + '</td>';
+                html += '<td>';
+                html += '<a href="/unit-head/ticket/' + ticket.id + '/" class="btn-view btn-sm" target="_blank">';
+                html += '<i class="fa-solid fa-eye"></i> View';
+                html += '</a>';
+                html += '</td>';
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            html += '<div style="text-align: center; margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted);">';
+            html += '<i class="fa-regular fa-clock me-1"></i>Showing ' + data.tickets.length + ' tickets';
+            html += '</div>';
+        } else {
+            html = '<div class="modal-empty"><i class="fa-regular fa-circle-check"></i><p>No tickets found for department: ' + departmentName + '</p></div>';
+        }
+        body.innerHTML = html;
+    })
+    .catch(function(error) {
+        console.error('Department drill-down error:', error);
+        var errorHtml = '<div class="modal-error">';
+        errorHtml += '<i class="fa-solid fa-circle-exclamation"></i>';
+        errorHtml += '<p><strong>Error loading tickets</strong></p>';
+        errorHtml += '<p style="font-size: 0.85rem; color: var(--text-muted);">' + error.message + '</p>';
+        if (error.message.includes('session') || error.message.includes('login')) {
+            errorHtml += '<a href="/login/?next=' + encodeURIComponent(window.location.pathname) + '" class="btn-view-all mt-2" style="display: inline-flex; align-items: center; gap: 0.3rem;">';
+            errorHtml += '<i class="fa-solid fa-right-to-bracket"></i> Login Again';
+            errorHtml += '</a>';
+        } else {
+            errorHtml += '<button class="btn btn-primary-custom btn-sm mt-2" onclick="window.location.reload();">';
+            errorHtml += '<i class="fa-solid fa-rotate me-1"></i>Refresh Page';
+            errorHtml += '</button>';
+        }
+        errorHtml += '</div>';
+        body.innerHTML = errorHtml;
+    });
+}
 
-        const modalEl = document.getElementById('drillDownModal');
-        const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+// ============================================================
+// MAKE ALL FUNCTIONS GLOBALLY ACCESSIBLE
+// ============================================================
+window.drillDownUnitTickets = drillDownUnitTickets;
+window.drillDownUnitTicketsByPriority = drillDownUnitTicketsByPriority;
+window.drillDownUnitTicketsByDepartment = drillDownUnitTicketsByDepartment;
 
-        const modalBody = document.getElementById('drillDownModalBody');
-        const statusLabel = document.getElementById('drillDownStatusLabel');
-        const viewAllBtn = document.getElementById('drillDownViewAllBtn');
-
-        statusLabel.textContent = 'Priority: ' + priority;
-        viewAllBtn.href = "{% url 'unit_head_all_tickets' %}?priority=" + encodeURIComponent(priority);
-
-        modalBody.innerHTML = `
-            <div class="modal-loading">
-                <i class="fa-solid fa-spinner fa-spin"></i>
-                <p>Loading ${priority} priority tickets...</p>
-            </div>
-        `;
-
-        modal.show();
-
-        let url = "{% url 'unit_head_all_tickets' %}?ajax=1&priority=" + encodeURIComponent(priority);
-        url += "&_=" + Date.now();
-
-        fetch(url, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Server returned ' + response.status);
-            return response.json();
-        })
-        .then(data => {
-            if (data.success === false) throw new Error(data.message || 'Server error');
-            if (data.html) {
-                modalBody.innerHTML = data.html;
-                if (data.count !== undefined) {
-                    statusLabel.textContent = 'Priority: ' + priority + ` (${data.count})`;
-                }
-            } else {
-                modalBody.innerHTML = `
-                    <div class="text-center py-4" style="color: var(--text-muted);">
-                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
-                        <p>No ${priority} priority tickets found</p>
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            modalBody.innerHTML = `
-                <div class="text-center py-4" style="color: #EF4444;">
-                    <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
-                    <p><strong>Error loading tickets</strong></p>
-                    <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
-                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownUnitTicketsByPriority('${priority}')">
-                        <i class="fa-solid fa-rotate me-1"></i>Retry
-                    </button>
-                </div>
-            `;
-        });
-    }
-
-    // ============================================================
-    // DRILL DOWN BY DEPARTMENT (UPDATED - uses department parameter)
-    // ============================================================
-    function drillDownUnitTicketsByDepartment(departmentName) {
-        forceCleanupBackdrops();
-
-        const modalEl = document.getElementById('drillDownModal');
-        const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
-
-        const modalBody = document.getElementById('drillDownModalBody');
-        const statusLabel = document.getElementById('drillDownStatusLabel');
-        const viewAllBtn = document.getElementById('drillDownViewAllBtn');
-
-        statusLabel.textContent = 'Department: ' + departmentName;
-        viewAllBtn.href = "{% url 'unit_head_all_tickets' %}?department=" + encodeURIComponent(departmentName);
-
-        modalBody.innerHTML = `
-            <div class="modal-loading">
-                <i class="fa-solid fa-spinner fa-spin"></i>
-                <p>Loading ${departmentName} tickets...</p>
-            </div>
-        `;
-
-        modal.show();
-
-        // Use department parameter to filter by department name
-        let url = "{% url 'unit_head_all_tickets' %}?ajax=1&department=" + encodeURIComponent(departmentName);
-        url += "&_=" + Date.now();
-
-        console.log('Fetching department tickets:', url);
-
-        fetch(url, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Server returned ' + response.status);
-            return response.json();
-        })
-        .then(data => {
-            console.log('Department data response:', data);
-            if (data.success === false) throw new Error(data.message || 'Server error');
-            if (data.html) {
-                modalBody.innerHTML = data.html;
-                if (data.count !== undefined) {
-                    statusLabel.textContent = 'Department: ' + departmentName + ` (${data.count})`;
-                }
-            } else {
-                modalBody.innerHTML = `
-                    <div class="text-center py-4" style="color: var(--text-muted);">
-                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
-                        <p>No tickets found for department: ${departmentName}</p>
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('Department drill-down error:', error);
-            modalBody.innerHTML = `
-                <div class="text-center py-4" style="color: #EF4444;">
-                    <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
-                    <p><strong>Error loading tickets</strong></p>
-                    <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
-                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownUnitTicketsByDepartment('${departmentName}')">
-                        <i class="fa-solid fa-rotate me-1"></i>Retry
-                    </button>
-                </div>
-            `;
-        });
-    }
-
-    function forceCleanupBackdrops() {
-        document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-            backdrop.remove();
-        });
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-    }
+// Check if user is authenticated on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // If user is not authenticated, redirect to login
+    fetch('/dashboard/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin'
+    })
+    .then(function(response) {
+        if (response.status === 302 || response.status === 401) {
+            window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
+        }
+    })
+    .catch(function() {
+        // Silent fail - don't redirect on network errors
+    });
+});
 </script>
+
+<style>
+/* ============================================================
+   DRILL DOWN MODAL TABLE STYLES - FIXED FOR DARK MODE
+   ============================================================ */
+:root {
+    --modal-bg: #ffffff;
+    --modal-border: #e5e7eb;
+    --modal-text: #1A2A6C;
+    --modal-text-secondary: #4A5A7C;
+    --modal-text-muted: #8A9AB8;
+}
+
+[data-theme="dark"] {
+    --modal-bg: #1A1A2E;
+    --modal-border: rgba(255, 255, 255, 0.06);
+    --modal-text: #E8EDF5;
+    --modal-text-secondary: #A8B8D8;
+    --modal-text-muted: #6A7A9A;
+}
+
+.modal-loading {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--modal-text-muted);
+}
+.modal-loading i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.75rem;
+    color: var(--brand-orange);
+}
+
+.modal-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--modal-text-muted);
+}
+.modal-empty i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.75rem;
+    opacity: 0.3;
+}
+
+.modal-error {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--danger-color, #EF4444);
+}
+.modal-error i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+/* Table Styles */
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+}
+.table {
+    font-size: 0.75rem;
+    margin-bottom: 0;
+}
+.table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--modal-bg);
+    z-index: 10;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--modal-text-muted);
+    border-bottom: 2px solid var(--modal-border);
+    padding: 0.5rem 0.5rem;
+}
+.table tbody td {
+    padding: 0.4rem 0.5rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--modal-border);
+    color: var(--modal-text-secondary);
+    background: var(--modal-bg);
+}
+.table tbody tr {
+    background: var(--modal-bg);
+}
+.table tbody tr:hover {
+    background: rgba(139, 92, 246, 0.04);
+}
+
+/* Badge Styles for Modal */
+.badge-custom {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.5rem;
+    border-radius: 50px;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.badge-status-open { background: #22C55E; color: #fff; }
+.badge-status-assigned { background: #3B82F6; color: #fff; }
+.badge-status-hold { background: #F59E0B; color: #1A1A2E; }
+.badge-status-escalated { background: #8B5CF6; color: #fff; }
+.badge-status-closed { background: #6B7280; color: #fff; }
+
+.badge-priority {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.5rem;
+    border-radius: 50px;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.badge-priority-critical { background: #EF4444; color: #fff; }
+.badge-priority-high { background: #F59E0B; color: #1A1A2E; }
+.badge-priority-medium { background: #3B82F6; color: #fff; }
+.badge-priority-low { background: #94A3B8; color: #1A1A2E; }
+
+.btn-view {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    border-radius: 50px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.btn-view:hover {
+    background: #3B82F6;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-close-custom {
+    border: 2px solid var(--modal-border);
+    background: transparent;
+    color: var(--modal-text-secondary);
+    border-radius: 50px;
+    padding: 0.25rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.btn-close-custom:hover {
+    border-color: var(--danger-color, #EF4444);
+    color: var(--danger-color, #EF4444);
+}
+
+.btn-view-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 0.25rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.btn-view-all:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35);
+    color: #fff;
+}
+
+/* Dark Theme Support for Modal */
+[data-theme="dark"] .modal-content {
+    background: #1A1A2E !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+[data-theme="dark"] .modal-header {
+    background: #1A1A2E !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+[data-theme="dark"] .modal-body {
+    background: #1A1A2E !important;
+}
+[data-theme="dark"] .modal-footer {
+    background: #1A1A2E !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+[data-theme="dark"] .btn-close {
+    filter: invert(1) brightness(2) !important;
+}
+[data-theme="dark"] .table thead th {
+    background: #1A1A2E;
+    color: #A8B8D8;
+    border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .table tbody td {
+    border-color: rgba(255, 255, 255, 0.04);
+    color: #E8EDF5;
+    background: #1A1A2E;
+}
+[data-theme="dark"] .btn-close-custom {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+}
+[data-theme="dark"] .btn-close-custom:hover {
+    border-color: var(--danger-color, #EF4444);
+    color: var(--danger-color, #EF4444);
+}
+[data-theme="dark"] .badge-custom {
+    color: #fff;
+}
+[data-theme="dark"] .badge-priority {
+    color: #fff;
+}
+[data-theme="dark"] .badge-priority-high,
+[data-theme="dark"] .badge-priority-low {
+    color: #1A1A2E;
+}
+</style>
+
+<!-- Toast Container for notifications -->
+<div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; max-width: 400px;"></div>
+
 {% endblock %}

@@ -20,6 +20,8 @@ from .admin_views import (
     test_warning_message,
     test_info_message,
     download_audit_log_excel as admin_download_audit_log_excel,
+    # ✅ NEW: Target Date
+    update_target_date,
 )
 
 # ✅ Import Reports Views from separate file
@@ -175,6 +177,7 @@ __all__ = [
     'test_warning_message',
     'test_info_message',
     'admin_download_audit_log_excel',
+    'update_target_date',  # ✅ NEW
     
     # Employee views
     'employee_dashboard',

@@ -28,13 +28,12 @@ class UnitHead(models.Model):
     Unit Head model with link to Django User for authentication.
     Each Unit Head has a corresponding User account for login.
     """
-    # Link to Django User for authentication - NULLABLE for migration
     user = models.OneToOneField(
         User, 
         on_delete=models.CASCADE, 
         related_name='unit_head_profile',
-        null=True,      # Allow null for existing rows
-        blank=True      # Allow blank in forms
+        null=True,
+        blank=True
     )
     unit = models.OneToOneField(
         Unit, 
@@ -52,11 +51,19 @@ class UnitHead(models.Model):
         return f"{self.name} ({self.unit.code})"
 
 
+# ============================================================
+# DEPARTMENT MODEL - ✅ FIXED: Allows same name in different units
+# ============================================================
 class Department(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)  # ✅ NO unique=True
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # ✅ Allows same department name in different units
+        # ✅ Prevents duplicate department name within the same unit
+        unique_together = ('unit', 'name')
 
     def save(self, *args, **kwargs):
         self.name = self.name.upper()
@@ -146,7 +153,6 @@ class EmployeeMaster(models.Model):
     def save(self, *args, **kwargs):
         self.employee_id = self.employee_id.upper()
         self.employee_name = self.employee_name.upper()
-        # Convert empty strings to None for mobile and email
         if self.mobile == '':
             self.mobile = None
         if self.email == '':
@@ -176,9 +182,12 @@ class DepartmentCredential(models.Model):
         return f"{self.unit.code} - {self.department.name} ({self.username})"
 
 
+# ============================================================
+# TICKET NUMBER GENERATOR - ✅ FIXED: No circular import
+# ============================================================
 def generate_ticket_number():
     """Generate a unique ticket number"""
-    from tickets.models import Ticket
+    from .models import Ticket
     
     last_ticket = Ticket.objects.all().order_by('id').last()
     
@@ -212,23 +221,16 @@ class Ticket(models.Model):
         ('Critical', 'Critical')
     ]
     
-    # ============================================================
-    # OLD ERROR TYPE - Used for employee ticket creation (New/Repeated)
-    # ============================================================
     ERROR_TYPE_CHOICES = [
         ('New', 'New'),
         ('Repeated', 'Repeated'),
     ]
     
-    # ============================================================
-    # NEW ERROR TYPES - Used for admin closing tickets
-    # ============================================================
     MAIN_ERROR_TYPE_CHOICES = [
         ('Roadmap Error', 'Roadmap Error'),
         ('GPL Error', 'GPL Error'),
     ]
     
-    # Roadmap Error Sub-Types
     ROADMAP_SUB_ERROR_CHOICES = [
         ('Database Error', 'Database Error'),
         ('Logic / Functional Error', 'Logic / Functional Error'),
@@ -244,7 +246,6 @@ class Ticket(models.Model):
         ('Other ERP Error', 'Other ERP Error'),
     ]
     
-    # GPL Error Sub-Types
     GPL_SUB_ERROR_CHOICES = [
         ('User / Data Entry Error', 'User / Data Entry Error'),
         ('Process / Procedure Error', 'Process / Procedure Error'),
@@ -273,16 +274,12 @@ class Ticket(models.Model):
         ('Other', 'Other')
     ]
 
-    # ============================================================
-    # BASIC TICKET FIELDS
-    # ============================================================
     ticket_number = models.CharField(max_length=30, unique=True, editable=False)
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT)
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     employee_id = models.CharField(max_length=50)
     employee_name = models.CharField(max_length=150)
     
-    # FIXED: Made mobile and email optional
     mobile = models.CharField(
         max_length=10, 
         blank=True,
@@ -298,9 +295,6 @@ class Ticket(models.Model):
     description = models.TextField()
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
     
-    # ============================================================
-    # ERROR TYPE - Used for employee ticket creation
-    # ============================================================
     error_type = models.CharField(
         max_length=50, 
         choices=ERROR_TYPE_CHOICES,
@@ -308,9 +302,6 @@ class Ticket(models.Model):
         verbose_name="Error Type"
     )
     
-    # ============================================================
-    # NEW FIELDS - Used when admin closes the ticket
-    # ============================================================
     main_error_type = models.CharField(
         max_length=50, 
         blank=True, 
@@ -329,15 +320,19 @@ class Ticket(models.Model):
     )
     
     # ============================================================
-    # ATTACHMENTS
+    # ✅ NEW: TARGET DATE FIELD
     # ============================================================
+    target_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Target Date",
+        help_text="Expected completion date for the ticket"
+    )
+    
     attachment_1 = models.FileField(upload_to='attachments/', blank=True, null=True)
     attachment_2 = models.FileField(upload_to='attachments/', blank=True, null=True)
     attachment_3 = models.FileField(upload_to='attachments/', blank=True, null=True)
     
-    # ============================================================
-    # STATUS & LIFECYCLE
-    # ============================================================
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
     created_by_role = models.CharField(max_length=10, choices=CREATED_BY_CHOICES, default='Employee')
     admin_creation_reason = models.CharField(max_length=50, choices=ADMIN_REASON_CHOICES, blank=True, null=True)
@@ -347,18 +342,12 @@ class Ticket(models.Model):
     closed_by = models.CharField(max_length=100, blank=True, null=True)
     vendor_ticket_number = models.CharField(max_length=100, blank=True, null=True)
     
-    # ============================================================
-    # TIMESTAMPS
-    # ============================================================
     created_by_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     closed_at = models.DateTimeField(blank=True, null=True)
     escalated_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # ============================================================
-    # NOTIFICATION FIELDS - Bell notification system
-    # ============================================================
     is_viewed = models.BooleanField(
         default=False,
         help_text="Admin has viewed this ticket"
@@ -376,7 +365,6 @@ class Ticket(models.Model):
     def save(self, *args, **kwargs):
         if not self.ticket_number:
             self.ticket_number = generate_ticket_number()
-        # Convert empty strings to None for mobile and email
         if self.mobile == '':
             self.mobile = None
         if self.email == '':
@@ -387,7 +375,6 @@ class Ticket(models.Model):
         return f"{self.ticket_number} - {self.subject}"
 
     def get_screen_display(self):
-        """Return the screen name and code for legacy code or ID values."""
         screen = ScreenMaster.objects.filter(
             Q(screen_code=self.screen_number) | Q(pk=self.screen_number)
         ).first()
@@ -395,39 +382,29 @@ class Ticket(models.Model):
             return f'{screen.screen_name} ({screen.screen_code})'
         return self.screen_number or 'Not Set'
     
-    # ============================================================
-    # HELPER METHODS
-    # ============================================================
-    
     def get_main_error_display(self):
-        """Get display value for main error type"""
         if self.main_error_type:
             return self.main_error_type
         return "N/A"
     
     def get_sub_error_display(self):
-        """Get display value for sub error type"""
         if self.sub_error_type:
             return self.sub_error_type
         return "N/A"
     
     def get_full_error_details(self):
-        """Get full error details as dictionary"""
         return {
             'main_error_type': self.get_main_error_display(),
             'sub_error_type': self.get_sub_error_display(),
         }
     
     def has_closing_error_details(self):
-        """Check if ticket has closing error details"""
         return bool(self.main_error_type and self.sub_error_type)
     
     def is_closed(self):
-        """Check if ticket is closed"""
         return self.status == 'Closed'
     
     def can_reopen(self):
-        """Check if ticket can be reopened (within 48 hours of closing)"""
         if not self.is_closed():
             return False
         if not self.closed_at:
@@ -437,15 +414,7 @@ class Ticket(models.Model):
         time_since_close = timezone.now() - self.closed_at
         return time_since_close.total_seconds() <= 48 * 3600
     
-    # ============================================================
-    # NEW: PRIORITY CHANGE HELPER METHODS
-    # ============================================================
-    
     def change_priority(self, new_priority, reason, performed_by):
-        """
-        Change ticket priority and create history entry.
-        Returns the old priority value.
-        """
         if self.is_closed():
             raise ValueError("Cannot change priority of a closed ticket.")
         
@@ -453,7 +422,6 @@ class Ticket(models.Model):
         self.priority = new_priority
         self.save()
         
-        # Create history entry
         TicketHistory.objects.create(
             ticket=self,
             action="Priority Changed",
@@ -464,7 +432,6 @@ class Ticket(models.Model):
         return old_priority
     
     def get_priority_display(self):
-        """Get priority with styling class"""
         priority_map = {
             'Critical': 'badge-priority-critical',
             'High': 'badge-priority-high',
@@ -477,11 +444,6 @@ class Ticket(models.Model):
         }
     
     def get_allowed_priority_changes(self):
-        """
-        Get list of allowed priority changes based on status.
-        Unit Heads can change priority for: Open, Assigned, Hold, Escalated
-        Cannot change for: Closed
-        """
         if self.is_closed():
             return []
         return ['Critical', 'High', 'Medium', 'Low']
@@ -498,7 +460,6 @@ class TicketHistory(models.Model):
         return f"{self.ticket.ticket_number} - {self.action} ({self.timestamp})"
 
     def get_performed_by_display(self):
-        """Return a readable user label for current and legacy history rows."""
         if self.performed_by and self.performed_by.isdigit():
             user = User.objects.filter(pk=int(self.performed_by)).first()
             if user:
@@ -522,7 +483,6 @@ class ReopenAttachment(models.Model):
 # ============================================================
 # SETTINGS AUDIT LOG MODEL
 # ============================================================
-
 class SettingsAuditLog(models.Model):
     ACTION_TYPES = [
         ('CREATE', 'Created'),
@@ -567,7 +527,6 @@ class SettingsAuditLog(models.Model):
         return f"{self.performed_by_name} - {self.action_type} - {self.setting_name} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
 
     def get_performed_by_display(self):
-        """Return a readable user label for current and legacy audit rows."""
         if self.performed_by:
             return self.performed_by.get_full_name() or self.performed_by.username
         if self.performed_by_name and self.performed_by_name.isdigit():
@@ -578,27 +537,25 @@ class SettingsAuditLog(models.Model):
 
 
 # ============================================================
-# ✅ UPDATED: ERP USER ID MAPPING MODEL - WITH INDEPENDENT ERP IDs
+# ERP USER ID MAPPING MODEL - ✅ FIXED: Removed unique=True
 # ============================================================
-
 class ERPHolderMapping(models.Model):
     """
     Maps ERP User IDs to Employee IDs
-    ERP ID can exist independently without employee mapping
-    One ERP User ID can be mapped to multiple Employee IDs
+    ✅ FIXED: Same ERP ID can be used by multiple employees across different units
     """
     erp_user_id = models.CharField(
         max_length=50, 
         db_index=True,
-        unique=True,  # ✅ ERP ID must be unique
+        # ✅ REMOVED: unique=True
         verbose_name="ERP User ID",
         help_text="ERP User ID (e.g., 0001, 0002, HRD1223)"
     )
     employee = models.ForeignKey(
         EmployeeMaster, 
-        on_delete=models.SET_NULL,  # ✅ Changed from CASCADE to SET_NULL
-        null=True,  # ✅ Allow NULL
-        blank=True,  # ✅ Allow blank
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='erp_mappings',
         verbose_name="Employee",
         help_text="Employee mapped to this ERP User ID (optional)"
@@ -644,12 +601,7 @@ class ERPHolderMapping(models.Model):
 # ============================================================
 # SCREEN MASTER MODEL
 # ============================================================
-
 class ScreenMaster(models.Model):
-    """
-    Master list of ERP Screens/Modules.
-    Screen Name and Screen Code must be unique.
-    """
     SCREEN_TYPE_CHOICES = [
         ('ALL', 'General'),
         ('ENTRY', 'Data Entry'),
@@ -698,13 +650,7 @@ class ScreenMaster(models.Model):
 # ============================================================
 # SCREEN MAPPING MODEL
 # ============================================================
-
 class ScreenMapping(models.Model):
-    """
-    Maps screens from ScreenMaster to ERP User IDs.
-    One screen can be mapped to multiple ERP IDs.
-    One ERP ID can have multiple screens.
-    """
     screen = models.ForeignKey(
         ScreenMaster,
         on_delete=models.CASCADE,

@@ -10,6 +10,7 @@
                     <th>Subject</th>
                     <th>Status</th>
                     <th>Priority</th>
+                    <th>Target Date</th>
                     <th>Created</th>
                     <th>Aging</th>
                     <th>Action</th>
@@ -18,8 +19,12 @@
             <tbody>
                 {% for ticket in tickets %}
                 <tr>
-                    <td><strong>{{ ticket.ticket_number }}</strong></td>
-                    <td>{{ ticket.subject|truncatechars:30 }}</td>
+                    <td>
+                        <strong>{{ ticket.ticket_number }}</strong>
+                    </td>
+                    <td>
+                        {{ ticket.subject|truncatechars:30 }}
+                    </td>
                     <td>
                         <span class="badge-custom badge-status-{{ ticket.status|lower }}">
                             {{ ticket.status }}
@@ -30,10 +35,26 @@
                             {{ ticket.priority }}
                         </span>
                     </td>
+                    <!-- ===== TARGET DATE COLUMN ===== -->
+                    <td>
+                        {% if ticket.target_date %}
+                            <span style="font-size: 0.7rem; font-weight: 600; color: var(--brand-orange, #FF6B00);">
+                                <i class="fa-regular fa-calendar me-1"></i>
+                                {{ ticket.target_date|date:"d M Y" }}
+                            </span>
+                        {% else %}
+                            <span style="font-size: 0.65rem; color: var(--text-muted, #8A9AB8);">
+                                <i class="fa-regular fa-calendar me-1"></i>
+                                Not Set
+                            </span>
+                        {% endif %}
+                    </td>
                     <td>
                         <div style="font-size: 0.65rem; color: var(--text-secondary);">
                             {{ ticket.created_at|date:"d M Y" }}
-                            <span style="display: block; font-size: 0.5rem; color: var(--text-muted);">{{ ticket.created_at|date:"H:i" }}</span>
+                            <span style="display: block; font-size: 0.5rem; color: var(--text-muted);">
+                                {{ ticket.created_at|date:"H:i" }}
+                            </span>
                         </div>
                     </td>
                     <td>
@@ -43,14 +64,22 @@
                         </span>
                     </td>
                     <td>
-                        <a href="{% url 'ticket_detail' ticket_id=ticket.id %}" class="btn-view btn-sm">
+                        <a href="{% url 'ticket_detail' ticket.id %}" class="btn-view btn-sm">
                             <i class="fa-solid fa-eye"></i> View
                         </a>
+                        {% if ticket.status == 'Open' %}
+                        <button class="btn-assign btn-sm" onclick="openAssignModal({{ ticket.id }}, '{{ ticket.ticket_number }}')">
+                            <i class="fa-solid fa-user-plus"></i> Assign
+                        </button>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">No tickets found.</td>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="fa-regular fa-ticket" style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+                        No tickets found.
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -58,349 +87,318 @@
     </div>
 </div>
 
+<!-- ============================================================
+     STYLES FOR MODAL - FULL DARK/LIGHT MODE SUPPORT
+     ============================================================ -->
 <style>
-    /* ============================================================
-       CONTAINER - LIGHT & DARK MODE
-    ============================================================ */
-    .uh-ticket-list-container {
-        padding: 0.5rem 0;
-        background: var(--bg-card);
-        border-radius: 8px;
-    }
+/* ============================================================
+   BASE VARIABLES - LIGHT MODE (Default)
+   ============================================================ */
+:root {
+    --uh-bg-container: #ffffff;
+    --uh-bg-table-header: #f8f9fa;
+    --uh-bg-table-hover: rgba(255, 107, 0, 0.04);
+    --uh-border-color: #e5e7eb;
+    --uh-text-primary: #1A2A6C;
+    --uh-text-secondary: #4A5A7C;
+    --uh-text-muted: #8A9AB8;
+    --uh-brand-orange: #FF6B00;
+    --uh-link-color: #3B82F6;
+    --uh-link-hover: #2563EB;
+    --uh-action-bg: rgba(59, 130, 246, 0.08);
+    --uh-action-hover: #3B82F6;
+    --uh-action-color: #3B82F6;
+}
 
-    /* ============================================================
-       DARK MODE - FULL CONTAINER BACKGROUND
-    ============================================================ */
-    [data-theme="dark"] .uh-ticket-list-container {
-        background: #1A1A2E;
-    }
+/* ============================================================
+   DARK MODE OVERRIDES
+   ============================================================ */
+[data-theme="dark"] {
+    --uh-bg-container: #1A1A2E;
+    --uh-bg-table-header: #1e1e3a;
+    --uh-bg-table-hover: rgba(255, 107, 0, 0.06);
+    --uh-border-color: rgba(255, 255, 255, 0.06);
+    --uh-text-primary: #E8EDF5;
+    --uh-text-secondary: #A8B8D8;
+    --uh-text-muted: #6A7A9A;
+    --uh-brand-orange: #FF6B00;
+    --uh-link-color: #60A5FA;
+    --uh-link-hover: #93BBFC;
+    --uh-action-bg: rgba(96, 165, 250, 0.1);
+    --uh-action-hover: #60A5FA;
+    --uh-action-color: #60A5FA;
+}
 
-    /* ============================================================
-       TABLE RESPONSIVE WRAPPER
-    ============================================================ */
-    .table-responsive {
-        background: var(--bg-card);
-        border-radius: 8px;
-        overflow: hidden;
-    }
+/* ============================================================
+   CONTAINER - FIXED WHITE BACKGROUND ISSUE
+   ============================================================ */
+.uh-ticket-list-container {
+    padding: 0.25rem 0;
+    background: var(--uh-bg-container);
+    border-radius: 8px;
+}
 
-    [data-theme="dark"] .table-responsive {
-        background: #1A1A2E;
-    }
+/* Fix for modal body background */
+#drillDownModal .modal-body,
+#drillDownModal .modal-content,
+#drillDownModal .modal-header,
+#drillDownModal .modal-footer {
+    background: var(--uh-bg-container) !important;
+}
 
-    /* ============================================================
-       TABLE STYLES - LIGHT MODE
-    ============================================================ */
+/* ============================================================
+   TABLE STYLES
+   ============================================================ */
+.uh-ticket-list-table {
+    font-size: 0.75rem;
+    margin-bottom: 0;
+    width: 100%;
+    color: var(--uh-text-primary);
+    background: var(--uh-bg-container);
+    border-collapse: collapse;
+}
+
+.uh-ticket-list-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--uh-bg-table-header) !important;
+    z-index: 10;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--uh-text-muted);
+    border-bottom: 2px solid var(--uh-border-color);
+    padding: 0.5rem 0.5rem;
+    font-weight: 700;
+}
+
+.uh-ticket-list-table tbody td {
+    padding: 0.4rem 0.5rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--uh-border-color);
+    color: var(--uh-text-secondary);
+    background: var(--uh-bg-container) !important;
+}
+
+.uh-ticket-list-table tbody tr {
+    background: var(--uh-bg-container) !important;
+}
+
+.uh-ticket-list-table tbody tr:hover {
+    background: var(--uh-bg-table-hover) !important;
+}
+
+/* ============================================================
+   BADGE STYLES - STATUS
+   ============================================================ */
+.badge-custom {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.5rem;
+    border-radius: 50px;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.badge-status-open { background: #22C55E; color: #fff; }
+.badge-status-assigned { background: #3B82F6; color: #fff; }
+.badge-status-hold { background: #F59E0B; color: #1A1A2E; }
+.badge-status-escalated { background: #8B5CF6; color: #fff; }
+.badge-status-closed { background: #6B7280; color: #fff; }
+
+/* ============================================================
+   BADGE STYLES - PRIORITY
+   ============================================================ */
+.badge-priority {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.5rem;
+    border-radius: 50px;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.badge-priority-critical { background: #EF4444; color: #fff; }
+.badge-priority-high { background: #F59E0B; color: #1A1A2E; }
+.badge-priority-medium { background: #3B82F6; color: #fff; }
+.badge-priority-low { background: #94A3B8; color: #1A1A2E; }
+
+/* ============================================================
+   AGING BADGE
+   ============================================================ */
+.aging-badge {
+    display: inline-block;
+    padding: 0.05rem 0.4rem;
+    border-radius: 50px;
+    font-size: 0.55rem;
+    font-weight: 600;
+}
+
+.aging-badge.aging-young { background: rgba(34, 197, 94, 0.12); color: #22C55E; }
+.aging-badge.aging-mid { background: rgba(245, 158, 11, 0.12); color: #F59E0B; }
+.aging-badge.aging-old { background: rgba(239, 68, 68, 0.12); color: #EF4444; }
+.aging-badge.aging-critical { background: rgba(239, 68, 68, 0.2); color: #EF4444; animation: pulseAging 2s ease-in-out infinite; }
+
+@keyframes pulseAging {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* ============================================================
+   ACTION BUTTONS
+   ============================================================ */
+.btn-view {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    background: var(--uh-action-bg);
+    color: var(--uh-action-color);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    border-radius: 50px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-view:hover {
+    background: var(--uh-action-hover);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-assign {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    background: rgba(255, 107, 0, 0.1);
+    color: var(--uh-brand-orange);
+    border: 1px solid rgba(255, 107, 0, 0.15);
+    border-radius: 50px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.55rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 0.2rem;
+}
+
+.btn-assign:hover {
+    background: var(--uh-brand-orange);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* ============================================================
+   DARK THEME - ADDITIONAL OVERRIDES
+   ============================================================ */
+[data-theme="dark"] .uh-ticket-list-table thead th {
+    background: #1A1A2E;
+    color: #A8B8D8;
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .uh-ticket-list-table tbody td {
+    border-color: rgba(255, 255, 255, 0.04);
+    color: #E8EDF5;
+}
+
+[data-theme="dark"] .uh-ticket-list-table tbody tr:hover {
+    background: rgba(255, 107, 0, 0.05);
+}
+
+[data-theme="dark"] .btn-view {
+    background: rgba(96, 165, 250, 0.1);
+    color: #60A5FA;
+    border-color: rgba(96, 165, 250, 0.15);
+}
+
+[data-theme="dark"] .btn-view:hover {
+    background: #60A5FA;
+    color: #1A1A2E;
+}
+
+[data-theme="dark"] .btn-assign {
+    background: rgba(255, 107, 0, 0.15);
+    color: #FF8C3A;
+    border-color: rgba(255, 107, 0, 0.2);
+}
+
+[data-theme="dark"] .btn-assign:hover {
+    background: #FF6B00;
+    color: #fff;
+}
+
+/* ============================================================
+   MODAL BACKGROUND - FORCE OVERRIDE
+   ============================================================ */
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-body,
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer,
+[data-theme="dark"] #drillDownModal .modal-content,
+[data-theme="dark"] #drillDownModal .modal-body,
+[data-theme="dark"] #drillDownModal .modal-header,
+[data-theme="dark"] #drillDownModal .modal-footer {
+    background: #1A1A2E !important;
+}
+
+[data-theme="dark"] .modal-content {
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-theme="dark"] .btn-close {
+    filter: invert(1) brightness(2) !important;
+}
+
+[data-theme="dark"] .text-muted {
+    color: #6A7A9A !important;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
     .uh-ticket-list-table {
-        background: var(--bg-card);
-        color: var(--text-primary);
-        margin-bottom: 0;
-        border-collapse: collapse;
-        width: 100%;
+        font-size: 0.65rem;
     }
-
-    .uh-ticket-list-table thead {
-        background: var(--bg-secondary);
-    }
-
-    .uh-ticket-list-table th {
-        padding: 0.6rem 0.75rem;
-        font-size: 0.6rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-secondary);
-        border-bottom: 2px solid var(--border-color);
-        background: var(--bg-secondary);
-    }
-
-    .uh-ticket-list-table td {
-        padding: 0.5rem 0.75rem;
-        vertical-align: middle;
-        border-bottom: 1px solid var(--border-color);
-        background: var(--bg-card);
-        color: var(--text-primary);
-    }
-
-    .uh-ticket-list-table tbody tr {
-        background: var(--bg-card);
-        transition: all 0.3s ease;
-    }
-
-    .uh-ticket-list-table tbody tr:hover {
-        background: rgba(255, 107, 0, 0.04) !important;
-    }
-
-    .uh-ticket-list-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    /* ============================================================
-       TABLE STYLES - DARK MODE
-    ============================================================ */
-    [data-theme="dark"] .uh-ticket-list-table {
-        background: #1A1A2E;
-    }
-
-    [data-theme="dark"] .uh-ticket-list-table thead {
-        background: #1E1E36;
-    }
-
-    [data-theme="dark"] .uh-ticket-list-table th {
-        color: #A8B8D8 !important;
-        border-color: rgba(255, 255, 255, 0.06);
-        background: #1E1E36;
-    }
-
-    [data-theme="dark"] .uh-ticket-list-table td {
-        color: #E8EDF5 !important;
-        border-color: rgba(255, 255, 255, 0.04);
-        background: #1A1A2E;
-    }
-
-    [data-theme="dark"] .uh-ticket-list-table tbody tr {
-        background: #1A1A2E;
-    }
-
-    [data-theme="dark"] .uh-ticket-list-table tbody tr:hover {
-        background: rgba(255, 107, 0, 0.08) !important;
-    }
-
-    [data-theme="dark"] .text-muted {
-        color: #6A7A9A !important;
-    }
-
-    /* ============================================================
-       AGING BADGE STYLES - LIGHT MODE
-    ============================================================ */
-    .aging-badge {
-        display: inline-block;
-        padding: 0.08rem 0.4rem;
-        border-radius: 50px;
+    .uh-ticket-list-table thead th {
         font-size: 0.5rem;
-        font-weight: 600;
-        white-space: nowrap;
-        font-family: 'Inter', sans-serif;
-        min-width: 35px;
-        text-align: center;
+        padding: 0.3rem 0.3rem;
     }
-
-    .aging-fresh {
-        background: rgba(34, 197, 94, 0.12);
-        color: #22C55E;
-        border: 1px solid rgba(34, 197, 94, 0.15);
+    .uh-ticket-list-table tbody td {
+        padding: 0.3rem 0.3rem;
     }
-
-    .aging-medium {
-        background: rgba(245, 158, 11, 0.12);
-        color: #F59E0B;
-        border: 1px solid rgba(245, 158, 11, 0.15);
+    .btn-view, .btn-assign {
+        font-size: 0.45rem;
+        padding: 0.05rem 0.3rem;
     }
+}
 
-    .aging-old {
-        background: rgba(239, 68, 68, 0.12);
-        color: #EF4444;
-        border: 1px solid rgba(239, 68, 68, 0.15);
-    }
-
-    .aging-very-old {
-        background: rgba(139, 92, 246, 0.12);
-        color: #8B5CF6;
-        border: 1px solid rgba(139, 92, 246, 0.15);
-    }
-
-    .aging-unknown {
-        background: rgba(148, 163, 184, 0.12);
-        color: #94A3B8;
-        border: 1px solid rgba(148, 163, 184, 0.15);
-    }
-
-    /* ============================================================
-       AGING BADGE STYLES - DARK MODE (FIXED)
-    ============================================================ */
-    [data-theme="dark"] .aging-fresh {
-        background: rgba(34, 197, 94, 0.2);
-        color: #4ADE80;
-        border: 1px solid rgba(34, 197, 94, 0.25);
-    }
-
-    [data-theme="dark"] .aging-medium {
-        background: rgba(245, 158, 11, 0.2);
-        color: #FBBF24;
-        border: 1px solid rgba(245, 158, 11, 0.25);
-    }
-
-    [data-theme="dark"] .aging-old {
-        background: rgba(239, 68, 68, 0.2);
-        color: #F87171;
-        border: 1px solid rgba(239, 68, 68, 0.25);
-    }
-
-    [data-theme="dark"] .aging-very-old {
-        background: rgba(139, 92, 246, 0.2);
-        color: #A78BFA;
-        border: 1px solid rgba(139, 92, 246, 0.25);
-    }
-
-    [data-theme="dark"] .aging-unknown {
-        background: rgba(148, 163, 184, 0.2);
-        color: #94A3B8;
-        border: 1px solid rgba(148, 163, 184, 0.25);
-    }
-
-    /* ============================================================
-       STATUS BADGES - LIGHT MODE
-    ============================================================ */
-    .badge-custom {
-        display: inline-block;
-        padding: 0.15rem 0.5rem;
-        border-radius: 50px;
+@media (max-width: 480px) {
+    .uh-ticket-list-table {
         font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        transition: all 0.3s ease;
-        white-space: nowrap;
     }
-
-    .badge-status-open { background: #22C55E; color: white; }
-    .badge-status-assigned { background: #3B82F6; color: white; }
-    .badge-status-hold { background: #F59E0B; color: white; }
-    .badge-status-escalated { background: #8B5CF6; color: white; }
-    .badge-status-closed { background: #94A3B8; color: white; }
-
-    /* ============================================================
-       STATUS BADGES - DARK MODE (FIXED)
-    ============================================================ */
-    [data-theme="dark"] .badge-status-open { 
-        background: rgba(34, 197, 94, 0.25); 
-        color: #4ADE80; 
-        border: 1px solid rgba(34, 197, 94, 0.3);
+    .badge-custom, .badge-priority {
+        font-size: 0.4rem;
+        padding: 0.05rem 0.25rem;
     }
-    [data-theme="dark"] .badge-status-assigned { 
-        background: rgba(59, 130, 246, 0.25); 
-        color: #60A5FA; 
-        border: 1px solid rgba(59, 130, 246, 0.3);
+    .aging-badge {
+        font-size: 0.4rem;
+        padding: 0.03rem 0.2rem;
     }
-    [data-theme="dark"] .badge-status-hold { 
-        background: rgba(245, 158, 11, 0.25); 
-        color: #FBBF24; 
-        border: 1px solid rgba(245, 158, 11, 0.3);
-    }
-    [data-theme="dark"] .badge-status-escalated { 
-        background: rgba(139, 92, 246, 0.25); 
-        color: #A78BFA; 
-        border: 1px solid rgba(139, 92, 246, 0.3);
-    }
-    [data-theme="dark"] .badge-status-closed { 
-        background: rgba(148, 163, 184, 0.25); 
-        color: #94A3B8; 
-        border: 1px solid rgba(148, 163, 184, 0.3);
-    }
-
-    /* ============================================================
-       PRIORITY BADGES - LIGHT MODE
-    ============================================================ */
-    .badge-priority {
-        display: inline-block;
-        padding: 0.15rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-
-    .badge-priority-critical { 
-        background: #EF4444; 
-        color: white; 
-    }
-    .badge-priority-high { 
-        background: #F59E0B; 
-        color: #1A1A2E;
-    }
-    .badge-priority-medium { 
-        background: #3B82F6; 
-        color: white;
-    }
-    .badge-priority-low { 
-        background: #94A3B8; 
-        color: white;
-    }
-
-    /* ============================================================
-       PRIORITY BADGES - DARK MODE (FIXED)
-    ============================================================ */
-    [data-theme="dark"] .badge-priority-critical { 
-        background: rgba(239, 68, 68, 0.25); 
-        color: #F87171;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-    [data-theme="dark"] .badge-priority-high { 
-        background: rgba(245, 158, 11, 0.25); 
-        color: #FBBF24;
-        border: 1px solid rgba(245, 158, 11, 0.3);
-    }
-    [data-theme="dark"] .badge-priority-medium { 
-        background: rgba(59, 130, 246, 0.25); 
-        color: #60A5FA;
-        border: 1px solid rgba(59, 130, 246, 0.3);
-    }
-    [data-theme="dark"] .badge-priority-low { 
-        background: rgba(148, 163, 184, 0.25); 
-        color: #94A3B8;
-        border: 1px solid rgba(148, 163, 184, 0.3);
-    }
-
-    /* ============================================================
-       VIEW BUTTON - LIGHT & DARK MODE
-    ============================================================ */
-    .btn-view {
-        padding: 0.2rem 0.8rem !important;
-        border-radius: 50px !important;
-        font-size: 0.6rem !important;
-        font-weight: 600 !important;
-        background: linear-gradient(135deg, #FF6B00, #FF8C38) !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        text-decoration: none !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-        box-shadow: 0 2px 8px rgba(255, 107, 0, 0.2) !important;
-        transition: all 0.3s ease !important;
-    }
-
-    .btn-view:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.35) !important;
-        color: #FFFFFF !important;
-    }
-
-    /* ============================================================
-       TABLE HOVER EFFECT - LIGHT & DARK MODE
-    ============================================================ */
-    .table-hover tbody tr:hover {
-        background: rgba(255, 107, 0, 0.04) !important;
-    }
-
-    [data-theme="dark"] .table-hover tbody tr:hover {
-        background: rgba(255, 107, 0, 0.08) !important;
-    }
-
-    /* ============================================================
-       SCROLLBAR
-    ============================================================ */
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 8px; }
-    ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 8px; }
-    ::-webkit-scrollbar-thumb:hover { background: #E55A00; }
-
-    [data-theme="dark"] ::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.02);
-    }
-
-    [data-theme="dark"] ::-webkit-scrollbar-thumb {
-        background: rgba(255, 107, 0, 0.5);
-    }
+}
 </style>

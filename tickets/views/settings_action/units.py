@@ -5,9 +5,11 @@ Unit and Department Settings - Add, Edit, Toggle Active/Inactive, Bulk Upload De
 """
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db import IntegrityError, transaction
+from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
 import logging
 
@@ -113,15 +115,33 @@ def settings_departments(request):
     Manage Departments: Add, Edit, Toggle Active/Inactive
     POST: action (add/edit/toggle), dept_id, name, unit
     Redirects to: settings_units_departments
+    ✅ FIXED: Allows same department name in different units
     """
     if request.method == 'POST':
         action = request.POST.get('action')
         
         if action == 'add':
-            form = DepartmentForm(request.POST)
-            if form.is_valid(): 
-                dept = form.save()
-                messages.success(request, f"Department '{dept.name}' added.")
+            unit_id = request.POST.get('unit')
+            dept_name = request.POST.get('name', '').strip()
+            
+            if not unit_id or not dept_name:
+                messages.error(request, "Unit and Department Name are required.")
+                return redirect('settings_units_departments')
+            
+            # ✅ FIXED: Check per unit, NOT globally
+            unit = get_object_or_404(Unit, pk=unit_id)
+            
+            if Department.objects.filter(unit=unit, name__iexact=dept_name).exists():
+                messages.error(request, f"Department '{dept_name}' already exists in unit '{unit.code}'.")
+                return redirect('settings_units_departments')
+            
+            try:
+                dept = Department.objects.create(
+                    unit=unit,
+                    name=dept_name,
+                    is_active=True
+                )
+                messages.success(request, f"Department '{dept.name}' added under {unit.code}.")
                 
                 log_settings_change(
                     request,
@@ -132,41 +152,49 @@ def settings_departments(request):
                     change_summary=f"Added department '{dept.name}' under unit '{dept.unit.code}'",
                     remarks=f"Department added by {request.user.username}"
                 )
-            else:
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(request, f"{field}: {error}")
+            except Exception as e:
+                messages.error(request, f"Error: {str(e)}")
         
         elif action == 'edit':
-            dept = get_object_or_404(Department, pk=request.POST.get('dept_id'))
+            dept_id = request.POST.get('dept_id')
+            dept_name = request.POST.get('name', '').strip()
+            
+            if not dept_id or not dept_name:
+                messages.error(request, "Department ID and Name are required.")
+                return redirect('settings_units_departments')
+            
+            dept = get_object_or_404(Department, pk=dept_id)
             old_name = dept.name
             old_unit = dept.unit.code
             
-            form = DepartmentForm(request.POST, instance=dept)
-            if form.is_valid(): 
-                form.save()
-                messages.success(request, f"Department '{dept.name}' updated.")
-                
-                change_details = []
-                if old_name != dept.name:
-                    change_details.append(f"Name: {old_name} → {dept.name}")
-                if old_unit != dept.unit.code:
-                    change_details.append(f"Unit: {old_unit} → {dept.unit.code}")
-                
-                log_settings_change(
-                    request,
-                    action_type='UPDATE',
-                    setting_type='DEPARTMENT',
-                    setting_name=f"Department: {dept.name}",
-                    old_value=f"Name: {old_name}, Unit: {old_unit}",
-                    new_value=f"Name: {dept.name}, Unit: {dept.unit.code}",
-                    change_summary='; '.join(change_details) if change_details else 'Department updated',
-                    remarks=f"Department updated by {request.user.username}"
-                )
-            else:
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(request, f"{field}: {error}")
+            # ✅ FIXED: Check per unit, excluding current instance
+            if Department.objects.filter(
+                unit=dept.unit, 
+                name__iexact=dept_name
+            ).exclude(pk=dept_id).exists():
+                messages.error(request, f"Department '{dept_name}' already exists in unit '{dept.unit.code}'.")
+                return redirect('settings_units_departments')
+            
+            dept.name = dept_name
+            dept.save()
+            messages.success(request, f"Department '{dept.name}' updated.")
+            
+            change_details = []
+            if old_name != dept.name:
+                change_details.append(f"Name: {old_name} → {dept.name}")
+            if old_unit != dept.unit.code:
+                change_details.append(f"Unit: {old_unit} → {dept.unit.code}")
+            
+            log_settings_change(
+                request,
+                action_type='UPDATE',
+                setting_type='DEPARTMENT',
+                setting_name=f"Department: {dept.name}",
+                old_value=f"Name: {old_name}, Unit: {old_unit}",
+                new_value=f"Name: {dept.name}, Unit: {dept.unit.code}",
+                change_summary='; '.join(change_details) if change_details else 'Department updated',
+                remarks=f"Department updated by {request.user.username}"
+            )
         
         elif action == 'toggle':
             dept = get_object_or_404(Department, pk=request.POST.get('dept_id'))
@@ -192,8 +220,9 @@ def settings_departments(request):
 
 
 # ============================================================
-# ✅ NEW: BULK UPLOAD DEPARTMENTS
+# ✅ BULK UPLOAD DEPARTMENTS - FIXED WITH PROPER ERROR HANDLING
 # ============================================================
+@csrf_exempt
 @login_required
 @user_passes_test(is_admin, login_url='tickets:login')
 def departments_bulk_upload(request):
@@ -202,29 +231,73 @@ def departments_bulk_upload(request):
     Expected columns: 'Unit Code', 'Department Name'
     Maps department to existing unit based on Unit Code
     URL: /custom-admin/settings/departments/bulk-upload/
+    ✅ FIXED: Allows same department name in different units
     """
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
+    # Check if it's an AJAX request
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
-    excel_file = request.FILES.get('excel_file')
-    if not excel_file:
-        return JsonResponse({'success': False, 'message': 'Please select an Excel file.'})
-    
-    if not excel_file.name.endswith(('.xlsx', '.xls', '.csv')):
+    if not is_ajax:
         return JsonResponse({
-            'success': False, 
-            'message': 'Invalid file format. Only .xlsx, .xls, and .csv files are supported.'
-        })
+            'success': False,
+            'message': 'Invalid request. This endpoint only accepts AJAX requests.',
+            'added_count': 0,
+            'skipped_count': 0,
+            'errors': ['Invalid request type.']
+        }, status=400)
     
     try:
+        if request.method != 'POST':
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid method. Use POST.',
+                'added_count': 0,
+                'skipped_count': 0,
+                'errors': ['Invalid request method. Please use POST.']
+            }, status=400)
+        
+        excel_file = request.FILES.get('excel_file')
+        if not excel_file:
+            return JsonResponse({
+                'success': False,
+                'message': 'Please select an Excel file.',
+                'added_count': 0,
+                'skipped_count': 0,
+                'errors': ['No file selected.']
+            })
+        
+        if not excel_file.name.endswith(('.xlsx', '.xls', '.csv')):
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid file format. Only .xlsx, .xls, and .csv files are supported.',
+                'added_count': 0,
+                'skipped_count': 0,
+                'errors': ['Unsupported file format.']
+            })
+        
         # Read the file
-        if excel_file.name.endswith('.csv'):
-            df = pd.read_csv(excel_file, dtype=str)
-        else:
-            df = pd.read_excel(excel_file, dtype=str)
+        try:
+            if excel_file.name.endswith('.csv'):
+                df = pd.read_csv(excel_file, dtype=str)
+            else:
+                df = pd.read_excel(excel_file, dtype=str)
+        except Exception as e:
+            logger.error(f"Error reading file: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'message': f'Error reading file: {str(e)}',
+                'added_count': 0,
+                'skipped_count': 0,
+                'errors': [f'Could not read file: {str(e)}']
+            })
         
         if df.empty:
-            return JsonResponse({'success': False, 'message': 'The uploaded file is empty.'})
+            return JsonResponse({
+                'success': False,
+                'message': 'The uploaded file is empty.',
+                'added_count': 0,
+                'skipped_count': 0,
+                'errors': ['File is empty.']
+            })
         
         # Find columns - look for Unit Code and Department Name
         unit_code_column = None
@@ -252,7 +325,6 @@ def departments_bulk_upload(request):
         
         # Get all active units for validation
         existing_units = {unit.code: unit for unit in Unit.objects.filter(is_active=True)}
-        existing_dept_names = set(Department.objects.values_list('name', flat=True))
         
         added_count = 0
         skipped_count = 0
@@ -284,9 +356,9 @@ def departments_bulk_upload(request):
                     skipped_count += 1
                     continue
                 
-                # Check if department already exists
-                if dept_name in existing_dept_names:
-                    errors.append(f"Row {index + 1}: Department '{dept_name}' already exists")
+                # ✅ FIXED: Check if department exists in THIS unit only
+                if Department.objects.filter(unit=unit, name__iexact=dept_name).exists():
+                    errors.append(f"Row {index + 1}: Department '{dept_name}' already exists in unit '{unit_code}'")
                     skipped_count += 1
                     skipped_depts.append(dept_name)
                     continue
@@ -300,9 +372,8 @@ def departments_bulk_upload(request):
                     )
                     added_count += 1
                     added_depts.append(dept_name)
-                    existing_dept_names.add(dept_name)  # Add to set to avoid duplicates in same file
                 except IntegrityError:
-                    errors.append(f"Row {index + 1}: Department '{dept_name}' already exists (database constraint)")
+                    errors.append(f"Row {index + 1}: Database constraint error for {unit_code} - {dept_name}")
                     skipped_count += 1
                     skipped_depts.append(dept_name)
                 except Exception as e:
@@ -337,11 +408,17 @@ def departments_bulk_upload(request):
         
     except Exception as e:
         logger.error(f"Bulk upload departments error: {str(e)}")
-        return JsonResponse({'success': False, 'message': f'Error processing file: {str(e)}'})
+        return JsonResponse({
+            'success': False,
+            'message': f'Error processing file: {str(e)}',
+            'added_count': 0,
+            'skipped_count': 0,
+            'errors': [str(e)]
+        }, status=500)
 
 
 # ============================================================
-# ✅ NEW: DOWNLOAD BULK UPLOAD TEMPLATE FOR DEPARTMENTS
+# ✅ DOWNLOAD BULK UPLOAD TEMPLATE FOR DEPARTMENTS
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='tickets:login')
@@ -435,28 +512,34 @@ def departments_download_template(request):
     
     note_row += 1
     note_cell4 = ws.cell(row=note_row, column=1)
-    note_cell4.value = "3. Departments with duplicate names will be skipped automatically"
+    note_cell4.value = "3. Departments with duplicate names within the same unit will be skipped automatically"
     note_cell4.font = Font(name='Calibri', size=9, color='333333')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=2)
     
-    note_row += 2
+    note_row += 1
     note_cell5 = ws.cell(row=note_row, column=1)
-    note_cell5.value = "⚠️ Unit Code must exist in the system. Departments are created as ACTIVE by default."
-    note_cell5.font = Font(name='Calibri', size=9, italic=True, color='FF6B00')
+    note_cell5.value = "4. The same department name can exist in different units (e.g., HRD in DCD and IMD)"
+    note_cell5.font = Font(name='Calibri', size=9, color='333333')
+    ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=2)
+    
+    note_row += 2
+    note_cell6 = ws.cell(row=note_row, column=1)
+    note_cell6.value = "⚠️ Unit Code must exist in the system. Departments are created as ACTIVE by default."
+    note_cell6.font = Font(name='Calibri', size=9, italic=True, color='FF6B00')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=2)
     
     # Add active units list for reference
     note_row += 2
-    note_cell6 = ws.cell(row=note_row, column=1)
-    note_cell6.value = "📋 Active Units in System:"
-    note_cell6.font = Font(name='Calibri', size=9, bold=True, color='1F4E79')
+    note_cell7 = ws.cell(row=note_row, column=1)
+    note_cell7.value = "📋 Active Units in System:"
+    note_cell7.font = Font(name='Calibri', size=9, bold=True, color='1F4E79')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=2)
     
     note_row += 1
     unit_codes = ', '.join([unit.code for unit in existing_units]) if existing_units.exists() else 'No units found'
-    note_cell7 = ws.cell(row=note_row, column=1)
-    note_cell7.value = unit_codes
-    note_cell7.font = Font(name='Calibri', size=9, color='666666')
+    note_cell8 = ws.cell(row=note_row, column=1)
+    note_cell8.value = unit_codes
+    note_cell8.font = Font(name='Calibri', size=9, color='666666')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=2)
     
     # Column widths

@@ -1,806 +1,10 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Ticket Details - {{ ticket.ticket_number }}{% endblock %}
 
 {% block extra_head %}
 {{ block.super }}
-<style>
-    .ticket-detail-container {
-        animation-name: fadeInUp;
-        animation-duration: 0.6s;
-        animation-timing-function: ease;
-        padding: 0 0.5rem;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .details-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.8rem;
-        padding: 0.25rem 0;
-    }
-
-    @media (max-width: 768px) {
-        .details-grid {
-            grid-template-columns: 1fr;
-            gap: 0.6rem;
-        }
-    }
-
-    .detail-item {
-        background: var(--input-bg);
-        border-radius: 10px;
-        padding: 0.5rem 0.8rem;
-        border: 1px solid var(--border-color);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .detail-item::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 3px;
-        background: var(--brand-gradient);
-        opacity: 0.5;
-        border-radius: 0 0 10px 0;
-    }
-
-    .detail-item:hover {
-        border-color: rgba(255, 107, 0, 0.25);
-        transform: translateX(3px);
-        box-shadow: 0 2px 12px rgba(255, 107, 0, 0.06);
-    }
-
-    .detail-label {
-        font-size: 0.5rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        color: var(--text-muted) !important;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        margin-bottom: 0.05rem;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .detail-label i {
-        font-size: 0.6rem;
-        color: var(--brand-orange);
-        opacity: 0.7;
-    }
-
-    .detail-value {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-primary) !important;
-        word-break: break-word;
-        padding-left: 0.1rem;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .detail-value a {
-        color: var(--brand-orange) !important;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-
-    .detail-value a:hover {
-        color: var(--brand-orange) !important;
-        text-decoration: underline;
-    }
-
-    .detail-subject {
-        grid-column: 1 / -1;
-        background: rgba(255, 107, 0, 0.04);
-        border: 1px solid rgba(255, 107, 0, 0.1);
-        border-radius: 10px;
-        padding: 0.6rem 0.8rem;
-    }
-
-    .detail-subject .detail-label {
-        font-size: 0.5rem;
-        letter-spacing: 0.8px;
-        color: var(--brand-orange) !important;
-    }
-
-    .detail-subject .detail-value {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--brand-orange) !important;
-    }
-
-    .detail-item.highlight-status {
-        background: rgba(255, 107, 0, 0.04);
-        border-color: rgba(255, 107, 0, 0.1);
-    }
-
-    .detail-item.highlight-status .detail-value {
-        font-size: 0.9rem;
-    }
-
-    .detail-item.ticket-number {
-        background: rgba(255, 107, 0, 0.06);
-        border-color: rgba(255, 107, 0, 0.15);
-    }
-
-    .detail-item.ticket-number .detail-value {
-        font-family: 'Courier New', monospace;
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: var(--brand-orange) !important;
-        letter-spacing: 0.5px;
-    }
-
-    .detail-description {
-        grid-column: 1 / -1;
-        margin-top: 0.1rem;
-    }
-
-    .detail-description .detail-value {
-        background: var(--input-bg);
-        border-radius: 10px;
-        padding: 0.6rem 0.8rem;
-        border-left: 3px solid var(--brand-orange);
-        font-weight: 400;
-        line-height: 1.7;
-        font-size: 0.82rem;
-        white-space: pre-line;
-        border: 1px solid var(--border-color);
-        border-left-width: 4px;
-        color: var(--text-secondary) !important;
-    }
-
-    .detail-description .detail-value:hover {
-        border-color: rgba(255, 107, 0, 0.2);
-    }
-
-    .detail-attachment {
-        grid-column: 1 / -1;
-    }
-
-    .detail-divider {
-        grid-column: 1 / -1;
-        border-bottom: 1px solid var(--border-color);
-        margin: 0.1rem 0 0.4rem 0;
-        opacity: 0.3;
-    }
-
-    .detail-helper {
-        font-size: 0.5rem;
-        color: var(--text-muted);
-        margin-top: 0.05rem;
-        opacity: 0.7;
-    }
-
-    .text-primary {
-        color: var(--brand-orange) !important;
-    }
-
-    .text-muted {
-        color: var(--text-muted) !important;
-    }
-
-    .text-secondary {
-        color: var(--text-secondary) !important;
-    }
-
-    .btn-primary-custom {
-        background: var(--brand-gradient) !important;
-        border: none !important;
-        color: #FFFFFF !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 50px !important;
-        padding: 0.5rem 1.5rem !important;
-        font-size: 0.9rem !important;
-        font-weight: 500 !important;
-        position: relative;
-        overflow: hidden;
-        font-family: 'Inter', sans-serif;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none !important;
-        box-shadow: 0 4px 16px rgba(255, 107, 0, 0.25) !important;
-    }
-
-    .btn-primary-custom::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: all 0.6s ease;
-    }
-
-    .btn-primary-custom:hover::before {
-        width: 300px;
-        height: 300px;
-    }
-
-    .btn-primary-custom:hover {
-        transform: translateY(-3px) scale(1.03) !important;
-        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.35) !important;
-        color: #FFFFFF !important;
-    }
-
-    .btn-excel-download {
-        background: linear-gradient(135deg, #22C55E, #16A34A) !important;
-        border: none !important;
-        color: #FFFFFF !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 50px !important;
-        padding: 0.4rem 1.2rem !important;
-        font-size: 0.8rem !important;
-        font-weight: 500 !important;
-        font-family: 'Inter', sans-serif;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none !important;
-        box-shadow: 0 4px 16px rgba(34, 197, 94, 0.25) !important;
-    }
-
-    .btn-excel-download:hover {
-        transform: translateY(-3px) scale(1.03) !important;
-        box-shadow: 0 8px 30px rgba(34, 197, 94, 0.35) !important;
-        color: #FFFFFF !important;
-    }
-
-    .btn-back {
-        border: 2px solid var(--border-color) !important;
-        color: var(--text-secondary) !important;
-        border-radius: 50px !important;
-        padding: 0.4rem 1.2rem !important;
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
-        transition: all 0.4s ease !important;
-        background: transparent !important;
-        font-family: 'Inter', sans-serif !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        text-decoration: none !important;
-    }
-
-    .btn-back:hover {
-        background: var(--bg-secondary) !important;
-        border-color: var(--brand-orange) !important;
-        color: var(--text-primary) !important;
-        transform: translateX(-3px) !important;
-    }
-
-    .panel-card {
-        background: var(--bg-card) !important;
-        border: 1px solid var(--border-color) !important;
-        box-shadow: var(--shadow-sm) !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 16px !important;
-        overflow: hidden;
-        animation: cardFadeIn 0.6s ease;
-        height: 100%;
-    }
-
-    .panel-card:hover {
-        box-shadow: var(--shadow-md) !important;
-        transform: translateY(-4px);
-        border-color: rgba(255, 107, 0, 0.2) !important;
-    }
-
-    @keyframes cardFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .glass-header {
-        background: rgba(255, 107, 0, 0.03) !important;
-        border-bottom: 1px solid var(--border-color) !important;
-        padding: 0.6rem 1.25rem;
-    }
-
-    .glass-header h5 {
-        color: var(--text-primary) !important;
-        font-weight: 700 !important;
-        font-family: 'Fraunces', serif !important;
-        font-size: 0.9rem;
-        margin: 0;
-    }
-
-    .glass-header h5 i {
-        color: var(--brand-orange) !important;
-    }
-
-    .card-body {
-        background: transparent !important;
-        padding: 1.25rem !important;
-    }
-
-    .badge-custom {
-        display: inline-block;
-        padding: 0.25rem 0.7rem;
-        border-radius: 50px;
-        font-size: 0.65rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        transition: all 0.3s ease;
-    }
-
-    .badge-status-open {
-        background: #22C55E;
-        color: white;
-    }
-
-    .badge-status-assigned {
-        background: #3B82F6;
-        color: white;
-    }
-
-    .badge-status-hold {
-        background: #F59E0B;
-        color: white;
-    }
-
-    .badge-status-escalated {
-        background: #8B5CF6;
-        color: white;
-    }
-
-    .badge-status-closed {
-        background: #94A3B8;
-        color: white;
-    }
-
-    .badge-priority {
-        padding: 0.25rem 0.7rem;
-        border-radius: 50px;
-        font-size: 0.65rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
-
-    .badge-priority-critical {
-        background: #EF4444;
-        color: white;
-        animation: pulseCritical 2s ease-in-out infinite;
-    }
-
-    @keyframes pulseCritical {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-        50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-    }
-
-    .badge-priority-high {
-        background: #F59E0B;
-        color: #1A1A2E;
-    }
-
-    .badge-priority-medium {
-        background: #3B82F6;
-        color: white;
-    }
-
-    .badge-priority-low {
-        background: #94A3B8;
-        color: white;
-    }
-
-    /* ===== TOP STATUS CARD ===== */
-    .top-status-card {
-        grid-column: 1 / -1;
-        border-radius: 10px;
-        padding: 0.6rem 0.8rem;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: stretch;
-        gap: 0.5rem;
-        background: var(--input-bg);
-        border: 1px solid var(--border-color);
-        margin-bottom: 0.2rem;
-    }
-
-    .top-status-card .status-section {
-        flex: 1;
-        min-width: 200px;
-    }
-
-    .top-status-card .status-section .section-label {
-        font-size: 0.5rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-muted);
-        margin-bottom: 0.15rem;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
-
-    .top-status-card .status-section .section-label i {
-        font-size: 0.6rem;
-    }
-
-    .top-status-card .status-section .section-value {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        word-break: break-word;
-    }
-
-    .top-status-card .divider {
-        width: 1px;
-        background: var(--border-color);
-        flex-shrink: 0;
-    }
-
-    @media (max-width: 768px) {
-        .top-status-card {
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-        .top-status-card .divider {
-            width: 100%;
-            height: 1px;
-        }
-        .top-status-card .status-section {
-            min-width: auto;
-        }
-    }
-
-    .status-box {
-        padding: 0.75rem 1rem;
-        border-radius: 12px;
-        border-left: 4px solid;
-        transition: all 0.3s ease;
-        animation: slideInRight 0.5s ease;
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-    }
-
-    @keyframes slideInRight {
-        from {
-            opacity: 0;
-            transform: translateX(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    .status-box-closed {
-        border-left-color: #22C55E !important;
-        background: rgba(34, 197, 94, 0.04) !important;
-    }
-
-    .status-box-hold {
-        border-left-color: #F59E0B !important;
-        background: rgba(245, 158, 11, 0.04) !important;
-    }
-
-    .status-box-escalated {
-        border-left-color: #8B5CF6 !important;
-        background: rgba(139, 92, 246, 0.04) !important;
-    }
-
-    .timeline {
-        position: relative;
-        padding: 0;
-        list-style: none;
-    }
-
-    .timeline::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 16px;
-        width: 2px;
-        background: var(--brand-gradient);
-        opacity: 0.4;
-    }
-
-    .timeline-item {
-        position: relative;
-        padding-left: 40px;
-        margin-bottom: 0.8rem;
-        animation: timelineSlide 0.5s ease;
-    }
-
-    .timeline-item:last-child {
-        margin-bottom: 0;
-    }
-
-    @keyframes timelineSlide {
-        from {
-            opacity: 0;
-            transform: translateX(-15px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    .timeline-marker {
-        position: absolute;
-        left: 11px;
-        top: 4px;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--brand-gradient);
-        border: 2px solid var(--bg-card);
-        box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.15);
-        z-index: 1;
-        transition: all 0.3s ease;
-    }
-
-    .timeline-item:hover .timeline-marker {
-        transform: scale(1.3);
-        box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
-    }
-
-    .timeline-content {
-        background: var(--input-bg) !important;
-        border-radius: 10px;
-        padding: 0.4rem 0.6rem;
-        transition: all 0.3s ease;
-        border: 1px solid var(--border-color) !important;
-    }
-
-    .timeline-content:hover {
-        border-color: rgba(255, 107, 0, 0.15) !important;
-        transform: translateX(3px);
-    }
-
-    .timeline-time {
-        font-size: 0.55rem;
-        color: var(--text-muted);
-        margin-bottom: 0.05rem;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .timeline-time i {
-        color: var(--brand-orange);
-    }
-
-    .timeline-title {
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: var(--brand-orange) !important;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .timeline-body {
-        font-size: 0.72rem;
-        color: var(--text-secondary) !important;
-        margin-top: 0.05rem;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .timeline-by {
-        font-size: 0.5rem;
-        color: var(--text-muted) !important;
-        display: block;
-        margin-top: 0.05rem;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .timeline-by i {
-        color: var(--brand-orange);
-    }
-
-    .timeline-wrapper {
-        padding: 0;
-    }
-
-    .btn-attachment {
-        border: 2px solid var(--brand-orange);
-        color: var(--brand-orange);
-        border-radius: 50px;
-        padding: 0.15rem 0.6rem;
-        font-size: 0.65rem;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background: transparent;
-        white-space: nowrap;
-    }
-
-    .btn-attachment:hover {
-        background: var(--brand-gradient);
-        color: white !important;
-        border-color: transparent;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.2);
-    }
-
-    .reopen-timer-box {
-        background: rgba(255, 107, 0, 0.04);
-        border: 1px solid rgba(255, 107, 0, 0.1);
-        border-radius: 12px;
-        padding: 0.5rem 1rem;
-        margin-top: 0.5rem;
-        display: inline-block;
-    }
-
-    .reopen-timer-box .timer-label {
-        font-size: 0.6rem;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .reopen-timer-box #reopen-timer {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: var(--brand-orange);
-        font-family: 'Courier New', monospace;
-        letter-spacing: 1px;
-    }
-
-    @media (max-width: 992px) {
-        .col-lg-7, .col-lg-5 {
-            flex: 0 0 100%;
-            max-width: 100%;
-        }
-        .panel-card { margin-bottom: 0.75rem; }
-    }
-
-    @media (max-width: 768px) {
-        .d-flex.justify-content-between {
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .d-flex.justify-content-between .btn {
-            width: 100%;
-            justify-content: center;
-        }
-        .card-body { padding: 1rem !important; }
-        .detail-value { font-size: 0.8rem; }
-        .detail-label { font-size: 0.45rem; }
-        .detail-subject .detail-value { font-size: 0.9rem; }
-        .detail-description .detail-value { font-size: 0.78rem; }
-        .timeline::before { left: 13px; }
-        .timeline-item { padding-left: 34px; }
-        .timeline-marker { left: 9px; width: 8px; height: 8px; }
-        .timeline-content { padding: 0.4rem 0.5rem; }
-        .timeline-title { font-size: 0.75rem; }
-        .timeline-body { font-size: 0.7rem; }
-        .reopen-timer-box #reopen-timer { font-size: 0.9rem; }
-        .top-status-card {
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-        .top-status-card .divider {
-            width: 100%;
-            height: 1px;
-        }
-        .top-status-card .status-section {
-            min-width: auto;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .card-body { padding: 0.75rem !important; }
-        .detail-value { font-size: 0.75rem; }
-        .detail-label { font-size: 0.4rem; }
-        .detail-subject .detail-value { font-size: 0.85rem; }
-        .detail-description .detail-value { font-size: 0.75rem; }
-        .badge-custom, .badge-priority { font-size: 0.5rem; padding: 0.15rem 0.5rem; }
-        .timeline-item { padding-left: 30px; }
-        .timeline::before { left: 11px; }
-        .timeline-marker { left: 7px; width: 7px; height: 7px; }
-        .timeline-content { padding: 0.3rem 0.4rem; }
-        .timeline-time { font-size: 0.5rem; }
-        .timeline-title { font-size: 0.7rem; }
-        .timeline-body { font-size: 0.65rem; }
-        .btn-back { font-size: 0.75rem !important; padding: 0.3rem 0.6rem !important; }
-        .btn-primary-custom { font-size: 0.75rem !important; padding: 0.3rem 0.8rem !important; }
-        .btn-excel-download { font-size: 0.7rem !important; padding: 0.3rem 0.8rem !important; }
-        .reopen-timer-box #reopen-timer { font-size: 0.8rem; }
-        .reopen-timer-box { padding: 0.3rem 0.6rem; }
-        .top-status-card .status-section .section-value {
-            font-size: 0.75rem;
-        }
-    }
-
-    [data-theme="dark"] .panel-card {
-        border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-    [data-theme="dark"] .panel-card:hover {
-        border-color: rgba(255, 107, 0, 0.25) !important;
-    }
-    [data-theme="dark"] .glass-header {
-        background: rgba(255, 107, 0, 0.05) !important;
-    }
-    [data-theme="dark"] .detail-item {
-        background: rgba(255, 255, 255, 0.04);
-        border-color: rgba(255, 255, 255, 0.06);
-    }
-    [data-theme="dark"] .detail-item:hover {
-        border-color: rgba(255, 107, 0, 0.25);
-    }
-    [data-theme="dark"] .detail-description .detail-value {
-        background: rgba(255, 255, 255, 0.04);
-    }
-    [data-theme="dark"] .timeline-content {
-        background: rgba(255, 255, 255, 0.04) !important;
-        border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-    [data-theme="dark"] .detail-subject {
-        background: rgba(255, 107, 0, 0.06);
-        border-color: rgba(255, 107, 0, 0.12);
-    }
-    [data-theme="dark"] .status-box-closed {
-        background: rgba(34, 197, 94, 0.06);
-    }
-    [data-theme="dark"] .status-box-hold {
-        background: rgba(245, 158, 11, 0.06);
-    }
-    [data-theme="dark"] .status-box-escalated {
-        background: rgba(139, 92, 246, 0.06);
-    }
-    [data-theme="dark"] .reopen-timer-box {
-        background: rgba(255, 107, 0, 0.06);
-        border-color: rgba(255, 107, 0, 0.12);
-    }
-    [data-theme="dark"] .top-status-card {
-        background: rgba(255, 255, 255, 0.03);
-        border-color: rgba(255, 255, 255, 0.06);
-    }
-    [data-theme="dark"] .btn-excel-download {
-        background: linear-gradient(135deg, #22C55E, #16A34A) !important;
-    }
-
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-        background: var(--bg-secondary);
-        border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: var(--brand-gradient);
-        border-radius: 10px;
-    }
-    ::selection {
-        background: var(--brand-orange);
-        color: white;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/employee/ticket_detail.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -859,7 +63,7 @@
                             <div class="detail-value">{{ ticket.subject }}</div>
                         </div>
 
-                        <!-- ===== TOP STATUS CARD (Combined: Closing Details + Vendor Tracking) ===== -->
+                        <!-- ===== TOP STATUS CARD ===== -->
                         <div class="top-status-card">
                             <!-- Closing Details Section -->
                             <div class="status-section">
@@ -935,7 +139,6 @@
                             <div class="detail-value">{{ ticket.department.name }}</div>
                         </div>
 
-                        <!-- ✅ FIXED: Screen Number - No longer uses get_screen_display -->
                         <div class="detail-item">
                             <span class="detail-label">
                                 <i class="fa-regular fa-display"></i> Screen Number
@@ -980,6 +183,25 @@
                             </div>
                         </div>
 
+                        <!-- ===== ASSIGNED TO WITH TARGET DATE ===== -->
+                        <div class="detail-item">
+                            <span class="detail-label">
+                                <i class="fa-regular fa-user-check"></i> Assigned To
+                            </span>
+                            <div class="detail-value">
+                                {% if ticket.assigned_person %}
+                                    <span style="font-weight: 600; color: var(--brand-orange);">{{ ticket.assigned_person }}</span>
+                                    {% if ticket.target_date %}
+                                        <br><small style="color: var(--text-muted); font-size: 0.65rem;">
+                                            <i class="fa-regular fa-calendar me-1"></i>Target Date: {{ ticket.target_date|date:"d M Y" }}
+                                        </small>
+                                    {% endif %}
+                                {% else %}
+                                    <span style="color: var(--text-muted);">Not Assigned</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
                         <div class="detail-item">
                             <span class="detail-label">
                                 <i class="fa-regular fa-calendar-plus"></i> Created
@@ -1015,7 +237,7 @@
                             </div>
                         </div>
 
-                        <!-- ===== ATTACHMENTS (3 files) ===== -->
+                        <!-- ===== ATTACHMENTS ===== -->
                         <div class="detail-attachment">
                             <span class="detail-label" style="margin-bottom: 0.3rem;">
                                 <i class="fa-regular fa-paperclip"></i> Attachments
@@ -1062,7 +284,7 @@
             </div>
             {% endif %}
 
-            <!-- ===== ESCALATED STATUS BOX (if escalated but no vendor ticket) ===== -->
+            <!-- ===== ESCALATED STATUS BOX ===== -->
             {% if ticket.status == 'Escalated' and not ticket.vendor_ticket_number %}
             <div class="status-box status-box-escalated">
                 <span class="detail-label" style="color: #8B5CF6; font-size: 0.65rem;">
@@ -1138,7 +360,7 @@
             </div>
         </div>
 
-        <!-- ===== REOPEN SECTION (if closed) ===== -->
+        <!-- ===== REOPEN SECTION ===== -->
         {% if ticket.status == 'Closed' %}
             <div class="col-12">
                 <div class="card panel-card">
@@ -1178,7 +400,7 @@
 <div class="modal fade" id="reopenModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form method="POST" action="{% url 'ticket_detail' ticket.id %}" id="reopenForm" enctype="multipart/form-data">
+            <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="reopenForm" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Reopen">
                 <div class="modal-header" style="background: var(--brand-gradient);">
@@ -1214,139 +436,60 @@
     </div>
 </div>
 
+<!-- Hidden input for reopen deadline -->
+<input type="hidden" name="reopen_deadline_iso" value="{{ reopen_deadline_iso|default:'' }}">
+
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/employee/ticket_detail.js' %}"></script>
 <script>
-    function startCountdown(deadlineISO) {
-        const timerEl = document.getElementById('reopen-timer');
-        if (!timerEl || !deadlineISO || deadlineISO === '') {
-            if (timerEl) timerEl.innerHTML = 'No deadline set';
-            return;
-        }
-
-        const deadline = new Date(deadlineISO).getTime();
+document.addEventListener('DOMContentLoaded', function() {
+    // ============================================================
+    // REOPEN COUNTDOWN TIMER
+    // ============================================================
+    var deadlineISO = document.querySelector('input[name="reopen_deadline_iso"]')?.value || '';
+    var timerElement = document.getElementById('reopen-timer');
+    
+    if (deadlineISO && timerElement) {
+        var deadline = new Date(deadlineISO).getTime();
         
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes timerPulse {
-                0%, 100% { opacity: 1; transform: scale(1); }
-                50% { opacity: 0.7; transform: scale(1.02); }
-            }
-        `;
-        document.head.appendChild(style);
-
-        const interval = setInterval(function() {
-            const now = new Date().getTime();
-            const distance = deadline - now;
-
+        var interval = setInterval(function() {
+            var now = new Date().getTime();
+            var distance = deadline - now;
+            
             if (distance < 0) {
                 clearInterval(interval);
-                timerEl.innerHTML = '⏰ Expired';
-                timerEl.style.color = '#EF4444';
-                timerEl.style.fontSize = '1rem';
-                timerEl.style.animation = 'timerPulse 1s ease-in-out infinite';
-                
-                const reopenBtn = document.querySelector('[data-bs-target="#reopenModal"]');
+                timerElement.innerHTML = 'Expired';
+                timerElement.style.color = '#EF4444';
+                var reopenBtn = document.querySelector('.btn-primary-custom');
                 if (reopenBtn) {
-                    reopenBtn.style.display = 'none';
-                    const parentDiv = reopenBtn.closest('.card-body');
-                    if (parentDiv) {
-                        const timerBox = parentDiv.querySelector('.reopen-timer-box');
-                        if (timerBox) {
-                            timerBox.innerHTML = `
-                                <div class="text-center py-2">
-                                    <i class="fa-regular fa-clock fa-2x mb-2 d-block opacity-25" style="color: #EF4444;"></i>
-                                    <p class="mb-0" style="color: #EF4444; font-size: 0.85rem; font-weight: 600;">
-                                        ⏰ Reopen window has expired
-                                    </p>
-                                    <p style="color: var(--text-muted); font-size: 0.7rem;">This ticket was closed more than 48 hours ago</p>
-                                </div>
-                            `;
-                        }
-                    }
+                    reopenBtn.disabled = true;
+                    reopenBtn.style.opacity = '0.5';
                 }
                 return;
             }
-
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             
-            const h = String(hours).padStart(2, '0');
-            const m = String(minutes).padStart(2, '0');
-            const s = String(seconds).padStart(2, '0');
+            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
             
-            timerEl.innerHTML = h + 'h ' + m + 'm ' + s + 's';
+            var h = String(hours).padStart(2, '0');
+            var m = String(minutes).padStart(2, '0');
+            var s = String(seconds).padStart(2, '0');
+            
+            timerElement.innerHTML = h + ':' + m + ':' + s;
             
             if (hours < 1) {
-                timerEl.style.color = '#EF4444';
-                timerEl.style.animation = 'timerPulse 1s ease-in-out infinite';
+                timerElement.style.color = '#EF4444';
             } else if (hours < 6) {
-                timerEl.style.color = '#F59E0B';
-                timerEl.style.animation = 'none';
+                timerElement.style.color = '#F59E0B';
             } else {
-                timerEl.style.color = 'var(--brand-orange)';
-                timerEl.style.animation = 'none';
+                timerElement.style.color = '#3B82F6';
             }
-            
         }, 1000);
     }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const deadlineISO = "{{ reopen_deadline_iso|default:'' }}";
-        if (deadlineISO && deadlineISO !== '') {
-            startCountdown(deadlineISO);
-        }
-
-        const timelineItems = document.querySelectorAll('.timeline-item');
-        timelineItems.forEach(function(item, index) {
-            item.style.opacity = '0';
-            setTimeout(function() {
-                item.style.transition = 'all 0.4s ease';
-                item.style.opacity = '1';
-            }, 200 + (index * 80));
-        });
-
-        function updateTheme() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const inputs = document.querySelectorAll('.form-control, textarea');
-            
-            inputs.forEach(function(input) {
-                input.style.display = 'none';
-                void input.offsetHeight;
-                input.style.display = '';
-                
-                if (isDark) {
-                    input.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-                    input.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                    input.style.color = '#E8EDF5';
-                } else {
-                    input.style.backgroundColor = '#F5F8FF';
-                    input.style.borderColor = '#DCE3F0';
-                    input.style.color = '#1A2A6C';
-                }
-            });
-        }
-
-        const themeToggleBtn = document.getElementById('themeToggleFloating');
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', function() {
-                setTimeout(updateTheme, 100);
-            });
-        }
-
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.attributeName === 'data-theme') {
-                    updateTheme();
-                }
-            });
-        });
-        
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-theme']
-        });
-
-        setTimeout(updateTheme, 200);
-    });
+});
 </script>
 {% endblock %}

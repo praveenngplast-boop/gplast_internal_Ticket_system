@@ -168,9 +168,9 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 Use a dedicated application user instead of MySQL root:
 
 ```sql
-CREATE DATABASE gplast_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'gplast_app'@'localhost' IDENTIFIED BY 'REPLACE_WITH_A_STRONG_PASSWORD';
-GRANT ALL PRIVILEGES ON gplast_db.* TO 'gplast_app'@'localhost';
+CREATE DATABASE gplast_ticketsystemdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'gplast_ticketsystemdb'@'localhost' IDENTIFIED BY 'REPLACE_WITH_A_STRONG_PASSWORD';
+GRANT ALL PRIVILEGES ON gplast_ticketsystemdb.* TO 'gplast_ticketsystemdb'@'localhost';
 FLUSH PRIVILEGES;
 ```
 

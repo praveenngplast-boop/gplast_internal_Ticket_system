@@ -2,6 +2,7 @@
 
 """
 ERP User ID Mapping Views - Add, Remove, Bulk Upload, Export Excel, Unmap
+✅ FIXED: Grouped view to show employees with same ERP ID mappings
 """
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -9,6 +10,7 @@ from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.utils import timezone
+from django.db.models import Count, Q
 import openpyxl
 import pandas as pd
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -22,33 +24,83 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# ERP MAPPING - PAGE VIEW
+# ERP MAPPING - PAGE VIEW (GROUPED BY ERP ID)
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='tickets:login')
 def erp_mapping_page(request):
     """
-    ERP User ID Mapping page
+    ERP User ID Mapping page - Grouped by ERP ID
     URL: /custom-admin/settings/erp-mapping/
+    Shows which employees share the same ERP ID
     """
     mappings = ERPHolderMapping.objects.all().select_related('employee', 'employee__unit', 'employee__department').order_by('erp_user_id')
     
-    paginator = Paginator(mappings, 20)
+    employees = EmployeeMaster.objects.filter(is_active=True).order_by('employee_id')
+    
+    # ============================================================
+    # GROUP MAPPINGS BY ERP USER ID
+    # ============================================================
+    grouped_mappings = {}
+    for mapping in mappings:
+        erp_id = mapping.erp_user_id
+        if erp_id not in grouped_mappings:
+            grouped_mappings[erp_id] = {
+                'erp_user_id': erp_id,
+                'employees': [],
+                'count': 0,
+                'is_mapped': False,
+                'mapping_ids': [],  # Store mapping IDs for bulk operations
+            }
+        
+        if mapping.employee:
+            grouped_mappings[erp_id]['employees'].append({
+                'mapping_id': mapping.id,
+                'employee_id': mapping.employee.employee_id,
+                'employee_name': mapping.employee.employee_name,
+                'unit_code': mapping.employee.unit.code if mapping.employee.unit else '—',
+                'department_name': mapping.employee.department.name if mapping.employee.department else '—',
+                'is_mapped': True,
+            })
+            grouped_mappings[erp_id]['is_mapped'] = True
+        else:
+            # Unmapped entry (no employee)
+            grouped_mappings[erp_id]['employees'].append({
+                'mapping_id': mapping.id,
+                'employee_id': None,
+                'employee_name': 'Not Mapped',
+                'unit_code': '—',
+                'department_name': '—',
+                'is_mapped': False,
+            })
+        
+        grouped_mappings[erp_id]['mapping_ids'].append(mapping.id)
+        grouped_mappings[erp_id]['count'] += 1
+    
+    # Convert to list for template
+    grouped_list = list(grouped_mappings.values())
+    
+    # Sort: Mapped first, then unmapped, then by ERP ID
+    grouped_list.sort(key=lambda x: (not x['is_mapped'], x['erp_user_id']))
+    
+    # Paginate grouped list
+    paginator = Paginator(grouped_list, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    employees = EmployeeMaster.objects.filter(is_active=True).order_by('employee_id')
-    
-    total_erp_ids = mappings.count()
+    total_mappings = mappings.count()
     mapped_count = mappings.filter(employee__isnull=False).count()
     unmapped_count = mappings.filter(employee__isnull=True).count()
+    unique_erp_ids = len(grouped_mappings)
     
     context = {
         'page_obj': page_obj,
         'employees': employees,
-        'total_mappings': total_erp_ids,
+        'total_mappings': total_mappings,
         'mapped_count': mapped_count,
         'unmapped_count': unmapped_count,
+        'unique_erp_ids': unique_erp_ids,
+        'grouped_mappings': page_obj,  # Pass paginated grouped data
     }
     return render(request, 'admin_panel/erp_mapping.html', context)
 
@@ -62,6 +114,7 @@ def erp_mapping_add(request):
     """
     Add a single ERP User ID mapping (AJAX)
     URL: /custom-admin/settings/erp-mapping/add/
+    ✅ FIXED: Allows same ERP ID to be mapped to multiple employees across different units
     """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
@@ -75,37 +128,45 @@ def erp_mapping_add(request):
     
     try:
         with transaction.atomic():
-            existing = ERPHolderMapping.objects.filter(erp_user_id=erp_user_id).first()
             
+            # ============================================================
             # ACTION: MAP ERP ID TO EMPLOYEE
+            # ============================================================
             if action == 'map':
                 if not employee_id:
                     return JsonResponse({'success': False, 'message': 'Employee ID is required for mapping'})
                 
-                if not existing:
-                    return JsonResponse({'success': False, 'message': f'ERP ID "{erp_user_id}" not found. Please add it first.'})
-                
+                # Get employee
                 try:
                     employee = EmployeeMaster.objects.get(employee_id=employee_id, is_active=True)
                 except EmployeeMaster.DoesNotExist:
                     return JsonResponse({'success': False, 'message': f'Employee ID "{employee_id}" not found'})
                 
-                if existing.employee and existing.employee.id == employee.id:
+                # ✅ Check if this exact ERP-Employee combination already exists
+                existing_mapping = ERPHolderMapping.objects.filter(
+                    erp_user_id=erp_user_id,
+                    employee=employee
+                ).first()
+                
+                if existing_mapping:
                     return JsonResponse({
                         'success': False,
                         'message': f'ERP {erp_user_id} is already mapped to {employee_id} ({employee.employee_name})'
                     })
                 
-                existing.employee = employee
-                existing.is_mapped = True
-                existing.save()
+                # ✅ Create new mapping (allow same ERP ID for different employees)
+                mapping = ERPHolderMapping.objects.create(
+                    erp_user_id=erp_user_id,
+                    employee=employee,
+                    is_mapped=True,
+                    created_by=request.user.username
+                )
                 
                 log_settings_change(
                     request,
-                    action_type='UPDATE',
+                    action_type='CREATE',
                     setting_type='ERP_MAPPING',
                     setting_name=f"ERP {erp_user_id} → {employee_id}",
-                    old_value=f"ERP: {erp_user_id} (Not Mapped)",
                     new_value=f"ERP: {erp_user_id}, Employee: {employee_id} - {employee.employee_name}",
                     change_summary=f"Mapped ERP {erp_user_id} to {employee_id}",
                     remarks=f"Mapped by {request.user.username}"
@@ -115,8 +176,8 @@ def erp_mapping_add(request):
                     'success': True,
                     'message': f'ERP {erp_user_id} mapped to {employee.employee_name} successfully!',
                     'mapping': {
-                        'id': existing.id,
-                        'erp_user_id': existing.erp_user_id,
+                        'id': mapping.id,
+                        'erp_user_id': mapping.erp_user_id,
                         'employee_id': employee.employee_id,
                         'employee_name': employee.employee_name,
                         'unit_code': employee.unit.code if employee.unit else '—',
@@ -125,14 +186,12 @@ def erp_mapping_add(request):
                     }
                 })
             
+            # ============================================================
             # ACTION: ADD NEW ERP ID (without employee)
+            # ============================================================
             else:
-                if existing:
-                    return JsonResponse({
-                        'success': False,
-                        'message': f'ERP ID "{erp_user_id}" already exists. Use "Map" action to assign employee.'
-                    })
-                
+                # ✅ Allow adding duplicate ERP IDs (since unique=True is removed)
+                # Just create a new unmapped entry
                 mapping = ERPHolderMapping.objects.create(
                     erp_user_id=erp_user_id,
                     employee=None,
@@ -145,7 +204,6 @@ def erp_mapping_add(request):
                     action_type='CREATE',
                     setting_type='ERP_MAPPING',
                     setting_name=f"ERP {erp_user_id}",
-                    old_value=None,
                     new_value=f"ERP: {erp_user_id} (Not Mapped)",
                     change_summary=f"Added ERP ID: {erp_user_id}",
                     remarks=f"Added by {request.user.username}"
@@ -166,7 +224,7 @@ def erp_mapping_add(request):
                 })
                 
     except IntegrityError as e:
-        return JsonResponse({'success': False, 'message': f'ERP ID "{erp_user_id}" already exists.'})
+        return JsonResponse({'success': False, 'message': f'Database error: {str(e)}'})
     except Exception as e:
         logger.error(f'Error adding ERP mapping: {e}')
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
@@ -276,6 +334,105 @@ def erp_mapping_unmap(request):
 
 
 # ============================================================
+# ERP MAPPING - UNMAP ALL MAPPINGS FOR ERP ID (AJAX)
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='tickets:login')
+def erp_mapping_unmap_all(request):
+    """
+    Remove all employee mappings from an ERP ID (keep ERP ID entries)
+    URL: /custom-admin/settings/erp-mapping/unmap-all/
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
+    
+    erp_user_id = request.POST.get('erp_user_id', '').strip()
+    
+    if not erp_user_id:
+        return JsonResponse({'success': False, 'message': 'ERP User ID is required'})
+    
+    try:
+        mappings = ERPHolderMapping.objects.filter(erp_user_id=erp_user_id)
+        
+        if not mappings.exists():
+            return JsonResponse({'success': False, 'message': f'ERP ID "{erp_user_id}" not found'})
+        
+        updated_count = 0
+        with transaction.atomic():
+            for mapping in mappings:
+                if mapping.employee:
+                    mapping.employee = None
+                    mapping.is_mapped = False
+                    mapping.save()
+                    updated_count += 1
+        
+        log_settings_change(
+            request,
+            action_type='UPDATE',
+            setting_type='ERP_MAPPING',
+            setting_name=f"ERP {erp_user_id}",
+            old_value=f"ERP: {erp_user_id} (Mapped to {updated_count} employees)",
+            new_value=f"ERP: {erp_user_id} (Not Mapped)",
+            change_summary=f"Unmapped all employees from ERP {erp_user_id}",
+            remarks=f"Unmapped all by {request.user.username}"
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'All {updated_count} employee(s) unmapped from ERP ID "{erp_user_id}" successfully!'
+        })
+    except Exception as e:
+        logger.error(f'Error unmapping all ERP: {e}')
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+# ============================================================
+# ERP MAPPING - DELETE ALL MAPPINGS FOR ERP ID (AJAX)
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='tickets:login')
+def erp_mapping_delete_all(request):
+    """
+    Delete all mappings for an ERP ID
+    URL: /custom-admin/settings/erp-mapping/delete-all/
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
+    
+    erp_user_id = request.POST.get('erp_user_id', '').strip()
+    
+    if not erp_user_id:
+        return JsonResponse({'success': False, 'message': 'ERP User ID is required'})
+    
+    try:
+        mappings = ERPHolderMapping.objects.filter(erp_user_id=erp_user_id)
+        
+        if not mappings.exists():
+            return JsonResponse({'success': False, 'message': f'ERP ID "{erp_user_id}" not found'})
+        
+        count = mappings.count()
+        mappings.delete()
+        
+        log_settings_change(
+            request,
+            action_type='DELETE',
+            setting_type='ERP_MAPPING',
+            setting_name=f"ERP {erp_user_id}",
+            old_value=f"ERP: {erp_user_id} ({count} mappings)",
+            change_summary=f"Deleted all {count} mappings for ERP {erp_user_id}",
+            remarks=f"Deleted all by {request.user.username}"
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'All {count} mapping(s) for ERP ID "{erp_user_id}" deleted successfully!'
+        })
+    except Exception as e:
+        logger.error(f'Error deleting all ERP mappings: {e}')
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+# ============================================================
 # ERP MAPPING - EXPORT EXCEL
 # ============================================================
 @login_required
@@ -296,7 +453,6 @@ def erp_mapping_export_excel(request):
     ws = wb.active
     ws.title = "ERP Mappings"
     
-    # Styles
     title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
     header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
     data_font = Font(name='Calibri', size=10)
@@ -313,7 +469,6 @@ def erp_mapping_export_excel(request):
     now_local = timezone.now().astimezone(current_tz)
     report_time = now_local.strftime('%d-%b-%Y %I:%M:%S %p')
     
-    # Title
     ws.merge_cells('A1:G1')
     ws['A1'] = f"ERP USER ID MAPPINGS - Generated: {report_time}  |  Total: {mappings.count()}"
     ws['A1'].font = title_font
@@ -321,7 +476,6 @@ def erp_mapping_export_excel(request):
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 40
     
-    # Headers
     headers = ['#', 'ERP User ID', 'Employee ID', 'Employee Name', 'Unit', 'Department', 'Status']
     for col_idx, header in enumerate(headers, 1):
         cell = ws.cell(row=3, column=col_idx)
@@ -332,7 +486,6 @@ def erp_mapping_export_excel(request):
         cell.border = thin_border
     ws.row_dimensions[3].height = 30
     
-    # Data
     for row_idx, mapping in enumerate(mappings, 4):
         if mapping.employee:
             row_data = [
@@ -362,7 +515,6 @@ def erp_mapping_export_excel(request):
             cell.alignment = Alignment(horizontal='left', vertical='center')
             cell.border = thin_border
             
-            # Color status column
             if col_idx == 7:
                 if value == 'Mapped':
                     cell.fill = PatternFill(start_color='E8F5E9', end_color='E8F5E9', fill_type='solid')
@@ -371,7 +523,6 @@ def erp_mapping_export_excel(request):
                     cell.fill = PatternFill(start_color='FFF3E0', end_color='FFF3E0', fill_type='solid')
                     cell.font = Font(name='Calibri', size=10, bold=True, color='F59E0B')
     
-    # Column widths
     column_widths = {'A': 8, 'B': 18, 'C': 18, 'D': 30, 'E': 20, 'F': 25, 'G': 15}
     for col_letter, width in column_widths.items():
         ws.column_dimensions[col_letter].width = width
@@ -410,6 +561,7 @@ def erp_mapping_bulk_upload(request):
         if df.empty:
             return JsonResponse({'success': False, 'message': 'The uploaded file is empty.'})
         
+        # Find ERP column
         erp_column = None
         for col in df.columns:
             col_lower = col.strip().lower()
@@ -430,20 +582,12 @@ def erp_mapping_bulk_upload(request):
         if not erp_ids:
             return JsonResponse({'success': False, 'message': 'No valid ERP IDs found in the file.'})
         
-        unique_erp_ids = list(dict.fromkeys(erp_ids))
-        existing_erp_ids = set(ERPHolderMapping.objects.values_list('erp_user_id', flat=True))
-        
+        # ✅ Allow duplicate ERP IDs - no uniqueness check
         added_count = 0
-        skipped_count = 0
         errors = []
         added_erp_ids = []
         
-        for erp_id in unique_erp_ids:
-            if erp_id in existing_erp_ids:
-                errors.append(f'ERP ID "{erp_id}" already exists')
-                skipped_count += 1
-                continue
-            
+        for erp_id in erp_ids:
             try:
                 mapping = ERPHolderMapping.objects.create(
                     erp_user_id=erp_id,
@@ -455,7 +599,6 @@ def erp_mapping_bulk_upload(request):
                 added_count += 1
             except Exception as e:
                 errors.append(f'Error adding ERP ID "{erp_id}": {str(e)}')
-                skipped_count += 1
         
         if added_count > 0:
             log_settings_change(
@@ -463,20 +606,20 @@ def erp_mapping_bulk_upload(request):
                 action_type='CREATE',
                 setting_type='ERP_MAPPING',
                 setting_name=f'Bulk Upload: {added_count} ERP IDs',
-                new_value=f'Added {added_count} ERP IDs: {", ".join(added_erp_ids[:10])}{"..." if len(added_erp_ids) > 10 else ""}',
+                new_value=f'Added {added_count} ERP IDs',
                 change_summary=f'Bulk uploaded {added_count} ERP IDs',
-                remarks=f'Bulk uploaded {added_count} ERP IDs, {skipped_count} skipped by {request.user.username}'
+                remarks=f'Bulk uploaded {added_count} ERP IDs by {request.user.username}'
             )
         
         message = f'Successfully added {added_count} ERP IDs.'
-        if skipped_count > 0:
-            message += f' Skipped {skipped_count} duplicate entries.'
+        if errors:
+            message += f' {len(errors)} entries had errors.'
         
         return JsonResponse({
             'success': True,
             'message': message,
             'added_count': added_count,
-            'skipped_count': skipped_count,
+            'skipped_count': len(errors),
             'added_erp_ids': added_erp_ids[:20],
             'errors': errors[:20]
         })
@@ -524,13 +667,13 @@ def erp_mapping_download_template(request):
     
     note_row = len(samples) + 3
     note_cell = ws.cell(row=note_row, column=1)
-    note_cell.value = "📌 Add your ERP IDs below. One per row. Any format accepted."
+    note_cell.value = "Add your ERP IDs below. One per row. Any format accepted."
     note_cell.font = Font(name='Calibri', size=10, italic=True, color='FF0000')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=1)
     
     note_row2 = len(samples) + 4
     note_cell2 = ws.cell(row=note_row2, column=1)
-    note_cell2.value = "⚠️ Duplicate ERP IDs will be automatically skipped. ERP IDs are created without employee mapping."
+    note_cell2.value = "Same ERP ID can be used by multiple employees across different units."
     note_cell2.font = Font(name='Calibri', size=10, italic=True, color='FF6B00')
     ws.merge_cells(start_row=note_row2, start_column=1, end_row=note_row2, end_column=1)
     

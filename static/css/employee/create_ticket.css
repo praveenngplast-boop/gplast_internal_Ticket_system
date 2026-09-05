@@ -1,0 +1,857 @@
+:root {
+    --ticket-bg: #FFFFFF;
+    --ticket-border: #E8EDF5;
+    --ticket-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    --ticket-radius: 16px;
+    --input-bg-light: #F8FAFF;
+    --input-border-light: #DCE3F0;
+    --text-primary-light: #1A2A6C;
+    --text-secondary-light: #4A5A7A;
+    --text-muted-light: #8A9AB8;
+    --success-color: #22C55E;
+    --danger-color: #EF4444;
+    --warning-color: #F59E0B;
+    --brand-orange: #FF6B00;
+    --brand-orange-dark: #E55A00;
+    --brand-gradient: linear-gradient(135deg, #FF6B00 0%, #FF8C38 100%);
+}
+
+[data-theme="dark"] {
+    --ticket-bg: #1A1A2E;
+    --ticket-border: rgba(255, 255, 255, 0.08);
+    --ticket-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    --input-bg-light: rgba(255, 255, 255, 0.05);
+    --input-border-light: rgba(255, 255, 255, 0.08);
+    --text-primary-light: #E8EDF5;
+    --text-secondary-light: #A8B8D8;
+    --text-muted-light: #6A7A9A;
+}
+
+/* DARK MODE FIX: Dropdown options */
+[data-theme="dark"] .form-select option,
+[data-theme="dark"] select option,
+[data-theme="dark"] .form-select optgroup,
+[data-theme="dark"] select optgroup {
+    background-color: #1A1A2E !important;
+    color: #E8EDF5 !important;
+}
+
+[data-theme="dark"] .form-select option:hover,
+[data-theme="dark"] select option:hover,
+[data-theme="dark"] .form-select option:focus,
+[data-theme="dark"] select option:focus,
+[data-theme="dark"] .form-select option:checked,
+[data-theme="dark"] select option:checked {
+    background-color: rgba(255, 107, 0, 0.2) !important;
+    color: #E8EDF5 !important;
+}
+
+/* Fix for select dropdown arrow in dark mode */
+[data-theme="dark"] .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236A7A9A' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+}
+
+.create-ticket-container {
+    animation: fadeInUp 0.5s ease;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0.5rem;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.panel-card {
+    background: var(--ticket-bg);
+    border: 1px solid var(--ticket-border);
+    box-shadow: var(--ticket-shadow);
+    border-radius: var(--ticket-radius);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.form-section {
+    background: var(--ticket-bg);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--ticket-border);
+    transition: all 0.3s ease;
+}
+
+.form-section:hover {
+    border-color: var(--brand-orange);
+}
+
+.form-section-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary-light);
+    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid rgba(255, 107, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Fraunces', serif;
+}
+
+.form-section-title .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--brand-gradient);
+    color: #FFFFFF;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.form-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary-light);
+    margin-bottom: 0.3rem;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.form-label i {
+    color: var(--brand-orange);
+    width: 16px;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+}
+
+.form-label .required-star {
+    color: var(--danger-color);
+    margin-left: 2px;
+}
+
+.form-label .badge-assigned {
+    background: var(--success-color);
+    color: #FFFFFF;
+    font-size: 0.5rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 50px;
+    font-weight: 500;
+    margin-left: 6px;
+    white-space: nowrap;
+}
+
+.form-label .badge-locked {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3B82F6;
+    font-size: 0.45rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 50px;
+    border: 1px solid rgba(59, 130, 246, 0.12);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    white-space: nowrap;
+    margin-left: 4px;
+}
+
+.form-control,
+.form-select,
+textarea,
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+select {
+    background-color: var(--input-bg-light) !important;
+    border: 2px solid var(--input-border-light) !important;
+    color: var(--text-primary-light) !important;
+    border-radius: 10px !important;
+    padding: 0.55rem 0.85rem !important;
+    font-size: 0.85rem !important;
+    transition: all 0.3s ease !important;
+    width: 100% !important;
+    font-family: 'Inter', sans-serif;
+    height: auto;
+    min-height: 42px;
+    box-sizing: border-box !important;
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea:focus,
+input:focus {
+    border-color: var(--brand-orange) !important;
+    box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1) !important;
+    outline: none !important;
+}
+
+/* ============================================================
+   LOCKED FIELD STYLES - Using readonly/disabled attributes
+============================================================ */
+.form-control.field-locked,
+.form-select.field-locked,
+select.field-locked,
+input.field-locked {
+    cursor: not-allowed !important;
+    opacity: 0.75;
+    background-color: var(--input-bg-light) !important;
+    border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Override for readonly fields that are locked */
+.form-control.field-locked:read-only {
+    cursor: not-allowed !important;
+    opacity: 0.75;
+    background-color: var(--input-bg-light) !important;
+    border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Override for disabled selects that are locked */
+.form-select.field-locked:disabled,
+select.field-locked:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.75;
+    background-color: var(--input-bg-light) !important;
+    border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* ERP User ID - always readonly style */
+.erp-user-id-wrapper input[readonly] {
+    cursor: not-allowed !important;
+    opacity: 0.85;
+    background-color: var(--input-bg-light) !important;
+    border-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236B7A9E' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.85rem center !important;
+    background-size: 14px 10px !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    padding-right: 2.5rem !important;
+    cursor: pointer;
+}
+
+.form-select:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.75;
+}
+
+.form-select option,
+select option {
+    background: var(--ticket-bg) !important;
+    color: var(--text-primary-light) !important;
+    padding: 8px 12px;
+}
+
+input[type="file"] {
+    background-color: var(--input-bg-light) !important;
+    color: var(--text-primary-light) !important;
+    padding: 0.4rem !important;
+    border-radius: 10px !important;
+    width: 100% !important;
+    border: 2px solid var(--input-border-light) !important;
+    cursor: pointer;
+    box-sizing: border-box !important;
+}
+
+input[type="file"]::file-selector-button,
+input[type="file"]::-webkit-file-upload-button {
+    background: var(--brand-gradient) !important;
+    border: none !important;
+    color: #FFFFFF !important;
+    padding: 0.4rem 1rem !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    margin-right: 0.75rem !important;
+    transition: all 0.3s ease !important;
+}
+
+input[type="file"]::file-selector-button:hover,
+input[type="file"]::-webkit-file-upload-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+}
+
+.emp-id-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.emp-fetch-status {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    pointer-events: none;
+    z-index: 5;
+    transition: all 0.3s ease;
+}
+
+.emp-fetch-status.found {
+    color: var(--success-color);
+}
+
+.emp-fetch-status.not-found {
+    color: var(--danger-color);
+}
+
+.emp-fetch-status.loading {
+    color: var(--brand-orange);
+    animation: spin 0.8s linear infinite;
+}
+
+.emp-fetch-status.mismatch {
+    color: var(--warning-color);
+}
+
+@keyframes spin {
+    0% { transform: translateY(-50%) rotate(0deg); }
+    100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+.field-auto-filled {
+    border-color: var(--success-color) !important;
+    background-color: rgba(34, 197, 94, 0.03) !important;
+}
+
+.auto-fill-badge {
+    display: inline-block;
+    font-size: 0.55rem;
+    padding: 0.1rem 0.6rem;
+    border-radius: 50px;
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success-color);
+    margin-left: 4px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+}
+
+.validation-badge {
+    display: inline-block;
+    font-size: 0.5rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 50px;
+    margin-left: 6px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+}
+
+.validation-badge.valid {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--success-color);
+}
+
+.validation-badge.invalid {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger-color);
+}
+
+.validation-message {
+    border-radius: 10px;
+    padding: 0.6rem 0.85rem;
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+    display: none;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.validation-message.show {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.validation-message.mismatch {
+    background: rgba(239, 68, 68, 0.06);
+    border: 2px solid rgba(239, 68, 68, 0.15);
+    color: var(--danger-color);
+}
+
+.validation-message.valid {
+    background: rgba(34, 197, 94, 0.06);
+    border: 2px solid rgba(34, 197, 94, 0.15);
+    color: var(--success-color);
+}
+
+.validation-message.not-found {
+    background: rgba(239, 68, 68, 0.06);
+    border: 2px solid rgba(239, 68, 68, 0.15);
+    color: var(--danger-color);
+}
+
+.validation-message i {
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.char-counter {
+    font-size: 0.65rem;
+    color: var(--text-muted-light);
+    text-align: right;
+    margin-top: 0.15rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    width: 100%;
+}
+
+.char-counter.warning {
+    color: var(--warning-color) !important;
+}
+
+.char-counter.danger {
+    color: var(--danger-color) !important;
+}
+
+.char-counter .counter-number {
+    font-weight: 600;
+}
+
+.alert-banner {
+    background: rgba(255, 107, 0, 0.05);
+    border: 1px solid rgba(255, 107, 0, 0.12);
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-secondary-light);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.alert-banner i {
+    color: var(--brand-orange);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.alert-banner .badge {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 50px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.alert-banner .badge.bg-success {
+    background: var(--success-color) !important;
+    color: #FFFFFF;
+}
+
+.alert-banner .badge.bg-warning {
+    background: var(--warning-color) !important;
+    color: #1A1A2E;
+}
+
+/* ============================================================
+   ATTACHMENT STYLES
+============================================================ */
+.attachment-wrapper {
+    background: var(--input-bg-light);
+    border: 2px solid var(--input-border-light);
+    border-radius: 10px;
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.attachment-wrapper:hover {
+    border-color: rgba(255, 107, 0, 0.2);
+}
+
+.attachment-wrapper .attachment-number {
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--brand-orange);
+    background: rgba(255, 107, 0, 0.08);
+    padding: 0.05rem 0.5rem;
+    border-radius: 50px;
+    display: inline-block;
+    margin-bottom: 0.2rem;
+}
+
+.attachment-wrapper .attachment-number .required-star {
+    color: var(--danger-color);
+}
+
+.attachment-wrapper .attachment-number .optional-text {
+    font-size: 0.5rem;
+    font-weight: 400;
+    color: var(--text-muted-light);
+}
+
+.attachment-wrapper input[type="file"] {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.7rem !important;
+    min-height: 32px;
+    background: var(--ticket-bg) !important;
+    display: block !important;
+    width: 100% !important;
+    border: none !important;
+}
+
+.attachment-wrapper input[type="file"]::file-selector-button,
+.attachment-wrapper input[type="file"]::-webkit-file-upload-button {
+    background: var(--brand-gradient) !important;
+    border: none !important;
+    color: #FFFFFF !important;
+    padding: 0.3rem 0.8rem !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 0.7rem !important;
+    font-weight: 500 !important;
+    margin-right: 0.5rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.attachment-wrapper input[type="file"]::file-selector-button:hover,
+.attachment-wrapper input[type="file"]::-webkit-file-upload-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+}
+
+.attachment-wrapper .remove-attachment {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+    background: transparent;
+    border: none;
+    color: var(--danger-color);
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0.15rem 0.3rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    line-height: 1;
+    opacity: 0.5;
+}
+
+.attachment-wrapper .remove-attachment:hover {
+    background: rgba(239, 68, 68, 0.08);
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.attachment-wrapper .attachment-status {
+    font-size: 0.5rem;
+    margin-top: 0.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.attachment-wrapper .attachment-status .status-icon {
+    font-size: 0.6rem;
+}
+
+.attachment-wrapper .attachment-status .status-text {
+    color: var(--text-muted-light);
+}
+
+.attachment-wrapper .attachment-status .status-text.has-file {
+    color: var(--success-color);
+}
+
+.btn-add-attachment {
+    background: transparent;
+    border: 2px dashed var(--input-border-light);
+    border-radius: 10px;
+    padding: 0.4rem 0.5rem;
+    width: 100%;
+    color: var(--text-secondary-light);
+    font-size: 0.65rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.btn-add-attachment:hover {
+    border-color: var(--brand-orange);
+    color: var(--brand-orange);
+    background: rgba(255, 107, 0, 0.04);
+}
+
+.btn-add-attachment:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn-add-attachment i {
+    font-size: 0.75rem;
+}
+
+.attachment-counter {
+    font-size: 0.5rem;
+    color: var(--text-muted-light);
+    margin-top: 0.2rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.attachment-counter i {
+    font-size: 0.45rem;
+    margin-right: 0.15rem;
+}
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+.btn-submit {
+    background: var(--brand-gradient) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 50px !important;
+    padding: 0.6rem 2.5rem !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.3s ease !important;
+    font-family: 'Inter', sans-serif !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    box-shadow: 0 4px 20px rgba(255, 107, 0, 0.25) !important;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 40px rgba(255, 107, 0, 0.35) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-cancel {
+    border: 2px solid var(--input-border-light) !important;
+    color: var(--text-secondary-light) !important;
+    border-radius: 50px !important;
+    padding: 0.6rem 1.8rem !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+    background: transparent !important;
+    transition: all 0.3s ease !important;
+    font-family: 'Inter', sans-serif !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    text-decoration: none !important;
+}
+
+.btn-cancel:hover {
+    background: var(--input-bg-light) !important;
+    border-color: var(--brand-orange) !important;
+    color: var(--text-primary-light) !important;
+    transform: translateY(-2px) !important;
+}
+
+.btn-cancel i {
+    color: var(--text-muted-light) !important;
+    transition: color 0.3s ease;
+}
+
+.btn-cancel:hover i {
+    color: var(--brand-orange) !important;
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width: 992px) {
+    .form-section {
+        padding: 1rem;
+    }
+    .btn-submit,
+    .btn-cancel {
+        padding: 0.5rem 1.5rem !important;
+        font-size: 0.85rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .panel-card .card-body {
+        padding: 0.75rem !important;
+    }
+    .form-section {
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    .form-section-title {
+        font-size: 0.8rem;
+    }
+    .form-section-title .step-number {
+        width: 22px;
+        height: 22px;
+        font-size: 0.6rem;
+    }
+    .form-control,
+    .form-select,
+    textarea,
+    input {
+        padding: 0.45rem 0.7rem !important;
+        font-size: 0.8rem !important;
+        min-height: 38px;
+    }
+    textarea {
+        min-height: 80px;
+    }
+    .btn-submit,
+    .btn-cancel {
+        width: 100%;
+        justify-content: center;
+        padding: 0.5rem 1.5rem !important;
+        font-size: 0.85rem !important;
+    }
+    .alert-banner {
+        font-size: 0.72rem !important;
+        padding: 0.4rem 0.75rem !important;
+    }
+    .validation-message {
+        font-size: 0.72rem;
+        padding: 0.4rem 0.65rem;
+    }
+    .attachment-wrapper {
+        padding: 0.4rem 0.5rem;
+    }
+    .attachment-wrapper input[type="file"] {
+        font-size: 0.6rem !important;
+        padding: 0.2rem 0.4rem !important;
+        min-height: 28px;
+    }
+    .btn-add-attachment {
+        font-size: 0.6rem;
+        padding: 0.3rem 0.4rem;
+    }
+    .attachment-counter {
+        font-size: 0.45rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .panel-card .card-body {
+        padding: 0.5rem !important;
+    }
+    .form-section {
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .form-section-title {
+        font-size: 0.7rem;
+    }
+    .form-section-title .step-number {
+        width: 18px;
+        height: 18px;
+        font-size: 0.55rem;
+    }
+    .form-label {
+        font-size: 0.65rem;
+    }
+    .form-control,
+    .form-select,
+    textarea,
+    input {
+        padding: 0.35rem 0.5rem !important;
+        font-size: 0.75rem !important;
+        min-height: 34px;
+    }
+    textarea {
+        min-height: 60px;
+    }
+    .btn-submit,
+    .btn-cancel {
+        font-size: 0.78rem !important;
+        padding: 0.4rem 1rem !important;
+    }
+    .alert-banner {
+        font-size: 0.65rem !important;
+        padding: 0.3rem 0.5rem !important;
+    }
+    .validation-message {
+        font-size: 0.65rem;
+        padding: 0.3rem 0.5rem;
+    }
+    .d-flex.justify-content-end {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    .d-flex.justify-content-end .btn {
+        width: 100% !important;
+    }
+    .attachment-wrapper .attachment-number {
+        font-size: 0.5rem;
+    }
+    .attachment-wrapper input[type="file"] {
+        font-size: 0.55rem !important;
+        padding: 0.15rem 0.3rem !important;
+        min-height: 24px;
+    }
+    .btn-add-attachment {
+        font-size: 0.55rem;
+        padding: 0.25rem 0.3rem;
+    }
+    .attachment-counter {
+        font-size: 0.4rem;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--input-bg-light);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--brand-orange);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--brand-orange-dark);
+}
+
+::selection {
+    background: var(--brand-orange);
+    color: #FFFFFF;
+}
+
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 1rem; }

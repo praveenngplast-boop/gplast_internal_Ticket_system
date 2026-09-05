@@ -1,7 +1,8 @@
-# tickets/views/settings_actions/employees.py
+# tickets/views/settings_action/employees.py
 
 """
 Employee Management - Add, Edit, Toggle, Delete, Bulk Upload, Downloads
+Mobile and Email are OPTIONAL fields (can be left empty)
 """
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -12,7 +13,8 @@ from django.db import IntegrityError
 from django.contrib import messages
 import openpyxl
 import pandas as pd
-from openpyxl.styles import Font, Alignment, PatternFill
+import math
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 import logging
 
 from tickets.models import EmployeeMaster, Unit, Department, SettingsAuditLog
@@ -22,17 +24,37 @@ from ..utils import is_admin, get_client_ip
 logger = logging.getLogger(__name__)
 
 
+def safe_str(value):
+    """
+    Convert value to string, handling nan and None properly.
+    Returns empty string for nan, None, or empty values.
+    """
+    if value is None:
+        return ''
+    if isinstance(value, float) and math.isnan(value):
+        return ''
+    if hasattr(pd, '_libs') and hasattr(pd._libs, 'missing') and hasattr(pd._libs.missing, 'NAType'):
+        if isinstance(value, pd._libs.missing.NAType):
+            return ''
+    try:
+        if pd.isna(value):
+            return ''
+    except:
+        pass
+    return str(value).strip()
+
+
 @login_required
 @user_passes_test(is_admin, login_url='tickets:login')
 def settings_employees(request):
     """
     Complete Employee Management Actions:
-    - Add Employee
+    - Add Employee (Mobile and Email are OPTIONAL)
     - Edit Employee
     - Toggle Active/Inactive
     - Toggle Can Assign
     - Delete Employee (Must be deactivated first)
-    - Bulk Upload (AJAX)
+    - Bulk Upload (AJAX) - Mobile and Email are OPTIONAL
     POST: action, employee_id, employee_name, mobile, email, unit, department, can_assign_ticket
     Redirects to: settings_employees_page
     """
@@ -41,14 +63,15 @@ def settings_employees(request):
         
         # ========== ADD EMPLOYEE ==========
         if action == 'add_employee':
-            eid = request.POST.get('employee_id','').strip().upper()
-            ename = request.POST.get('employee_name','').strip().upper()
-            mob = request.POST.get('mobile','').strip()
-            email = request.POST.get('email','').strip()
+            eid = request.POST.get('employee_id', '').strip().upper()
+            ename = request.POST.get('employee_name', '').strip().upper()
+            mob = request.POST.get('mobile', '').strip()
+            email = request.POST.get('email', '').strip()
             uid = request.POST.get('unit')
             did = request.POST.get('department')
+            can_assign = request.POST.get('can_assign_ticket') == 'on'
             
-            # Only Employee ID and Name are mandatory
+            # Only Employee ID and Name are MANDATORY
             if not eid:
                 messages.error(request, "Employee ID is required.")
                 return redirect('settings_employees_page')
@@ -56,12 +79,12 @@ def settings_employees(request):
                 messages.error(request, "Employee Name is required.")
                 return redirect('settings_employees_page')
             
-            # Validate mobile if provided
+            # ✅ Mobile is OPTIONAL - only validate if provided
             if mob and (not mob.isdigit() or len(mob) != 10):
                 messages.error(request, f'Mobile number must be exactly 10 digits: {mob}')
                 return redirect('settings_employees_page')
             
-            # Validate email if provided
+            # ✅ Email is OPTIONAL - only validate if provided
             if email and ('@' not in email or '.' not in email):
                 messages.error(request, f'Invalid email format: {email}')
                 return redirect('settings_employees_page')
@@ -80,7 +103,8 @@ def settings_employees(request):
                     email=email or None,
                     unit_id=uid or None,
                     department_id=did or None,
-                    is_active=True
+                    is_active=True,
+                    can_assign_ticket=can_assign
                 )
                 messages.success(request, f'✅ Employee "{eid}" added successfully.')
                 
@@ -114,17 +138,21 @@ def settings_employees(request):
                 messages.error(request, "Please select an Excel file.")
                 return redirect('settings_employees_page')
             
-            if not excel_file.name.endswith(('.xlsx', '.xls')):
+            if not excel_file.name.endswith(('.xlsx', '.xls', '.csv')):
                 if is_ajax:
                     return JsonResponse({
                         'success': False,
-                        'message': 'Invalid file format. Only .xlsx and .xls files are supported.'
+                        'message': 'Invalid file format. Only .xlsx, .xls, and .csv files are supported.'
                     })
-                messages.error(request, "Invalid file format. Only .xlsx and .xls files are supported.")
+                messages.error(request, "Invalid file format. Only .xlsx, .xls, and .csv files are supported.")
                 return redirect('settings_employees_page')
             
             try:
-                df = pd.read_excel(excel_file, dtype=str)
+                # Read the file
+                if excel_file.name.endswith('.csv'):
+                    df = pd.read_csv(excel_file, dtype=str)
+                else:
+                    df = pd.read_excel(excel_file, dtype=str)
                 
                 if df.empty:
                     if is_ajax:
@@ -135,14 +163,14 @@ def settings_employees(request):
                     messages.error(request, "The uploaded file is empty.")
                     return redirect('settings_employees_page')
                 
-                # Required columns - Email and Mobile are optional
+                # Required columns - Only Employee ID and Name are MANDATORY
                 required_columns = ['Employee ID', 'Employee Name']
                 missing_columns = []
                 for col in required_columns:
                     if col not in df.columns:
                         found = False
                         for existing_col in df.columns:
-                            if existing_col.lower() == col.lower():
+                            if existing_col.strip().lower() == col.lower():
                                 found = True
                                 break
                         if not found:
@@ -164,6 +192,7 @@ def settings_employees(request):
                 all_units = {unit.code.upper(): unit for unit in Unit.objects.filter(is_active=True)}
                 all_departments = {dept.name.upper(): dept for dept in Department.objects.filter(is_active=True)}
                 
+                # First pass: Validate all rows
                 for idx, row in df.iterrows():
                     row_num = idx + 2
                     
@@ -175,21 +204,23 @@ def settings_employees(request):
                     dn = None
                     
                     for col in df.columns:
-                        col_lower = col.lower()
+                        col_lower = col.strip().lower()
+                        value = safe_str(row.get(col, ''))
+                        
                         if col_lower in ['employee id', 'employee_id', 'employeeid']:
-                            eid = str(row.get(col, '')).strip().upper()
+                            eid = value.upper()
                         elif col_lower in ['employee name', 'employee_name', 'employeename', 'name']:
-                            ename = str(row.get(col, '')).strip().upper()
-                        elif col_lower in ['mobile', 'phone', 'contact']:
-                            mob = str(row.get(col, '')).strip()
-                        elif col_lower in ['email', 'email id', 'email_id', 'emailid']:
-                            email = str(row.get(col, '')).strip().lower()
+                            ename = value.upper()
+                        elif col_lower in ['mobile', 'phone', 'contact', 'mobileno', 'mobile_no']:
+                            mob = value
+                        elif col_lower in ['email', 'email id', 'email_id', 'emailid', 'e-mail']:
+                            email = value.lower()
                         elif col_lower in ['unit code', 'unit_code', 'unitcode', 'unit']:
-                            uc = str(row.get(col, '')).strip().upper()
-                        elif col_lower in ['department', 'dept', 'department name', 'department_name']:
-                            dn = str(row.get(col, '')).strip().upper()
+                            uc = value.upper()
+                        elif col_lower in ['department', 'dept', 'department name', 'department_name', 'dept name']:
+                            dn = value.upper()
                     
-                    # Only Employee ID and Name are mandatory
+                    # Only Employee ID and Name are MANDATORY
                     if not eid:
                         validation_errors.append({'row': row_num, 'message': 'Employee ID is required'})
                         continue
@@ -197,12 +228,12 @@ def settings_employees(request):
                         validation_errors.append({'row': row_num, 'message': 'Employee Name is required'})
                         continue
                     
-                    # Validate mobile if provided
+                    # ✅ Mobile is OPTIONAL - only validate if provided
                     if mob and (not mob.isdigit() or len(mob) != 10):
                         validation_errors.append({'row': row_num, 'message': f'Mobile number must be 10 digits: {mob}'})
                         continue
                     
-                    # Validate email if provided
+                    # ✅ Email is OPTIONAL - only validate if provided
                     if email and ('@' not in email or '.' not in email):
                         validation_errors.append({'row': row_num, 'message': f'Invalid email format: {email}'})
                         continue
@@ -213,6 +244,7 @@ def settings_employees(request):
                             valid_units += f' and {len(all_units) - 5} more'
                         validation_errors.append({'row': row_num, 'message': f'Invalid Unit Code "{uc}". Valid units: {valid_units}'})
                         continue
+                    
                     if dn and dn not in all_departments:
                         valid_depts = ', '.join(list(all_departments.keys())[:5])
                         if len(all_departments) > 5:
@@ -222,6 +254,7 @@ def settings_employees(request):
                     
                     successful_rows += 1
                 
+                # If there are validation errors, return them
                 if validation_errors:
                     if is_ajax:
                         return JsonResponse({
@@ -236,6 +269,7 @@ def settings_employees(request):
                         messages.error(request, f'... and {len(validation_errors) - 5} more errors.')
                     return redirect('settings_employees_page')
                 
+                # Second pass: Process valid rows
                 success_count = 0
                 error_count = 0
                 update_count = 0
@@ -250,30 +284,32 @@ def settings_employees(request):
                         dn = None
                         
                         for col in df.columns:
-                            col_lower = col.lower()
+                            col_lower = col.strip().lower()
+                            value = safe_str(row.get(col, ''))
+                            
                             if col_lower in ['employee id', 'employee_id', 'employeeid']:
-                                eid = str(row.get(col, '')).strip().upper()
+                                eid = value.upper()
                             elif col_lower in ['employee name', 'employee_name', 'employeename', 'name']:
-                                ename = str(row.get(col, '')).strip().upper()
-                            elif col_lower in ['mobile', 'phone', 'contact']:
-                                mob = str(row.get(col, '')).strip()
-                            elif col_lower in ['email', 'email id', 'email_id', 'emailid']:
-                                email = str(row.get(col, '')).strip().lower()
+                                ename = value.upper()
+                            elif col_lower in ['mobile', 'phone', 'contact', 'mobileno', 'mobile_no']:
+                                mob = value
+                            elif col_lower in ['email', 'email id', 'email_id', 'emailid', 'e-mail']:
+                                email = value.lower()
                             elif col_lower in ['unit code', 'unit_code', 'unitcode', 'unit']:
-                                uc = str(row.get(col, '')).strip().upper()
-                            elif col_lower in ['department', 'dept', 'department name', 'department_name']:
-                                dn = str(row.get(col, '')).strip().upper()
+                                uc = value.upper()
+                            elif col_lower in ['department', 'dept', 'department name', 'department_name', 'dept name']:
+                                dn = value.upper()
                         
                         if not eid or not ename:
                             error_count += 1
                             continue
                         
-                        # Validate mobile if provided
+                        # ✅ Mobile is OPTIONAL - only validate if provided
                         if mob and (not mob.isdigit() or len(mob) != 10):
                             error_count += 1
                             continue
                         
-                        # Validate email if provided
+                        # ✅ Email is OPTIONAL - only validate if provided
                         if email and ('@' not in email or '.' not in email):
                             error_count += 1
                             continue
@@ -327,15 +363,15 @@ def settings_employees(request):
                 if is_ajax:
                     return JsonResponse({
                         'success': True,
-                        'message': f'✅ Created {success_count} new employees, Updated {update_count} existing. {error_count} skipped.'
+                        'message': f'Created {success_count} new employees, Updated {update_count} existing. {error_count} skipped.'
                     })
                 
                 if success_count > 0:
-                    messages.success(request, f'✅ Created {success_count} new employees.')
+                    messages.success(request, f'Created {success_count} new employees.')
                 if update_count > 0:
-                    messages.success(request, f'✅ Updated {update_count} existing employees.')
+                    messages.success(request, f'Updated {update_count} existing employees.')
                 if error_count > 0:
-                    messages.warning(request, f'⚠️ {error_count} rows were skipped due to errors.')
+                    messages.warning(request, f'{error_count} rows were skipped due to errors.')
                 
             except Exception as e:
                 logger.error(f"Bulk upload error: {str(e)}")
@@ -358,10 +394,10 @@ def settings_employees(request):
             old_dept = emp.department.name if emp.department else 'None'
             old_can_assign = 'Yes' if emp.can_assign_ticket else 'No'
             
-            new_eid = request.POST.get('employee_id','').strip().upper()
-            new_ename = request.POST.get('employee_name','').strip().upper()
-            new_mobile = request.POST.get('mobile','').strip()
-            new_email = request.POST.get('email','').strip()
+            new_eid = request.POST.get('employee_id', '').strip().upper()
+            new_ename = request.POST.get('employee_name', '').strip().upper()
+            new_mobile = request.POST.get('mobile', '').strip()
+            new_email = request.POST.get('email', '').strip()
             new_unit = request.POST.get('unit') or None
             new_dept = request.POST.get('department') or None
             
@@ -373,12 +409,12 @@ def settings_employees(request):
                 messages.error(request, "Employee Name is required.")
                 return redirect('settings_employees_page')
             
-            # Validate mobile if provided
+            # ✅ Mobile is OPTIONAL - only validate if provided
             if new_mobile and (not new_mobile.isdigit() or len(new_mobile) != 10):
                 messages.error(request, f'Mobile number must be exactly 10 digits: {new_mobile}')
                 return redirect('settings_employees_page')
             
-            # Validate email if provided
+            # ✅ Email is OPTIONAL - only validate if provided
             if new_email and ('@' not in new_email or '.' not in new_email):
                 messages.error(request, f'Invalid email format: {new_email}')
                 return redirect('settings_employees_page')
@@ -484,16 +520,13 @@ def settings_employees(request):
             eid = emp.employee_id
             ename = emp.employee_name
             
-            # Check if employee is active
             if emp.is_active:
                 messages.error(request, f'❌ Cannot delete "{eid}" because they are still ACTIVE. Please deactivate the employee first, then try deleting again.')
                 return redirect('settings_employees_page')
             
-            # Employee is inactive, proceed with deletion
             emp_mobile = emp.mobile
             emp_email = emp.email
             
-            # Log before deleting
             log_settings_change(
                 request,
                 action_type='DELETE',
@@ -504,9 +537,7 @@ def settings_employees(request):
                 remarks=f"Employee permanently deleted by {request.user.username} (was already deactivated)"
             )
             
-            # Hard delete from database
             emp.delete()
-            
             messages.success(request, f'✅ Employee "{eid}" has been permanently deleted from the database.')
     
     return redirect('settings_employees_page')
@@ -526,29 +557,37 @@ def download_employee_list(request):
     ws = wb.active
     ws.title = "Employees"
     
-    tf = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
-    hf = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
-    df = Font(name='Calibri', size=11)
-    tfill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
-    hfill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
+    title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    data_font = Font(name='Calibri', size=11)
+    title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+    header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
+    thin_border = Border(
+        left=Side(style='thin', color='D0D0D0'),
+        right=Side(style='thin', color='D0D0D0'),
+        top=Side(style='thin', color='D0D0D0'),
+        bottom=Side(style='thin', color='D0D0D0')
+    )
     
     ws.merge_cells('A1:I1')
     ws['A1'] = "Employee Directory"
-    ws['A1'].font = tf
-    ws['A1'].fill = tfill
+    ws['A1'].font = title_font
+    ws['A1'].fill = title_fill
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 35
     
-    for ci, h in enumerate(['Employee ID', 'Name', 'Mobile', 'Email', 'Unit Code', 'Unit Name', 'Department', 'Status', 'Can Assign'], 1):
-        c = ws.cell(row=3, column=ci)
-        c.value = h
-        c.font = hf
-        c.fill = hfill
-        c.alignment = Alignment(horizontal='center', vertical='center')
+    headers = ['Employee ID', 'Name', 'Mobile', 'Email', 'Unit Code', 'Unit Name', 'Department', 'Status', 'Can Assign']
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col_idx)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = thin_border
     ws.row_dimensions[3].height = 25
     
-    for ri, emp in enumerate(emps, 4):
-        rd = [
+    for row_idx, emp in enumerate(emps, 4):
+        row_data = [
             emp.employee_id,
             emp.employee_name,
             emp.mobile or '',
@@ -559,15 +598,16 @@ def download_employee_list(request):
             'Active' if emp.is_active else 'Inactive',
             'Yes' if emp.can_assign_ticket else 'No'
         ]
-        for ci, v in enumerate(rd, 1):
-            c = ws.cell(row=ri, column=ci)
-            c.value = v
-            c.font = df
+        for col_idx, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.value = value
+            cell.font = data_font
+            cell.border = thin_border
     
-    for col in ws.columns:
-        ws.column_dimensions[openpyxl.utils.get_column_letter(col[0].column)].width = max(
-            max(len(str(c.value or '')) for c in col if c.row > 1) + 3, 12
-        )
+    column_widths = {'A': 15, 'B': 25, 'C': 15, 'D': 25, 'E': 12, 'F': 20, 'G': 20, 'H': 12, 'I': 12}
+    for col_letter, width in column_widths.items():
+        ws.column_dimensions[col_letter].width = width
+    
     wb.save(resp)
     return resp
 
@@ -578,7 +618,7 @@ def download_employee_template(request):
     """
     Download Excel template for bulk employee upload
     Columns: Employee ID, Employee Name, Mobile, Email, Unit Code, Department
-    Note: Mobile and Email are optional
+    Note: Mobile and Email are OPTIONAL (can be left blank)
     """
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=Employee_Upload_Template.xlsx'
@@ -587,9 +627,16 @@ def download_employee_template(request):
     ws = wb.active
     ws.title = "Employee Template"
     
-    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    header_font = Font(name='Calibri', size=12, bold=True, color='FFFFFF')
     header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
     header_alignment = Alignment(horizontal='center', vertical='center')
+    data_font = Font(name='Calibri', size=11)
+    thin_border = Border(
+        left=Side(style='thin', color='D0D0D0'),
+        right=Side(style='thin', color='D0D0D0'),
+        top=Side(style='thin', color='D0D0D0'),
+        bottom=Side(style='thin', color='D0D0D0')
+    )
     
     headers = ['Employee ID', 'Employee Name', 'Mobile', 'Email', 'Unit Code', 'Department']
     
@@ -599,6 +646,8 @@ def download_employee_template(request):
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = header_alignment
+        cell.border = thin_border
+    ws.row_dimensions[1].height = 30
     
     sample_data = [
         ['EMP001', 'JOHN DOE', '9876543210', 'john.doe@company.com', 'GPL', 'Production'],
@@ -606,23 +655,25 @@ def download_employee_template(request):
         ['EMP003', 'MIKE JOHNSON', '9876543212', 'mike.johnson@company.com', 'IMD', 'Purchase'],
         ['EMP004', 'SARAH WILLIAMS', '', '', 'GPL', 'Sales'],
         ['EMP005', 'DAVID BROWN', '9876543213', '', 'GPLAST', 'Finance'],
+        ['EMP006', 'ROBERT TAYLOR', '', 'robert.taylor@company.com', 'DCD', 'HRD'],
     ]
     
     for row_idx, row_data in enumerate(sample_data, 2):
         for col_idx, value in enumerate(row_data, 1):
             cell = ws.cell(row=row_idx, column=col_idx)
             cell.value = value
-            cell.font = Font(name='Calibri', size=11)
+            cell.font = data_font
+            cell.border = thin_border
     
     note_row = len(sample_data) + 3
     note_cell = ws.cell(row=note_row, column=1)
-    note_cell.value = "Mandatory fields: Employee ID, Employee Name. Mobile and Email are optional."
-    note_cell.font = Font(name='Calibri', size=10, italic=True, color='FF0000')
+    note_cell.value = "Mandatory fields: Employee ID, Employee Name  |  Mobile and Email are OPTIONAL"
+    note_cell.font = Font(name='Calibri', size=10, bold=True, color='FF0000')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=6)
     
     validation_row = note_row + 1
     validation_cell = ws.cell(row=validation_row, column=1)
-    validation_cell.value = "Note: Unit Code must match existing active units in the system. Department must match existing active departments."
+    validation_cell.value = "Note: Unit Code must match existing active units. Department must match existing active departments."
     validation_cell.font = Font(name='Calibri', size=9, italic=True, color='666666')
     ws.merge_cells(start_row=validation_row, start_column=1, end_row=validation_row, end_column=6)
     

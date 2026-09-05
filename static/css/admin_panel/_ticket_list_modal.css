@@ -1,0 +1,157 @@
+/* Aging Badge Styles */
+.aging-badge {
+    display: inline-block;
+    padding: 0.08rem 0.4rem;
+    border-radius: 50px;
+    font-size: 0.5rem;
+    font-weight: 600;
+    white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+    min-width: 35px;
+    text-align: center;
+}
+
+.aging-fresh {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22C55E;
+    border: 1px solid rgba(34, 197, 94, 0.15);
+}
+
+.aging-medium {
+    background: rgba(245, 158, 11, 0.12);
+    color: #F59E0B;
+    border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.aging-old {
+    background: rgba(239, 68, 68, 0.12);
+    color: #EF4444;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.aging-very-old {
+    background: rgba(139, 92, 246, 0.12);
+    color: #8B5CF6;
+    border: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+.aging-unknown {
+    background: rgba(148, 163, 184, 0.12);
+    color: #94A3B8;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+[data-theme="dark"] .aging-fresh {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ADE80;
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+[data-theme="dark"] .aging-medium {
+    background: rgba(245, 158, 11, 0.15);
+    color: #FBBF24;
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+[data-theme="dark"] .aging-old {
+    background: rgba(239, 68, 68, 0.15);
+    color: #F87171;
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+[data-theme="dark"] .aging-very-old {
+    background: rgba(139, 92, 246, 0.15);
+    color: #A78BFA;
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.badge-priority-critical { 
+    background: #EF4444; 
+    color: white; 
+    padding: 0.15rem 0.5rem;
+    border-radius: 50px;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-block;
+}
+.badge-priority-high { 
+    background: #F59E0B; 
+    color: #1A1A2E;
+    padding: 0.15rem 0.5rem;
+    border-radius: 50px;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-block;
+}
+.badge-priority-medium { 
+    background: #3B82F6; 
+    color: white;
+    padding: 0.15rem 0.5rem;
+    border-radius: 50px;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-block;
+}
+.badge-priority-low { 
+    background: #94A3B8; 
+    color: white;
+    padding: 0.15rem 0.5rem;
+    border-radius: 50px;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-block;
+}
+.badge-custom {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 50px;
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+.badge-status-open { background: #22C55E; color: white; }
+.badge-status-assigned { background: #3B82F6; color: white; }
+.badge-status-hold { background: #F59E0B; color: white; }
+.badge-status-escalated { background: #8B5CF6; color: white; }
+.badge-status-closed { background: #94A3B8; color: white; }
+
+.btn-view {
+    padding: 0.2rem 0.8rem !important;
+    border-radius: 50px !important;
+    font-size: 0.6rem !important;
+    font-weight: 600 !important;
+    background: linear-gradient(135deg, #FF6B00, #FF8C38) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    box-shadow: 0 2px 8px rgba(255, 107, 0, 0.2) !important;
+    transition: all 0.3s ease !important;
+}
+.btn-view:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 20px rgba(255, 107, 0, 0.35) !important;
+    color: #FFFFFF !important;
+}
+
+/* Table hover effect */
+.table-hover tbody tr:hover {
+    background: rgba(255, 107, 0, 0.04) !important;
+}
+
+[data-theme="dark"] .table-hover tbody tr:hover {
+    background: rgba(255, 107, 0, 0.08) !important;
+}

@@ -1,0 +1,283 @@
+/* ============================================================
+   TEST NOTIFICATIONS - BUTTON STYLES
+============================================================ */
+
+.btn-success {
+    background: linear-gradient(135deg, #22C55E, #16A34A) !important;
+    border: none !important;
+    color: white !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #16A34A, #15803D) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3) !important;
+}
+
+.btn-success:active {
+    transform: scale(0.95) !important;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #EF4444, #DC2626) !important;
+    border: none !important;
+    color: white !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #DC2626, #B91C1C) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3) !important;
+}
+
+.btn-danger:active {
+    transform: scale(0.95) !important;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #F59E0B, #D97706) !important;
+    border: none !important;
+    color: #1A2A6C !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #D97706, #B45309) !important;
+    color: #1A2A6C !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3) !important;
+}
+
+.btn-warning:active {
+    transform: scale(0.95) !important;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #3B82F6, #2563EB) !important;
+    border: none !important;
+    color: white !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-info:hover {
+    background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+}
+
+.btn-info:active {
+    transform: scale(0.95) !important;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6B7280, #4B5563) !important;
+    border: none !important;
+    color: white !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #4B5563, #374151) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3) !important;
+}
+
+.btn-secondary:active {
+    transform: scale(0.95) !important;
+}
+
+.btn-primary {
+    background: var(--brand-gradient) !important;
+    border: none !important;
+    color: white !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3) !important;
+}
+
+.btn-primary:active {
+    transform: scale(0.95) !important;
+}
+
+.btn-outline-success {
+    border-color: #22C55E !important;
+    color: #22C55E !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-outline-success:hover {
+    background: #22C55E !important;
+    color: white !important;
+}
+
+.btn-outline-info {
+    border-color: #3B82F6 !important;
+    color: #3B82F6 !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-outline-info:hover {
+    background: #3B82F6 !important;
+    color: white !important;
+}
+
+.btn-outline-warning {
+    border-color: #F59E0B !important;
+    color: #F59E0B !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-outline-warning:hover {
+    background: #F59E0B !important;
+    color: #1A2A6C !important;
+}
+
+.btn-outline-danger {
+    border-color: #EF4444 !important;
+    color: #EF4444 !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-outline-danger:hover {
+    background: #EF4444 !important;
+    color: white !important;
+}
+
+.btn-outline-primary {
+    border-color: var(--brand-orange) !important;
+    color: var(--brand-orange) !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-outline-primary:hover {
+    background: var(--brand-gradient) !important;
+    color: white !important;
+    border-color: transparent !important;
+}
+
+/* ============================================================
+   DARK THEME
+============================================================ */
+[data-theme="dark"] .btn-outline-success {
+    color: #34D399 !important;
+    border-color: #34D399 !important;
+}
+
+[data-theme="dark"] .btn-outline-success:hover {
+    background: #34D399 !important;
+    color: #1A1A2E !important;
+}
+
+[data-theme="dark"] .btn-outline-info {
+    color: #60A5FA !important;
+    border-color: #60A5FA !important;
+}
+
+[data-theme="dark"] .btn-outline-info:hover {
+    background: #60A5FA !important;
+    color: #1A1A2E !important;
+}
+
+[data-theme="dark"] .btn-outline-warning {
+    color: #FBBF24 !important;
+    border-color: #FBBF24 !important;
+}
+
+[data-theme="dark"] .btn-outline-warning:hover {
+    background: #FBBF24 !important;
+    color: #1A1A2E !important;
+}
+
+[data-theme="dark"] .btn-outline-danger {
+    color: #F87171 !important;
+    border-color: #F87171 !important;
+}
+
+[data-theme="dark"] .btn-outline-danger:hover {
+    background: #F87171 !important;
+    color: #1A1A2E !important;
+}
+
+[data-theme="dark"] .btn-outline-primary {
+    color: var(--brand-orange) !important;
+    border-color: var(--brand-orange) !important;
+}
+
+[data-theme="dark"] .btn-outline-primary:hover {
+    background: var(--brand-gradient) !important;
+    color: white !important;
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width: 576px) {
+    .card-header {
+        padding: 0.6rem 1rem !important;
+    }
+    .card-body {
+        padding: 0.75rem !important;
+    }
+    .btn {
+        font-size: 0.7rem !important;
+        padding: 0.3rem 0.6rem !important;
+    }
+    .btn-sm {
+        font-size: 0.6rem !important;
+        padding: 0.2rem 0.5rem !important;
+    }
+    .btn-success, .btn-danger, .btn-warning, .btn-info, .btn-secondary, .btn-primary {
+        font-size: 0.7rem !important;
+        padding: 0.3rem 0.6rem !important;
+    }
+    hr {
+        margin: 1rem 0 !important;
+    }
+    h5 {
+        font-size: 0.85rem !important;
+    }
+    .d-flex.flex-wrap.gap-2 {
+        gap: 0.3rem !important;
+    }
+    .gap-2 {
+        gap: 0.3rem !important;
+    }
+    .row.g-2.g-md-3 {
+        --bs-gutter-y: 0.3rem;
+    }
+    .col-6 {
+        padding-left: 0.3rem;
+        padding-right: 0.3rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .card-body {
+        padding: 0.5rem !important;
+    }
+    .btn {
+        font-size: 0.6rem !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+    .btn-success, .btn-danger, .btn-warning, .btn-info, .btn-secondary, .btn-primary {
+        font-size: 0.6rem !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+    .btn-sm {
+        font-size: 0.55rem !important;
+        padding: 0.15rem 0.4rem !important;
+    }
+    h5 {
+        font-size: 0.75rem !important;
+    }
+    .col-6 {
+        padding-left: 0.2rem;
+        padding-right: 0.2rem;
+    }
+}

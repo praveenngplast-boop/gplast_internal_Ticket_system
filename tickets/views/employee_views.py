@@ -51,6 +51,30 @@ def role_redirect(request):
         return redirect('login')
 
 
+def _employee_ticket_scope(user):
+    """Return the tickets visible to a non-admin employee."""
+    credential = DepartmentCredential.objects.filter(
+        username=user.username,
+        is_active=True,
+    ).select_related('department').first()
+
+    if credential and credential.department_id:
+        return Ticket.objects.filter(department_id=credential.department_id)
+
+    employee = EmployeeMaster.objects.filter(
+        email=user.email,
+        is_active=True,
+    ).select_related('department').first()
+
+    if employee and employee.department_id:
+        return Ticket.objects.filter(department_id=employee.department_id)
+
+    return Ticket.objects.filter(
+        Q(created_by_user=user) |
+        Q(assigned_person__icontains=user.username)
+    ).distinct()
+
+
 # ============================================================
 # EMPLOYEE DASHBOARD
 # ============================================================
@@ -62,10 +86,7 @@ def employee_dashboard(request):
     if request.user.is_staff:
         tickets = Ticket.objects.all()
     else:
-        tickets = Ticket.objects.filter(
-            Q(created_by_user=request.user) | 
-            Q(assigned_person__icontains=request.user.username)
-        ).distinct()
+        tickets = _employee_ticket_scope(request.user)
     
     kpis = {
         'total': tickets.count(),
@@ -201,11 +222,15 @@ def create_ticket(request):
                 performed_by=request.user.username
             )
             
-            try:
-                send_ticket_email(ticket, 'Created')
-                logger.info(f"Email sent for ticket {ticket.ticket_number}")
-            except Exception as e:
-                logger.error(f"Failed to send email for ticket {ticket.ticket_number}: {e}")
+            # ============================================================
+            # EMAIL SENDING DISABLED - COMMENTED OUT
+            # ============================================================
+            # try:
+            #     send_ticket_email(ticket, 'Created')
+            #     logger.info(f"Email sent for ticket {ticket.ticket_number}")
+            # except Exception as e:
+            #     logger.error(f"Failed to send email for ticket {ticket.ticket_number}: {e}")
+            # ============================================================
             
             messages.success(request, f'Ticket #{ticket.ticket_number} created successfully!')
             return redirect('ticket_detail', ticket_id=ticket.id)
@@ -235,9 +260,9 @@ def create_ticket(request):
 
 
 # ============================================================
-# ALL TICKETS - WITH 30 DAY CLOSED FILTER AND EXCEL EXPORT
+# ALL TICKETS - WITH 30 DAY CLOSED FILTER AND EXCEL EXPORT - FIXED AJAX
 # ============================================================
-@login_required
+@login_required  # ✅ ADDED - Fixes the authentication issue for drill-down
 def all_tickets(request):
     """
     View all tickets with 30-day filter for closed tickets
@@ -246,8 +271,29 @@ def all_tickets(request):
     - Search works across ALL history
     - Pagination: 20 per page
     - Excel export with current filters
+    - ✅ AJAX support for drill-down with target date
     """
-    tickets = Ticket.objects.all().order_by('-created_at')
+    # ✅ Check if user is authenticated FIRST
+    is_ajax = request.GET.get('ajax', 'false')
+    if isinstance(is_ajax, str):
+        is_ajax = is_ajax.lower() in ['true', '1', 'yes']
+    
+    # ✅ If not authenticated and AJAX, return JSON error
+    if not request.user.is_authenticated:
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'message': 'Please login to view tickets.',
+                'tickets': [],
+                'count': 0
+            }, status=401)
+        return redirect('login')
+    
+    if request.user.is_staff:
+        tickets = Ticket.objects.all()
+    else:
+        tickets = _employee_ticket_scope(request.user)
+    tickets = tickets.order_by('-created_at')
     
     status_filter = request.GET.get('status', '')
     priority_filter = request.GET.get('priority', '')
@@ -255,9 +301,12 @@ def all_tickets(request):
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     
-    # ✅ NEW: Main Error Type and Sub Error Type filters
+    # Main Error Type and Sub Error Type filters
     main_error_type = request.GET.get('main_error_type', '').strip()
     sub_error_type = request.GET.get('sub_error_type', '').strip()
+    
+    # ✅ Filter parameter for drill-down
+    filter_param = request.GET.get('filter', '').strip()
     
     # 30-DAY CLOSED TICKETS FILTER (DEFAULT VIEW)
     if not status_filter:
@@ -273,11 +322,26 @@ def all_tickets(request):
     if priority_filter:
         tickets = tickets.filter(priority=priority_filter)
     
-    # ✅ NEW: Apply Main Error Type filter
+    # ✅ Apply filter parameter for drill-down
+    if filter_param and filter_param != 'all':
+        if filter_param == 'Open':
+            tickets = tickets.filter(status='Open')
+        elif filter_param == 'Assigned':
+            tickets = tickets.filter(status='Assigned')
+        elif filter_param == 'Hold':
+            tickets = tickets.filter(status='Hold')
+        elif filter_param == 'Escalated':
+            tickets = tickets.filter(status='Escalated')
+        elif filter_param == 'Closed':
+            tickets = tickets.filter(status='Closed')
+        elif filter_param == 'Critical':
+            tickets = tickets.filter(priority='Critical')
+    
+    # Apply Main Error Type filter
     if main_error_type and main_error_type != '':
         tickets = tickets.filter(main_error_type=main_error_type)
     
-    # ✅ NEW: Apply Sub Error Type filter
+    # Apply Sub Error Type filter
     if sub_error_type and sub_error_type != '' and sub_error_type != 'All':
         tickets = tickets.filter(sub_error_type=sub_error_type)
     
@@ -323,18 +387,45 @@ def all_tickets(request):
     if request.GET.get('export') == 'excel':
         return export_filtered_tickets_excel(request, tickets)
     
-    is_ajax = request.GET.get('ajax', False)
+    # ============================================================
+    # ✅ FIXED: AJAX RESPONSE - Return JSON with ticket data
+    # ============================================================
     if is_ajax:
-        tickets = tickets[:50]
-        html = render_to_string('employee/_ticket_list_modal.html', {
-            'tickets': tickets,
-        }, request=request)
-        return JsonResponse({
-            'html': html,
-            'success': True,
-            'count': tickets.count()
-        })
+        try:
+            tickets_list = tickets[:50]
+            tickets_data = []
+            for ticket in tickets_list:
+                tickets_data.append({
+                    'id': ticket.id,
+                    'ticket_number': ticket.ticket_number,
+                    'subject': ticket.subject,
+                    'employee_name': ticket.employee_name,
+                    'status': ticket.status,
+                    'priority': ticket.priority,
+                    'target_date': ticket.target_date.isoformat() if ticket.target_date else None,
+                    'created_at': ticket.created_at.isoformat(),
+                    'unit': ticket.unit.code if ticket.unit else '',
+                    'department': ticket.department.name if ticket.department else '',
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'tickets': tickets_data,
+                'count': tickets.count()
+            })
+        except Exception as e:
+            logger.error(f"AJAX error in all_tickets: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e),
+                'message': 'Error loading tickets. Please try again.',
+                'tickets': [],
+                'count': 0
+            }, status=500)
     
+    # ============================================================
+    # REGULAR PAGE RENDER
+    # ============================================================
     paginator = Paginator(tickets, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -351,7 +442,6 @@ def all_tickets(request):
         'priority_choices': Ticket.PRIORITY_CHOICES,
         'units': Unit.objects.filter(is_active=True),
         'departments': Department.objects.filter(is_active=True),
-        # ✅ NEW: Pass error type filters to template
         'selected_main_error_type': main_error_type,
         'selected_sub_error_type': sub_error_type,
     }
@@ -359,7 +449,7 @@ def all_tickets(request):
 
 
 # ============================================================
-# MY TICKETS - WITH EXCEL EXPORT
+# MY TICKETS - WITH EXCEL EXPORT - FIXED AJAX
 # ============================================================
 @login_required
 def my_tickets(request):
@@ -374,9 +464,12 @@ def my_tickets(request):
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     
-    # ✅ NEW: Main Error Type and Sub Error Type filters
+    # Main Error Type and Sub Error Type filters
     main_error_type = request.GET.get('main_error_type', '').strip()
     sub_error_type = request.GET.get('sub_error_type', '').strip()
+    
+    # ✅ Filter parameter for drill-down
+    filter_param = request.GET.get('filter', '').strip()
     
     selected_status = status_filter
     selected_priority = priority_filter
@@ -395,11 +488,26 @@ def my_tickets(request):
     if ticket_number_filter:
         tickets = tickets.filter(ticket_number__icontains=ticket_number_filter)
     
-    # ✅ NEW: Apply Main Error Type filter
+    # ✅ Apply filter parameter for drill-down
+    if filter_param and filter_param != 'all':
+        if filter_param == 'Open':
+            tickets = tickets.filter(status='Open')
+        elif filter_param == 'Assigned':
+            tickets = tickets.filter(status='Assigned')
+        elif filter_param == 'Hold':
+            tickets = tickets.filter(status='Hold')
+        elif filter_param == 'Escalated':
+            tickets = tickets.filter(status='Escalated')
+        elif filter_param == 'Closed':
+            tickets = tickets.filter(status='Closed')
+        elif filter_param == 'Critical':
+            tickets = tickets.filter(priority='Critical')
+    
+    # Apply Main Error Type filter
     if main_error_type and main_error_type != '':
         tickets = tickets.filter(main_error_type=main_error_type)
     
-    # ✅ NEW: Apply Sub Error Type filter
+    # Apply Sub Error Type filter
     if sub_error_type and sub_error_type != '' and sub_error_type != 'All':
         tickets = tickets.filter(sub_error_type=sub_error_type)
     
@@ -455,17 +563,34 @@ def my_tickets(request):
     if request.GET.get('export') == 'excel':
         return export_filtered_my_tickets_excel(request, tickets)
     
-    is_ajax = request.GET.get('ajax', False)
+    # ============================================================
+    # ✅ FIXED: AJAX RESPONSE - Return JSON with HTML
+    # ============================================================
+    is_ajax = request.GET.get('ajax', 'false')
+    if isinstance(is_ajax, str):
+        is_ajax = is_ajax.lower() in ['true', '1', 'yes']
+    
     if is_ajax:
-        tickets = tickets[:50]
-        html = render_to_string('employee/_ticket_list_modal.html', {
-            'tickets': tickets,
-        }, request=request)
-        return JsonResponse({
-            'html': html,
-            'success': True,
-            'count': tickets.count()
-        })
+        try:
+            tickets_list = tickets[:50]
+            html = render_to_string('employee/_ticket_list_modal.html', {
+                'tickets': tickets_list,
+            }, request=request)
+            
+            return JsonResponse({
+                'success': True,
+                'html': html,
+                'count': tickets.count()
+            })
+        except Exception as e:
+            logger.error(f"AJAX error in my_tickets: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e),
+                'message': 'Error loading tickets. Please try again.',
+                'html': '',
+                'count': 0
+            }, status=500)
     
     paginator = Paginator(tickets, 20)
     page_number = request.GET.get('page')
@@ -490,7 +615,6 @@ def my_tickets(request):
         'status_choices': Ticket.STATUS_CHOICES,
         'priority_choices': Ticket.PRIORITY_CHOICES,
         'employees': employees,
-        # ✅ NEW: Pass error type filters to template
         'selected_main_error_type': main_error_type,
         'selected_sub_error_type': sub_error_type,
     }
@@ -544,13 +668,12 @@ def export_filtered_tickets_excel(request, tickets_qs):
     ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[2].height = 25
     
-    # ✅ UPDATED: Added Main Error Type and Sub Error Type columns
     headers = [
         'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
         'Employee ID', 'Employee Name', 'Mobile', 'Email', 'Screen/Module',
         'Subject', 'Description', 'Priority', 'Error Type', 'Created By Role',
         'Assigned Person', 'Hold Reason', 'Closing Remarks', 'Closed By',
-        'Vendor Ticket', 'Main Error Type', 'Sub Error Type',
+        'Vendor Ticket', 'Main Error Type', 'Sub Error Type', 'Target Date',
         'Created At', 'Closed At', 'Time to Close', 'Escalated At'
     ]
     
@@ -592,6 +715,8 @@ def export_filtered_tickets_excel(request, tickets_qs):
         else:
             escalated_at_local = ''
         
+        target_date_str = ticket.target_date.strftime('%d-%b-%Y') if ticket.target_date else ''
+        
         time_to_close = ''
         if ticket.created_at and ticket.closed_at:
             duration = ticket.closed_at - ticket.created_at
@@ -624,8 +749,9 @@ def export_filtered_tickets_excel(request, tickets_qs):
             ticket.closing_remarks or '',
             ticket.closed_by or '',
             ticket.vendor_ticket_number or '',
-            ticket.main_error_type or 'N/A',  # ✅ NEW
-            ticket.sub_error_type or 'N/A',   # ✅ NEW
+            ticket.main_error_type or 'N/A',
+            ticket.sub_error_type or 'N/A',
+            target_date_str,
             created_at_local,
             closed_at_local,
             time_to_close,
@@ -646,7 +772,8 @@ def export_filtered_tickets_excel(request, tickets_qs):
         'F': 14, 'G': 22, 'H': 16, 'I': 25, 'J': 16,
         'K': 30, 'L': 40, 'M': 14, 'N': 20, 'O': 18,
         'P': 20, 'Q': 20, 'R': 30, 'S': 18, 'T': 18,
-        'U': 22, 'V': 22, 'W': 16, 'X': 22, 'Y': 16, 'Z': 22
+        'U': 22, 'V': 22, 'W': 18, 'X': 16, 'Y': 22, 
+        'Z': 16, 'AA': 22
     }
     
     for col_letter, width in column_widths.items():
@@ -703,13 +830,12 @@ def export_filtered_my_tickets_excel(request, tickets_qs):
     ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[2].height = 25
     
-    # ✅ UPDATED: Added Main Error Type and Sub Error Type columns
     headers = [
         'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
         'Employee ID', 'Employee Name', 'Mobile', 'Email', 'Screen/Module',
         'Subject', 'Description', 'Priority', 'Error Type', 'Created By Role',
         'Assigned Person', 'Hold Reason', 'Closing Remarks', 'Closed By',
-        'Vendor Ticket', 'Main Error Type', 'Sub Error Type',
+        'Vendor Ticket', 'Main Error Type', 'Sub Error Type', 'Target Date',
         'Created At', 'Closed At', 'Time to Close', 'Escalated At'
     ]
     
@@ -751,6 +877,8 @@ def export_filtered_my_tickets_excel(request, tickets_qs):
         else:
             escalated_at_local = ''
         
+        target_date_str = ticket.target_date.strftime('%d-%b-%Y') if ticket.target_date else ''
+        
         time_to_close = ''
         if ticket.created_at and ticket.closed_at:
             duration = ticket.closed_at - ticket.created_at
@@ -783,8 +911,9 @@ def export_filtered_my_tickets_excel(request, tickets_qs):
             ticket.closing_remarks or '',
             ticket.closed_by or '',
             ticket.vendor_ticket_number or '',
-            ticket.main_error_type or 'N/A',  # ✅ NEW
-            ticket.sub_error_type or 'N/A',   # ✅ NEW
+            ticket.main_error_type or 'N/A',
+            ticket.sub_error_type or 'N/A',
+            target_date_str,
             created_at_local,
             closed_at_local,
             time_to_close,
@@ -805,7 +934,8 @@ def export_filtered_my_tickets_excel(request, tickets_qs):
         'F': 14, 'G': 22, 'H': 16, 'I': 25, 'J': 16,
         'K': 30, 'L': 40, 'M': 14, 'N': 20, 'O': 18,
         'P': 20, 'Q': 20, 'R': 30, 'S': 18, 'T': 18,
-        'U': 22, 'V': 22, 'W': 16, 'X': 22, 'Y': 16, 'Z': 22
+        'U': 22, 'V': 22, 'W': 18, 'X': 16, 'Y': 22,
+        'Z': 16, 'AA': 22
     }
     
     for col_letter, width in column_widths.items():
@@ -825,7 +955,6 @@ def employee_ticket_detail(request, ticket_id):
     history = TicketHistory.objects.filter(ticket=ticket).order_by('timestamp')
     
     # ✅ FIXED: Only filter by screen_code, NOT by pk
-    # This was the cause of: ValueError: Field 'id' expected a number but got 'CFG0200'
     screen_object = ScreenMaster.objects.filter(screen_code=ticket.screen_number).first()
     
     # Build attachments list for display
@@ -935,6 +1064,7 @@ def download_individual_ticket_excel(request, ticket_id):
         ('Priority', ticket.priority),
         ('Status', ticket.status),
         ('Error Type', ticket.error_type or 'Not Set'),
+        ('Target Date', ticket.target_date.strftime('%d-%b-%Y') if ticket.target_date else 'Not Set'),
         ('Created Date', timezone.localtime(ticket.created_at).strftime('%d-%b-%Y %I:%M %p') if ticket.created_at else ''),
         ('Updated Date', ticket.updated_at.strftime('%d-%b-%Y %I:%M %p') if ticket.updated_at else ''),
     ]
@@ -988,7 +1118,7 @@ def download_individual_ticket_excel(request, ticket_id):
     
     row += 1
     
-    # Closing Details (if closed) - ✅ UPDATED with new error types
+    # Closing Details (if closed)
     if ticket.status == 'Closed':
         ws.merge_cells(f'A{row}:F{row}')
         ws[f'A{row}'] = "CLOSING DETAILS"
@@ -1012,8 +1142,8 @@ def download_individual_ticket_excel(request, ticket_id):
         closing_info = [
             ('Closed By', ticket.closed_by or ''),
             ('Closed Date', timezone.localtime(ticket.closed_at).strftime('%d-%b-%Y %I:%M %p') if ticket.closed_at else ''),
-            ('Main Error Type', ticket.main_error_type or 'N/A'),  # ✅ NEW
-            ('Sub Error Type', ticket.sub_error_type or 'N/A'),   # ✅ NEW
+            ('Main Error Type', ticket.main_error_type or 'N/A'),
+            ('Sub Error Type', ticket.sub_error_type or 'N/A'),
             ('Closing Remarks', ticket.closing_remarks or ''),
             ('Time to Close', time_to_close_str),
         ]
@@ -1051,7 +1181,7 @@ def download_individual_ticket_excel(request, ticket_id):
 
 
 # ============================================================
-# UPDATE TICKET STATUS
+# UPDATE TICKET STATUS - WITH TARGET DATE SUPPORT
 # ============================================================
 @login_required
 def update_ticket_status(request, ticket_id):
@@ -1066,19 +1196,29 @@ def update_ticket_status(request, ticket_id):
         assigned_person = request.POST.get('assigned_person')
         remarks = request.POST.get('remarks', '')
         
+        target_date_str = request.POST.get('target_date', '').strip()
+        target_date = None
+        if target_date_str:
+            try:
+                target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                messages.error(request, 'Invalid target date format.')
+                return redirect('ticket_detail', ticket_id=ticket_id)
+        
         if assigned_person:
             ticket.assigned_person = assigned_person
             ticket.status = 'Assigned'
+            if target_date:
+                ticket.target_date = target_date
             ticket.save()
             
             TicketHistory.objects.create(
                 ticket=ticket,
                 action=f'Assigned to {assigned_person}',
-                remarks=remarks,
+                remarks=remarks + (f' | Target Date: {target_date.strftime("%d-%b-%Y")}' if target_date else ''),
                 performed_by=request.user.username
             )
-            send_ticket_email(ticket, 'Assigned', remarks=remarks, request=request)
-            messages.success(request, f'Ticket assigned to {assigned_person}')
+            messages.success(request, f'Ticket assigned to {assigned_person}. Target date set to {target_date.strftime("%d-%b-%Y") if target_date else "Not set"}.')
         else:
             messages.error(request, 'Please select an employee to assign')
     
@@ -1095,7 +1235,6 @@ def update_ticket_status(request, ticket_id):
                 remarks=hold_reason,
                 performed_by=request.user.username
             )
-            send_ticket_email(ticket, 'Hold', remarks=hold_reason)
             messages.success(request, 'Ticket put on hold')
         else:
             messages.error(request, 'Please provide a reason for holding')
@@ -1116,11 +1255,9 @@ def update_ticket_status(request, ticket_id):
             remarks=f'Vendor Ticket: {vendor_ticket or "N/A"} - {remarks}',
             performed_by=request.user.username
         )
-        send_ticket_email(ticket, 'Escalated', remarks=remarks)
         messages.success(request, 'Ticket escalated successfully')
     
     elif action_type == 'Close':
-        # ✅ UPDATED: Get new error type fields
         main_error_type = request.POST.get('main_error_type', '').strip()
         sub_error_type = request.POST.get('sub_error_type', '').strip()
         closing_remarks = request.POST.get('closing_remarks', '').strip()
@@ -1140,12 +1277,6 @@ def update_ticket_status(request, ticket_id):
                 remarks=f'Main Error: {main_error_type}\nSub Error: {sub_error_type}\nClosing Remarks: {closing_remarks}',
                 performed_by=request.user.username
             )
-            
-            try:
-                send_ticket_email(ticket, 'Closed', remarks=closing_remarks)
-            except Exception as e:
-                logger.error(f"Failed to send closing email: {e}")
-            
             messages.success(request, 'Ticket closed successfully')
         else:
             messages.error(request, 'Please provide main error type, sub error type, and closing remarks')
@@ -1174,25 +1305,47 @@ def update_ticket_status(request, ticket_id):
                     remarks=remarks,
                     performed_by=request.user.username
                 )
-                reopen_attachments = [
+                for uploaded_file in uploaded_files:
                     ReopenAttachment.objects.create(
                         ticket=ticket,
                         file=uploaded_file,
                         uploaded_by=request.user.username,
-                    ).file
-                    for uploaded_file in uploaded_files
-                ]
-                
-                try:
-                    send_ticket_email(ticket, 'Reopened', remarks=remarks, attachments=reopen_attachments)
-                except Exception as e:
-                    logger.error(f"Failed to send reopen email: {e}")
-                
+                    )
                 messages.success(request, 'Ticket reopened successfully')
             else:
                 messages.error(request, 'Cannot reopen ticket after 48 hours')
         else:
             messages.error(request, 'Please provide a reason for reopening')
+    
+    elif action_type == 'UpdateTargetDate':
+        target_date_str = request.POST.get('target_date', '').strip()
+        
+        if not target_date_str:
+            messages.error(request, 'Target date is required.')
+            return redirect('ticket_detail', ticket_id=ticket_id)
+        
+        try:
+            target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+            
+            if target_date < timezone.now().date():
+                messages.error(request, 'Target date cannot be in the past.')
+                return redirect('ticket_detail', ticket_id=ticket_id)
+            
+            old_target_date = ticket.target_date
+            ticket.target_date = target_date
+            ticket.save()
+            
+            TicketHistory.objects.create(
+                ticket=ticket,
+                action='Target Date Updated',
+                remarks=f'Target date changed from {old_target_date.strftime("%d-%b-%Y") if old_target_date else "Not set"} to {target_date.strftime("%d-%b-%Y")}',
+                performed_by=request.user.username
+            )
+            
+            messages.success(request, f'Target date updated to {target_date.strftime("%d-%b-%Y")}.')
+            
+        except ValueError:
+            messages.error(request, 'Invalid date format.')
     
     return redirect('ticket_detail', ticket_id=ticket_id)
 
@@ -1253,14 +1406,14 @@ def export_closed_tickets_30_days(request):
     ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[2].height = 25
     
-    # ✅ UPDATED: Added Main Error Type and Sub Error Type columns
     headers = [
         'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
         'Employee ID', 'Employee Name', 'Mobile', 'Email', 'Screen/Module',
         'Subject', 'Description', 'Priority', 'Error Type', 'Created By Role',
         'Admin Creation Reason', 'Assigned Person', 'Hold Reason',
-        'Main Error Type', 'Sub Error Type', 'Closing Remarks', 'Closed By',
-        'Vendor Ticket Number', 'Created At', 'Closed At', 'Time to Close', 'Escalated At'
+        'Main Error Type', 'Sub Error Type', 'Target Date', 'Closing Remarks', 
+        'Closed By', 'Vendor Ticket Number', 'Created At', 'Closed At', 
+        'Time to Close', 'Escalated At'
     ]
     
     for col_idx, header in enumerate(headers, 1):
@@ -1301,6 +1454,8 @@ def export_closed_tickets_30_days(request):
         else:
             escalated_at_local = ''
         
+        target_date_str = ticket.target_date.strftime('%d-%b-%Y') if ticket.target_date else ''
+        
         time_to_close = ''
         if ticket.created_at and ticket.closed_at:
             duration = ticket.closed_at - ticket.created_at
@@ -1331,8 +1486,9 @@ def export_closed_tickets_30_days(request):
             ticket.admin_creation_reason or '',
             ticket.assigned_person or '',
             ticket.hold_reason or '',
-            ticket.main_error_type or 'N/A',  # ✅ NEW
-            ticket.sub_error_type or 'N/A',   # ✅ NEW
+            ticket.main_error_type or 'N/A',
+            ticket.sub_error_type or 'N/A',
+            target_date_str,
             ticket.closing_remarks or '',
             ticket.closed_by or '',
             ticket.vendor_ticket_number or '',
@@ -1356,8 +1512,8 @@ def export_closed_tickets_30_days(request):
         'F': 14, 'G': 22, 'H': 16, 'I': 25, 'J': 16,
         'K': 30, 'L': 40, 'M': 14, 'N': 20, 'O': 18,
         'P': 25, 'Q': 20, 'R': 20, 'S': 22, 'T': 22,
-        'U': 30, 'V': 18, 'W': 18, 'X': 22, 'Y': 22,
-        'Z': 16, 'AA': 22
+        'U': 18, 'V': 30, 'W': 18, 'X': 18, 'Y': 22,
+        'Z': 22, 'AA': 16, 'AB': 22
     }
     
     for col_letter, width in column_widths.items():

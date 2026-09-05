@@ -320,7 +320,7 @@ def download_credentials(request):
 
 
 # ============================================================
-# ✅ NEW: BULK UPLOAD CREDENTIALS
+# ✅ BULK UPLOAD CREDENTIALS - FIXED WITH AJAX HANDLING
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='tickets:login')
@@ -329,185 +329,237 @@ def credentials_bulk_upload(request):
     Bulk upload department credentials from Excel/CSV file
     Expected columns: 'Unit Code', 'Department Name', 'Username', 'Password'
     URL: /custom-admin/settings/credentials/bulk-upload/
+    ✅ FIXED: Always returns JSON for AJAX requests
     """
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
+    # Check if it's an AJAX request
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
-    excel_file = request.FILES.get('excel_file')
-    if not excel_file:
-        return JsonResponse({'success': False, 'message': 'Please select an Excel file.'})
-    
-    if not excel_file.name.endswith(('.xlsx', '.xls', '.csv')):
-        return JsonResponse({
-            'success': False, 
-            'message': 'Invalid file format. Only .xlsx, .xls, and .csv files are supported.'
-        })
-    
-    try:
-        # Read the file
-        if excel_file.name.endswith('.csv'):
-            df = pd.read_csv(excel_file, dtype=str)
-        else:
-            df = pd.read_excel(excel_file, dtype=str)
-        
-        if df.empty:
-            return JsonResponse({'success': False, 'message': 'The uploaded file is empty.'})
-        
-        # Find columns - look for Unit Code, Department Name, Username, Password
-        unit_code_column = None
-        dept_name_column = None
-        username_column = None
-        password_column = None
-        
-        for col in df.columns:
-            col_lower = col.strip().lower()
-            if 'unit' in col_lower and ('code' in col_lower or 'id' in col_lower):
-                unit_code_column = col
-            if 'department' in col_lower or 'dept' in col_lower:
-                if 'name' in col_lower or 'dept' in col_lower:
-                    dept_name_column = col
-            if 'user' in col_lower and 'name' in col_lower:
-                username_column = col
-            if 'password' in col_lower or 'pwd' in col_lower:
-                password_column = col
-        
-        # If not found by pattern, use column names based on position
-        if unit_code_column is None and len(df.columns) >= 1:
-            unit_code_column = df.columns[0]
-        if dept_name_column is None and len(df.columns) >= 2:
-            dept_name_column = df.columns[1]
-        if username_column is None and len(df.columns) >= 3:
-            username_column = df.columns[2]
-        if password_column is None and len(df.columns) >= 4:
-            password_column = df.columns[3]
-        
-        # Get all active units for validation
-        units = {unit.code: unit for unit in Unit.objects.filter(is_active=True)}
-        
-        added_count = 0
-        skipped_count = 0
-        errors = []
-        added_creds = []
-        skipped_creds = []
-        
-        with transaction.atomic():
-            for index, row in df.iterrows():
-                # Get values
-                unit_code = str(row[unit_code_column]).strip() if pd.notna(row[unit_code_column]) else ''
-                dept_name = str(row[dept_name_column]).strip() if pd.notna(row[dept_name_column]) else ''
-                username = str(row[username_column]).strip() if pd.notna(row[username_column]) else ''
-                password = str(row[password_column]).strip() if pd.notna(row[password_column]) else ''
-                
-                # Validate
-                if not unit_code:
-                    errors.append(f"Row {index + 1}: Unit Code is empty")
-                    skipped_count += 1
-                    continue
-                
-                if not dept_name:
-                    errors.append(f"Row {index + 1}: Department Name is empty")
-                    skipped_count += 1
-                    continue
-                
-                if not username:
-                    errors.append(f"Row {index + 1}: Username is empty")
-                    skipped_count += 1
-                    continue
-                
-                if not password:
-                    errors.append(f"Row {index + 1}: Password is empty")
-                    skipped_count += 1
-                    continue
-                
-                # Check if unit exists
-                unit = units.get(unit_code)
-                if not unit:
-                    errors.append(f"Row {index + 1}: Unit '{unit_code}' not found")
-                    skipped_count += 1
-                    continue
-                
-                # Find department by name within the unit
-                department = Department.objects.filter(
-                    unit=unit,
-                    name__iexact=dept_name,
-                    is_active=True
-                ).first()
-                
-                if not department:
-                    errors.append(f"Row {index + 1}: Department '{dept_name}' not found in unit '{unit_code}'")
-                    skipped_count += 1
-                    continue
-                
-                # Check if credential already exists for this unit and department
-                if DepartmentCredential.objects.filter(unit=unit, department=department).exists():
-                    errors.append(f"Row {index + 1}: Credential already exists for {unit_code} - {dept_name}")
-                    skipped_count += 1
-                    skipped_creds.append(f"{unit_code} - {dept_name}")
-                    continue
-                
-                # Create credential
-                try:
-                    cred = DepartmentCredential.objects.create(
+    # Always return JSON for AJAX requests
+    if is_ajax:
+        try:
+            if request.method != 'POST':
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'Invalid method. Use POST.',
+                    'added_count': 0,
+                    'skipped_count': 0,
+                    'errors': ['Invalid request method. Please use POST.']
+                }, status=400)
+            
+            excel_file = request.FILES.get('excel_file')
+            if not excel_file:
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'Please select an Excel file.',
+                    'added_count': 0,
+                    'skipped_count': 0,
+                    'errors': ['No file selected.']
+                })
+            
+            if not excel_file.name.endswith(('.xlsx', '.xls', '.csv')):
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'Invalid file format. Only .xlsx, .xls, and .csv files are supported.',
+                    'added_count': 0,
+                    'skipped_count': 0,
+                    'errors': ['Unsupported file format.']
+                })
+            
+            # Read the file
+            try:
+                if excel_file.name.endswith('.csv'):
+                    df = pd.read_csv(excel_file, dtype=str)
+                else:
+                    df = pd.read_excel(excel_file, dtype=str)
+            except Exception as e:
+                logger.error(f"Error reading file: {str(e)}")
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Error reading file: {str(e)}',
+                    'added_count': 0,
+                    'skipped_count': 0,
+                    'errors': [f'Could not read file: {str(e)}']
+                })
+            
+            if df.empty:
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'The uploaded file is empty.',
+                    'added_count': 0,
+                    'skipped_count': 0,
+                    'errors': ['File is empty.']
+                })
+            
+            # Find columns - look for Unit Code, Department Name, Username, Password
+            unit_code_column = None
+            dept_name_column = None
+            username_column = None
+            password_column = None
+            
+            for col in df.columns:
+                col_lower = col.strip().lower()
+                if 'unit' in col_lower and ('code' in col_lower or 'id' in col_lower):
+                    unit_code_column = col
+                if 'department' in col_lower or 'dept' in col_lower:
+                    if 'name' in col_lower or 'dept' in col_lower:
+                        dept_name_column = col
+                if 'user' in col_lower and 'name' in col_lower:
+                    username_column = col
+                if 'password' in col_lower or 'pwd' in col_lower:
+                    password_column = col
+            
+            # If not found by pattern, use column names based on position
+            if unit_code_column is None and len(df.columns) >= 1:
+                unit_code_column = df.columns[0]
+            if dept_name_column is None and len(df.columns) >= 2:
+                dept_name_column = df.columns[1]
+            if username_column is None and len(df.columns) >= 3:
+                username_column = df.columns[2]
+            if password_column is None and len(df.columns) >= 4:
+                password_column = df.columns[3]
+            
+            # Get all active units for validation
+            units = {unit.code: unit for unit in Unit.objects.filter(is_active=True)}
+            
+            added_count = 0
+            skipped_count = 0
+            errors = []
+            added_creds = []
+            skipped_creds = []
+            
+            with transaction.atomic():
+                for index, row in df.iterrows():
+                    # Get values
+                    unit_code = str(row[unit_code_column]).strip() if pd.notna(row[unit_code_column]) else ''
+                    dept_name = str(row[dept_name_column]).strip() if pd.notna(row[dept_name_column]) else ''
+                    username = str(row[username_column]).strip() if pd.notna(row[username_column]) else ''
+                    password = str(row[password_column]).strip() if pd.notna(row[password_column]) else ''
+                    
+                    # Validate
+                    if not unit_code:
+                        errors.append(f"Row {index + 1}: Unit Code is empty")
+                        skipped_count += 1
+                        continue
+                    
+                    if not dept_name:
+                        errors.append(f"Row {index + 1}: Department Name is empty")
+                        skipped_count += 1
+                        continue
+                    
+                    if not username:
+                        errors.append(f"Row {index + 1}: Username is empty")
+                        skipped_count += 1
+                        continue
+                    
+                    if not password:
+                        errors.append(f"Row {index + 1}: Password is empty")
+                        skipped_count += 1
+                        continue
+                    
+                    # Check if unit exists
+                    unit = units.get(unit_code)
+                    if not unit:
+                        errors.append(f"Row {index + 1}: Unit '{unit_code}' not found")
+                        skipped_count += 1
+                        continue
+                    
+                    # Find department by name within the unit
+                    department = Department.objects.filter(
                         unit=unit,
-                        department=department,
-                        username=username,
-                        password=password,
+                        name__iexact=dept_name,
                         is_active=True
-                    )
+                    ).first()
                     
-                    # Create/Update Django User
-                    user, created = User.objects.get_or_create(
-                        username=username,
-                        defaults={'is_staff': False}
-                    )
-                    if created:
-                        user.set_password(password)
-                        user.save()
+                    if not department:
+                        errors.append(f"Row {index + 1}: Department '{dept_name}' not found in unit '{unit_code}'")
+                        skipped_count += 1
+                        continue
                     
-                    added_count += 1
-                    added_creds.append(f"{unit_code} - {dept_name}")
+                    # Check if credential already exists for this unit and department
+                    if DepartmentCredential.objects.filter(unit=unit, department=department).exists():
+                        errors.append(f"Row {index + 1}: Credential already exists for {unit_code} - {dept_name}")
+                        skipped_count += 1
+                        skipped_creds.append(f"{unit_code} - {dept_name}")
+                        continue
                     
-                except IntegrityError:
-                    errors.append(f"Row {index + 1}: Database constraint error for {unit_code} - {dept_name}")
-                    skipped_count += 1
-                    skipped_creds.append(f"{unit_code} - {dept_name}")
-                except Exception as e:
-                    errors.append(f"Row {index + 1}: Error creating credential '{username}': {str(e)}")
-                    skipped_count += 1
-        
-        # Log bulk upload
-        if added_count > 0:
-            log_settings_change(
-                request,
-                action_type='CREATE',
-                setting_type='CREDENTIAL',
-                setting_name=f'Bulk Upload: {added_count} Credentials',
-                new_value=f'Added {added_count} credentials',
-                change_summary=f'Bulk uploaded {added_count} department credentials',
-                remarks=f'Bulk uploaded {added_count} credentials, {skipped_count} skipped by {request.user.username}'
-            )
-        
-        message = f'Successfully added {added_count} credentials.'
-        if skipped_count > 0:
-            message += f' Skipped {skipped_count} entries.'
-        
-        return JsonResponse({
-            'success': True,
-            'message': message,
-            'added_count': added_count,
-            'skipped_count': skipped_count,
-            'added_creds': added_creds[:20],
-            'skipped_creds': skipped_creds[:20],
-            'errors': errors[:20]
-        })
-        
-    except Exception as e:
-        logger.error(f"Bulk upload credentials error: {str(e)}")
-        return JsonResponse({'success': False, 'message': f'Error processing file: {str(e)}'})
+                    # Create credential
+                    try:
+                        cred = DepartmentCredential.objects.create(
+                            unit=unit,
+                            department=department,
+                            username=username,
+                            password=password,
+                            is_active=True
+                        )
+                        
+                        # Create/Update Django User
+                        user, created = User.objects.get_or_create(
+                            username=username,
+                            defaults={'is_staff': False}
+                        )
+                        if created:
+                            user.set_password(password)
+                            user.save()
+                        
+                        added_count += 1
+                        added_creds.append(f"{unit_code} - {dept_name}")
+                        
+                    except IntegrityError:
+                        errors.append(f"Row {index + 1}: Database constraint error for {unit_code} - {dept_name}")
+                        skipped_count += 1
+                        skipped_creds.append(f"{unit_code} - {dept_name}")
+                    except Exception as e:
+                        errors.append(f"Row {index + 1}: Error creating credential '{username}': {str(e)}")
+                        skipped_count += 1
+            
+            # Log bulk upload
+            if added_count > 0:
+                log_settings_change(
+                    request,
+                    action_type='CREATE',
+                    setting_type='CREDENTIAL',
+                    setting_name=f'Bulk Upload: {added_count} Credentials',
+                    new_value=f'Added {added_count} credentials',
+                    change_summary=f'Bulk uploaded {added_count} department credentials',
+                    remarks=f'Bulk uploaded {added_count} credentials, {skipped_count} skipped by {request.user.username}'
+                )
+            
+            message = f'Successfully added {added_count} credentials.'
+            if skipped_count > 0:
+                message += f' Skipped {skipped_count} entries.'
+            
+            return JsonResponse({
+                'success': True,
+                'message': message,
+                'added_count': added_count,
+                'skipped_count': skipped_count,
+                'added_creds': added_creds[:20],
+                'skipped_creds': skipped_creds[:20],
+                'errors': errors[:20]
+            })
+            
+        except Exception as e:
+            logger.error(f"Bulk upload credentials error: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'message': f'Error processing file: {str(e)}',
+                'added_count': 0,
+                'skipped_count': 0,
+                'errors': [str(e)]
+            }, status=500)
+    
+    # Non-AJAX request - return error
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request. This endpoint only accepts AJAX requests.',
+        'added_count': 0,
+        'skipped_count': 0,
+        'errors': ['Invalid request type.']
+    }, status=400)
 
 
 # ============================================================
-# ✅ NEW: DOWNLOAD BULK UPLOAD TEMPLATE FOR CREDENTIALS
+# ✅ DOWNLOAD BULK UPLOAD TEMPLATE FOR CREDENTIALS
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='tickets:login')

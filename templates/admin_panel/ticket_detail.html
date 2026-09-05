@@ -4,1417 +4,7 @@
 
 {% block extra_head %}
 {{ block.super }}
-<style>
-    :root {
-        --ticket-bg: #FFFFFF;
-        --ticket-border: #E8EDF5;
-        --ticket-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-        --ticket-radius: 16px;
-        --input-bg: #F8FAFF;
-        --input-border: #DCE3F0;
-        --text-primary: #1A2A6C;
-        --text-secondary: #4A5A7A;
-        --text-muted: #8A9AB8;
-        --success-color: #22C55E;
-        --danger-color: #EF4444;
-        --warning-color: #F59E0B;
-        --brand-orange: #FF6B00;
-        --brand-orange-dark: #E55A00;
-        --brand-gradient: linear-gradient(135deg, #FF6B00 0%, #FF8C38 100%);
-        --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
-        --shadow-md: 0 4px 24px rgba(0,0,0,0.10);
-        --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
-    }
-
-    [data-theme="dark"] {
-        --ticket-bg: #1A1A2E;
-        --ticket-border: rgba(255, 255, 255, 0.08);
-        --ticket-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-        --input-bg: rgba(255, 255, 255, 0.05);
-        --input-border: rgba(255, 255, 255, 0.08);
-        --text-primary: #E8EDF5;
-        --text-secondary: #A8B8D8;
-        --text-muted: #6A7A9A;
-        --shadow-sm: 0 2px 12px rgba(0,0,0,0.3);
-        --shadow-md: 0 4px 24px rgba(0,0,0,0.4);
-        --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
-    }
-
-    /* ========== GLOBAL RESET & BASE ========== */
-    .ticket-container {
-        animation: fadeInUp 0.6s ease;
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 0 0.5rem 2rem 0.5rem;
-        min-height: calc(100vh - 200px);
-    }
-
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ========== HEADER ========== */
-    .ticket-header {
-        background: var(--ticket-bg);
-        border: 1px solid var(--ticket-border);
-        border-radius: var(--ticket-radius);
-        padding: 1rem 1.25rem;
-        margin-bottom: 1.25rem;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .ticket-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--brand-gradient);
-        background-size: 200% 100%;
-        animation: shimmerMove 3s ease infinite;
-    }
-
-    @keyframes shimmerMove {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-    }
-
-    .ticket-header:hover {
-        box-shadow: var(--shadow-md);
-    }
-
-    .header-title {
-        font-size: clamp(1rem, 2vw, 1.3rem);
-        font-weight: 700;
-        color: var(--text-primary);
-        font-family: 'Fraunces', serif;
-    }
-
-    .header-title i {
-        color: var(--brand-orange);
-    }
-
-    .header-subtitle {
-        font-size: clamp(0.7rem, 1vw, 0.8rem);
-        color: var(--text-secondary);
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .header-subtitle .time-badge {
-        background: rgba(255, 107, 0, 0.08);
-        border: 1px solid rgba(255, 107, 0, 0.1);
-        color: var(--brand-orange);
-        font-size: 0.55rem;
-        padding: 0.15rem 0.6rem;
-        border-radius: 50px;
-        font-weight: 600;
-    }
-
-    .header-actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        align-items: center;
-    }
-
-    .btn-back {
-        border: 2px solid var(--ticket-border) !important;
-        color: var(--text-secondary) !important;
-        border-radius: 50px !important;
-        padding: 0.3rem 0.9rem !important;
-        font-size: 0.75rem !important;
-        transition: all 0.3s ease !important;
-        text-decoration: none !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        background: transparent !important;
-        min-height: 36px;
-    }
-
-    .btn-back:hover {
-        border-color: var(--brand-orange) !important;
-        color: var(--text-primary) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.1) !important;
-    }
-
-    .btn-download-excel {
-        background: linear-gradient(135deg, #22C55E, #16A34A) !important;
-        border: none !important;
-        color: white !important;
-        border-radius: 50px !important;
-        padding: 0.3rem 1rem !important;
-        font-size: 0.75rem !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-        text-decoration: none !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        min-height: 36px;
-        box-shadow: 0 2px 12px rgba(34, 197, 94, 0.25) !important;
-    }
-
-    .btn-download-excel:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.35) !important;
-        color: white !important;
-    }
-
-    .btn-download-excel i {
-        font-size: 0.8rem;
-    }
-
-    /* ========== ACTION BANNER ========== */
-    .action-banner {
-        background: var(--ticket-bg);
-        border: 2px solid var(--brand-orange);
-        border-radius: var(--ticket-radius);
-        padding: 0.75rem 1.25rem;
-        margin-bottom: 1.25rem;
-        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.08);
-        transition: all 0.3s ease;
-    }
-
-    .action-banner:hover {
-        box-shadow: 0 4px 30px rgba(255, 107, 0, 0.15);
-        border-color: var(--brand-orange-dark);
-    }
-
-    .action-banner .banner-title {
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-muted);
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    .action-banner .banner-title i {
-        color: var(--brand-orange);
-    }
-
-    .action-banner .banner-title .reopen-badge {
-        background: rgba(59, 130, 246, 0.15);
-        color: #3B82F6;
-        font-size: 0.5rem;
-        padding: 0.1rem 0.5rem;
-        border-radius: 50px;
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        font-weight: 600;
-    }
-
-    .action-buttons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        justify-content: flex-start;
-    }
-
-    .action-btn {
-        padding: 0.4rem 1.2rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.78rem;
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        transition: all 0.3s ease;
-        color: white !important;
-        cursor: pointer;
-        font-family: 'Inter', sans-serif;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        min-height: 38px;
-    }
-
-    .action-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        color: white !important;
-    }
-
-    .action-btn:active {
-        transform: scale(0.95);
-    }
-
-    .action-btn i { font-size: 0.75rem; }
-
-    .action-btn-assign { background: var(--warning-color) !important; }
-    .action-btn-hold { background: #94A3B8 !important; }
-    .action-btn-escalate { background: #8B5CF6 !important; }
-    .action-btn-close { background: var(--success-color) !important; }
-    .action-btn-reopen { background: #3B82F6 !important; }
-
-    .action-btn .badge-reopen-time {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        font-size: 0.55rem;
-        padding: 0.1rem 0.4rem;
-        border-radius: 50px;
-        margin-left: 0.2rem;
-    }
-
-    .action-btn .reopen-expired {
-        background: rgba(239, 68, 68, 0.3);
-        color: white;
-        font-size: 0.55rem;
-        padding: 0.1rem 0.4rem;
-        border-radius: 50px;
-        margin-left: 0.2rem;
-    }
-
-    .action-status-msg {
-        color: var(--text-muted);
-        font-size: 0.65rem;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        padding: 0.2rem 0.5rem;
-    }
-
-    /* ========== PANEL CARDS ========== */
-    .panel-card {
-        background: var(--ticket-bg);
-        border: 1px solid var(--ticket-border);
-        border-radius: var(--ticket-radius);
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease;
-        height: 100%;
-    }
-
-    .panel-card:hover {
-        box-shadow: var(--shadow-md);
-        border-color: rgba(255, 107, 0, 0.15);
-    }
-
-    .glass-header {
-        background: rgba(255, 107, 0, 0.03);
-        border-bottom: 1px solid var(--ticket-border);
-        padding: 0.6rem 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .glass-header h6 {
-        color: var(--text-primary) !important;
-        font-weight: 700;
-        font-size: 0.8rem;
-        margin: 0;
-        font-family: 'Fraunces', serif;
-    }
-
-    .glass-header h6 i {
-        color: var(--brand-orange) !important;
-    }
-
-    .glass-header .badge-count {
-        background: rgba(255, 107, 0, 0.08);
-        color: var(--brand-orange);
-        font-size: 0.55rem;
-        padding: 0.1rem 0.5rem;
-        border-radius: 50px;
-        border: 1px solid rgba(255, 107, 0, 0.1);
-        font-weight: 600;
-    }
-
-    .card-body {
-        padding: 0.75rem 1rem;
-    }
-
-    /* ========== DETAILS GRID ========== */
-    .details-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
-    }
-
-    .detail-item {
-        background: var(--input-bg);
-        border: 1px solid var(--ticket-border);
-        border-radius: 8px;
-        padding: 0.4rem 0.6rem;
-        transition: all 0.3s ease;
-        overflow: hidden;
-        word-break: break-word;
-    }
-
-    .detail-item:hover {
-        border-color: rgba(255, 107, 0, 0.2);
-    }
-
-    .detail-item.full-width {
-        grid-column: 1 / -1;
-    }
-
-    .detail-item.highlight {
-        background: rgba(255, 107, 0, 0.04);
-        border-color: rgba(255, 107, 0, 0.12);
-    }
-
-    /* ===== CLOSING DETAILS SPECIAL STYLING ===== */
-    .detail-item.closing-details {
-        background: rgba(34, 197, 94, 0.04);
-        border-color: rgba(34, 197, 94, 0.12);
-        grid-column: 1 / -1;
-    }
-
-    .detail-item.closing-details .detail-label {
-        color: var(--success-color);
-    }
-
-    .detail-item.closing-details .detail-value {
-        color: var(--text-primary);
-    }
-
-    .detail-item.closing-details .closing-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem 0.75rem;
-        padding: 0.1rem 0;
-        border-bottom: 1px solid rgba(34, 197, 94, 0.08);
-    }
-
-    .detail-item.closing-details .closing-row:last-child {
-        border-bottom: none;
-    }
-
-    .detail-item.closing-details .closing-row .closing-label {
-        font-weight: 600;
-        color: var(--text-muted);
-        font-size: 0.6rem;
-        min-width: 80px;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-
-    .detail-item.closing-details .closing-row .closing-value {
-        color: var(--text-primary);
-        font-size: 0.78rem;
-        word-break: break-word;
-        flex: 1;
-    }
-
-    /* ===== VENDOR TRACKING CARD ===== */
-    .vendor-tracking-card {
-        background: rgba(139, 92, 246, 0.04);
-        border: 1px solid rgba(139, 92, 246, 0.12);
-        border-radius: 10px;
-        padding: 0.6rem 0.8rem;
-        grid-column: 1 / -1;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .vendor-tracking-card .vendor-left {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        flex-wrap: wrap;
-    }
-
-    .vendor-tracking-card .vendor-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: rgba(139, 92, 246, 0.12);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #8B5CF6;
-        font-size: 0.8rem;
-        flex-shrink: 0;
-    }
-
-    .vendor-tracking-card .vendor-info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.05rem;
-    }
-
-    .vendor-tracking-card .vendor-info .vendor-label {
-        font-size: 0.5rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-muted);
-    }
-
-    .vendor-tracking-card .vendor-info .vendor-number {
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #8B5CF6;
-        font-family: 'Courier New', monospace;
-        letter-spacing: 0.5px;
-    }
-
-    .vendor-tracking-card .vendor-right {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    .vendor-tracking-card .vendor-right .vendor-badge {
-        background: rgba(139, 92, 246, 0.12);
-        color: #8B5CF6;
-        padding: 0.15rem 0.6rem;
-        border-radius: 50px;
-        font-size: 0.5rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-
-    .vendor-tracking-card .vendor-right .vendor-date {
-        font-size: 0.6rem;
-        color: var(--text-muted);
-    }
-
-    .vendor-tracking-card .vendor-right .vendor-date i {
-        color: #8B5CF6;
-        margin-right: 0.2rem;
-    }
-
-    /* ===== COMBINED TOP CARD ===== */
-    .top-status-card {
-        grid-column: 1 / -1;
-        border-radius: 10px;
-        padding: 0.6rem 0.8rem;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: stretch;
-        gap: 0.5rem;
-        background: var(--input-bg);
-        border: 1px solid var(--ticket-border);
-    }
-
-    .top-status-card .status-section {
-        flex: 1;
-        min-width: 200px;
-    }
-
-    .top-status-card .status-section .section-label {
-        font-size: 0.5rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-muted);
-        margin-bottom: 0.15rem;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
-
-    .top-status-card .status-section .section-label i {
-        font-size: 0.6rem;
-    }
-
-    .top-status-card .status-section .section-value {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        word-break: break-word;
-    }
-
-    .top-status-card .divider {
-        width: 1px;
-        background: var(--ticket-border);
-        flex-shrink: 0;
-    }
-
-    @media (max-width: 768px) {
-        .top-status-card {
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-        .top-status-card .divider {
-            width: 100%;
-            height: 1px;
-        }
-        .top-status-card .status-section {
-            min-width: auto;
-        }
-        .vendor-tracking-card {
-            flex-direction: column;
-            align-items: stretch;
-            text-align: center;
-        }
-        .vendor-tracking-card .vendor-left {
-            justify-content: center;
-        }
-        .vendor-tracking-card .vendor-right {
-            justify-content: center;
-        }
-    }
-
-    .detail-label {
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-muted);
-        display: block;
-        margin-bottom: 0.05rem;
-    }
-
-    .detail-value {
-        font-size: 0.82rem;
-        font-weight: 500;
-        color: var(--text-primary);
-        word-break: break-word;
-        overflow-wrap: break-word;
-    }
-
-    .detail-value.highlight-text {
-        color: var(--brand-orange);
-        font-weight: 700;
-    }
-
-    .detail-value a {
-        color: var(--brand-orange);
-        text-decoration: none;
-    }
-
-    .detail-value a:hover {
-        text-decoration: underline;
-    }
-
-    .detail-description {
-        grid-column: 1 / -1;
-    }
-
-    .detail-description .detail-value {
-        background: var(--input-bg);
-        border-radius: 6px;
-        padding: 0.5rem 0.6rem;
-        border-left: 3px solid var(--brand-orange);
-        line-height: 1.6;
-        font-weight: 400;
-        color: var(--text-secondary);
-        white-space: pre-line;
-        font-size: 0.8rem;
-    }
-
-    /* ========== BADGES ========== */
-    .badge-status {
-        display: inline-block;
-        padding: 0.15rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        white-space: nowrap;
-    }
-
-    .badge-status-open { background: var(--success-color); color: white; }
-    .badge-status-assigned { background: #3B82F6; color: white; }
-    .badge-status-hold { background: var(--warning-color); color: white; }
-    .badge-status-escalated { background: #8B5CF6; color: white; }
-    .badge-status-closed { background: #94A3B8; color: white; }
-
-    .badge-priority {
-        display: inline-block;
-        padding: 0.15rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.55rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        white-space: nowrap;
-    }
-
-    .badge-priority-critical { background: var(--danger-color); color: white; animation: pulseCritical 2s ease-in-out infinite; }
-    .badge-priority-high { background: var(--warning-color); color: #1A1A2E; }
-    .badge-priority-medium { background: #3B82F6; color: white; }
-    .badge-priority-low { background: #94A3B8; color: white; }
-
-    @keyframes pulseCritical {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-        50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-    }
-
-    .badge-origin {
-        display: inline-block;
-        padding: 0.15rem 0.5rem;
-        border-radius: 50px;
-        font-size: 0.55rem;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .badge-origin-admin {
-        background: var(--brand-gradient);
-        color: white;
-    }
-
-    .badge-origin-self {
-        background: var(--input-bg);
-        color: var(--text-secondary);
-        border: 1px solid var(--ticket-border);
-    }
-
-    /* ========== STATUS BOXES ========== */
-    .status-box {
-        padding: 0.5rem 0.75rem;
-        border-radius: 8px;
-        border-left: 3px solid;
-        margin-top: 0.5rem;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .status-box-hold {
-        border-left-color: var(--warning-color);
-        background: rgba(245, 158, 11, 0.06);
-    }
-
-    .status-box-escalated {
-        border-left-color: #8B5CF6;
-        background: rgba(139, 92, 246, 0.06);
-    }
-
-    .status-box-closed {
-        border-left-color: var(--success-color);
-        background: rgba(34, 197, 94, 0.06);
-    }
-
-    .status-box strong {
-        font-size: 0.8rem;
-        display: block;
-        margin-bottom: 0.2rem;
-    }
-
-    .status-box p {
-        font-size: 0.78rem;
-        color: var(--text-secondary);
-        margin: 0.2rem 0 0 0;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        line-height: 1.5;
-    }
-
-    .status-box p small {
-        display: inline-block;
-        margin-top: 0.1rem;
-    }
-
-    .btn-attachment {
-        border: 2px solid var(--brand-orange);
-        color: var(--brand-orange);
-        border-radius: 50px;
-        padding: 0.15rem 0.6rem;
-        font-size: 0.65rem;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background: transparent;
-        white-space: nowrap;
-    }
-
-    .btn-attachment:hover {
-        background: var(--brand-gradient);
-        color: white !important;
-        border-color: transparent;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(255, 107, 0, 0.2);
-    }
-
-    /* ========== TIMELINE ========== */
-    .timeline-wrapper {
-        padding: 0;
-    }
-
-    .timeline {
-        position: relative;
-        padding: 0;
-        list-style: none;
-        margin: 0;
-    }
-
-    .timeline::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 14px;
-        width: 2px;
-        background: var(--brand-gradient);
-        opacity: 0.25;
-    }
-
-    .timeline-item {
-        position: relative;
-        padding-left: 34px;
-        margin-bottom: 0.5rem;
-        animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-10px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
-    .timeline-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .timeline-marker {
-        position: absolute;
-        left: 9px;
-        top: 4px;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--brand-gradient);
-        border: 2px solid var(--ticket-bg);
-        z-index: 1;
-    }
-
-    .timeline-content {
-        background: var(--input-bg);
-        border-radius: 8px;
-        padding: 0.35rem 0.6rem;
-        border: 1px solid var(--ticket-border);
-        transition: all 0.3s ease;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-    }
-
-    .timeline-content:hover {
-        border-color: rgba(255, 107, 0, 0.15);
-    }
-
-    .timeline-time {
-        font-size: 0.55rem;
-        color: var(--text-muted);
-        font-weight: 500;
-    }
-
-    .timeline-title {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--brand-orange);
-        word-break: break-word;
-    }
-
-    .timeline-body {
-        font-size: 0.7rem;
-        color: var(--text-secondary);
-        margin-top: 0.05rem;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-    }
-
-    .timeline-by {
-        font-size: 0.55rem;
-        color: var(--text-muted);
-        display: block;
-        margin-top: 0.05rem;
-    }
-
-    .timeline-empty {
-        text-align: center;
-        padding: 2rem 0;
-        color: var(--text-muted);
-    }
-
-    .timeline-empty i {
-        font-size: 2rem;
-        opacity: 0.25;
-        display: block;
-        margin-bottom: 0.5rem;
-    }
-
-    .timeline-empty p {
-        font-size: 0.8rem;
-        margin: 0;
-    }
-
-    /* ========== MODALS ========== */
-    .modal-content {
-        background: var(--ticket-bg) !important;
-        border: 1px solid var(--ticket-border) !important;
-        border-radius: var(--ticket-radius) !important;
-        box-shadow: var(--shadow-lg) !important;
-    }
-
-    .modal-header {
-        border-bottom: 1px solid var(--ticket-border) !important;
-        padding: 0.75rem 1rem !important;
-        border-radius: var(--ticket-radius) var(--ticket-radius) 0 0 !important;
-    }
-
-    .modal-header .modal-title {
-        font-family: 'Fraunces', serif !important;
-        font-weight: 700 !important;
-        font-size: 0.95rem !important;
-        color: #FFFFFF !important;
-    }
-
-    .modal-header .modal-title i { margin-right: 0.4rem; }
-
-    .modal-body {
-        padding: 1rem !important;
-        color: var(--text-primary) !important;
-    }
-
-    .modal-footer {
-        border-top: 1px solid var(--ticket-border) !important;
-        padding: 0.75rem 1rem !important;
-        border-radius: 0 0 var(--ticket-radius) var(--ticket-radius) !important;
-    }
-
-    .modal .btn-close {
-        filter: brightness(0) invert(1) !important;
-        opacity: 0.7 !important;
-    }
-
-    .modal .btn-close:hover {
-        opacity: 1 !important;
-    }
-
-    .btn-modal-close {
-        background: var(--input-bg) !important;
-        border: 2px solid var(--ticket-border) !important;
-        color: var(--text-secondary) !important;
-        border-radius: 50px !important;
-        padding: 0.25rem 1rem !important;
-        font-size: 0.75rem !important;
-        transition: all 0.3s ease !important;
-        font-family: 'Inter', sans-serif !important;
-        min-height: 34px;
-    }
-
-    .btn-modal-close:hover {
-        background: var(--ticket-bg) !important;
-        border-color: var(--brand-orange) !important;
-        color: var(--text-primary) !important;
-        transform: translateY(-1px) !important;
-    }
-
-    .btn-modal-submit {
-        border-radius: 50px !important;
-        padding: 0.25rem 1rem !important;
-        font-size: 0.75rem !important;
-        font-weight: 600 !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        transition: all 0.3s ease !important;
-        font-family: 'Inter', sans-serif !important;
-        min-height: 34px;
-    }
-
-    .btn-modal-submit:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
-        color: #FFFFFF !important;
-    }
-
-    .btn-modal-submit.bg-assign { background: var(--warning-color) !important; }
-    .btn-modal-submit.bg-hold { background: #94A3B8 !important; }
-    .btn-modal-submit.bg-escalate { background: #8B5CF6 !important; }
-    .btn-modal-submit.bg-close { background: var(--success-color) !important; }
-    .btn-modal-submit.bg-reopen { background: #3B82F6 !important; }
-
-    .modal-header.bg-assign { background: var(--warning-color) !important; }
-    .modal-header.bg-hold { background: #94A3B8 !important; }
-    .modal-header.bg-escalate { background: #8B5CF6 !important; }
-    .modal-header.bg-close { background: var(--success-color) !important; }
-    .modal-header.bg-reopen { background: #3B82F6 !important; }
-
-    /* ========== FORM ELEMENTS ========== */
-    .form-control, .form-select, textarea {
-        background-color: var(--input-bg) !important;
-        border: 2px solid var(--ticket-border) !important;
-        color: var(--text-primary) !important;
-        border-radius: 8px !important;
-        padding: 0.35rem 0.6rem !important;
-        font-size: 0.78rem !important;
-        transition: all 0.3s ease !important;
-        width: 100%;
-        -webkit-text-fill-color: var(--text-primary) !important;
-    }
-
-    .form-control:focus, .form-select:focus, textarea:focus {
-        border-color: var(--brand-orange) !important;
-        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.08) !important;
-        outline: none !important;
-    }
-
-    .form-control::placeholder, textarea::placeholder {
-        color: var(--text-muted) !important;
-        opacity: 0.6 !important;
-        font-size: 0.7rem !important;
-    }
-
-    .form-select option, select option {
-        background: var(--ticket-bg) !important;
-        color: var(--text-primary) !important;
-    }
-
-    .form-label {
-        font-weight: 600 !important;
-        font-size: 0.7rem !important;
-        color: var(--text-secondary) !important;
-        margin-bottom: 0.2rem !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-    }
-
-    .form-label i {
-        color: var(--brand-orange) !important;
-        width: 14px;
-        font-size: 0.6rem;
-    }
-
-    .form-label .required {
-        color: var(--danger-color);
-        font-size: 0.8rem;
-    }
-
-    /* ========== SUB-ERROR TYPE GROUP ========== */
-    .sub-error-group {
-        margin-top: 0.5rem;
-        padding: 0.5rem 0.75rem;
-        background: var(--input-bg);
-        border-radius: 8px;
-        border: 1px solid var(--ticket-border);
-        display: none;
-        transition: all 0.3s ease;
-    }
-
-    .sub-error-group.show {
-        display: block;
-        animation: fadeInSub 0.3s ease;
-    }
-
-    @keyframes fadeInSub {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .sub-error-group .sub-label {
-        font-size: 0.65rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        display: block;
-        margin-bottom: 0.3rem;
-    }
-
-    .sub-error-group .sub-label i {
-        color: var(--brand-orange);
-        margin-right: 0.3rem;
-    }
-
-    /* ========== SCROLLBAR ========== */
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: var(--input-bg); border-radius: 8px; }
-    ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 8px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--brand-orange-dark); }
-
-    ::selection { background: var(--brand-orange); color: white; }
-
-    /* ========== RESPONSIVE ========== */
-    @media (max-width: 992px) {
-        .ticket-header { padding: 0.75rem 1rem; }
-        .panel-card { margin-bottom: 0.75rem; }
-        .detail-value { font-size: 0.78rem; }
-        .action-btn { font-size: 0.7rem; padding: 0.3rem 0.8rem; min-height: 34px; }
-        .action-banner { padding: 0.6rem 1rem; }
-        .details-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    @media (max-width: 768px) {
-        .ticket-container { padding: 0 0.25rem 1rem 0.25rem; }
-        .ticket-header { padding: 0.6rem 0.75rem; }
-        .header-title { font-size: 0.95rem; }
-        .header-actions { width: 100%; justify-content: flex-end; }
-        .btn-back, .btn-download-excel { font-size: 0.65rem !important; padding: 0.2rem 0.6rem !important; min-height: 30px; }
-        
-        .action-banner { padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; }
-        .action-banner .banner-title { font-size: 0.6rem; }
-        .action-btn { font-size: 0.6rem; padding: 0.2rem 0.5rem; min-height: 28px; }
-        .action-btn i { font-size: 0.55rem; }
-        .action-buttons { gap: 0.3rem; }
-        
-        .glass-header { padding: 0.4rem 0.6rem; }
-        .glass-header h6 { font-size: 0.7rem; }
-        .card-body { padding: 0.5rem; }
-        .details-grid { grid-template-columns: 1fr; gap: 0.3rem; }
-        .detail-item { padding: 0.3rem 0.4rem; }
-        .detail-value { font-size: 0.72rem; }
-        .detail-label { font-size: 0.5rem; }
-        .detail-description .detail-value { font-size: 0.72rem; padding: 0.3rem 0.4rem; }
-        
-        .detail-item.closing-details .closing-row {
-            flex-direction: column;
-            gap: 0.05rem;
-            padding: 0.2rem 0;
-        }
-        .detail-item.closing-details .closing-row .closing-label {
-            font-size: 0.55rem;
-            min-width: auto;
-        }
-        .detail-item.closing-details .closing-row .closing-value {
-            font-size: 0.7rem;
-            padding-left: 0;
-        }
-        
-        .vendor-tracking-card {
-            flex-direction: column;
-            align-items: stretch;
-            text-align: center;
-        }
-        .vendor-tracking-card .vendor-left {
-            justify-content: center;
-        }
-        .vendor-tracking-card .vendor-right {
-            justify-content: center;
-        }
-        
-        .top-status-card {
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-        .top-status-card .divider {
-            width: 100%;
-            height: 1px;
-        }
-        .top-status-card .status-section {
-            min-width: auto;
-        }
-        
-        .timeline-item { padding-left: 28px; margin-bottom: 0.4rem; }
-        .timeline::before { left: 10px; }
-        .timeline-marker { left: 6px; width: 8px; height: 8px; }
-        .timeline-title { font-size: 0.7rem; }
-        .timeline-body { font-size: 0.65rem; }
-        
-        .status-box { padding: 0.4rem 0.6rem; }
-        .status-box strong { font-size: 0.7rem; }
-        .status-box p { font-size: 0.68rem; }
-        
-        .modal-body { padding: 0.75rem !important; }
-        .modal-header .modal-title { font-size: 0.85rem !important; }
-        .form-control, .form-select, textarea { font-size: 0.7rem !important; padding: 0.25rem 0.4rem !important; }
-        .form-label { font-size: 0.65rem !important; }
-        .btn-modal-submit, .btn-modal-close { font-size: 0.65rem !important; padding: 0.2rem 0.6rem !important; min-height: 30px; }
-        
-        .action-status-msg { font-size: 0.55rem; }
-        .header-subtitle .time-badge { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
-        .badge-status, .badge-priority, .badge-origin { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
-    }
-
-    @media (max-width: 576px) {
-        .ticket-header { padding: 0.5rem 0.6rem; }
-        .header-title { font-size: 0.85rem; }
-        .header-subtitle { font-size: 0.6rem; flex-wrap: wrap; }
-        .header-actions { flex-wrap: wrap; justify-content: stretch; }
-        .btn-back, .btn-download-excel { flex: 1; justify-content: center; font-size: 0.6rem !important; padding: 0.2rem 0.4rem !important; min-height: 28px; }
-        
-        .action-banner { padding: 0.4rem 0.5rem; }
-        .action-banner .banner-title { font-size: 0.55rem; }
-        .action-btn { font-size: 0.55rem; padding: 0.15rem 0.4rem; min-height: 24px; flex: 1; justify-content: center; min-width: 60px; }
-        .action-btn i { font-size: 0.5rem; }
-        .action-buttons { gap: 0.2rem; }
-        
-        .glass-header h6 { font-size: 0.65rem; }
-        .glass-header { padding: 0.3rem 0.5rem; }
-        .card-body { padding: 0.4rem; }
-        .detail-value { font-size: 0.68rem; }
-        .detail-description .detail-value { font-size: 0.68rem; }
-        .detail-item { padding: 0.2rem 0.3rem; }
-        .badge-status, .badge-priority, .badge-origin { font-size: 0.45rem; padding: 0.08rem 0.3rem; }
-        .btn-attachment { font-size: 0.5rem; padding: 0.08rem 0.3rem; }
-        
-        .detail-item.closing-details .closing-row {
-            flex-direction: column;
-            gap: 0.05rem;
-            padding: 0.15rem 0;
-        }
-        .detail-item.closing-details .closing-row .closing-label {
-            font-size: 0.5rem;
-            min-width: auto;
-        }
-        .detail-item.closing-details .closing-row .closing-value {
-            font-size: 0.65rem;
-        }
-        
-        .vendor-tracking-card .vendor-info .vendor-number {
-            font-size: 0.75rem;
-        }
-        .vendor-tracking-card .vendor-icon {
-            width: 26px;
-            height: 26px;
-            font-size: 0.65rem;
-        }
-        
-        .top-status-card .status-section .section-value {
-            font-size: 0.75rem;
-        }
-        
-        .timeline-item { padding-left: 24px; margin-bottom: 0.3rem; }
-        .timeline::before { left: 8px; }
-        .timeline-marker { left: 4px; width: 6px; height: 6px; }
-        .timeline-title { font-size: 0.65rem; }
-        .timeline-body { font-size: 0.6rem; }
-        .timeline-time { font-size: 0.5rem; }
-        .timeline-by { font-size: 0.5rem; }
-        .timeline-content { padding: 0.25rem 0.4rem; }
-        
-        .modal-dialog { margin: 0.5rem; }
-        .modal-body { padding: 0.5rem !important; }
-        .modal-header .modal-title { font-size: 0.8rem !important; }
-        .btn-modal-submit, .btn-modal-close { font-size: 0.6rem !important; padding: 0.15rem 0.5rem !important; min-height: 26px; }
-        
-        .status-box { padding: 0.3rem 0.5rem; }
-        .status-box strong { font-size: 0.65rem; }
-        .status-box p { font-size: 0.6rem; }
-        .status-box p br { display: none; }
-        .status-box p small { font-size: 0.55rem; }
-    }
-
-    @media (max-width: 400px) {
-        .ticket-container { padding: 0 0.1rem 0.5rem 0.1rem; }
-        .ticket-header { padding: 0.4rem 0.4rem; }
-        .header-title { font-size: 0.75rem; }
-        .header-subtitle { font-size: 0.5rem; flex-direction: column; align-items: flex-start; }
-        .header-actions { flex-direction: column; width: 100%; }
-        .btn-back, .btn-download-excel { width: 100%; justify-content: center; font-size: 0.55rem !important; min-height: 24px; }
-        
-        .action-btn { font-size: 0.5rem; padding: 0.1rem 0.3rem; min-height: 22px; min-width: 45px; }
-        .action-btn i { font-size: 0.45rem; }
-        
-        .glass-header { padding: 0.3rem 0.4rem; flex-direction: column; align-items: stretch; text-align: center; }
-        .glass-header h6 { font-size: 0.6rem; }
-        .card-body { padding: 0.3rem; }
-        .detail-item { padding: 0.15rem 0.2rem; }
-        .detail-value { font-size: 0.6rem; }
-        .detail-label { font-size: 0.45rem; }
-        .detail-description .detail-value { font-size: 0.6rem; padding: 0.2rem 0.3rem; }
-        
-        .detail-item.closing-details .closing-row .closing-label {
-            font-size: 0.45rem;
-        }
-        .detail-item.closing-details .closing-row .closing-value {
-            font-size: 0.6rem;
-        }
-        
-        .vendor-tracking-card .vendor-info .vendor-number {
-            font-size: 0.65rem;
-        }
-        .vendor-tracking-card .vendor-icon {
-            width: 22px;
-            height: 22px;
-            font-size: 0.55rem;
-        }
-        
-        .top-status-card .status-section .section-value {
-            font-size: 0.65rem;
-        }
-        
-        .badge-status, .badge-priority, .badge-origin { font-size: 0.4rem; padding: 0.05rem 0.2rem; }
-        .badge-status i, .badge-priority i { display: none; }
-        
-        .timeline-item { padding-left: 20px; }
-        .timeline::before { left: 6px; }
-        .timeline-marker { left: 2px; width: 5px; height: 5px; }
-        .timeline-title { font-size: 0.6rem; }
-        .timeline-body { font-size: 0.55rem; }
-        .timeline-content { padding: 0.2rem 0.3rem; }
-        
-        .modal-dialog { margin: 0.2rem; }
-        .modal-body { padding: 0.3rem !important; }
-        .btn-modal-submit, .btn-modal-close { font-size: 0.55rem !important; padding: 0.1rem 0.4rem !important; min-height: 22px; }
-        
-        .status-box { padding: 0.2rem 0.3rem; }
-        .status-box strong { font-size: 0.6rem; }
-        .status-box p { font-size: 0.55rem; margin: 0.1rem 0 0 0; }
-    }
-
-    /* ========== DARK THEME OVERRIDES ========== */
-    [data-theme="dark"] .detail-item {
-        background: rgba(255, 255, 255, 0.04);
-        border-color: rgba(255, 255, 255, 0.06);
-    }
-
-    [data-theme="dark"] .detail-description .detail-value {
-        background: rgba(255, 255, 255, 0.04);
-    }
-
-    [data-theme="dark"] .timeline-content {
-        background: rgba(255, 255, 255, 0.04);
-        border-color: rgba(255, 255, 255, 0.06);
-    }
-
-    [data-theme="dark"] .badge-origin-self {
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--text-secondary);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    [data-theme="dark"] .status-box-hold {
-        background: rgba(245, 158, 11, 0.08);
-    }
-
-    [data-theme="dark"] .status-box-escalated {
-        background: rgba(139, 92, 246, 0.08);
-    }
-
-    [data-theme="dark"] .status-box-closed {
-        background: rgba(34, 197, 94, 0.08);
-    }
-
-    [data-theme="dark"] .detail-item.closing-details {
-        background: rgba(34, 197, 94, 0.06);
-        border-color: rgba(34, 197, 94, 0.15);
-    }
-
-    [data-theme="dark"] .vendor-tracking-card {
-        background: rgba(139, 92, 246, 0.06);
-        border-color: rgba(139, 92, 246, 0.15);
-    }
-
-    [data-theme="dark"] .top-status-card {
-        background: rgba(255, 255, 255, 0.03);
-        border-color: rgba(255, 255, 255, 0.06);
-    }
-
-    [data-theme="dark"] .btn-modal-close {
-        background: rgba(255, 255, 255, 0.06) !important;
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        color: rgba(255, 255, 255, 0.7) !important;
-    }
-
-    [data-theme="dark"] .btn-modal-close:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border-color: var(--brand-orange) !important;
-        color: #FFFFFF !important;
-    }
-
-    [data-theme="dark"] .panel-card {
-        border-color: rgba(255, 255, 255, 0.06);
-    }
-
-    [data-theme="dark"] .panel-card:hover {
-        border-color: rgba(255, 107, 0, 0.2);
-    }
-
-    [data-theme="dark"] .glass-header {
-        background: rgba(255, 107, 0, 0.04);
-    }
-
-    [data-theme="dark"] .btn-back {
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        color: rgba(255, 255, 255, 0.7) !important;
-    }
-
-    [data-theme="dark"] .btn-back:hover {
-        border-color: var(--brand-orange) !important;
-        color: #FFFFFF !important;
-    }
-
-    [data-theme="dark"] .action-banner {
-        border-color: rgba(255, 107, 0, 0.3);
-        background: rgba(255, 107, 0, 0.03);
-    }
-
-    [data-theme="dark"] .action-banner:hover {
-        border-color: rgba(255, 107, 0, 0.5);
-        box-shadow: 0 4px 30px rgba(255, 107, 0, 0.1);
-    }
-
-    [data-theme="dark"] .detail-item.highlight {
-        background: rgba(255, 107, 0, 0.06);
-        border-color: rgba(255, 107, 0, 0.15);
-    }
-
-    [data-theme="dark"] .ticket-header::before {
-        background: var(--brand-gradient);
-    }
-
-    [data-theme="dark"] .form-control, 
-    [data-theme="dark"] .form-select, 
-    [data-theme="dark"] textarea {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border-color: rgba(255, 255, 255, 0.08) !important;
-        color: #E8EDF5 !important;
-        -webkit-text-fill-color: #E8EDF5 !important;
-    }
-
-    [data-theme="dark"] .form-control:focus,
-    [data-theme="dark"] .form-select:focus,
-    [data-theme="dark"] textarea:focus {
-        border-color: var(--brand-orange) !important;
-        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12) !important;
-    }
-
-    [data-theme="dark"] .form-select option,
-    [data-theme="dark"] select option {
-        background: #1A1A2E !important;
-        color: #E8EDF5 !important;
-    }
-
-    [data-theme="dark"] .modal-content {
-        background: rgba(26, 26, 46, 0.98) !important;
-        border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-
-    [data-theme="dark"] .modal-header {
-        border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-
-    [data-theme="dark"] .modal-footer {
-        border-color: rgba(255, 255, 255, 0.06) !important;
-        background: rgba(255, 107, 0, 0.03) !important;
-    }
-
-    [data-theme="dark"] .modal .btn-close {
-        filter: brightness(0) invert(1) !important;
-        opacity: 0.5 !important;
-    }
-
-    [data-theme="dark"] .modal .btn-close:hover {
-        opacity: 1 !important;
-    }
-
-    [data-theme="dark"] .btn-download-excel {
-        background: linear-gradient(135deg, #22C55E, #16A34A) !important;
-    }
-
-    [data-theme="dark"] .sub-error-group {
-        background: rgba(255, 255, 255, 0.03);
-        border-color: rgba(255, 255, 255, 0.06);
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/admin_panel/ticket_detail.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -1516,7 +106,7 @@
                             <div class="detail-value highlight-text">{{ ticket.subject }}</div>
                         </div>
 
-                        <!-- ===== TOP STATUS CARD (Combined: Closing Details + Vendor Tracking) ===== -->
+                        <!-- ===== TOP STATUS CARD ===== -->
                         <div class="top-status-card">
                             <!-- Closing Details Section -->
                             <div class="status-section">
@@ -1597,7 +187,7 @@
                             <div class="detail-value">{{ ticket.department.name }}</div>
                         </div>
 
-                        <!-- ===== SCREEN / MODULE - ✅ FIXED ===== -->
+                        <!-- ===== SCREEN / MODULE ===== -->
                         <div class="detail-item">
                             <span class="detail-label">Screen / Module</span>
                             <div class="detail-value">
@@ -1636,6 +226,11 @@
                             <div class="detail-value">
                                 {% if ticket.assigned_person %}
                                     <span style="font-weight: 600; color: var(--brand-orange);">{{ ticket.assigned_person }}</span>
+                                    {% if ticket.target_date %}
+                                        <br><small style="color: var(--text-muted); font-size: 0.65rem;">
+                                            <i class="fa-regular fa-calendar me-1"></i>Target: {{ ticket.target_date|date:"d M Y" }}
+                                        </small>
+                                    {% endif %}
                                 {% else %}
                                     <span style="color: var(--text-muted);">Not Assigned</span>
                                 {% endif %}
@@ -1673,7 +268,7 @@
                             <div class="detail-value">{{ ticket.description|default:"No description provided." }}</div>
                         </div>
 
-                        <!-- ===== ATTACHMENTS (3 files) ===== -->
+                        <!-- ===== ATTACHMENTS ===== -->
                         <div class="detail-item full-width">
                             <span class="detail-label">Attachments</span>
                             <div class="detail-value" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
@@ -1706,7 +301,7 @@
                 </div>
             </div>
 
-            <!-- ========== STATUS BOXES (Hold Reason) ========== -->
+            <!-- ========== STATUS BOXES ========== -->
             {% if ticket.status == 'Hold' and ticket.hold_reason %}
             <div class="status-box status-box-hold">
                 <strong style="color: var(--warning-color);"><i class="fa-solid fa-pause me-1"></i>Hold Reason</strong>
@@ -1766,18 +361,18 @@
             </div>
         </div>
     </div>
-</div> <!-- END ticket-container -->
+</div>
 
 <!-- ============================================
      MODALS
 ============================================ -->
 
 {% if ticket.status != 'Closed' %}
-<!-- Assign Modal -->
+<!-- ===== ASSIGN MODAL - FIXED with ticket ID in action ===== -->
 <div class="modal fade" id="assignModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <form method="POST" id="assignForm">
+            <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="assignForm">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Assign">
                 <div class="modal-header bg-assign">
@@ -1794,6 +389,14 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <!-- ===== TARGET DATE FIELD ===== -->
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fa-regular fa-calendar"></i>Target Date <span class="required">*</span></label>
+                        <input type="date" name="target_date" id="targetDate" class="form-control" required>
+                        <small class="text-muted" style="font-size: 0.65rem;">
+                            <i class="fa-regular fa-clock me-1"></i>Set the expected completion date
+                        </small>
+                    </div>
                     <div class="mb-0">
                         <label class="form-label"><i class="fa-regular fa-message"></i>Remarks</label>
                         <textarea name="remarks" class="form-control" rows="2" placeholder="Optional"></textarea>
@@ -1808,11 +411,11 @@
     </div>
 </div>
 
-<!-- Hold Modal -->
+<!-- ===== HOLD MODAL ===== -->
 <div class="modal fade" id="holdModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <form method="POST" id="holdForm">
+            <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="holdForm">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Hold">
                 <div class="modal-header bg-hold">
@@ -1834,11 +437,11 @@
     </div>
 </div>
 
-<!-- Escalate Modal -->
+<!-- ===== ESCALATE MODAL ===== -->
 <div class="modal fade" id="escalateModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <form method="POST" id="escalateForm">
+            <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="escalateForm">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Escalate">
                 <div class="modal-header bg-escalate">
@@ -1864,11 +467,11 @@
     </div>
 </div>
 
-<!-- Close Modal - Updated with new error types -->
+<!-- ===== CLOSE MODAL ===== -->
 <div class="modal fade" id="closeModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content">
-            <form method="POST" id="closeForm">
+            <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="closeForm">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Close">
                 <div class="modal-header bg-close">
@@ -1886,7 +489,7 @@
                         </select>
                     </div>
 
-                    <!-- Sub Error Type - Dynamic based on main selection -->
+                    <!-- Sub Error Type -->
                     <div class="mb-3 sub-error-group" id="subErrorGroup">
                         <label class="sub-label"><i class="fa-solid fa-chevron-right"></i>Sub Error Type <span class="required">*</span></label>
                         <select name="sub_error_type" id="subErrorType" class="form-select">
@@ -1908,12 +511,13 @@
         </div>
     </div>
 </div>
+
 {% else %}
-<!-- Reopen Modal -->
+<!-- ===== REOPEN MODAL ===== -->
 <div class="modal fade" id="reopenModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
-            <form method="POST" id="reopenForm" enctype="multipart/form-data">
+            <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="reopenForm" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Reopen">
                 <div class="modal-header bg-reopen">
@@ -1942,197 +546,72 @@
 </div>
 {% endif %}
 
+<!-- Hidden input for reopen deadline -->
+<input type="hidden" name="reopen_deadline_iso" value="{{ reopen_deadline_iso|default:'' }}">
+
 {% endblock %}
 
 {% block extra_js %}
 {{ block.super }}
+<script src="{% static 'js/admin_panel/admin_ticket_detail.js' %}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-
-        // ========== REOPEN COUNTDOWN TIMER ==========
-        function startCountdown(deadlineISO) {
-            var timerBadge = document.getElementById('reopen-timer-badge');
-            var timerText = document.getElementById('reopen-timer-text');
-            
-            if (!deadlineISO || deadlineISO === '') return;
-
-            var deadline = new Date(deadlineISO).getTime();
-            var interval = setInterval(function() {
-                var now = new Date().getTime();
-                var distance = deadline - now;
-
-                if (distance < 0) {
-                    clearInterval(interval);
-                    if (timerBadge) {
-                        timerBadge.innerHTML = 'Expired';
-                        timerBadge.style.background = 'rgba(239, 68, 68, 0.3)';
-                    }
-                    if (timerText) {
-                        timerText.textContent = 'Reopen window closed';
-                        timerText.style.color = '#EF4444';
-                    }
-                    var reopenBtn = document.querySelector('.action-btn-reopen');
-                    if (reopenBtn) {
-                        var parent = reopenBtn.closest('.action-buttons');
-                        if (parent) {
-                            parent.innerHTML = '<span class="action-status-msg" style="color: var(--text-muted);"><i class="fa-regular fa-clock"></i> Cannot reopen (48+ hours elapsed)</span>';
-                        }
-                    }
-                    return;
-                }
-
-                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                var h = String(hours).padStart(2, '0');
-                var m = String(minutes).padStart(2, '0');
-                var s = String(seconds).padStart(2, '0');
-
-                if (timerBadge) {
-                    timerBadge.innerHTML = h + ':' + m + ':' + s;
-                }
-                if (timerText) {
-                    timerText.textContent = 'Time left to reopen';
-                }
-
-                if (timerBadge) {
-                    if (hours < 1) {
-                        timerBadge.style.background = 'rgba(239, 68, 68, 0.3)';
-                    } else if (hours < 6) {
-                        timerBadge.style.background = 'rgba(245, 158, 11, 0.3)';
-                    } else {
-                        timerBadge.style.background = 'rgba(59, 130, 246, 0.2)';
-                    }
-                }
-            }, 1000);
+document.addEventListener('DOMContentLoaded', function() {
+    // ============================================================
+    // TARGET DATE VALIDATION
+    // ============================================================
+    var targetDateInput = document.getElementById('targetDate');
+    if (targetDateInput) {
+        var today = new Date();
+        var todayStr = today.toISOString().split('T')[0];
+        targetDateInput.setAttribute('min', todayStr);
+        
+        // Set default to 7 days from now
+        var futureDate = new Date(today);
+        futureDate.setDate(futureDate.getDate() + 7);
+        var futureStr = futureDate.toISOString().split('T')[0];
+        if (!targetDateInput.value) {
+            targetDateInput.value = futureStr;
         }
-
-        var deadlineISO = "{{ reopen_deadline_iso|default:'' }}";
-        if (deadlineISO && deadlineISO !== '') {
-            startCountdown(deadlineISO);
-        }
-
-        // ========== DYNAMIC SUB ERROR TYPES ==========
-        const subErrorOptions = {
-            'Roadmap Error': [
-                'Database Error',
-                'Logic / Functional Error',
-                'Application Error',
-                'Calculation Error',
-                'Report / Print Error',
-                'Workflow / Approval Error',
-                'Integration / API Error',
-                'Barcode Error',
-                'Performance Error',
-                'Access / Permission Error',
-                'Master Data / Configuration Error',
-                'Other ERP Error'
-            ],
-            'GPL Error': [
-                'User / Data Entry Error',
-                'Process / Procedure Error',
-                'Master Data Error',
-                'Other GPL Error'
-            ]
-        };
-
-        const mainErrorSelect = document.getElementById('mainErrorType');
-        const subErrorSelect = document.getElementById('subErrorType');
-        const subErrorGroup = document.getElementById('subErrorGroup');
-
-        if (mainErrorSelect && subErrorSelect && subErrorGroup) {
-            mainErrorSelect.addEventListener('change', function() {
-                const selected = this.value;
-                const subOptions = subErrorOptions[selected] || [];
-
-                // Clear existing options
-                subErrorSelect.innerHTML = '<option value="">-- Select Sub Error Type --</option>';
-
-                if (subOptions.length > 0) {
-                    subOptions.forEach(function(option) {
-                        const opt = document.createElement('option');
-                        opt.value = option;
-                        opt.textContent = option;
-                        subErrorSelect.appendChild(opt);
-                    });
-                    subErrorGroup.classList.add('show');
-                    subErrorSelect.disabled = false;
-                    subErrorSelect.required = true;
-                } else {
-                    subErrorGroup.classList.remove('show');
-                    subErrorSelect.disabled = true;
-                    subErrorSelect.required = false;
-                }
-            });
-
-            // Trigger change on load if value is set
-            if (mainErrorSelect.value) {
-                mainErrorSelect.dispatchEvent(new Event('change'));
+        
+        targetDateInput.addEventListener('change', function() {
+            var selectedDate = this.value;
+            if (!selectedDate) return;
+            var selected = new Date(selectedDate);
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (selected < today) {
+                alert('Target date cannot be in the past. Please select a future date.');
+                this.value = todayStr;
             }
-        }
-
-        // ========== PREVENT DOUBLE SUBMIT ==========
-        document.querySelectorAll('form').forEach(function(form) {
-            form.addEventListener('submit', function(e) {
-                if (this.dataset.submitted === 'true') {
+        });
+    }
+    
+    // ============================================================
+    // ASSIGN FORM VALIDATION
+    // ============================================================
+    var assignForm = document.getElementById('assignForm');
+    if (assignForm) {
+        assignForm.addEventListener('submit', function(e) {
+            var targetDate = document.getElementById('targetDate');
+            if (targetDate) {
+                if (!targetDate.value) {
                     e.preventDefault();
+                    alert('Please select a target date.');
+                    targetDate.focus();
                     return false;
                 }
-                this.dataset.submitted = 'true';
-                setTimeout(function() {
-                    form.dataset.submitted = 'false';
-                }, 3000);
-            });
-        });
-
-        // ========== THEME SYNC ==========
-        function updateFormTheme() {
-            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            var inputs = document.querySelectorAll('.form-control, .form-select, textarea');
-
-            inputs.forEach(function(input) {
-                if (isDark) {
-                    input.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-                    input.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                    input.style.color = '#E8EDF5';
-                    input.style.webkitTextFillColor = '#E8EDF5';
-                } else {
-                    input.style.backgroundColor = '#F8FAFF';
-                    input.style.borderColor = '#DCE3F0';
-                    input.style.color = '#1A2A6C';
-                    input.style.webkitTextFillColor = '#1A2A6C';
+                var selected = new Date(targetDate.value);
+                var today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (selected < today) {
+                    e.preventDefault();
+                    alert('Target date cannot be in the past. Please select a future date.');
+                    targetDate.focus();
+                    return false;
                 }
-            });
-        }
-
-        var themeToggleBtn = document.getElementById('themeToggleFloating');
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', function() {
-                setTimeout(updateFormTheme, 100);
-            });
-        }
-
-        var observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.attributeName === 'data-theme') {
-                    updateFormTheme();
-                }
-            });
+            }
         });
-
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-theme']
-        });
-
-        setTimeout(updateFormTheme, 200);
-
-        // ========== ANIMATE TIMELINE ITEMS ==========
-        var timelineItems = document.querySelectorAll('.timeline-item');
-        timelineItems.forEach(function(item, index) {
-            item.style.animationDelay = (index * 0.05) + 's';
-        });
-    });
+    }
+});
 </script>
 {% endblock %}

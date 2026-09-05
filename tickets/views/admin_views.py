@@ -209,7 +209,7 @@ def create_ticket_admin(request):
 
 
 # ============================================================
-# ALL TICKETS - ADMIN
+# ALL TICKETS - ADMIN (FIXED AJAX RESPONSE)
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='login')
@@ -255,6 +255,9 @@ def all_tickets(request):
     # ✅ Screen filter
     screen_number = request.GET.get('screen_number', '').strip()
     
+    # ✅ Filter parameter for drill-down
+    filter_param = request.GET.get('filter', '').strip()
+    
     is_viewed = request.GET.get('is_viewed', '')
     if is_viewed == 'false':
         tickets_qs = tickets_qs.filter(is_viewed=False)
@@ -275,6 +278,21 @@ def all_tickets(request):
         tickets_qs = tickets_qs.filter(status='Closed')
     elif category == 'critical': 
         tickets_qs = tickets_qs.filter(priority='Critical')
+    
+    # ✅ Apply filter parameter for drill-down
+    if filter_param and filter_param != 'all':
+        if filter_param == 'Open':
+            tickets_qs = tickets_qs.filter(status='Open')
+        elif filter_param == 'Assigned':
+            tickets_qs = tickets_qs.filter(status='Assigned')
+        elif filter_param == 'Hold':
+            tickets_qs = tickets_qs.filter(status='Hold')
+        elif filter_param == 'Escalated':
+            tickets_qs = tickets_qs.filter(status='Escalated')
+        elif filter_param == 'Closed':
+            tickets_qs = tickets_qs.filter(status='Closed')
+        elif filter_param == 'Critical':
+            tickets_qs = tickets_qs.filter(priority='Critical')
     
     if unit_id: 
         tickets_qs = tickets_qs.filter(unit_id=unit_id)
@@ -344,48 +362,48 @@ def all_tickets(request):
         closed_at__gte=thirty_days_ago
     ).count()
     
+    # ============================================================
+    # ✅ FIXED: AJAX RESPONSE - Return JSON with ticket data
+    # ============================================================
     if is_ajax:
-        filter_value = 'All'
-        filter_type = 'status'
-        
-        if status:
-            filter_value = status
-            filter_type = 'status'
-        elif priority:
-            filter_value = priority
-            filter_type = 'priority'
-        elif unit_id:
-            unit = Unit.objects.filter(pk=unit_id).first()
-            filter_value = unit.code if unit else 'Unit'
-            filter_type = 'unit'
-        elif category and category != 'all':
-            filter_value = category.capitalize()
-            filter_type = 'status'
-
         try:
-            try:
-                html = render_to_string('admin_panel/_ticket_list_modal.html', {
-                    'tickets': tickets_qs[:50],
-                    'status_label': filter_value,
-                    'filter_type': filter_type,
-                    'filter_value': filter_value,
-                }, request=request)
-                return JsonResponse({'html': html, 'success': True, 'count': tickets_qs.count()})
-            except TemplateDoesNotExist:
-                html = generate_admin_ticket_list_html(tickets_qs[:50], filter_value)
-                return JsonResponse({'html': html, 'success': True, 'count': tickets_qs.count()})
-            except Exception as e:
-                logger.error(f"AJAX error in all_tickets (template): {str(e)}")
-                html = generate_admin_ticket_list_html(tickets_qs[:50], filter_value)
-                return JsonResponse({'html': html, 'success': True, 'count': tickets_qs.count()})
+            tickets = tickets_qs[:50]
+            
+            # Build ticket data with target date
+            tickets_data = []
+            for ticket in tickets:
+                tickets_data.append({
+                    'id': ticket.id,
+                    'ticket_number': ticket.ticket_number,
+                    'subject': ticket.subject,
+                    'employee_name': ticket.employee_name,
+                    'status': ticket.status,
+                    'priority': ticket.priority,
+                    'target_date': ticket.target_date.isoformat() if ticket.target_date else None,
+                    'created_at': ticket.created_at.isoformat(),
+                    'unit': ticket.unit.code if ticket.unit else '',
+                    'department': ticket.department.name if ticket.department else '',
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'tickets': tickets_data,
+                'count': tickets_qs.count()
+            })
+            
         except Exception as e:
             logger.error(f"AJAX error in all_tickets: {str(e)}")
             return JsonResponse({
-                'success': False, 
+                'success': False,
                 'error': str(e),
-                'message': 'Error loading tickets. Please try again.'
+                'message': 'Error loading tickets. Please try again.',
+                'tickets': [],
+                'count': 0
             }, status=500)
     
+    # ============================================================
+    # REGULAR PAGE RENDER
+    # ============================================================
     paginator = Paginator(tickets_qs, 20)
     page_number = request.GET.get('page')
     try: 
@@ -426,14 +444,14 @@ def all_tickets(request):
 
 
 # ============================================================
-# TICKET DETAIL - ADMIN (UPDATED WITH PRIORITY CHANGE)
+# TICKET DETAIL - ADMIN (UPDATED WITH PRIORITY CHANGE & TARGET DATE)
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='login')
 def ticket_detail_admin(request, pk):
     """
     Admin ticket detail view with full ticket management
-    Includes: Assign, Hold, Escalate, Close, Reopen, and Change Priority
+    Includes: Assign, Hold, Escalate, Close, Reopen, Change Priority, and Target Date
     """
     ticket = get_object_or_404(Ticket, pk=pk)
     
@@ -494,21 +512,35 @@ def ticket_detail_admin(request, pk):
                 if not assigned_person: 
                     messages.error(request, "Assigned Person Name is mandatory.")
                     return redirect('admin_ticket_detail', pk=ticket.id)
+                
+                # ✅ Get target date
+                target_date_str = request.POST.get('target_date', '').strip()
+                target_date = None
+                if target_date_str:
+                    try:
+                        target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        messages.error(request, "Invalid target date format.")
+                        return redirect('admin_ticket_detail', pk=ticket.id)
+                
                 ticket.status = 'Assigned'
                 ticket.assigned_person = assigned_person
+                if target_date:
+                    ticket.target_date = target_date
                 ticket.save()
+                
                 TicketHistory.objects.create(
                     ticket=ticket, 
                     action=f"Assigned to {assigned_person}", 
-                    remarks=remarks, 
+                    remarks=remarks + (f" | Target Date: {target_date.strftime('%d-%b-%Y')}" if target_date else ""), 
                     performed_by=f"Admin {request.user.username}"
                 )
                 # ============================================================
                 # EMAIL SENDING DISABLED - COMMENTED OUT
                 # ============================================================
-                # send_ticket_email(ticket, 'Assigned', remarks=remarks, request=request)
+                # send_ticket_email(ticket, 'Assigned')
                 # ============================================================
-                messages.success(request, f'Ticket assigned to {assigned_person}.')
+                messages.success(request, f'Ticket assigned to {assigned_person}. Target date set to {target_date.strftime("%d-%b-%Y") if target_date else "Not set"}.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
             elif action_type == 'Hold':
@@ -528,7 +560,7 @@ def ticket_detail_admin(request, pk):
                 # ============================================================
                 # EMAIL SENDING DISABLED - COMMENTED OUT
                 # ============================================================
-                # send_ticket_email(ticket, 'Hold', remarks=hold_reason)
+                # send_ticket_email(ticket, 'Hold')
                 # ============================================================
                 messages.success(request, 'Ticket placed on Hold.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
@@ -550,7 +582,7 @@ def ticket_detail_admin(request, pk):
                 # ============================================================
                 # EMAIL SENDING DISABLED - COMMENTED OUT
                 # ============================================================
-                # send_ticket_email(ticket, 'Escalated', remarks=remark_str)
+                # send_ticket_email(ticket, 'Escalated')
                 # ============================================================
                 messages.success(request, 'Ticket escalated to ERP vendor.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
@@ -582,7 +614,7 @@ def ticket_detail_admin(request, pk):
                     # ============================================================
                     # EMAIL SENDING DISABLED - COMMENTED OUT
                     # ============================================================
-                    # send_ticket_email(ticket, 'Closed', remarks=closing_remarks)
+                    # send_ticket_email(ticket, 'Closed')
                     # ============================================================
                     messages.success(request, 'Ticket closed successfully.')
                     return redirect('admin_ticket_detail', pk=ticket.id)
@@ -623,7 +655,7 @@ def ticket_detail_admin(request, pk):
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
             # ============================================================
-            # NEW: PRIORITY CHANGE ACTION
+            # PRIORITY CHANGE ACTION
             # ============================================================
             elif action_type == 'ChangePriority':
                 # Check if ticket is closed
@@ -663,6 +695,42 @@ def ticket_detail_admin(request, pk):
                 
                 messages.success(request, f'Priority changed from {old_priority} to {new_priority}.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
+            
+            # ============================================================
+            # ✅ NEW: UPDATE TARGET DATE
+            # ============================================================
+            elif action_type == 'UpdateTargetDate':
+                target_date_str = request.POST.get('target_date', '').strip()
+                
+                if not target_date_str:
+                    messages.error(request, "Target date is required.")
+                    return redirect('admin_ticket_detail', pk=ticket.id)
+                
+                try:
+                    target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+                    
+                    # Check if date is in the past
+                    if target_date < timezone.now().date():
+                        messages.error(request, "Target date cannot be in the past.")
+                        return redirect('admin_ticket_detail', pk=ticket.id)
+                    
+                    old_target_date = ticket.target_date
+                    ticket.target_date = target_date
+                    ticket.save()
+                    
+                    TicketHistory.objects.create(
+                        ticket=ticket,
+                        action="Target Date Updated",
+                        remarks=f"Target date changed from {old_target_date.strftime('%d-%b-%Y') if old_target_date else 'Not set'} to {target_date.strftime('%d-%b-%Y')}",
+                        performed_by=f"Admin {request.user.username}"
+                    )
+                    
+                    messages.success(request, f'Target date updated to {target_date.strftime("%d-%b-%Y")}.')
+                    return redirect('admin_ticket_detail', pk=ticket.id)
+                    
+                except ValueError:
+                    messages.error(request, "Invalid date format.")
+                    return redirect('admin_ticket_detail', pk=ticket.id)
                 
         return redirect('admin_ticket_detail', pk=ticket.id)
     
@@ -683,7 +751,63 @@ def ticket_detail_admin(request, pk):
 
 
 # ============================================================
-# NOTIFICATION FUNCTIONS
+# ✅ NEW: UPDATE TARGET DATE (Standalone Endpoint)
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='login')
+def update_target_date(request, ticket_id):
+    """
+    Update the target date for an assigned ticket via AJAX
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
+    
+    try:
+        ticket = Ticket.objects.get(id=ticket_id)
+    except Ticket.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Ticket not found'}, status=404)
+    
+    target_date_str = request.POST.get('target_date', '').strip()
+    
+    if not target_date_str:
+        return JsonResponse({'success': False, 'message': 'Target date is required'})
+    
+    try:
+        from datetime import date
+        target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+        
+        # Check if date is in the past
+        if target_date < date.today():
+            return JsonResponse({'success': False, 'message': 'Target date cannot be in the past'})
+        
+        # Check if ticket is assigned
+        if ticket.status not in ['Assigned', 'Open']:
+            return JsonResponse({'success': False, 'message': 'Ticket must be in Assigned or Open status to set target date'})
+        
+        old_target_date = ticket.target_date
+        ticket.target_date = target_date
+        ticket.save()
+        
+        # Log the change
+        TicketHistory.objects.create(
+            ticket=ticket,
+            action="Target Date Updated",
+            remarks=f"Target date changed from {old_target_date.strftime('%d-%b-%Y') if old_target_date else 'Not set'} to {target_date.strftime('%d-%b-%Y')}",
+            performed_by=f"Admin {request.user.username}"
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Target date updated to {target_date.strftime("%d-%b-%Y")}',
+            'target_date': target_date.strftime('%d-%b-%Y')
+        })
+        
+    except ValueError:
+        return JsonResponse({'success': False, 'message': 'Invalid date format'}, status=400)
+
+
+# ============================================================
+# NOTIFICATION FUNCTIONS - FIXED FOR AJAX
 # ============================================================
 
 @login_required
@@ -691,20 +815,42 @@ def ticket_detail_admin(request, pk):
 def get_notifications(request):
     """
     Get unviewed tickets for AJAX dropdown refresh
+    ✅ FIXED: Always returns JSON for AJAX requests
     """
-    unviewed_count = Ticket.objects.filter(is_viewed=False).count()
-    unviewed_tickets = Ticket.objects.filter(is_viewed=False).order_by('-created_at')[:10]
+    # Check if it's an AJAX request
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
-    html = render_to_string('admin_panel/_notification_items.html', {
-        'unviewed_tickets': unviewed_tickets,
-        'unviewed_count': unviewed_count,
-    }, request=request)
+    if is_ajax:
+        try:
+            unviewed_count = Ticket.objects.filter(is_viewed=False).count()
+            unviewed_tickets = Ticket.objects.filter(is_viewed=False).order_by('-created_at')[:10]
+            
+            html = render_to_string('admin_panel/_notification_items.html', {
+                'unviewed_tickets': unviewed_tickets,
+                'unviewed_count': unviewed_count,
+            }, request=request)
+            
+            return JsonResponse({
+                'success': True,
+                'html': html,
+                'count': unviewed_count
+            })
+        except Exception as e:
+            logger.error(f"Error in get_notifications: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'message': str(e),
+                'count': 0,
+                'html': ''
+            }, status=500)
     
+    # For non-AJAX requests, return a proper page or redirect
     return JsonResponse({
-        'success': True,
-        'html': html,
-        'count': unviewed_count
-    })
+        'success': False,
+        'message': 'Invalid request. This endpoint only accepts AJAX requests.',
+        'count': 0,
+        'html': ''
+    }, status=400)
 
 
 @login_required
@@ -712,18 +858,27 @@ def get_notifications(request):
 def mark_all_notifications_read(request):
     """
     Mark all tickets as viewed
+    ✅ FIXED: Always returns JSON for AJAX requests
     """
     if request.method == 'POST':
-        count = Ticket.objects.filter(is_viewed=False).update(
-            is_viewed=True,
-            viewed_at=timezone.now()
-        )
-        return JsonResponse({
-            'success': True,
-            'message': f'Marked {count} tickets as read',
-            'count': 0
-        })
-    return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
+        try:
+            count = Ticket.objects.filter(is_viewed=False).update(
+                is_viewed=True,
+                viewed_at=timezone.now()
+            )
+            return JsonResponse({
+                'success': True,
+                'message': f'Marked {count} tickets as read',
+                'count': 0
+            })
+        except Exception as e:
+            logger.error(f"Error in mark_all_notifications_read: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            }, status=500)
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request. Use POST.'}, status=400)
 
 
 @login_required
@@ -731,17 +886,26 @@ def mark_all_notifications_read(request):
 def mark_notification_read(request, ticket_id):
     """
     Mark a single ticket as viewed
+    ✅ FIXED: Always returns JSON for AJAX requests
     """
     if request.method == 'POST':
-        ticket = get_object_or_404(Ticket, pk=ticket_id)
-        ticket.is_viewed = True
-        ticket.viewed_at = timezone.now()
-        ticket.save()
-        return JsonResponse({
-            'success': True,
-            'message': f'Ticket {ticket.ticket_number} marked as read'
-        })
-    return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
+        try:
+            ticket = get_object_or_404(Ticket, pk=ticket_id)
+            ticket.is_viewed = True
+            ticket.viewed_at = timezone.now()
+            ticket.save()
+            return JsonResponse({
+                'success': True,
+                'message': f'Ticket {ticket.ticket_number} marked as read'
+            })
+        except Exception as e:
+            logger.error(f"Error in mark_notification_read: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            }, status=500)
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request. Use POST.'}, status=400)
 
 
 # ============================================================
