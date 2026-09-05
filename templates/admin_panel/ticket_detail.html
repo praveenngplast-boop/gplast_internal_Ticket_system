@@ -363,6 +363,8 @@
     </div>
 </div>
 
+{% include 'tickets/_ticket_replies.html' with reply_url=admin_reply_url %}
+
 <!-- ============================================
      MODALS
 ============================================ -->
@@ -553,7 +555,7 @@
 
 {% block extra_js %}
 {{ block.super }}
-<script src="{% static 'js/admin_panel/admin_ticket_detail.js' %}"></script>
+<script src="{% static 'js/admin_panel/ticket_detail.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // ============================================================

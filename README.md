@@ -14,73 +14,161 @@ This guide covers the complete project structure and deployment on an on-premise
 - Admin notifications and email notifications
 - Scheduled daily, weekly, or monthly email reports
 
-## Technology
-
-- Python 3.10 or newer
-- Django 4.2 or newer and less than 5.1
-- MySQL 8.x or compatible MySQL server
-- Django templates, Bootstrap 5, Font Awesome 6, and Chart.js
-- Waitress for Windows production hosting
-- WhiteNoise for static files
-- `python-decouple` for environment configuration
-
 ## Complete Folder Structure
+
+The repository is organized as a Django project with one application, role-specific templates, role-specific assets, and shared UI utilities.
 
 ```text
 gplast_internal_Ticket_system/
 |
-|-- manage.py                         Django command-line entry point
-|-- requirements.txt                  Python dependencies
-|-- README.md                         This deployment guide
-|-- .env                              Server configuration; keep private
-|-- .env.example                      Example environment configuration
+|-- manage.py                              Django command-line entry point
+|-- requirements.txt                       Python dependencies
+|-- README.md                              Project, setup, architecture, and operations guide
+|-- .env                                   Local/private configuration; never commit
+|-- .env.example                           Safe configuration template
 |
-|-- gplast_ticket/                    Django project configuration
+|-- gplast_ticket/                         Django project package
 |   |-- __init__.py
-|   |-- settings.py                   Database, email, security, static, and logging settings
-|   |-- urls.py                       Root URL configuration
-|   |-- asgi.py                       ASGI entry point
-|   `-- wsgi.py                       WSGI entry point
+|   |-- settings.py                        Database, email, security, static, media, and logging settings
+|   |-- urls.py                            Root URL configuration; includes tickets.urls
+|   |-- asgi.py                            ASGI entry point
+|   `-- wsgi.py                            WSGI entry point for Waitress/IIS
 |
-|-- tickets/                          Main Django application
+|-- tickets/                               Main Django application
 |   |-- __init__.py
-|   |-- admin.py                      Django admin registrations
-|   |-- apps.py                       Application configuration
-|   |-- context_processors.py         Shared template context
-|   |-- email_utils.py                Scheduled report email generation and sending
-|   |-- forms.py                      Django forms
-|   |-- models.py                     Database models
-|   |-- notification_tags.py           Notification template tags
-|   |-- tests.py                      Automated tests
-|   |-- urls.py                       Application URL patterns
-|   |-- utils.py                      Shared ticket and email utilities
+|   |-- admin.py                            Django admin registrations
+|   |-- apps.py                             Application configuration
+|   |-- context_processors.py               Shared navigation and notification context
+|   |-- email_utils.py                      Scheduled report email generation and delivery
+|   |-- export_helpers.py                   Shared Excel reply-sheet and reply-section writers
+|   |-- forms.py                             Ticket, close-ticket, and TicketReplyForm definitions
+|   |-- models.py                            Ticket, TicketHistory, TicketReply, users, units, and settings models
+|   |-- notification_tags.py                 Notification template tags
+|   |-- tests.py                             Automated Django tests
+|   |-- urls.py                              Employee, Admin, Unit Head, AJAX, report, and settings routes
+|   |-- utils.py                             Role checks, attachment validation, reopening, and shared helpers
 |   |
-|   |-- views/
-|   |   |-- __init__.py               View exports
-|   |   |-- auth_views.py             Login and logout views
-|   |   |-- admin_views.py             Admin dashboard and ticket views
-|   |   |-- employee_views.py          Employee dashboard and ticket views
-|   |   |-- ajax_views.py              AJAX endpoints
-|   |   |-- reports_views.py            Reports and report exports
-|   |   |-- settings_views.py           Settings page views
-|   |   |-- audit_views.py              Audit log page and Excel export
-|   |   |-- scheduled_email_views.py    Scheduled email settings and actions
-|   |   |-- erp_mapping_views.py        ERP mapping views
-|   |   |-- settings_action/            Settings POST actions
-|   |   `-- utils.py                    View helper functions
+|   |-- migrations/
+|   |   |-- __init__.py
+|   |   |-- 0001_initial.py                  Initial database schema
+|   |   |-- 0002_ticket_target_date.py       Adds ticket target dates
+|   |   `-- 0003_ticketreply.py               Adds conversation replies and reply attachments
 |   |
-|   |-- migrations/                    Database migration files
 |   |-- management/commands/
-|   |   |-- send_emails.py              Checks and sends a due scheduled email
-|   |   `-- run_email_scheduler.py      Continuously checks the schedule
+|   |   |-- send_emails.py                   Sends due scheduled reports
+|   |   `-- run_email_scheduler.py           Continuously checks the email schedule
 |   |
+|   |-- templatetags/
+|   |   |-- __init__.py
+|   |   `-- ticket_filters.py                Aging, priority, and ticket display filters
+|   |
+|   `-- views/
+|       |-- __init__.py                      Central view exports
+|       |-- auth_views.py                    Login, logout, and role redirects
+|       |-- employee_views.py                Employee dashboard, tickets, exports, and permissions
+|       |-- admin_views.py                   Admin dashboard, ticket actions, and settings actions
+|       |-- unit_head_views.py               Unit Head dashboard, unit filtering, and exports
+|       |-- reply_views.py                   Shared permission-aware reply endpoint
+|       |-- reports_views.py                 Reports, escalated aging, exports, and escalated detail page
+|       |-- ajax_views.py                    AJAX statistics, search, and ticket data endpoints
+|       |-- settings_views.py                 Settings pages
+|       |-- audit_views.py                   Audit log display and export
+|       |-- backup_views.py                  Full database backup export
+|       |-- scheduled_email_views.py         Scheduled email settings
+|       |-- settings_action/                 POST handlers for settings administration
+|       `-- utils.py                         View-level role and formatting helpers
 |
-|-- templates/                         Django HTML templates
-|   |-- base.html                      Shared layout and navigation
-|   |-- auth/login.html                Login page
-|   |-- employee/                      Employee pages
-|   `-- admin_panel/                   Administrator and settings pages
+|-- templates/
+|   |-- base.html                           Shared shell, sidebar, Bootstrap, global CSS, and global JS
+|   |-- auth/login.html                     Login page
+|   |-- tickets/_ticket_replies.html        Shared conversation list and reply form
+|   |
+|   |-- employee/                           Employee dashboard and ticket pages
+|   |   |-- dashboard.html                   KPI cards, charts, and drill-down modal
+|   |   |-- create_ticket.html                Employee ticket creation
+|   |   |-- my_tickets.html                   Employee ticket list and filters
+|   |   |-- ticket_detail.html                 Employee ticket detail and replies
+|   |   `-- _ticket_list_modal.html            Employee ticket-list markup/styles
+|   |
+|   |-- admin_panel/                        Admin, reports, and settings pages
+|   |   |-- dashboard.html                   System KPIs, charts, and drill-down modal
+|   |   |-- all_tickets.html                  Admin ticket list and filters
+|   |   |-- ticket_detail.html                 Admin editing/workflow page
+|   |   |-- escalated_aging_report.html       Escalated aging report
+|   |   |-- escalated_ticket_detail.html       Read-only individual escalated page
+|   |   |-- reports.html                      Admin reports
+|   |   |-- create_ticket.html                Admin ticket creation
+|   |   |-- settings_*.html                   Settings and administration screens
+|   |   `-- _ticket_list_modal.html            Admin ticket-list markup
+|   |
+|   `-- unit_head/                          Unit Head dashboard and unit-scoped pages
+|       |-- dashboard.html                   Unit KPIs, charts, and drill-down modal
+|       |-- all_tickets.html                  Unit-scoped ticket list
+|       |-- my_tickets.html                   Unit Head ticket view
+|       |-- ticket_detail.html                 Unit-scoped detail and replies
+|       |-- reports.html                      Unit reports
+|       `-- _ticket_list_modal.html            Unit Head ticket-list markup/styles
 |
+|-- static/
+|   |-- css/
+|   |   |-- shared/
+|   |   |   |-- base.css                      Global layout, variables, navigation, badges, and modal base styles
+|   |   |   `-- components.css                Shared responsive buttons, drill-downs, replies, tables, and controls
+|   |   |-- employee/                         Employee-specific pages and dashboard styles
+|   |   |-- admin_panel/                      Admin, reports, settings, and dashboard styles
+|   |   |-- unit_head/                        Unit Head pages and dashboard styles
+|   |   `-- style.css                         Legacy stylesheet retained for compatibility
+|   |
+|   |-- js/
+|   |   |-- base.js                            Sidebar, theme, and global layout behavior
+|   |   |-- shared/
+|   |   |   |-- charts.js                      Shared chart helpers
+|   |   |   |-- confirmations.js                Shared confirmation hook location
+|   |   |   `-- ticket_ui.js                    Shared JSON, aging, modal, and UI helpers
+|   |   |-- employee/                          Employee dashboard and ticket scripts
+|   |   |-- admin_panel/                       Admin dashboard, settings, and reports scripts
+|   |   `-- unit_head/                         Unit Head dashboard and ticket scripts
+|   |
+|   `-- images/                               Logos, favicon, and interface images
+|
+|-- media/
+|   |-- attachments/                          Original ticket attachments
+|   `-- attachments/reopen/                   Reopen attachments
+|
+|-- logs/django.log                           Runtime application log
+|-- staticfiles/                              collectstatic output; generated, not source
+`-- venv/                                     Local Python environment; recreate per machine
+```
+
+Do not commit `.env`, `venv/`, `media/`, `logs/`, `staticfiles/`, or Python `__pycache__` directories.
+
+## Application Architecture
+
+### Roles
+
+- **Employee:** creates tickets and views/replies to tickets in the employee's permitted department scope.
+- **Admin:** manages all tickets, assignments, escalation, closure, reopening, settings, reports, and replies.
+- **Unit Head:** views and replies to tickets in the assigned unit and uses unit-scoped reports and exports.
+
+Role permissions are enforced in Django views. Frontend visibility is not treated as a security boundary.
+
+### Ticket communication
+
+- `TicketHistory` stores workflow/audit events such as assignment, escalation, closure, reopening, priority changes, and target-date changes.
+- `TicketReply` stores user conversation messages separately from workflow history.
+- Replies can include an attachment under `media/attachments/replies/`.
+- `templates/tickets/_ticket_replies.html` is reused by Employee, Admin, Unit Head, and the individual escalated-ticket page.
+- `tickets/views/reply_views.py` applies the role and department/unit checks before saving a reply.
+
+### Shared frontend controls
+
+- `static/css/shared/components.css` owns responsive controls, drill-down modal layout, badges, tables, reply panels, focus states, and mobile behavior.
+- `static/js/shared/ticket_ui.js` owns shared JSON response validation, aging formatting, HTML escaping, modal state helpers, and cleanup behavior.
+- Role dashboards keep their own data and filters but use shared route data and shared UI styling.
+
+### Exports
+
+Individual and filtered Excel exports include ticket replies. Reply data is written with ticket number, timestamp, sender, role, message, and attachment name. The full backup also includes the `TicketReply` model sheet.
 |-- static/                            CSS, JavaScript, and images
 |   |-- css/style.css
 |   |-- js/charts.js

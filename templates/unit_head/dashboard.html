@@ -216,7 +216,7 @@
 <!-- ============================================================
      DRILL DOWN MODAL
      ============================================================ -->
-<div class="modal fade" id="drillDownModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade dashboard-drilldown-modal" id="drillDownModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -291,7 +291,7 @@ function drillDownUnitTickets(filter) {
             throw new Error('Your session has expired. Please login again.');
         }
         if (!response.ok) throw new Error('Network error: ' + response.status);
-        return response.json();
+        return TicketUI.requestJson(response);
     })
     .then(function(data) {
         if (!data.success) {
@@ -385,7 +385,7 @@ function drillDownUnitTicketsByPriority(priority) {
             throw new Error('Your session has expired. Please login again.');
         }
         if (!response.ok) throw new Error('Network error: ' + response.status);
-        return response.json();
+        return TicketUI.requestJson(response);
     })
     .then(function(data) {
         if (!data.success) {
@@ -481,7 +481,7 @@ function drillDownUnitTicketsByDepartment(departmentName) {
             throw new Error('Your session has expired. Please login again.');
         }
         if (!response.ok) throw new Error('Network error: ' + response.status);
-        return response.json();
+        return TicketUI.requestJson(response);
     })
     .then(function(data) {
         console.log('Department data response:', data);

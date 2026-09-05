@@ -1,6 +1,7 @@
 # tickets/views/employee_views.py
 
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q, Count
@@ -20,13 +21,15 @@ from tickets.models import (
     AdminNotificationEmail, 
     EmployeeMaster,         
     TicketHistory,
+    TicketReply,
     ReopenAttachment,
     SettingsAuditLog,
     DepartmentCredential,
     ScreenMaster,
 )
-from tickets.forms import TicketForm
+from tickets.forms import TicketForm, TicketReplyForm
 from tickets.utils import send_ticket_email, validate_attachment
+from tickets.export_helpers import add_replies_sheet, append_replies_section
 import logging
 
 logger = logging.getLogger(__name__)
@@ -779,6 +782,7 @@ def export_filtered_tickets_excel(request, tickets_qs):
     for col_letter, width in column_widths.items():
         ws.column_dimensions[col_letter].width = width
     
+    add_replies_sheet(wb, tickets_qs)
     wb.save(response)
     return response
 
@@ -941,6 +945,7 @@ def export_filtered_my_tickets_excel(request, tickets_qs):
     for col_letter, width in column_widths.items():
         ws.column_dimensions[col_letter].width = width
     
+    add_replies_sheet(wb, tickets_qs)
     wb.save(response)
     return response
 
@@ -952,7 +957,11 @@ def export_filtered_my_tickets_excel(request, tickets_qs):
 def employee_ticket_detail(request, ticket_id):
     """View ticket details with individual ticket Excel download"""
     ticket = get_object_or_404(Ticket, id=ticket_id)
+    if not request.user.is_staff and not _employee_ticket_scope(request.user).filter(pk=ticket.pk).exists():
+        messages.error(request, 'You do not have permission to view this ticket.')
+        return redirect('employee_all_tickets')
     history = TicketHistory.objects.filter(ticket=ticket).order_by('timestamp')
+    replies = ticket.replies.select_related('author').all()
     
     # ✅ FIXED: Only filter by screen_code, NOT by pk
     screen_object = ScreenMaster.objects.filter(screen_code=ticket.screen_number).first()
@@ -990,6 +999,10 @@ def employee_ticket_detail(request, ticket_id):
     context = {
         'ticket': ticket,
         'history': history,
+        'replies': replies,
+        'reply_form': TicketReplyForm(),
+        'can_reply': True,
+        'employee_reply_url': reverse('employee_ticket_reply', args=[ticket.id]),
         'attachments': attachments,
         'can_reopen': can_reopen,
         'reopen_deadline_iso': reopen_deadline_iso,
@@ -1013,6 +1026,9 @@ def ticket_detail(request, ticket_id):
 def download_individual_ticket_excel(request, ticket_id):
     """Download a single ticket details as Excel file"""
     ticket = get_object_or_404(Ticket, id=ticket_id)
+    if not request.user.is_staff and not _employee_ticket_scope(request.user).filter(pk=ticket.pk).exists():
+        messages.error(request, 'You do not have permission to download this ticket.')
+        return redirect('employee_all_tickets')
     
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -1162,6 +1178,11 @@ def download_individual_ticket_excel(request, ticket_id):
         
         row += 1
     
+    row = append_replies_section(
+        ws, row, ticket, section_font, section_font, data_font,
+        section_fill, section_fill, thin_border
+    )
+
     # Footer
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = f"Report generated on {timezone.now().strftime('%d-%b-%Y %I:%M %p')} | GPLAST Support System"
@@ -1191,6 +1212,14 @@ def update_ticket_status(request, ticket_id):
     
     ticket = get_object_or_404(Ticket, id=ticket_id)
     action_type = request.POST.get('action_type')
+
+    if not request.user.is_staff:
+        if not _employee_ticket_scope(request.user).filter(pk=ticket.pk).exists():
+            messages.error(request, 'You do not have permission to update this ticket.')
+            return redirect('employee_all_tickets')
+        if action_type != 'Reopen':
+            messages.error(request, 'Only administrators can perform this ticket action.')
+            return redirect('ticket_detail', ticket_id=ticket_id)
     
     if action_type == 'Assign':
         assigned_person = request.POST.get('assigned_person')
@@ -1360,7 +1389,7 @@ def export_closed_tickets_30_days(request):
     """
     thirty_days_ago = timezone.now() - timedelta(days=30)
     
-    tickets_qs = Ticket.objects.filter(
+    tickets_qs = _employee_ticket_scope(request.user).filter(
         status='Closed',
         closed_at__gte=thirty_days_ago
     ).order_by('-closed_at')
@@ -1518,7 +1547,8 @@ def export_closed_tickets_30_days(request):
     
     for col_letter, width in column_widths.items():
         ws.column_dimensions[col_letter].width = width
-    
+
+    add_replies_sheet(wb, tickets_qs)
     wb.save(response)
     return response
 

@@ -5,6 +5,7 @@ Reports Views - Reports, Export, Download Excel
 Admin and Unit Head reports
 """
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -26,8 +27,9 @@ from tickets.models import (
     AdminContact, AdminNotificationEmail, SettingsAuditLog,
     ERPHolderMapping, UnitHead
 )
-from tickets.forms import AdminTicketForm, CloseTicketForm
+from tickets.forms import AdminTicketForm, CloseTicketForm, TicketReplyForm
 from tickets.utils import send_ticket_email
+from tickets.export_helpers import add_replies_sheet, append_replies_section
 
 from .utils import (
     is_admin,
@@ -64,6 +66,10 @@ def escalated_aging_report(request):
     Accessible by Admin (all units) and Unit Head (their unit only)
     """
     now = timezone.now()
+
+    if not request.user.is_staff and not is_unit_head(request.user):
+        messages.error(request, 'You do not have permission to view escalated reports.')
+        return redirect('employee_dashboard')
     
     # ✅ Check if user is Unit Head
     user_is_unit_head = is_unit_head(request.user)
@@ -207,6 +213,42 @@ def escalated_aging_report(request):
     return render(request, 'admin_panel/escalated_aging_report.html', context)
 
 
+@login_required
+def escalated_ticket_detail(request, pk):
+    """Read-only individual page for an escalated ticket."""
+    ticket = get_object_or_404(
+        Ticket.objects.select_related('unit', 'department'),
+        pk=pk,
+        status='Escalated',
+    )
+
+    if is_unit_head(request.user) and not request.user.is_staff:
+        unit = get_unit_head_unit(request.user)
+        if not unit or ticket.unit_id != unit.id:
+            messages.error(request, 'You do not have permission to view this escalated ticket.')
+            return redirect('escalated_aging_report')
+    elif not request.user.is_staff:
+        messages.error(request, 'You do not have permission to view escalated tickets.')
+        return redirect('employee_dashboard')
+
+    if request.user.is_staff:
+        reply_url = reverse('admin_ticket_reply', args=[ticket.id])
+    else:
+        reply_url = reverse('unit_head_ticket_reply', args=[ticket.id])
+
+    aging_days = max(0, (timezone.now() - ticket.escalated_at).days) if ticket.escalated_at else 0
+    context = {
+        'ticket': ticket,
+        'history': ticket.history.all().order_by('timestamp'),
+        'replies': ticket.replies.select_related('author').all(),
+        'reply_form': TicketReplyForm(),
+        'can_reply': True,
+        'reply_url': reply_url,
+        'aging_days': aging_days,
+    }
+    return render(request, 'admin_panel/escalated_ticket_detail.html', context)
+
+
 # ============================================================
 # REPORTS VIEW - Admin & Unit Head (UPDATED WITH DEPARTMENT)
 # ============================================================
@@ -219,6 +261,10 @@ def reports(request):
     # ✅ Check if user is Unit Head
     user_is_unit_head = is_unit_head(request.user)
     user_is_admin = request.user.is_staff
+
+    if not user_is_admin and not user_is_unit_head:
+        messages.error(request, 'You do not have permission to view reports.')
+        return redirect('employee_dashboard')
     
     # ✅ Unit Heads can only see their unit
     if user_is_unit_head and not user_is_admin:
@@ -532,6 +578,7 @@ def reports(request):
         for col_letter, width in column_widths.items():
             ws.column_dimensions[col_letter].width = width
         
+        add_replies_sheet(wb, tickets_qs)
         wb.save(response)
         return response
     
@@ -620,6 +667,9 @@ def download_ticket_excel(request, pk):
     Admin: All tickets | Unit Head: Only their unit's tickets
     """
     ticket = get_object_or_404(Ticket, pk=pk)
+    if not request.user.is_staff and not is_unit_head(request.user):
+        messages.error(request, "You do not have permission to download this ticket.")
+        return redirect('employee_dashboard')
     
     # ✅ Unit Head security check
     user_is_unit_head = is_unit_head(request.user)
@@ -831,7 +881,10 @@ def download_ticket_excel(request, pk):
         ws.cell(row=row, column=4).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         row += 1
     
-    row += 1
+    row = append_replies_section(
+        ws, row + 1, ticket, section_font, history_header_font, data_font,
+        section_fill, history_header_fill, thin_border
+    )
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = f"Report generated on {timezone.now().strftime('%d-%b-%Y %I:%M %p')} | GPLAST Support System"
     ws[f'A{row}'].font = Font(name='Calibri', size=9, italic=True, color='666666')
@@ -860,6 +913,10 @@ def export_closed_tickets_30_days(request):
     Export closed tickets from the last 30 days to Excel.
     Admin: All units | Unit Head: Only their unit
     """
+    if not request.user.is_staff and not is_unit_head(request.user):
+        messages.error(request, 'You do not have permission to export closed tickets.')
+        return redirect('employee_dashboard')
+
     thirty_days_ago = timezone.now() - timedelta(days=30)
     
     # ✅ Check if user is Unit Head
@@ -999,5 +1056,6 @@ def export_closed_tickets_30_days(request):
     for col_letter, width in column_widths.items():
         ws.column_dimensions[col_letter].width = width
     
+    add_replies_sheet(wb, tickets_qs)
     wb.save(response)
     return response

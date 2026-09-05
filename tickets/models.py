@@ -467,6 +467,22 @@ class TicketHistory(models.Model):
         return self.performed_by or 'System'
 
 
+class TicketReply(models.Model):
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='replies')
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    author_name = models.CharField(max_length=150)
+    author_role = models.CharField(max_length=30)
+    body = models.TextField()
+    attachment = models.FileField(upload_to='attachments/replies/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.ticket.ticket_number} - {self.author_name} ({self.created_at})"
+
+
 class ReopenAttachment(models.Model):
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='reopen_attachments')
     file = models.FileField(upload_to='attachments/reopen/')

@@ -1,4 +1,11 @@
+var adminAllTicketsUrl = '/custom-admin/tickets/';
+
 document.addEventListener('DOMContentLoaded', function() {
+
+    var adminAllTicketsUrlElement = document.getElementById('adminAllTicketsUrl');
+    adminAllTicketsUrl = adminAllTicketsUrlElement
+        ? adminAllTicketsUrlElement.getAttribute('data-url')
+        : adminAllTicketsUrl;
 
     function forceCleanupBackdrops() {
         document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
@@ -305,9 +312,9 @@ function drillDownAdminTickets(filterValue) {
     else if (filterValue === 'all') { filterParam = ''; }
 
     if (filterParam) {
-        viewAllBtn.href = "/all-tickets/?" + filterParam + "=" + encodeURIComponent(filterValue);
+        viewAllBtn.href = adminAllTicketsUrl + "?" + filterParam + "=" + encodeURIComponent(filterValue);
     } else {
-        viewAllBtn.href = "/all-tickets/";
+        viewAllBtn.href = adminAllTicketsUrl;
     }
 
     modalBody.innerHTML = `
@@ -319,7 +326,7 @@ function drillDownAdminTickets(filterValue) {
 
     modal.show();
 
-    var url = "/all-tickets/?ajax=1";
+    var url = adminAllTicketsUrl + "?ajax=1";
     if (filterParam) { url += "&" + filterParam + "=" + encodeURIComponent(filterValue); }
 
     fetch(url, {
@@ -371,24 +378,24 @@ function drillDownWithFilter(filterType, filterValue, filterLabel) {
 
     statusLabel.textContent = filterLabel;
 
-    var url = "/all-tickets/?ajax=1";
+    var url = adminAllTicketsUrl + "?ajax=1";
     
     if (filterType === 'unit') {
-        viewAllBtn.href = "/all-tickets/?unit=" + encodeURIComponent(filterValue);
+        viewAllBtn.href = adminAllTicketsUrl + "?unit=" + encodeURIComponent(filterValue);
         url += "&unit=" + encodeURIComponent(filterValue);
     } else if (filterType === 'priority') {
-        viewAllBtn.href = "/all-tickets/?priority=" + encodeURIComponent(filterValue);
+        viewAllBtn.href = adminAllTicketsUrl + "?priority=" + encodeURIComponent(filterValue);
         url += "&priority=" + encodeURIComponent(filterValue);
     } else if (filterType === 'errorType') {
-        viewAllBtn.href = "/all-tickets/?main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+        viewAllBtn.href = adminAllTicketsUrl + "?main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
         url += "&main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
         statusLabel.textContent = 'Main Error: ' + filterValue + ' (Closed Tickets)';
     } else if (filterType === 'subErrorType') {
-        viewAllBtn.href = "/all-tickets/?sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+        viewAllBtn.href = adminAllTicketsUrl + "?sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
         url += "&sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
         statusLabel.textContent = 'Sub Error: ' + filterValue + ' (Closed Tickets)';
     } else {
-        viewAllBtn.href = "/all-tickets/";
+        viewAllBtn.href = adminAllTicketsUrl;
     }
 
     modalBody.innerHTML = `

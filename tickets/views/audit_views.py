@@ -1,4 +1,4 @@
-"""Views for the settings audit log and its Excel export."""
+﻿"""Views for the settings audit log and its Excel export."""
 
 from datetime import datetime, time, timedelta
 
@@ -78,7 +78,7 @@ def _filtered_audit_logs(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_audit_log(request):
     logs, date_error = _filtered_audit_logs(request)
     page_obj = Paginator(logs, 10).get_page(request.GET.get('page'))
@@ -100,7 +100,7 @@ def settings_audit_log(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def download_audit_log_excel(request):
     logs, date_error = _filtered_audit_logs(request)
     generated_at = timezone.localtime(timezone.now())

@@ -213,7 +213,7 @@
 <!-- ============================================================
      ADMIN DRILL DOWN MODAL - WITH TARGET DATE
      ============================================================ -->
-<div class="modal fade" id="adminDrillDownModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade dashboard-drilldown-modal" id="adminDrillDownModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -242,13 +242,12 @@
 </div>
 
 {{ charts_data|json_script:"charts-data" }}
+<span id="adminAllTicketsUrl" data-url="{% url 'all_tickets' %}" hidden></span>
 {% endblock %}
 
 {% block extra_js %}
 {{ block.super }}
 <script src="{% static 'js/admin_panel/dashboard.js' %}"></script>
-<script src="{% static 'js/shared/charts.js' %}"></script>
-<script src="{% static 'js/shared/confirmations.js' %}"></script>
 <script>
 // ============================================================
 // ADMIN DRILL DOWN FUNCTION - WITH TARGET DATE
@@ -275,7 +274,7 @@ function drillDownAdminTickets(filter) {
     fetch('/custom-admin/tickets/?ajax=true&filter=' + encodeURIComponent(filter))
         .then(function(response) {
             if (!response.ok) throw new Error('Network error: ' + response.status);
-            return response.json();
+            return TicketUI.requestJson(response);
         })
         .then(function(data) {
             if (!data.success) {
@@ -307,7 +306,7 @@ function drillDownAdminTickets(filter) {
                     html += '<td><span style="font-size: 0.75rem; ' + (ticket.target_date ? 'color: var(--brand-orange); font-weight: 600;' : 'color: var(--text-muted);') + '">' + targetDate + '</span></td>';
                     html += '<td style="font-size:0.65rem;">' + createdDate + '</td>';
                     html += '<td>';
-                    html += '<a href="/custom-admin/ticket/' + ticket.id + '//" class="btn-view btn-sm" target="_blank">';
+                    html += '<a href="/custom-admin/ticket/' + ticket.id + '/" class="btn-view btn-sm" target="_blank">';
                     html += '<i class="fa-solid fa-eye"></i> View';
                     html += '</a>';
                     html += '</td>';

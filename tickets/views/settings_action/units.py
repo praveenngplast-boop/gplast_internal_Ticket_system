@@ -1,4 +1,4 @@
-# tickets/views/settings_action/units.py
+﻿# tickets/views/settings_action/units.py
 
 """
 Unit and Department Settings - Add, Edit, Toggle Active/Inactive, Bulk Upload Departments
@@ -9,7 +9,6 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db import IntegrityError, transaction
-from django.views.decorators.csrf import csrf_exempt
 import pandas as pd
 import logging
 
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_units(request):
     """
     Manage Units: Add, Edit, Toggle Active/Inactive
@@ -66,9 +65,9 @@ def settings_units(request):
                 
                 change_details = []
                 if old_code != unit.code:
-                    change_details.append(f"Code: {old_code} → {unit.code}")
+                    change_details.append(f"Code: {old_code} â†’ {unit.code}")
                 if old_name != unit.full_name:
-                    change_details.append(f"Name: {old_name} → {unit.full_name}")
+                    change_details.append(f"Name: {old_name} â†’ {unit.full_name}")
                 
                 log_settings_change(
                     request,
@@ -109,13 +108,13 @@ def settings_units(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_departments(request):
     """
     Manage Departments: Add, Edit, Toggle Active/Inactive
     POST: action (add/edit/toggle), dept_id, name, unit
     Redirects to: settings_units_departments
-    ✅ FIXED: Allows same department name in different units
+    âœ… FIXED: Allows same department name in different units
     """
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -128,7 +127,7 @@ def settings_departments(request):
                 messages.error(request, "Unit and Department Name are required.")
                 return redirect('settings_units_departments')
             
-            # ✅ FIXED: Check per unit, NOT globally
+            # âœ… FIXED: Check per unit, NOT globally
             unit = get_object_or_404(Unit, pk=unit_id)
             
             if Department.objects.filter(unit=unit, name__iexact=dept_name).exists():
@@ -167,7 +166,7 @@ def settings_departments(request):
             old_name = dept.name
             old_unit = dept.unit.code
             
-            # ✅ FIXED: Check per unit, excluding current instance
+            # âœ… FIXED: Check per unit, excluding current instance
             if Department.objects.filter(
                 unit=dept.unit, 
                 name__iexact=dept_name
@@ -181,9 +180,9 @@ def settings_departments(request):
             
             change_details = []
             if old_name != dept.name:
-                change_details.append(f"Name: {old_name} → {dept.name}")
+                change_details.append(f"Name: {old_name} â†’ {dept.name}")
             if old_unit != dept.unit.code:
-                change_details.append(f"Unit: {old_unit} → {dept.unit.code}")
+                change_details.append(f"Unit: {old_unit} â†’ {dept.unit.code}")
             
             log_settings_change(
                 request,
@@ -220,18 +219,17 @@ def settings_departments(request):
 
 
 # ============================================================
-# ✅ BULK UPLOAD DEPARTMENTS - FIXED WITH PROPER ERROR HANDLING
+# âœ… BULK UPLOAD DEPARTMENTS - FIXED WITH PROPER ERROR HANDLING
 # ============================================================
-@csrf_exempt
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def departments_bulk_upload(request):
     """
     Bulk upload departments from Excel/CSV file
     Expected columns: 'Unit Code', 'Department Name'
     Maps department to existing unit based on Unit Code
     URL: /custom-admin/settings/departments/bulk-upload/
-    ✅ FIXED: Allows same department name in different units
+    âœ… FIXED: Allows same department name in different units
     """
     # Check if it's an AJAX request
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -356,7 +354,7 @@ def departments_bulk_upload(request):
                     skipped_count += 1
                     continue
                 
-                # ✅ FIXED: Check if department exists in THIS unit only
+                # âœ… FIXED: Check if department exists in THIS unit only
                 if Department.objects.filter(unit=unit, name__iexact=dept_name).exists():
                     errors.append(f"Row {index + 1}: Department '{dept_name}' already exists in unit '{unit_code}'")
                     skipped_count += 1
@@ -418,10 +416,10 @@ def departments_bulk_upload(request):
 
 
 # ============================================================
-# ✅ DOWNLOAD BULK UPLOAD TEMPLATE FOR DEPARTMENTS
+# âœ… DOWNLOAD BULK UPLOAD TEMPLATE FOR DEPARTMENTS
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def departments_download_template(request):
     """
     Download Excel template for bulk department upload
@@ -494,7 +492,7 @@ def departments_download_template(request):
     
     # Note 1 - Instructions
     note_cell1 = ws.cell(row=note_row, column=1)
-    note_cell1.value = "📌 INSTRUCTIONS:"
+    note_cell1.value = "ðŸ“Œ INSTRUCTIONS:"
     note_cell1.font = Font(name='Calibri', size=10, bold=True, color='1F4E79')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=2)
     
@@ -524,14 +522,14 @@ def departments_download_template(request):
     
     note_row += 2
     note_cell6 = ws.cell(row=note_row, column=1)
-    note_cell6.value = "⚠️ Unit Code must exist in the system. Departments are created as ACTIVE by default."
+    note_cell6.value = "âš ï¸ Unit Code must exist in the system. Departments are created as ACTIVE by default."
     note_cell6.font = Font(name='Calibri', size=9, italic=True, color='FF6B00')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=2)
     
     # Add active units list for reference
     note_row += 2
     note_cell7 = ws.cell(row=note_row, column=1)
-    note_cell7.value = "📋 Active Units in System:"
+    note_cell7.value = "ðŸ“‹ Active Units in System:"
     note_cell7.font = Font(name='Calibri', size=9, bold=True, color='1F4E79')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=2)
     

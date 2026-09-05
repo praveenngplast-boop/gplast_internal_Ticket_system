@@ -34,11 +34,12 @@ urlpatterns = [
     # ============================================================
     # EMPLOYEE URLS
     # ============================================================
-    path('', views.employee_dashboard, name='employee_dashboard'),
+    path('', views.employee_dashboard, name='root_employee_dashboard'),
     path('dashboard/', views.employee_dashboard, name='employee_dashboard'),
     path('create-ticket/', views.create_ticket, name='create_ticket'),
     path('my-tickets/', views.my_tickets, name='my_tickets'),
     path('ticket/<int:ticket_id>/', views.ticket_detail, name='ticket_detail'),
+    path('ticket/<int:ticket_id>/reply/', views.ticket_reply, name='employee_ticket_reply'),
     path('all-tickets/', views.employee_all_tickets, name='employee_all_tickets'),
     path('ticket/<int:ticket_id>/update/', views.update_ticket_status, name='update_ticket_status'),
     path('ticket/<int:ticket_id>/download/', views.download_individual_ticket_excel, name='employee_download_ticket_excel'),
@@ -50,11 +51,13 @@ urlpatterns = [
     path('custom-admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('custom-admin/create-ticket/', views.create_ticket_admin, name='create_ticket_admin'),
     path('custom-admin/tickets/', views.all_tickets, name='all_tickets'),
-    path('custom-admin/ticket/<int:pk>//', views.ticket_detail_admin, name='admin_ticket_detail'),
+    path('custom-admin/ticket/<int:pk>/', views.ticket_detail_admin, name='admin_ticket_detail'),
+    path('custom-admin/ticket/<int:ticket_id>/reply/', views.ticket_reply, name='admin_ticket_reply'),
     
     # REPORTS URLS
     path('custom-admin/reports/', reports, name='reports'),
     path('custom-admin/reports/escalated-aging/', escalated_aging_report, name='escalated_aging_report'),
+    path('custom-admin/reports/escalated/<int:pk>/', views.escalated_ticket_detail, name='escalated_ticket_detail'),
     path('custom-admin/download-ticket/<int:pk>/excel/', download_ticket_excel, name='admin_download_ticket_excel'),
     path('custom-admin/export/closed-30-days/', export_closed_tickets_30_days, name='export_closed_30_days'),
 
@@ -122,6 +125,7 @@ urlpatterns = [
     path('unit-head/tickets/', unit_head_views.unit_head_all_tickets, name='unit_head_all_tickets'),
     # ❌ REMOVED: path('unit-head/my-tickets/', unit_head_views.unit_head_my_tickets, name='unit_head_my_tickets'),
     path('unit-head/ticket/<int:ticket_id>/', unit_head_views.unit_head_ticket_detail, name='unit_head_ticket_detail'),
+    path('unit-head/ticket/<int:ticket_id>/reply/', views.ticket_reply, name='unit_head_ticket_reply'),
     path('unit-head/reports/', unit_head_views.unit_head_reports, name='unit_head_reports'),
     path('unit-head/ticket/<int:ticket_id>/download/', unit_head_views.unit_head_download_ticket_excel, name='unit_head_download_ticket_excel'),
     path('unit-head/export/closed-30-days/', unit_head_views.unit_head_export_closed_tickets_30_days, name='unit_head_export_closed_30_days'),

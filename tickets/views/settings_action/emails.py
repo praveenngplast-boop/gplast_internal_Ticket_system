@@ -1,4 +1,4 @@
-# tickets/views/settings_actions/emails.py
+﻿# tickets/views/settings_actions/emails.py
 
 """
 Email Settings - Manage Notification Emails
@@ -14,7 +14,7 @@ from ..utils import is_admin
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_emails(request):
     """
     Manage Notification Emails: Add, Delete

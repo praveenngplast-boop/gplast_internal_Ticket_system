@@ -4,9 +4,40 @@ from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.contrib.auth.models import User
 from tickets.models import (
     Ticket, Unit, Department, AdminContact, AdminNotificationEmail, 
-    EmployeeMaster, DepartmentCredential, ERPHolderMapping, UnitHead
+    EmployeeMaster, DepartmentCredential, ERPHolderMapping, UnitHead, TicketReply
 )
 from tickets.utils import validate_attachment
+
+
+class TicketReplyForm(forms.ModelForm):
+    class Meta:
+        model = TicketReply
+        fields = ['body', 'attachment']
+        widgets = {
+            'body': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Add an update or reply to this ticket...',
+                'class': 'form-control',
+            }),
+            'attachment': forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt',
+            }),
+        }
+
+    def clean_body(self):
+        body = self.cleaned_data.get('body', '').strip()
+        if not body:
+            raise ValidationError('Reply message cannot be empty.')
+        return body
+
+    def clean_attachment(self):
+        attachment = self.cleaned_data.get('attachment')
+        if attachment:
+            is_valid, message = validate_attachment(attachment)
+            if not is_valid:
+                raise ValidationError(message)
+        return attachment
 
 
 # ============================================================
@@ -101,19 +132,25 @@ class TicketForm(forms.ModelForm):
     def clean_attachment_1(self):
         attachment = self.cleaned_data.get('attachment_1')
         if attachment:
-            validate_attachment(attachment)
+            is_valid, message = validate_attachment(attachment)
+            if not is_valid:
+                raise ValidationError(message)
         return attachment
 
     def clean_attachment_2(self):
         attachment = self.cleaned_data.get('attachment_2')
         if attachment:
-            validate_attachment(attachment)
+            is_valid, message = validate_attachment(attachment)
+            if not is_valid:
+                raise ValidationError(message)
         return attachment
 
     def clean_attachment_3(self):
         attachment = self.cleaned_data.get('attachment_3')
         if attachment:
-            validate_attachment(attachment)
+            is_valid, message = validate_attachment(attachment)
+            if not is_valid:
+                raise ValidationError(message)
         return attachment
 
     def clean(self):

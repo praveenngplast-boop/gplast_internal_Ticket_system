@@ -1,4 +1,4 @@
-# tickets/views/settings_actions/settings_password.py
+﻿# tickets/views/settings_actions/settings_password.py
 
 """
 Password Settings - Change Admin Password and Reset Employee Password
@@ -15,7 +15,7 @@ from ..utils import is_admin
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_passwords(request):
     """
     Change Admin Password and Reset Employee Password

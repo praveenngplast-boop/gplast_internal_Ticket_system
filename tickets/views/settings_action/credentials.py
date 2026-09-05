@@ -1,4 +1,4 @@
-# tickets/views/settings_action/credentials.py
+﻿# tickets/views/settings_action/credentials.py
 
 """
 Credentials Management - Add, Edit, Toggle, Delete, Download, Bulk Upload
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_credentials(request):
     """
     Manage Department Credentials:
@@ -134,7 +134,7 @@ def settings_credentials(request):
                 
                 change_details = []
                 if old_username != nu:
-                    change_details.append(f"Username: {old_username} → {nu}")
+                    change_details.append(f"Username: {old_username} â†’ {nu}")
                 if np:
                     change_details.append("Password changed")
                 
@@ -223,7 +223,7 @@ def settings_credentials(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def download_credentials(request):
     """
     Download all department credentials as Excel
@@ -320,16 +320,16 @@ def download_credentials(request):
 
 
 # ============================================================
-# ✅ BULK UPLOAD CREDENTIALS - FIXED WITH AJAX HANDLING
+# âœ… BULK UPLOAD CREDENTIALS - FIXED WITH AJAX HANDLING
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def credentials_bulk_upload(request):
     """
     Bulk upload department credentials from Excel/CSV file
     Expected columns: 'Unit Code', 'Department Name', 'Username', 'Password'
     URL: /custom-admin/settings/credentials/bulk-upload/
-    ✅ FIXED: Always returns JSON for AJAX requests
+    âœ… FIXED: Always returns JSON for AJAX requests
     """
     # Check if it's an AJAX request
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -559,10 +559,10 @@ def credentials_bulk_upload(request):
 
 
 # ============================================================
-# ✅ DOWNLOAD BULK UPLOAD TEMPLATE FOR CREDENTIALS
+# âœ… DOWNLOAD BULK UPLOAD TEMPLATE FOR CREDENTIALS
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def credentials_download_template(request):
     """
     Download Excel template for bulk credential upload
@@ -638,7 +638,7 @@ def credentials_download_template(request):
     
     # Note 1 - Instructions
     note_cell1 = ws.cell(row=note_row, column=1)
-    note_cell1.value = "📌 INSTRUCTIONS:"
+    note_cell1.value = "ðŸ“Œ INSTRUCTIONS:"
     note_cell1.font = Font(name='Calibri', size=10, bold=True, color='1F4E79')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=4)
     
@@ -668,14 +668,14 @@ def credentials_download_template(request):
     
     note_row += 2
     note_cell6 = ws.cell(row=note_row, column=1)
-    note_cell6.value = "⚠️ Unit Code and Department Name must exist in the system. Credentials are created as ACTIVE by default."
+    note_cell6.value = "âš ï¸ Unit Code and Department Name must exist in the system. Credentials are created as ACTIVE by default."
     note_cell6.font = Font(name='Calibri', size=9, italic=True, color='FF6B00')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=4)
     
     # Add active units list for reference
     note_row += 2
     note_cell7 = ws.cell(row=note_row, column=1)
-    note_cell7.value = "📋 Active Units in System:"
+    note_cell7.value = "ðŸ“‹ Active Units in System:"
     note_cell7.font = Font(name='Calibri', size=9, bold=True, color='1F4E79')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=4)
     

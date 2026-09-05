@@ -1,4 +1,4 @@
-"""Admin-only full database export."""
+﻿"""Admin-only full database export."""
 
 import json
 from datetime import date, datetime
@@ -27,6 +27,7 @@ BACKUP_MODELS = [
     ticket_models.DepartmentCredential,
     ticket_models.Ticket,
     ticket_models.TicketHistory,
+    ticket_models.TicketReply,
     ticket_models.ReopenAttachment,
     ticket_models.SettingsAuditLog,
     ticket_models.ERPHolderMapping,
@@ -92,7 +93,7 @@ def _write_model_sheet(workbook, model, used_names):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def download_full_backup(request):
     workbook = openpyxl.Workbook()
     workbook.remove(workbook.active)
@@ -111,3 +112,4 @@ def download_full_backup(request):
     )
     workbook.save(response)
     return response
+

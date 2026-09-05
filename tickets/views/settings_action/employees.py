@@ -1,4 +1,4 @@
-# tickets/views/settings_action/employees.py
+﻿# tickets/views/settings_action/employees.py
 
 """
 Employee Management - Add, Edit, Toggle, Delete, Bulk Upload, Downloads
@@ -45,7 +45,7 @@ def safe_str(value):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_employees(request):
     """
     Complete Employee Management Actions:
@@ -79,12 +79,12 @@ def settings_employees(request):
                 messages.error(request, "Employee Name is required.")
                 return redirect('settings_employees_page')
             
-            # ✅ Mobile is OPTIONAL - only validate if provided
+            # âœ… Mobile is OPTIONAL - only validate if provided
             if mob and (not mob.isdigit() or len(mob) != 10):
                 messages.error(request, f'Mobile number must be exactly 10 digits: {mob}')
                 return redirect('settings_employees_page')
             
-            # ✅ Email is OPTIONAL - only validate if provided
+            # âœ… Email is OPTIONAL - only validate if provided
             if email and ('@' not in email or '.' not in email):
                 messages.error(request, f'Invalid email format: {email}')
                 return redirect('settings_employees_page')
@@ -92,7 +92,7 @@ def settings_employees(request):
             # Check for duplicate employee_id (case-insensitive)
             existing_employee = EmployeeMaster.objects.filter(employee_id__iexact=eid).first()
             if existing_employee:
-                messages.error(request, f'❌ Employee ID "{eid}" already exists in the database.')
+                messages.error(request, f'âŒ Employee ID "{eid}" already exists in the database.')
                 return redirect('settings_employees_page')
             
             try:
@@ -106,7 +106,7 @@ def settings_employees(request):
                     is_active=True,
                     can_assign_ticket=can_assign
                 )
-                messages.success(request, f'✅ Employee "{eid}" added successfully.')
+                messages.success(request, f'âœ… Employee "{eid}" added successfully.')
                 
                 log_settings_change(
                     request,
@@ -119,10 +119,10 @@ def settings_employees(request):
                 )
             except IntegrityError as e:
                 logger.error(f"IntegrityError while adding employee {eid}: {str(e)}")
-                messages.error(request, f'❌ Employee ID "{eid}" already exists.')
+                messages.error(request, f'âŒ Employee ID "{eid}" already exists.')
             except Exception as e:
                 logger.error(f"Error adding employee {eid}: {str(e)}")
-                messages.error(request, f'❌ Error adding employee: {str(e)}')
+                messages.error(request, f'âŒ Error adding employee: {str(e)}')
         
         # ========== BULK UPLOAD ==========
         elif action == 'bulk_upload':
@@ -228,12 +228,12 @@ def settings_employees(request):
                         validation_errors.append({'row': row_num, 'message': 'Employee Name is required'})
                         continue
                     
-                    # ✅ Mobile is OPTIONAL - only validate if provided
+                    # âœ… Mobile is OPTIONAL - only validate if provided
                     if mob and (not mob.isdigit() or len(mob) != 10):
                         validation_errors.append({'row': row_num, 'message': f'Mobile number must be 10 digits: {mob}'})
                         continue
                     
-                    # ✅ Email is OPTIONAL - only validate if provided
+                    # âœ… Email is OPTIONAL - only validate if provided
                     if email and ('@' not in email or '.' not in email):
                         validation_errors.append({'row': row_num, 'message': f'Invalid email format: {email}'})
                         continue
@@ -304,12 +304,12 @@ def settings_employees(request):
                             error_count += 1
                             continue
                         
-                        # ✅ Mobile is OPTIONAL - only validate if provided
+                        # âœ… Mobile is OPTIONAL - only validate if provided
                         if mob and (not mob.isdigit() or len(mob) != 10):
                             error_count += 1
                             continue
                         
-                        # ✅ Email is OPTIONAL - only validate if provided
+                        # âœ… Email is OPTIONAL - only validate if provided
                         if email and ('@' not in email or '.' not in email):
                             error_count += 1
                             continue
@@ -409,12 +409,12 @@ def settings_employees(request):
                 messages.error(request, "Employee Name is required.")
                 return redirect('settings_employees_page')
             
-            # ✅ Mobile is OPTIONAL - only validate if provided
+            # âœ… Mobile is OPTIONAL - only validate if provided
             if new_mobile and (not new_mobile.isdigit() or len(new_mobile) != 10):
                 messages.error(request, f'Mobile number must be exactly 10 digits: {new_mobile}')
                 return redirect('settings_employees_page')
             
-            # ✅ Email is OPTIONAL - only validate if provided
+            # âœ… Email is OPTIONAL - only validate if provided
             if new_email and ('@' not in new_email or '.' not in new_email):
                 messages.error(request, f'Invalid email format: {new_email}')
                 return redirect('settings_employees_page')
@@ -423,7 +423,7 @@ def settings_employees(request):
             if new_eid != old_id:
                 existing_employee = EmployeeMaster.objects.filter(employee_id__iexact=new_eid).exclude(pk=emp.pk).first()
                 if existing_employee:
-                    messages.error(request, f'❌ Employee ID "{new_eid}" already exists in the database.')
+                    messages.error(request, f'âŒ Employee ID "{new_eid}" already exists in the database.')
                     return redirect('settings_employees_page')
             
             emp.employee_id = new_eid
@@ -436,23 +436,23 @@ def settings_employees(request):
             
             try: 
                 emp.save()
-                messages.success(request, '✅ Employee updated successfully.')
+                messages.success(request, 'âœ… Employee updated successfully.')
                 
                 change_details = []
                 if old_id != emp.employee_id:
-                    change_details.append(f"ID: {old_id} → {emp.employee_id}")
+                    change_details.append(f"ID: {old_id} â†’ {emp.employee_id}")
                 if old_name != emp.employee_name:
-                    change_details.append(f"Name: {old_name} → {emp.employee_name}")
+                    change_details.append(f"Name: {old_name} â†’ {emp.employee_name}")
                 if old_mobile != emp.mobile:
-                    change_details.append(f"Mobile: {old_mobile or 'None'} → {emp.mobile or 'None'}")
+                    change_details.append(f"Mobile: {old_mobile or 'None'} â†’ {emp.mobile or 'None'}")
                 if old_email != emp.email:
-                    change_details.append(f"Email: {old_email or 'None'} → {emp.email or 'None'}")
+                    change_details.append(f"Email: {old_email or 'None'} â†’ {emp.email or 'None'}")
                 if old_unit != (emp.unit.code if emp.unit else 'None'):
-                    change_details.append(f"Unit: {old_unit} → {emp.unit.code if emp.unit else 'None'}")
+                    change_details.append(f"Unit: {old_unit} â†’ {emp.unit.code if emp.unit else 'None'}")
                 if old_dept != (emp.department.name if emp.department else 'None'):
-                    change_details.append(f"Department: {old_dept} → {emp.department.name if emp.department else 'None'}")
+                    change_details.append(f"Department: {old_dept} â†’ {emp.department.name if emp.department else 'None'}")
                 if old_can_assign != ('Yes' if emp.can_assign_ticket else 'No'):
-                    change_details.append(f"Can Assign: {old_can_assign} → {'Yes' if emp.can_assign_ticket else 'No'}")
+                    change_details.append(f"Can Assign: {old_can_assign} â†’ {'Yes' if emp.can_assign_ticket else 'No'}")
                 
                 log_settings_change(
                     request,
@@ -466,10 +466,10 @@ def settings_employees(request):
                 )
             except IntegrityError as e:
                 logger.error(f"IntegrityError while editing employee: {str(e)}")
-                messages.error(request, '❌ Employee ID already exists.')
+                messages.error(request, 'âŒ Employee ID already exists.')
             except Exception as e:
                 logger.error(f"Error editing employee: {str(e)}")
-                messages.error(request, f'❌ Error updating employee: {str(e)}')
+                messages.error(request, f'âŒ Error updating employee: {str(e)}')
         
         # ========== TOGGLE EMPLOYEE ACTIVE/INACTIVE ==========
         elif action == 'toggle_employee':
@@ -479,7 +479,7 @@ def settings_employees(request):
             emp.save()
             new_status = 'Active' if emp.is_active else 'Inactive'
             
-            messages.success(request, f'✅ Employee {"activated" if emp.is_active else "deactivated"}.')
+            messages.success(request, f'âœ… Employee {"activated" if emp.is_active else "deactivated"}.')
             
             log_settings_change(
                 request,
@@ -501,7 +501,7 @@ def settings_employees(request):
             new_value = 'Yes' if emp.can_assign_ticket else 'No'
             
             status = "enabled" if emp.can_assign_ticket else "disabled"
-            messages.success(request, f'✅ Employee "{emp.employee_id}" assignment {status}.')
+            messages.success(request, f'âœ… Employee "{emp.employee_id}" assignment {status}.')
             
             log_settings_change(
                 request,
@@ -521,7 +521,7 @@ def settings_employees(request):
             ename = emp.employee_name
             
             if emp.is_active:
-                messages.error(request, f'❌ Cannot delete "{eid}" because they are still ACTIVE. Please deactivate the employee first, then try deleting again.')
+                messages.error(request, f'âŒ Cannot delete "{eid}" because they are still ACTIVE. Please deactivate the employee first, then try deleting again.')
                 return redirect('settings_employees_page')
             
             emp_mobile = emp.mobile
@@ -538,13 +538,13 @@ def settings_employees(request):
             )
             
             emp.delete()
-            messages.success(request, f'✅ Employee "{eid}" has been permanently deleted from the database.')
+            messages.success(request, f'âœ… Employee "{eid}" has been permanently deleted from the database.')
     
     return redirect('settings_employees_page')
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def download_employee_list(request):
     """
     Download complete employee list as Excel with all fields
@@ -613,7 +613,7 @@ def download_employee_list(request):
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def download_employee_template(request):
     """
     Download Excel template for bulk employee upload

@@ -140,7 +140,7 @@
                         {% for row in aging_rows %}
                         <tr>
                             <td>
-                                <a class="ticket-link" href="{% url 'admin_ticket_detail' row.ticket.pk %}">
+                                <a class="ticket-link" href="{% url 'escalated_ticket_detail' row.ticket.pk %}">
                                     {{ row.ticket.ticket_number }}
                                 </a>
                             </td>
@@ -158,7 +158,7 @@
                                 </span>
                             </td>
                             <td>
-                                <a class="aging-btn-sm aging-btn-sm-primary" href="{% url 'admin_ticket_detail' row.ticket.pk %}">
+                                <a class="aging-btn-sm aging-btn-sm-primary" href="{% url 'escalated_ticket_detail' row.ticket.pk %}">
                                     <i class="fa-solid fa-eye"></i> View
                                 </a>
                             </td>

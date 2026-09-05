@@ -372,8 +372,8 @@
         }
 
         // Build the "View All" button URL
-        const allTicketsUrl = document.querySelector('[data-unit-head-all-tickets-url]');
-        let baseUrl = allTicketsUrl ? allTicketsUrl.getAttribute('data-unit-head-all-tickets-url') : '/unit-head/tickets/';
+        const allTicketsUrl = document.getElementById('unitHeadAllTicketsUrl');
+        let baseUrl = allTicketsUrl ? allTicketsUrl.getAttribute('data-url') : '/unit-head/tickets/';
 
         if (filterParam && filterValue) {
             viewAllBtn.href = baseUrl + '?' + filterParam + '=' + encodeURIComponent(filterValue);
@@ -458,8 +458,8 @@
 
         statusLabel.textContent = 'Priority: ' + priority;
 
-        const allTicketsUrl = document.querySelector('[data-unit-head-all-tickets-url]');
-        let baseUrl = allTicketsUrl ? allTicketsUrl.getAttribute('data-unit-head-all-tickets-url') : '/unit-head/tickets/';
+        const allTicketsUrl = document.getElementById('unitHeadAllTicketsUrl');
+        let baseUrl = allTicketsUrl ? allTicketsUrl.getAttribute('data-url') : '/unit-head/tickets/';
 
         viewAllBtn.href = baseUrl + '?priority=' + encodeURIComponent(priority);
 
@@ -537,8 +537,8 @@
 
         statusLabel.textContent = 'Department: ' + departmentName;
 
-        const allTicketsUrl = document.querySelector('[data-unit-head-all-tickets-url]');
-        let baseUrl = allTicketsUrl ? allTicketsUrl.getAttribute('data-unit-head-all-tickets-url') : '/unit-head/tickets/';
+        const allTicketsUrl = document.getElementById('unitHeadAllTicketsUrl');
+        let baseUrl = allTicketsUrl ? allTicketsUrl.getAttribute('data-url') : '/unit-head/tickets/';
 
         viewAllBtn.href = baseUrl + '?department=' + encodeURIComponent(departmentName);
 

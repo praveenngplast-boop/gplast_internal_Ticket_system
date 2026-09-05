@@ -29,6 +29,7 @@ from .reports_views import (
     reports,
     download_ticket_excel as admin_download_ticket_excel,
     export_closed_tickets_30_days as admin_export_closed_tickets_30_days,
+    escalated_ticket_detail,
 )
 
 from .employee_views import (
@@ -73,6 +74,7 @@ from .audit_views import (
 )
 from .backup_views import download_full_backup
 from .scheduled_email_views import settings_email_reports
+from .reply_views import ticket_reply
 
 # Import settings action views from the package.
 from .settings_action import (
@@ -168,6 +170,7 @@ __all__ = [
     'admin_download_ticket_excel',
     'admin_export_closed_tickets_30_days',
     'reports',
+    'escalated_ticket_detail',
     'get_notifications',
     'mark_all_notifications_read',
     'mark_notification_read',
@@ -183,6 +186,7 @@ __all__ = [
     'employee_dashboard',
     'create_ticket',
     'employee_all_tickets',
+    'ticket_reply',
     'my_tickets',
     'employee_ticket_detail',
     'ticket_detail',

@@ -1,4 +1,4 @@
-"""Admin views for scheduled ticket email reports."""
+﻿"""Admin views for scheduled ticket email reports."""
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import redirect, render
@@ -9,7 +9,7 @@ from .utils import is_admin
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_email_reports(request):
     schedule, _ = EmailSchedule.objects.get_or_create(id=1)
     selected_frequencies = schedule.frequency if isinstance(schedule.frequency, list) else [schedule.frequency]
@@ -71,3 +71,4 @@ def settings_email_reports(request):
         'additional_email_list': parse_emails(schedule.additional_emails),
     }
     return render(request, 'admin_panel/settings_email_reports.html', context)
+

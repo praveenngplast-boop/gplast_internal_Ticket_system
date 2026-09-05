@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Escalated Ticket {{ ticket.ticket_number }} - GPLAST{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_panel/escalated_ticket_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="escalated-detail-page">
+    <header class="escalated-detail-header">
+        <div>
+            <a class="escalated-back-link" href="{% url 'escalated_aging_report' %}">
+                <i class="fa-solid fa-arrow-left"></i> Back to Escalated Aging
+            </a>
+            <div class="escalated-heading-row">
+                <div>
+                    <span class="escalated-eyebrow"><i class="fa-solid fa-cloud-arrow-up"></i> Escalated Ticket</span>
+                    <h1>{{ ticket.ticket_number }}</h1>
+                    <p>{{ ticket.subject }}</p>
+                </div>
+                <span class="escalated-status-badge">Escalated</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="escalated-detail-grid">
+        <section class="escalated-detail-card escalated-main-card">
+            <div class="escalated-card-heading">
+                <h2>Ticket Information</h2>
+                <span class="escalated-priority priority-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
+            </div>
+            <dl class="escalated-info-grid">
+                <div><dt>Employee</dt><dd>{{ ticket.employee_name }} ({{ ticket.employee_id }})</dd></div>
+                <div><dt>Department</dt><dd>{{ ticket.department.name|default:'-' }}</dd></div>
+                <div><dt>Unit</dt><dd>{{ ticket.unit.full_name|default:'-' }}</dd></div>
+                <div><dt>Screen / Module</dt><dd>{{ ticket.screen_number|default:'-' }}</dd></div>
+                <div class="escalated-info-wide"><dt>Subject</dt><dd>{{ ticket.subject }}</dd></div>
+                <div class="escalated-info-wide"><dt>Description</dt><dd class="preserve-lines">{{ ticket.description }}</dd></div>
+            </dl>
+        </section>
+
+        <aside class="escalated-detail-card escalated-escalation-card">
+            <div class="escalated-card-heading">
+                <h2>Escalation Details</h2>
+                <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <dl class="escalated-info-list">
+                <div><dt>Escalated On</dt><dd>{{ ticket.escalated_at|date:'d M Y, h:i A'|default:'-' }}</dd></div>
+                <div><dt>Current Aging</dt><dd>{{ aging_days }} day{{ aging_days|pluralize }}</dd></div>
+                <div><dt>Vendor Ticket</dt><dd>{{ ticket.vendor_ticket_number|default:'Not assigned' }}</dd></div>
+                <div><dt>Assigned To</dt><dd>{{ ticket.assigned_person|default:'Not assigned' }}</dd></div>
+            </dl>
+        </aside>
+
+        <section class="escalated-detail-card escalated-history-card">
+            <div class="escalated-card-heading">
+                <h2>Audit History</h2>
+                <span class="escalated-count">{{ history|length }}</span>
+            </div>
+            <div class="escalated-history-list">
+                {% for entry in history %}
+                <article class="escalated-history-item">
+                    <div class="escalated-history-dot"></div>
+                    <div>
+                        <strong>{{ entry.action }}</strong>
+                        <time>{{ entry.timestamp|date:'d M Y, H:i' }}</time>
+                        {% if entry.remarks %}<p>{{ entry.remarks }}</p>{% endif %}
+                        <small>By {{ entry.get_performed_by_display }}</small>
+                    </div>
+                </article>
+                {% empty %}
+                <p class="escalated-empty">No audit history available.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="escalated-detail-card escalated-reply-card">
+            {% include 'tickets/_ticket_replies.html' with reply_url=reply_url %}
+        </section>
+    </div>
+</div>
+{% endblock %}

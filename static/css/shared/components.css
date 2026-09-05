@@ -1,0 +1,545 @@
+/* Shared responsive controls for all ticket-system roles. */
+
+:root {
+	--control-min-size: 44px;
+	--content-gap: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+button,
+[role="button"],
+a.btn,
+.btn,
+.sidebar-link {
+	min-height: var(--control-min-size);
+}
+
+.dashboard-container,
+.page-container,
+.content-container {
+	width: min(100%, 1400px);
+	box-sizing: border-box;
+}
+
+.table-responsive {
+	width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+}
+
+.table-responsive > table {
+	min-width: 700px;
+}
+
+.modal-dialog {
+	width: auto;
+	max-width: min(960px, calc(100vw - 2rem));
+	margin: 1rem auto;
+}
+
+.modal-content {
+	max-height: calc(100vh - 2rem);
+	overflow: hidden;
+}
+
+.modal-header .btn-close,
+#confirmModal .btn-close {
+	flex: 0 0 auto;
+	width: var(--control-min-size);
+	height: var(--control-min-size);
+	margin: 0 0 0 auto;
+	padding: 0.75rem;
+}
+
+#confirmModal .modal-content {
+	width: 100%;
+	max-width: 32rem;
+	margin-inline: auto;
+}
+
+#confirmModal .modal-footer {
+	justify-content: flex-end;
+}
+
+.modal-body {
+	overflow: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+.ticket-modal-state {
+	display: grid;
+	justify-items: center;
+	gap: 0.65rem;
+	padding: 2.5rem 1rem;
+	color: var(--text-muted, #8A9AB8);
+	text-align: center;
+}
+
+.ticket-modal-state i {
+	color: var(--brand-orange, #FF6B00);
+	font-size: 2rem;
+}
+
+.ticket-modal-state-error {
+	color: var(--status-critical, #EF4444);
+}
+
+.ticket-replies-panel {
+	display: grid;
+	gap: 1rem;
+	margin-top: 1.25rem;
+	padding: clamp(1rem, 2vw, 1.5rem);
+	border: 1px solid var(--border-color, #E8EDF5);
+	border-radius: 14px;
+	background: var(--bg-card, #FFFFFF);
+}
+
+.ticket-replies-header,
+.ticket-reply-meta,
+.ticket-reply-form-row {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	flex-wrap: wrap;
+}
+
+.ticket-replies-header {
+	justify-content: space-between;
+}
+
+.ticket-section-eyebrow,
+.ticket-reply-role,
+.ticket-reply-meta time {
+	color: var(--text-muted, #8A9AB8);
+	font-size: 0.72rem;
+}
+
+.ticket-replies-count {
+	min-width: 2rem;
+	padding: 0.25rem 0.6rem;
+	border-radius: 999px;
+	background: rgba(255, 107, 0, 0.1);
+	color: var(--brand-orange, #FF6B00);
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-align: center;
+}
+
+.ticket-replies-list {
+	display: grid;
+	gap: 0.75rem;
+	max-height: 28rem;
+	overflow-y: auto;
+}
+
+.ticket-reply {
+	padding: 0.85rem 1rem;
+	border-left: 3px solid var(--border-color, #E8EDF5);
+	border-radius: 8px;
+	background: var(--bg-secondary, #F8FAFF);
+}
+
+.ticket-reply-own {
+	border-left-color: var(--brand-orange, #FF6B00);
+}
+
+.ticket-reply-meta strong {
+	color: var(--text-primary, #1A2A6C);
+	font-size: 0.8rem;
+}
+
+.ticket-reply-body {
+	margin-top: 0.45rem;
+	color: var(--text-secondary, #4A5A7A);
+	font-size: 0.84rem;
+	line-height: 1.55;
+	overflow-wrap: anywhere;
+}
+
+.ticket-reply-attachment {
+	display: inline-flex;
+	max-width: 100%;
+	margin-top: 0.65rem;
+	color: var(--brand-orange, #FF6B00);
+	font-size: 0.75rem;
+	overflow-wrap: anywhere;
+}
+
+.ticket-replies-empty {
+	padding: 1.5rem;
+	color: var(--text-muted, #8A9AB8);
+	text-align: center;
+}
+
+.ticket-replies-empty i {
+	display: block;
+	margin-bottom: 0.5rem;
+	font-size: 1.75rem;
+}
+
+.ticket-reply-form {
+	display: grid;
+	gap: 0.65rem;
+	padding-top: 0.5rem;
+	border-top: 1px solid var(--border-color, #E8EDF5);
+}
+
+.ticket-reply-form label {
+	color: var(--text-secondary, #4A5A7A);
+	font-size: 0.78rem;
+	font-weight: 700;
+}
+
+.ticket-reply-form-row {
+	align-items: end;
+}
+
+.ticket-reply-attachment-field {
+	flex: 1 1 16rem;
+}
+
+.ticket-reply-attachment-field input {
+	width: 100%;
+}
+
+.ticket-reply-submit {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+	flex: 0 0 auto;
+	min-width: 9.5rem;
+	min-height: 44px;
+	padding: 0.65rem 1.15rem !important;
+	border: 0 !important;
+	border-radius: 999px !important;
+	background: var(--brand-gradient, linear-gradient(135deg, #FF6B00, #FF8C38)) !important;
+	color: #FFFFFF !important;
+	font: inherit;
+	font-size: 0.82rem;
+	font-weight: 700;
+	line-height: 1.2;
+	text-decoration: none;
+	cursor: pointer;
+	box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
+	transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.ticket-reply-submit:hover {
+	color: #FFFFFF !important;
+	filter: brightness(1.05);
+	transform: translateY(-1px);
+	box-shadow: 0 6px 16px rgba(255, 107, 0, 0.28);
+}
+
+.ticket-reply-submit:active {
+	transform: translateY(0);
+}
+
+.ticket-reply-submit:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	transform: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+	outline: 3px solid rgba(255, 107, 0, 0.45);
+	outline-offset: 2px;
+}
+
+.modal-footer,
+.dashboard-header,
+.glass-header,
+.panel-header,
+.card-header {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.modal-footer > *,
+.dashboard-header > *,
+.glass-header > *:last-child,
+.panel-header > *:last-child,
+.card-header > *:last-child {
+	margin-left: auto;
+}
+
+/* Dashboard drill-downs sit outside the dashboard container, so these rules
+   intentionally win over role-specific modal height rules. */
+#drillDownModal .modal-dialog,
+#adminDrillDownModal .modal-dialog {
+	display: flex;
+	width: auto;
+	max-width: min(1100px, calc(100vw - 2rem));
+	max-height: calc(100vh - 2rem);
+	margin: 1rem auto;
+}
+
+#drillDownModal .modal-content,
+#adminDrillDownModal .modal-content {
+	display: flex;
+	min-height: 0;
+	width: 100%;
+	max-height: calc(100vh - 2rem);
+}
+
+#drillDownModal .modal-body,
+#adminDrillDownModal .modal-body {
+	min-height: 0;
+	max-height: none !important;
+	overflow: auto !important;
+	padding: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+#drillDownModal .modal-body .table-responsive,
+#adminDrillDownModal .modal-body .table-responsive {
+	max-width: 100%;
+	margin: 0;
+}
+
+.dashboard-drilldown-modal .modal-body .table {
+	min-width: 700px;
+	margin-bottom: 0;
+	color: var(--text-primary, #1A2A6C) !important;
+}
+
+.dashboard-drilldown-modal .modal-body .table th,
+.dashboard-drilldown-modal .modal-body .table td {
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.dashboard-drilldown-modal .modal-body .badge-custom,
+.dashboard-drilldown-modal .modal-body .badge-priority {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	min-width: 4.5rem;
+	padding: 0.25rem 0.55rem !important;
+	border-radius: 999px !important;
+	font-size: 0.68rem !important;
+	font-weight: 700 !important;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+
+.dashboard-drilldown-modal .modal-body .badge-status-open {
+	background: var(--status-open, #22C55E) !important;
+	color: #FFFFFF !important;
+}
+
+.dashboard-drilldown-modal .modal-body .badge-status-assigned {
+	background: var(--status-assigned, #3B82F6) !important;
+	color: #FFFFFF !important;
+}
+
+.dashboard-drilldown-modal .modal-body .badge-status-hold {
+	background: var(--status-hold, #F59E0B) !important;
+	color: #1A1A2E !important;
+}
+
+.dashboard-drilldown-modal .modal-body .badge-status-escalated {
+	background: var(--status-escalated, #8B5CF6) !important;
+	color: #FFFFFF !important;
+}
+
+.dashboard-drilldown-modal .modal-body .badge-status-closed {
+	background: var(--status-closed, #94A3B8) !important;
+	color: #FFFFFF !important;
+}
+
+.dashboard-drilldown-modal .modal-body .btn-view {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	gap: 0.3rem;
+	min-width: 4.5rem;
+	min-height: 36px;
+	padding: 0.4rem 0.7rem !important;
+	border: 1px solid var(--brand-orange, #FF6B00) !important;
+	border-radius: 999px !important;
+	background: rgba(255, 107, 0, 0.08) !important;
+	color: var(--brand-orange, #FF6B00) !important;
+	font-size: 0.72rem !important;
+	font-weight: 700;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.dashboard-drilldown-modal .modal-body .btn-view:hover {
+	background: var(--brand-orange, #FF6B00) !important;
+	color: #FFFFFF !important;
+}
+
+.dashboard-drilldown-modal .btn-close-custom,
+.dashboard-drilldown-modal .btn-view-all {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+	min-height: 44px;
+	padding: 0.55rem 1rem !important;
+	border-radius: 999px !important;
+	font-size: 0.78rem !important;
+	font-weight: 700 !important;
+	line-height: 1.2;
+	white-space: normal;
+}
+
+#drillDownModal .modal-footer,
+#adminDrillDownModal .modal-footer {
+	justify-content: flex-end;
+	flex: 0 0 auto;
+}
+
+#drillDownModal .modal-footer > *,
+#adminDrillDownModal .modal-footer > * {
+	margin-left: 0;
+}
+
+#drillDownModal .modal-footer > :first-child,
+#adminDrillDownModal .modal-footer > :first-child {
+	margin-right: auto;
+}
+
+.ticket-replies-panel {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+}
+
+.ticket-reply-form textarea,
+.ticket-reply-form input[type="file"] {
+	box-sizing: border-box;
+	max-width: 100%;
+}
+
+@media (max-width: 767.98px) {
+	.dashboard-container,
+	.page-container,
+	.content-container {
+		padding-inline: 0.75rem;
+	}
+
+	.dashboard-header {
+		padding: 1rem;
+		align-items: stretch;
+	}
+
+	.dashboard-header > *,
+	.glass-header > *,
+	.panel-header > *,
+	.card-header > *,
+	.modal-footer > * {
+		margin-left: 0;
+		width: 100%;
+	}
+
+	.dashboard-header .btn,
+	.modal-footer .btn,
+	.modal-footer a {
+		justify-content: center;
+	}
+
+	.modal-dialog {
+		max-width: calc(100vw - 1rem);
+		margin: 0.5rem auto;
+	}
+
+	#drillDownModal .modal-dialog,
+	#adminDrillDownModal .modal-dialog {
+		max-width: calc(100vw - 1rem);
+		max-height: calc(100vh - 1rem);
+		margin: 0.5rem auto;
+	}
+
+	#drillDownModal .modal-content,
+	#adminDrillDownModal .modal-content {
+		max-height: calc(100vh - 1rem);
+	}
+
+	.modal-content {
+		max-height: calc(100vh - 1rem);
+	}
+
+	#confirmModal .modal-footer {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	#confirmModal .modal-footer .btn {
+		width: 100%;
+	}
+
+	#drillDownModal .modal-footer,
+	#adminDrillDownModal .modal-footer {
+		align-items: stretch;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	#drillDownModal .modal-footer > *,
+	#adminDrillDownModal .modal-footer > * {
+		width: 100%;
+		margin-left: 0;
+		justify-content: center;
+	}
+
+	.dashboard-drilldown-modal .modal-body .table {
+		min-width: 640px;
+	}
+
+	.dashboard-drilldown-modal .modal-body .badge-custom,
+	.dashboard-drilldown-modal .modal-body .badge-priority,
+	.dashboard-drilldown-modal .modal-body .btn-view {
+		font-size: 0.62rem !important;
+	}
+
+	.modal-body {
+		padding: 0.75rem;
+	}
+
+	.table-responsive > table {
+		min-width: 640px;
+	}
+
+	.kpi-card {
+		min-height: 112px;
+	}
+
+	.chart-wrapper {
+		min-height: 240px;
+	}
+}
+
+@media (max-width: 479.98px) {
+	.dashboard-container,
+	.page-container,
+	.content-container {
+		padding-inline: 0.5rem;
+	}
+
+	.btn,
+	.btn-primary-custom,
+	.btn-outline-custom,
+	.btn-view-all {
+		max-width: 100%;
+		white-space: normal;
+	}
+
+	.ticket-reply-form-row {
+		align-items: stretch;
+	}
+
+	.ticket-reply-submit {
+		width: 100%;
+		min-width: 0;
+	}
+}

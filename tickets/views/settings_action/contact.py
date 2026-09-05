@@ -1,4 +1,4 @@
-# tickets/views/settings_actions/contact.py
+﻿# tickets/views/settings_actions/contact.py
 
 """
 Contact Settings - Helpdesk Contact Information
@@ -13,7 +13,7 @@ from ..utils import is_admin
 
 
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_contact(request):
     """
     Update Helpdesk Contact information
@@ -40,12 +40,12 @@ def settings_contact(request):
         if admin_name and admin_name != contact_obj.admin_name:
             contact_obj.admin_name = admin_name
             changed = True
-            change_details.append(f"Name: {old_name} → {admin_name}")
+            change_details.append(f"Name: {old_name} â†’ {admin_name}")
         
         if admin_email and admin_email != contact_obj.admin_email:
             contact_obj.admin_email = admin_email
             changed = True
-            change_details.append(f"Email: {old_email} → {admin_email}")
+            change_details.append(f"Email: {old_email} â†’ {admin_email}")
         
         if changed:
             contact_obj.save()

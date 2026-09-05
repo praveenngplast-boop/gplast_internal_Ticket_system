@@ -1,4 +1,4 @@
-# tickets/views/settings_action/unit_heads.py
+﻿# tickets/views/settings_action/unit_heads.py
 
 """
 Unit Head Management - Add, Edit, Toggle, Delete
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # UNIT HEAD MANAGEMENT PAGE (GET)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_unit_heads_page(request):
     """
     Display Unit Head management page with all unit heads
@@ -62,7 +62,7 @@ def settings_unit_heads_page(request):
 # UNIT HEAD MANAGEMENT - POST ACTIONS
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_unit_heads(request):
     """
     Handle Unit Head management POST actions:
@@ -78,7 +78,7 @@ def settings_unit_heads(request):
     action = request.POST.get('action')
     
     # ============================================================
-    # ADD UNIT HEAD - ✅ Auto-create Employee
+    # ADD UNIT HEAD - âœ… Auto-create Employee
     # ============================================================
     if action == 'add_unit_head':
         form = UnitHeadForm(request.POST)
@@ -88,7 +88,7 @@ def settings_unit_heads(request):
                 with transaction.atomic():
                     unit_head = form.save()
                     
-                    # ✅ CREATE EMPLOYEE MASTER RECORD
+                    # âœ… CREATE EMPLOYEE MASTER RECORD
                     employee_id = unit_head.user.username.upper()
                     
                     # Check if employee already exists with this ID
@@ -119,7 +119,7 @@ def settings_unit_heads(request):
                     
                     messages.success(
                         request, 
-                        f'✅ Unit Head "{unit_head.name}" added successfully! '
+                        f'âœ… Unit Head "{unit_head.name}" added successfully! '
                         f'User "{unit_head.user.username}" created with password. '
                         f'{"Employee" if employee_created else "Employee"} record updated.'
                     )
@@ -136,23 +136,23 @@ def settings_unit_heads(request):
                     
             except IntegrityError as e:
                 logger.error(f"IntegrityError while adding Unit Head: {str(e)}")
-                messages.error(request, f'❌ Database error: {str(e)}')
+                messages.error(request, f'âŒ Database error: {str(e)}')
             except Exception as e:
                 logger.error(f"Error adding Unit Head: {str(e)}")
-                messages.error(request, f'❌ Error adding Unit Head: {str(e)}')
+                messages.error(request, f'âŒ Error adding Unit Head: {str(e)}')
         else:
             # Display form errors
             for field, errors in form.errors.items():
                 for error in errors:
                     if field == '__all__':
-                        messages.error(request, f'❌ {error}')
+                        messages.error(request, f'âŒ {error}')
                     else:
-                        messages.error(request, f'❌ {field.replace("_", " ").title()}: {error}')
+                        messages.error(request, f'âŒ {field.replace("_", " ").title()}: {error}')
         
         return redirect('settings_unit_heads_page')
     
     # ============================================================
-    # EDIT UNIT HEAD - ✅ Update Employee
+    # EDIT UNIT HEAD - âœ… Update Employee
     # ============================================================
     elif action == 'edit_unit_head':
         unit_head_id = request.POST.get('unit_head_id')
@@ -172,7 +172,7 @@ def settings_unit_heads(request):
                 with transaction.atomic():
                     unit_head = form.save()
                     
-                    # ✅ UPDATE EMPLOYEE MASTER RECORD
+                    # âœ… UPDATE EMPLOYEE MASTER RECORD
                     employee_id = unit_head.user.username.upper()
                     employee = EmployeeMaster.objects.filter(employee_id=employee_id).first()
                     
@@ -199,19 +199,19 @@ def settings_unit_heads(request):
                     # Track changes for audit
                     changes = []
                     if old_name != unit_head.name:
-                        changes.append(f"Name: {old_name} → {unit_head.name}")
+                        changes.append(f"Name: {old_name} â†’ {unit_head.name}")
                     if old_email != unit_head.email:
-                        changes.append(f"Email: {old_email} → {unit_head.email}")
+                        changes.append(f"Email: {old_email} â†’ {unit_head.email}")
                     if old_unit != unit_head.unit:
-                        changes.append(f"Unit: {old_unit.code if old_unit else 'None'} → {unit_head.unit.code if unit_head.unit else 'None'}")
+                        changes.append(f"Unit: {old_unit.code if old_unit else 'None'} â†’ {unit_head.unit.code if unit_head.unit else 'None'}")
                     if old_is_active != unit_head.is_active:
-                        changes.append(f"Status: {'Active' if old_is_active else 'Inactive'} → {'Active' if unit_head.is_active else 'Inactive'}")
+                        changes.append(f"Status: {'Active' if old_is_active else 'Inactive'} â†’ {'Active' if unit_head.is_active else 'Inactive'}")
                     if old_username != unit_head.user.username:
-                        changes.append(f"Username: {old_username} → {unit_head.user.username}")
+                        changes.append(f"Username: {old_username} â†’ {unit_head.user.username}")
                     
                     messages.success(
                         request, 
-                        f'✅ Unit Head "{unit_head.name}" updated successfully! Employee record also updated.'
+                        f'âœ… Unit Head "{unit_head.name}" updated successfully! Employee record also updated.'
                     )
                     
                     log_settings_change(
@@ -227,23 +227,23 @@ def settings_unit_heads(request):
                     
             except IntegrityError as e:
                 logger.error(f"IntegrityError while editing Unit Head: {str(e)}")
-                messages.error(request, f'❌ Database error: {str(e)}')
+                messages.error(request, f'âŒ Database error: {str(e)}')
             except Exception as e:
                 logger.error(f"Error editing Unit Head: {str(e)}")
-                messages.error(request, f'❌ Error editing Unit Head: {str(e)}')
+                messages.error(request, f'âŒ Error editing Unit Head: {str(e)}')
         else:
             # Display form errors
             for field, errors in form.errors.items():
                 for error in errors:
                     if field == '__all__':
-                        messages.error(request, f'❌ {error}')
+                        messages.error(request, f'âŒ {error}')
                     else:
-                        messages.error(request, f'❌ {field.replace("_", " ").title()}: {error}')
+                        messages.error(request, f'âŒ {field.replace("_", " ").title()}: {error}')
         
         return redirect('settings_unit_heads_page')
     
     # ============================================================
-    # TOGGLE UNIT HEAD ACTIVE/INACTIVE - ✅ Toggle Employee
+    # TOGGLE UNIT HEAD ACTIVE/INACTIVE - âœ… Toggle Employee
     # ============================================================
     elif action == 'toggle_unit_head':
         unit_head_id = request.POST.get('unit_head_id')
@@ -260,7 +260,7 @@ def settings_unit_heads(request):
                 unit_head.user.is_active = unit_head.is_active
                 unit_head.user.save()
             
-            # ✅ TOGGLE EMPLOYEE MASTER RECORD
+            # âœ… TOGGLE EMPLOYEE MASTER RECORD
             employee_id = unit_head.user.username.upper()
             employee = EmployeeMaster.objects.filter(employee_id=employee_id).first()
             if employee:
@@ -271,7 +271,7 @@ def settings_unit_heads(request):
         
         messages.success(
             request, 
-            f'✅ Unit Head "{unit_head.name}" {"activated" if unit_head.is_active else "deactivated"}. '
+            f'âœ… Unit Head "{unit_head.name}" {"activated" if unit_head.is_active else "deactivated"}. '
             f'Employee record also {"activated" if unit_head.is_active else "deactivated"}.'
         )
         
@@ -289,7 +289,7 @@ def settings_unit_heads(request):
         return redirect('settings_unit_heads_page')
     
     # ============================================================
-    # DELETE UNIT HEAD - ✅ Delete Employee
+    # DELETE UNIT HEAD - âœ… Delete Employee
     # ============================================================
     elif action == 'delete_unit_head':
         unit_head_id = request.POST.get('unit_head_id')
@@ -306,7 +306,7 @@ def settings_unit_heads(request):
         if unit_head.is_active:
             messages.error(
                 request, 
-                f'❌ Cannot delete "{name}" because they are still ACTIVE. '
+                f'âŒ Cannot delete "{name}" because they are still ACTIVE. '
                 f'Please deactivate the Unit Head first, then try deleting again.'
             )
             return redirect('settings_unit_heads_page')
@@ -316,7 +316,7 @@ def settings_unit_heads(request):
                 # Store user reference before deleting unit head
                 user = unit_head.user
                 
-                # ✅ DELETE EMPLOYEE MASTER RECORD
+                # âœ… DELETE EMPLOYEE MASTER RECORD
                 if employee_id:
                     employee = EmployeeMaster.objects.filter(employee_id=employee_id).first()
                     if employee:
@@ -333,7 +333,7 @@ def settings_unit_heads(request):
                 
                 messages.success(
                     request, 
-                    f'✅ Unit Head "{name}" has been permanently deleted. Employee record also deleted.'
+                    f'âœ… Unit Head "{name}" has been permanently deleted. Employee record also deleted.'
                 )
                 
                 log_settings_change(
@@ -348,7 +348,7 @@ def settings_unit_heads(request):
                 
         except Exception as e:
             logger.error(f"Error deleting Unit Head: {str(e)}")
-            messages.error(request, f'❌ Error deleting Unit Head: {str(e)}')
+            messages.error(request, f'âŒ Error deleting Unit Head: {str(e)}')
         
         return redirect('settings_unit_heads_page')
     
@@ -421,5 +421,5 @@ def settings_unit_heads(request):
     # INVALID ACTION
     # ============================================================
     else:
-        messages.error(request, f'❌ Invalid action: {action}')
+        messages.error(request, f'âŒ Invalid action: {action}')
         return redirect('settings_unit_heads_page')

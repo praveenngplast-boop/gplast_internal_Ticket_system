@@ -1,4 +1,4 @@
-# tickets/views/settings_actions/screen_master.py
+﻿# tickets/views/settings_actions/screen_master.py
 
 """
 Screen Master - Add, Edit, Delete, Download Excel, Download Template, Bulk Upload
@@ -25,7 +25,7 @@ DEFAULT_SCREEN_TYPE = 'ALL'
 # SCREEN MASTER - ADD
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_master_add(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
@@ -39,7 +39,7 @@ def screen_master_add(request):
     if not screen_code:
         return JsonResponse({'success': False, 'message': 'Screen Code is required'})
 
-    # ✅ If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
+    # âœ… If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
     valid_types = ['ALL', 'ENTRY', 'CONFIGURATION', 'QUERY']
     if not screen_type or screen_type not in valid_types:
         screen_type = DEFAULT_SCREEN_TYPE
@@ -82,7 +82,7 @@ def screen_master_add(request):
 # SCREEN MASTER - EDIT
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_master_edit(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
@@ -99,7 +99,7 @@ def screen_master_edit(request):
     if not screen_code:
         return JsonResponse({'success': False, 'message': 'Screen Code is required'})
 
-    # ✅ If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
+    # âœ… If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
     valid_types = ['ALL', 'ENTRY', 'CONFIGURATION', 'QUERY']
     if not screen_type or screen_type not in valid_types:
         screen_type = DEFAULT_SCREEN_TYPE
@@ -144,7 +144,7 @@ def screen_master_edit(request):
 # SCREEN MASTER - DELETE
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_master_delete(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
@@ -177,7 +177,7 @@ def screen_master_delete(request):
 # SCREEN MASTER - DOWNLOAD EXCEL
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_master_download_excel(request):
     screens = ScreenMaster.objects.all().order_by('screen_name')
 
@@ -249,7 +249,7 @@ def screen_master_download_excel(request):
 # SCREEN MASTER - DOWNLOAD TEMPLATE
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_master_download_template(request):
     """
     Download Excel template for bulk screen upload
@@ -314,7 +314,7 @@ def screen_master_download_template(request):
 # SCREEN MASTER - BULK UPLOAD
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_master_bulk_upload(request):
     """
     Bulk upload screens from Excel
@@ -386,7 +386,7 @@ def screen_master_bulk_upload(request):
                 skipped_count += 1
                 continue
             
-            # ✅ If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
+            # âœ… If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
             if not screen_type or screen_type not in valid_types:
                 screen_type = DEFAULT_SCREEN_TYPE
             

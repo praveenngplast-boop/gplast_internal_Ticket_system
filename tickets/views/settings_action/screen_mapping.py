@@ -1,4 +1,4 @@
-# tickets/views/settings_action/screen_mapping.py
+﻿# tickets/views/settings_action/screen_mapping.py
 
 """
 Screen Mapping - Add, Remove, Delete ERP, Export Excel, Page View, AJAX, Bulk Upload
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 # SCREEN MAPPING - ADD (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_mapping_add(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
@@ -45,7 +45,7 @@ def screen_mapping_add(request):
         return JsonResponse({'success': False, 'message': 'Screen not found'})
 
     if ScreenMapping.objects.filter(screen=screen, erp_user_id=erp_user_id).exists():
-        return JsonResponse({'success': False, 'message': f'Mapping already exists: {screen.screen_code} → ERP {erp_user_id}'})
+        return JsonResponse({'success': False, 'message': f'Mapping already exists: {screen.screen_code} â†’ ERP {erp_user_id}'})
 
     try:
         mapping = ScreenMapping.objects.create(
@@ -53,7 +53,7 @@ def screen_mapping_add(request):
         )
         log_settings_change(
             request, 'CREATE', 'SCREEN',
-            f'{screen.screen_code} → ERP {erp_user_id}',
+            f'{screen.screen_code} â†’ ERP {erp_user_id}',
             new_value=f'Screen: {screen.screen_code}, ERP ID: {erp_user_id}',
             change_summary=f'Mapped screen {screen.screen_code} to ERP {erp_user_id}'
         )
@@ -81,7 +81,7 @@ def screen_mapping_add(request):
 # SCREEN MAPPING - REMOVE (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_mapping_remove(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
@@ -101,7 +101,7 @@ def screen_mapping_remove(request):
 
     log_settings_change(
         request, 'DELETE', 'SCREEN',
-        f'{screen_code} → ERP {erp_user_id}',
+        f'{screen_code} â†’ ERP {erp_user_id}',
         old_value=f'Screen: {screen_code}, ERP ID: {erp_user_id}',
         change_summary=f'Removed screen mapping: {screen_code} from ERP {erp_user_id}'
     )
@@ -112,7 +112,7 @@ def screen_mapping_remove(request):
 # SCREEN MAPPING - DELETE ALL FOR ERP ID (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_mapping_delete_erp(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
@@ -142,7 +142,7 @@ def screen_mapping_delete_erp(request):
 # SCREEN MAPPING - EXPORT EXCEL
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_mapping_export_excel(request):
     import openpyxl
     from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -202,7 +202,7 @@ def screen_mapping_export_excel(request):
         cell.border = thin_border
     ws.row_dimensions[3].height = 25
 
-    # Build ERP→Employee lookup
+    # Build ERPâ†’Employee lookup
     all_erp_ids = mappings.values_list('erp_user_id', flat=True).distinct()
     erp_emp_map = {}
     for erp_id in all_erp_ids:
@@ -233,7 +233,7 @@ def screen_mapping_export_excel(request):
 # SCREEN MAPPING PAGE VIEW
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_screen_mapping_page(request):
     """
     Screen Mapping Settings Page - Compact Table View with Modal
@@ -333,10 +333,10 @@ def ajax_get_screens_for_erp(request):
 
 
 # ============================================================
-# ✅ NEW: SCREEN MAPPING - BULK UPLOAD (AJAX)
+# âœ… NEW: SCREEN MAPPING - BULK UPLOAD (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_mapping_bulk_upload(request):
     """
     Bulk upload screen mappings from Excel/CSV
@@ -428,7 +428,7 @@ def screen_mapping_bulk_upload(request):
             
             # Check if mapping already exists
             if (erp_id, screen.id) in existing_mappings:
-                errors.append(f'Row {row_num}: Mapping already exists for ERP "{erp_id}" → Screen "{screen_code}"')
+                errors.append(f'Row {row_num}: Mapping already exists for ERP "{erp_id}" â†’ Screen "{screen_code}"')
                 skipped_count += 1
                 continue
             
@@ -440,7 +440,7 @@ def screen_mapping_bulk_upload(request):
                     created_by=request.user.username
                 )
                 added_count += 1
-                added_mappings.append(f'{erp_id} → {screen_code}')
+                added_mappings.append(f'{erp_id} â†’ {screen_code}')
                 # Add to existing mappings set
                 existing_mappings.add((erp_id, screen.id))
             except Exception as e:
@@ -478,10 +478,10 @@ def screen_mapping_bulk_upload(request):
 
 
 # ============================================================
-# ✅ NEW: SCREEN MAPPING - DOWNLOAD BULK UPLOAD TEMPLATE
+# âœ… NEW: SCREEN MAPPING - DOWNLOAD BULK UPLOAD TEMPLATE
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def screen_mapping_download_template(request):
     """
     Download Excel template for bulk screen mapping upload
@@ -527,13 +527,13 @@ def screen_mapping_download_template(request):
     # Notes
     note_row = len(samples) + 3
     note_cell = ws.cell(row=note_row, column=1)
-    note_cell.value = "📌 Add your screen mappings below. One per row."
+    note_cell.value = "ðŸ“Œ Add your screen mappings below. One per row."
     note_cell.font = Font(name='Calibri', size=10, italic=True, color='FF0000')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=2)
     
     note_row2 = len(samples) + 4
     note_cell2 = ws.cell(row=note_row2, column=1)
-    note_cell2.value = "⚠️ ERP User ID must exist in the system. Screen Code must exist in Screen Master."
+    note_cell2.value = "âš ï¸ ERP User ID must exist in the system. Screen Code must exist in Screen Master."
     note_cell2.font = Font(name='Calibri', size=10, italic=True, color='FF6B00')
     ws.merge_cells(start_row=note_row2, start_column=1, end_row=note_row2, end_column=2)
     

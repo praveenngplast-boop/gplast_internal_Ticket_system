@@ -360,6 +360,8 @@
             </div>
         </div>
 
+        {% include 'tickets/_ticket_replies.html' with reply_url=employee_reply_url %}
+
         <!-- ===== REOPEN SECTION ===== -->
         {% if ticket.status == 'Closed' %}
             <div class="col-12">

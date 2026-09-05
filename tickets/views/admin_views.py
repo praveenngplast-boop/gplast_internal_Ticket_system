@@ -5,6 +5,7 @@ Admin Views - Dashboard, Create Ticket, All Tickets, Ticket Detail
 (Reports views moved to reports_views.py)
 """
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -26,9 +27,9 @@ import json
 from tickets.models import (
     Unit, Department, Ticket, TicketHistory, EmployeeMaster,
     AdminContact, AdminNotificationEmail, SettingsAuditLog, ScreenMaster,
-    ERPHolderMapping, ReopenAttachment, UnitHead
+    ERPHolderMapping, ReopenAttachment, UnitHead, TicketReply
 )
-from tickets.forms import AdminTicketForm, CloseTicketForm
+from tickets.forms import AdminTicketForm, CloseTicketForm, TicketReplyForm
 from tickets.utils import send_ticket_email, validate_attachment
 
 from .utils import (
@@ -462,6 +463,7 @@ def ticket_detail_admin(request, pk):
         logger.info(f"Ticket {ticket.ticket_number} marked as viewed by {request.user.username}")
     
     history = ticket.history.all().order_by('timestamp')
+    replies = ticket.replies.select_related('author').all()
     can_reopen = False
     reopen_time_left = None
     reopen_deadline = None
@@ -632,6 +634,10 @@ def ticket_detail_admin(request, pk):
                         'close_form': close_form,
                         'erp_id': erp_id,
                         'screen_object': screen_object,
+                        'replies': replies,
+                        'reply_form': TicketReplyForm(),
+                        'can_reply': True,
+                        'admin_reply_url': reverse('admin_ticket_reply', args=[ticket.id]),
                     }
                     return render(request, 'admin_panel/ticket_detail.html', context)
                 
@@ -737,6 +743,10 @@ def ticket_detail_admin(request, pk):
     context = {
         'ticket': ticket,
         'history': history,
+        'replies': replies,
+        'reply_form': TicketReplyForm(),
+        'can_reply': True,
+        'admin_reply_url': reverse('admin_ticket_reply', args=[ticket.id]),
         'employees': employees,
         'attachments': attachments,
         'can_reopen': can_reopen,

@@ -1,4 +1,4 @@
-# tickets/views/settings_views.py
+﻿# tickets/views/settings_views.py
 
 """
 Settings Views (GET) - All settings page views
@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 # SETTINGS DASHBOARD
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_page(request):
     """
     Settings dashboard/index page with navigation cards
@@ -61,7 +61,7 @@ def settings_page(request):
 # UNITS & DEPARTMENTS
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_units_departments(request):
     """
     Manage Units and Departments
@@ -80,7 +80,7 @@ def settings_units_departments(request):
 # COMMUNICATION SETTINGS
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_communication(request):
     """
     Manage Helpdesk Contact and Notification Emails
@@ -108,7 +108,7 @@ def settings_communication(request):
 # EMPLOYEE MANAGEMENT
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_employees_page(request):
     """
     Complete employee management with Can Assign toggle
@@ -128,7 +128,7 @@ def settings_employees_page(request):
 # DEPARTMENT CREDENTIALS
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_credentials_page(request):
     """
     Manage department credentials
@@ -163,7 +163,7 @@ def settings_credentials_page(request):
 # DEPARTMENT-WISE EMPLOYEE VIEW
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_dept_employees(request):
     """
     View employees organized by department (tree view)
@@ -209,7 +209,7 @@ def settings_dept_employees(request):
 # UNIT HEAD MANAGEMENT
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_unit_heads_page(request):
     """
     Manage Unit Heads - View all unit heads with their user accounts
@@ -247,7 +247,7 @@ def settings_unit_heads_page(request):
 # SETTINGS AUDIT LOG
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_audit_log(request):
     """
     View settings audit logs with filters
@@ -312,7 +312,7 @@ def settings_audit_log(request):
 # SETTINGS AUDIT LOG - EXCEL DOWNLOAD
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def download_audit_log_excel(request):
     """
     Export filtered audit logs to Excel
@@ -473,7 +473,7 @@ def download_audit_log_excel(request):
 # SCREEN MASTER SETTINGS PAGE
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_screen_master(request):
     """
     Screen Master Management Page
@@ -491,7 +491,7 @@ def settings_screen_master(request):
 # SCREEN MAPPING SETTINGS PAGE
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def settings_screen_mapping_page(request):
     """
     Screen Mapping Management Page
@@ -513,7 +513,7 @@ def settings_screen_mapping_page(request):
 
 
 # ============================================================
-# AJAX: GET EMPLOYEES BY DEPARTMENT - ✅ FIXED
+# AJAX: GET EMPLOYEES BY DEPARTMENT - âœ… FIXED
 # ============================================================
 @login_required
 def get_employees_by_department(request):

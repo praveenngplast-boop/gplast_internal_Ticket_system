@@ -1,8 +1,8 @@
-# tickets/views/settings_action/erp_mapping_views.py
+﻿# tickets/views/settings_action/erp_mapping_views.py
 
 """
 ERP User ID Mapping Views - Add, Remove, Bulk Upload, Export Excel, Unmap
-✅ FIXED: Grouped view to show employees with same ERP ID mappings
+âœ… FIXED: Grouped view to show employees with same ERP ID mappings
 """
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # ERP MAPPING - PAGE VIEW (GROUPED BY ERP ID)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def erp_mapping_page(request):
     """
     ERP User ID Mapping page - Grouped by ERP ID
@@ -58,8 +58,8 @@ def erp_mapping_page(request):
                 'mapping_id': mapping.id,
                 'employee_id': mapping.employee.employee_id,
                 'employee_name': mapping.employee.employee_name,
-                'unit_code': mapping.employee.unit.code if mapping.employee.unit else '—',
-                'department_name': mapping.employee.department.name if mapping.employee.department else '—',
+                'unit_code': mapping.employee.unit.code if mapping.employee.unit else 'â€”',
+                'department_name': mapping.employee.department.name if mapping.employee.department else 'â€”',
                 'is_mapped': True,
             })
             grouped_mappings[erp_id]['is_mapped'] = True
@@ -69,8 +69,8 @@ def erp_mapping_page(request):
                 'mapping_id': mapping.id,
                 'employee_id': None,
                 'employee_name': 'Not Mapped',
-                'unit_code': '—',
-                'department_name': '—',
+                'unit_code': 'â€”',
+                'department_name': 'â€”',
                 'is_mapped': False,
             })
         
@@ -109,12 +109,12 @@ def erp_mapping_page(request):
 # ERP MAPPING - ADD (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def erp_mapping_add(request):
     """
     Add a single ERP User ID mapping (AJAX)
     URL: /custom-admin/settings/erp-mapping/add/
-    ✅ FIXED: Allows same ERP ID to be mapped to multiple employees across different units
+    âœ… FIXED: Allows same ERP ID to be mapped to multiple employees across different units
     """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
@@ -142,7 +142,7 @@ def erp_mapping_add(request):
                 except EmployeeMaster.DoesNotExist:
                     return JsonResponse({'success': False, 'message': f'Employee ID "{employee_id}" not found'})
                 
-                # ✅ Check if this exact ERP-Employee combination already exists
+                # âœ… Check if this exact ERP-Employee combination already exists
                 existing_mapping = ERPHolderMapping.objects.filter(
                     erp_user_id=erp_user_id,
                     employee=employee
@@ -154,7 +154,7 @@ def erp_mapping_add(request):
                         'message': f'ERP {erp_user_id} is already mapped to {employee_id} ({employee.employee_name})'
                     })
                 
-                # ✅ Create new mapping (allow same ERP ID for different employees)
+                # âœ… Create new mapping (allow same ERP ID for different employees)
                 mapping = ERPHolderMapping.objects.create(
                     erp_user_id=erp_user_id,
                     employee=employee,
@@ -166,7 +166,7 @@ def erp_mapping_add(request):
                     request,
                     action_type='CREATE',
                     setting_type='ERP_MAPPING',
-                    setting_name=f"ERP {erp_user_id} → {employee_id}",
+                    setting_name=f"ERP {erp_user_id} â†’ {employee_id}",
                     new_value=f"ERP: {erp_user_id}, Employee: {employee_id} - {employee.employee_name}",
                     change_summary=f"Mapped ERP {erp_user_id} to {employee_id}",
                     remarks=f"Mapped by {request.user.username}"
@@ -180,8 +180,8 @@ def erp_mapping_add(request):
                         'erp_user_id': mapping.erp_user_id,
                         'employee_id': employee.employee_id,
                         'employee_name': employee.employee_name,
-                        'unit_code': employee.unit.code if employee.unit else '—',
-                        'department_name': employee.department.name if employee.department else '—',
+                        'unit_code': employee.unit.code if employee.unit else 'â€”',
+                        'department_name': employee.department.name if employee.department else 'â€”',
                         'is_mapped': True,
                     }
                 })
@@ -190,7 +190,7 @@ def erp_mapping_add(request):
             # ACTION: ADD NEW ERP ID (without employee)
             # ============================================================
             else:
-                # ✅ Allow adding duplicate ERP IDs (since unique=True is removed)
+                # âœ… Allow adding duplicate ERP IDs (since unique=True is removed)
                 # Just create a new unmapped entry
                 mapping = ERPHolderMapping.objects.create(
                     erp_user_id=erp_user_id,
@@ -217,8 +217,8 @@ def erp_mapping_add(request):
                         'erp_user_id': mapping.erp_user_id,
                         'employee_id': None,
                         'employee_name': 'Not Mapped',
-                        'unit_code': '—',
-                        'department_name': '—',
+                        'unit_code': 'â€”',
+                        'department_name': 'â€”',
                         'is_mapped': False,
                     }
                 })
@@ -234,7 +234,7 @@ def erp_mapping_add(request):
 # ERP MAPPING - REMOVE (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def erp_mapping_remove(request):
     """
     Remove an ERP User ID mapping (AJAX)
@@ -281,7 +281,7 @@ def erp_mapping_remove(request):
 # ERP MAPPING - UNMAP (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def erp_mapping_unmap(request):
     """
     Remove employee mapping from ERP ID (keep ERP ID) (AJAX)
@@ -337,7 +337,7 @@ def erp_mapping_unmap(request):
 # ERP MAPPING - UNMAP ALL MAPPINGS FOR ERP ID (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def erp_mapping_unmap_all(request):
     """
     Remove all employee mappings from an ERP ID (keep ERP ID entries)
@@ -390,7 +390,7 @@ def erp_mapping_unmap_all(request):
 # ERP MAPPING - DELETE ALL MAPPINGS FOR ERP ID (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def erp_mapping_delete_all(request):
     """
     Delete all mappings for an ERP ID
@@ -436,7 +436,7 @@ def erp_mapping_delete_all(request):
 # ERP MAPPING - EXPORT EXCEL
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def erp_mapping_export_excel(request):
     """
     Export all ERP mappings to Excel
@@ -493,18 +493,18 @@ def erp_mapping_export_excel(request):
                 mapping.erp_user_id,
                 mapping.employee.employee_id,
                 mapping.employee.employee_name,
-                mapping.employee.unit.code if mapping.employee.unit else '—',
-                mapping.employee.department.name if mapping.employee.department else '—',
+                mapping.employee.unit.code if mapping.employee.unit else 'â€”',
+                mapping.employee.department.name if mapping.employee.department else 'â€”',
                 'Mapped'
             ]
         else:
             row_data = [
                 row_idx - 3,
                 mapping.erp_user_id,
-                '—',
+                'â€”',
                 'Not Mapped',
-                '—',
-                '—',
+                'â€”',
+                'â€”',
                 'Unmapped'
             ]
         
@@ -535,7 +535,7 @@ def erp_mapping_export_excel(request):
 # ERP MAPPING - BULK UPLOAD (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def erp_mapping_bulk_upload(request):
     """
     Bulk upload ONLY ERP IDs from Excel/CSV - NO format validation
@@ -582,7 +582,7 @@ def erp_mapping_bulk_upload(request):
         if not erp_ids:
             return JsonResponse({'success': False, 'message': 'No valid ERP IDs found in the file.'})
         
-        # ✅ Allow duplicate ERP IDs - no uniqueness check
+        # âœ… Allow duplicate ERP IDs - no uniqueness check
         added_count = 0
         errors = []
         added_erp_ids = []
@@ -633,7 +633,7 @@ def erp_mapping_bulk_upload(request):
 # ERP MAPPING - DOWNLOAD BULK UPLOAD TEMPLATE
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def erp_mapping_download_template(request):
     """
     Download Excel template for bulk ERP ID upload
@@ -687,7 +687,7 @@ def erp_mapping_download_template(request):
 # ERP MAPPING - LIST (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def erp_mapping_list(request):
     """
     Get ERP mappings list (AJAX)
@@ -718,7 +718,7 @@ def erp_mapping_list(request):
 # ERP MAPPING - SEARCH EMPLOYEES (AJAX)
 # ============================================================
 @login_required
-@user_passes_test(is_admin, login_url='tickets:login')
+@user_passes_test(is_admin, login_url='login')
 def erp_mapping_search_employees(request):
     """
     Search employees by ID or Name (AJAX)

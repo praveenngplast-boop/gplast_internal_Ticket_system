@@ -1,0 +1,52 @@
+{% load static %}
+<div class="ticket-replies-panel">
+    <div class="ticket-replies-header">
+        <div>
+            <span class="ticket-section-eyebrow"><i class="fa-regular fa-comments me-1"></i>Conversation</span>
+            <h5 class="mb-0">Ticket Replies</h5>
+        </div>
+        <span class="ticket-replies-count">{{ replies|length }}</span>
+    </div>
+
+    <div class="ticket-replies-list">
+        {% for reply in replies %}
+        <article class="ticket-reply {% if reply.author == request.user %}ticket-reply-own{% endif %}">
+            <div class="ticket-reply-meta">
+                <strong>{{ reply.author_name }}</strong>
+                <span class="ticket-reply-role">{{ reply.author_role }}</span>
+                <time datetime="{{ reply.created_at|date:'c' }}">{{ reply.created_at|date:'d M Y, H:i' }}</time>
+            </div>
+            <div class="ticket-reply-body">{{ reply.body|linebreaksbr }}</div>
+            {% if reply.attachment %}
+            <a class="ticket-reply-attachment" href="{{ reply.attachment.url }}" target="_blank" rel="noopener">
+                <i class="fa-solid fa-paperclip me-1"></i>{{ reply.attachment.name|cut:'attachments/replies/' }}
+            </a>
+            {% endif %}
+        </article>
+        {% empty %}
+        <div class="ticket-replies-empty">
+            <i class="fa-regular fa-message"></i>
+            <p class="mb-0">No replies yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if can_reply %}
+    <form class="ticket-reply-form" method="post" action="{{ reply_url }}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="id_body">Add information or reply</label>
+        {{ reply_form.body }}
+        {% if reply_form.body.errors %}<div class="text-danger small">{{ reply_form.body.errors }}</div>{% endif %}
+        <div class="ticket-reply-form-row">
+            <div class="ticket-reply-attachment-field">
+                <label for="id_attachment"><i class="fa-solid fa-paperclip me-1"></i>Attachment</label>
+                {{ reply_form.attachment }}
+            </div>
+            <button type="submit" class="btn-primary-custom ticket-reply-submit">
+                <i class="fa-solid fa-paper-plane me-1"></i>Send Reply
+            </button>
+        </div>
+        {% if reply_form.attachment.errors %}<div class="text-danger small">{{ reply_form.attachment.errors }}</div>{% endif %}
+    </form>
+    {% endif %}
+</div>

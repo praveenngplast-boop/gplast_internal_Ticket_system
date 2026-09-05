@@ -1,3 +1,8 @@
+var employeeAllTicketsUrlElement = document.getElementById('employeeAllTicketsUrl');
+var employeeAllTicketsUrl = employeeAllTicketsUrlElement
+    ? employeeAllTicketsUrlElement.getAttribute('data-url')
+    : '/all-tickets/';
+
 // ============================================================
 // FORCE CLEANUP BACKDROPS - SINGLE DEFINITION
 // ============================================================
@@ -282,9 +287,9 @@ function drillDownTickets(status) {
     }
 
     if (filterParam && filterValue) {
-        viewAllBtn.href = "/my-tickets/?" + filterParam + "=" + encodeURIComponent(filterValue);
+        viewAllBtn.href = employeeAllTicketsUrl + "?" + filterParam + "=" + encodeURIComponent(filterValue);
     } else {
-        viewAllBtn.href = "/my-tickets/";
+        viewAllBtn.href = employeeAllTicketsUrl;
     }
 
     modalBody.innerHTML = `
@@ -296,7 +301,7 @@ function drillDownTickets(status) {
 
     modal.show();
 
-    var url = "/my-tickets/?ajax=1";
+    var url = employeeAllTicketsUrl + "?ajax=1";
     if (filterParam && filterValue) {
         url += "&" + filterParam + "=" + encodeURIComponent(filterValue);
     }
@@ -359,7 +364,7 @@ function drillDownTicketsByPriority(priority) {
     var viewAllBtn = document.getElementById('drillDownViewAllBtn');
 
     statusLabel.textContent = 'Priority: ' + priority;
-    viewAllBtn.href = "/my-tickets/?priority=" + encodeURIComponent(priority);
+    viewAllBtn.href = employeeAllTicketsUrl + "?priority=" + encodeURIComponent(priority);
 
     modalBody.innerHTML = `
         <div class="modal-loading">
@@ -370,7 +375,7 @@ function drillDownTicketsByPriority(priority) {
 
     modal.show();
 
-    var url = "/my-tickets/?ajax=1&priority=" + encodeURIComponent(priority);
+    var url = employeeAllTicketsUrl + "?ajax=1&priority=" + encodeURIComponent(priority);
     url += "&_=" + Date.now();
 
     // ✅ FIX: Added credentials: 'same-origin' to send session cookies

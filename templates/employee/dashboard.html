@@ -214,7 +214,7 @@
 <!-- ============================================================
      DRILL DOWN MODAL - WITH TARGET DATE
      ============================================================ -->
-<div class="modal fade" id="drillDownModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade dashboard-drilldown-modal" id="drillDownModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -243,6 +243,7 @@
 </div>
 
 {{ charts_data|json_script:"charts-data" }}
+<span id="employeeAllTicketsUrl" data-url="{% url 'employee_all_tickets' %}" hidden></span>
 {% endblock %}
 
 {% block extra_js %}
@@ -280,15 +281,7 @@ function drillDownTickets(filter) {
         credentials: 'same-origin'
     })
     .then(function(response) {
-        if (response.redirected || response.url.includes('/login/')) {
-            throw new Error('Your session has expired. Please login again.');
-        }
-        if (!response.ok) throw new Error('Network error: ' + response.status);
-        var contentType = response.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-            throw new Error('The ticket service returned an invalid response. Please refresh and try again.');
-        }
-        return response.json();
+        return TicketUI.requestJson(response);
     })
     .then(function(data) {
         if (!data.success) {

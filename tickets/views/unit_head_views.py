@@ -8,6 +8,7 @@ BUT CAN CHANGE PRIORITY for non-closed tickets
 """
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
@@ -25,10 +26,11 @@ import logging
 
 from tickets.models import (
     Unit, Department, Ticket, TicketHistory, EmployeeMaster,
-    ScreenMaster, ERPHolderMapping, ReopenAttachment, UnitHead
+    ScreenMaster, ERPHolderMapping, ReopenAttachment, UnitHead, TicketReply
 )
-from tickets.forms import CloseTicketForm
+from tickets.forms import CloseTicketForm, TicketReplyForm
 from tickets.utils import send_ticket_email, validate_attachment
+from tickets.export_helpers import add_replies_sheet, append_replies_section
 from .utils import format_timedelta_display, reopen_ticket_logic
 
 logger = logging.getLogger(__name__)
@@ -195,6 +197,7 @@ def unit_head_all_tickets(request):
     # Get filter parameters
     status = request.GET.get('status', '')
     priority = request.GET.get('priority', '')
+    filter_param = request.GET.get('filter', '').strip()
     ticket_number = request.GET.get('ticket_number', '').strip()
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
@@ -202,6 +205,14 @@ def unit_head_all_tickets(request):
     main_error_type = request.GET.get('main_error_type', '').strip()
     sub_error_type = request.GET.get('sub_error_type', '').strip()
     department = request.GET.get('department', '').strip()
+
+    # Dashboard drill-downs send a shared filter parameter. Normalize it into
+    # the same status/priority filters used by the full Unit Head page.
+    if filter_param and filter_param != 'all':
+        if filter_param == 'Critical':
+            priority = 'Critical'
+        elif filter_param in {'Open', 'Assigned', 'Hold', 'Escalated', 'Closed'}:
+            status = filter_param
     
     # Apply filters
     if status:
@@ -445,6 +456,7 @@ def unit_head_ticket_detail(request, ticket_id):
         return redirect('unit_head_all_tickets')
     
     history = ticket.history.all().order_by('timestamp')
+    replies = ticket.replies.select_related('author').all()
     
     time_to_close_str = ""
     if ticket.status == 'Closed' and ticket.created_at and ticket.closed_at:
@@ -558,6 +570,10 @@ def unit_head_ticket_detail(request, ticket_id):
     context = {
         'ticket': ticket,
         'history': history,
+        'replies': replies,
+        'reply_form': TicketReplyForm(),
+        'can_reply': True,
+        'unit_head_reply_url': reverse('unit_head_ticket_reply', args=[ticket.id]),
         'attachments': attachments,
         'time_to_close': time_to_close_str,
         'erp_id': erp_id,
@@ -779,6 +795,11 @@ def unit_head_download_ticket_excel(request, ticket_id):
         
         row += 1
     
+    row = append_replies_section(
+        ws, row, ticket, section_font, section_font, data_font,
+        section_fill, section_fill, thin_border
+    )
+
     # Footer
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = f"Report generated on {timezone.now().strftime('%d-%b-%Y %I:%M %p')} | GPLAST Support System"
@@ -1086,7 +1107,8 @@ def unit_head_export_closed_tickets_30_days(request):
     
     for col_letter, width in column_widths.items():
         ws.column_dimensions[col_letter].width = width
-    
+
+    add_replies_sheet(wb, tickets_qs)
     wb.save(response)
     return response
 
@@ -1217,5 +1239,6 @@ def unit_head_export_filtered_tickets_excel(request, tickets_qs, unit):
     for col_letter, width in column_widths.items():
         ws.column_dimensions[col_letter].width = width
     
+    add_replies_sheet(wb, tickets_qs)
     wb.save(response)
     return response

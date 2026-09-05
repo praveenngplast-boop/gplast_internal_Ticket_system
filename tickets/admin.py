@@ -5,7 +5,7 @@ from tickets.models import (
     AdminContact, 
     # AdminNotificationEmail,  # COMMENTED - Email related model
     Ticket, 
-    TicketHistory, 
+    TicketHistory, TicketReply,
     UnitHead, 
     # EmailSchedule,  # COMMENTED - Email related model
     EmployeeMaster,
@@ -194,6 +194,14 @@ class TicketHistoryAdmin(admin.ModelAdmin):
     list_filter = ('performed_by', 'timestamp')
     search_fields = ('ticket__ticket_number', 'action', 'remarks')
     readonly_fields = ('timestamp',)
+
+
+@admin.register(TicketReply)
+class TicketReplyAdmin(admin.ModelAdmin):
+    list_display = ('ticket', 'author_name', 'author_role', 'created_at')
+    list_filter = ('author_role', 'created_at')
+    search_fields = ('ticket__ticket_number', 'author_name', 'body')
+    readonly_fields = ('created_at',)
 
 
 # ============================================================
