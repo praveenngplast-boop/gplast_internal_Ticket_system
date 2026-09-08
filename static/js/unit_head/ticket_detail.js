@@ -151,7 +151,6 @@
                 });
             } else {
                 // Fallback: console log + alert
-                console.log('[' + (type || 'info') + '] ' + message);
                 if (type === 'error' || type === 'warning') {
                     alert(message);
                 }
@@ -203,8 +202,6 @@
         // ============================================================
         // LOGGING
         // ============================================================
-        console.log('✅ Unit Head Ticket Detail loaded');
-        console.log('📋 Ticket #' + '{{ ticket.ticket_number }}' + ' - Status: {{ ticket.status }}');
 
     });
 

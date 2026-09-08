@@ -150,7 +150,6 @@
     // ADD MODAL - COMPLETELY FIXED
     // ============================================================
     function openAddModal(prefillErp) {
-        console.log('openAddModal called with:', prefillErp);
         
         var addModal = document.getElementById('addModal');
         var addErpId = document.getElementById('addErpId');
@@ -194,7 +193,6 @@
         // Show the modal - using CSS classes
         addModal.style.display = 'flex';
         addModal.classList.add('active');
-        console.log('Modal opened, classes:', addModal.className);
         
         // Focus on the ERP select after a small delay
         setTimeout(function() {
@@ -213,7 +211,6 @@
     }
 
     function submitAdd() {
-        console.log('submitAdd called');
         
         var addErpId = document.getElementById('addErpId');
         var addScreen = document.getElementById('addScreen');
@@ -244,7 +241,6 @@
         formData.append('erp_user_id', erpId);
         formData.append('screen_id', screenId);
 
-        console.log('Submitting mapping:', { erpId: erpId, screenId: screenId });
 
         // Disable submit button
         var submitBtn = document.querySelector('#addModal .btn-orange');
@@ -274,7 +270,6 @@
             return response.json();
         })
         .then(function(data) {
-            console.log('Add response:', data);
             if (data.success) {
                 showToast(data.message || '✅ Mapping added successfully!', 'success');
                 closeAddModal();
@@ -739,7 +734,6 @@
     // INITIALIZATION - FIX MODAL DISPLAY
     // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('✅ Screen Mapping JS loaded successfully');
         
         // Ensure all modals are hidden initially
         var modalIds = ['viewModal', 'addModal', 'removeModal', 'bulkUploadModal'];
@@ -752,10 +746,6 @@
         });
         
         // Debug: Check if elements exist
-        console.log('📌 Add Modal:', document.getElementById('addModal'));
-        console.log('📌 Add ERP Select:', document.getElementById('addErpId'));
-        console.log('📌 Add Screen Select:', document.getElementById('addScreen'));
-        console.log('📌 Toast Container:', document.getElementById('toastContainer'));
         
         // Test toast
         // showToast('✅ Screen Mapping loaded successfully!', 'success');

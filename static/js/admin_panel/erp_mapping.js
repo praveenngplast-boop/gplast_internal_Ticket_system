@@ -623,6 +623,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    console.log('ERP Mapping JS loaded with grouped view support');
-    console.log('Bulk Upload URL:', BULK_UPLOAD_URL);
 });

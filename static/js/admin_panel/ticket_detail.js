@@ -371,6 +371,4 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
 
-    console.log('✅ Admin Ticket Detail JS loaded successfully');
-    console.log('📌 Target date validation initialized');
 });

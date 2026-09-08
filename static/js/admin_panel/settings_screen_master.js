@@ -436,9 +436,4 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
 
-    console.log('Screen Master JS loaded with fixed URLs');
-    console.log('Add URL:', ADD_URL);
-    console.log('Edit URL:', EDIT_URL);
-    console.log('Delete URL:', DELETE_URL);
-    console.log('Bulk Upload URL:', BULK_UPLOAD_URL);
 });

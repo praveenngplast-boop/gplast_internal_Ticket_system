@@ -105,10 +105,10 @@
                         }
                     },
                     cutout: '60%',
-                    onClick: function(event, elements) {
+                    onClick: function(event, elements, chart) {
                         if (elements.length > 0) {
                             const index = elements[0].index;
-                            const label = this.data.labels[index];
+                            const label = chart.data.labels[index];
                             window.drillDownUnitTickets(label);
                         }
                     }
@@ -174,10 +174,10 @@
                             }
                         }
                     },
-                    onClick: function(event, elements) {
+                    onClick: function(event, elements, chart) {
                         if (elements.length > 0) {
                             const index = elements[0].index;
-                            const label = this.data.labels[index];
+                            const label = chart.data.labels[index];
                             window.drillDownUnitTicketsByPriority(label);
                         }
                     }
@@ -242,10 +242,10 @@
                             }
                         }
                     },
-                    onClick: function(event, elements) {
+                    onClick: function(event, elements, chart) {
                         if (elements.length > 0) {
                             const index = elements[0].index;
-                            const label = this.data.labels[index];
+                            const label = chart.data.labels[index];
                             window.drillDownUnitTicketsByDepartment(label);
                         }
                     }
@@ -325,10 +325,6 @@
         // ------------------------------------------------------------
         // CONSOLE LOG
         // ------------------------------------------------------------
-        console.log('✅ Unit Head Dashboard loaded with drill-down enabled');
-        console.log('📊 Status data:', hasStatusData ? 'Available' : 'None');
-        console.log('📊 Priority data:', hasPriorityData ? 'Available' : 'None');
-        console.log('📊 Department data:', hasDeptData ? 'Available' : 'None');
 
     }); // end DOMContentLoaded
 
@@ -554,7 +550,6 @@
         let url = baseUrl + '?ajax=1&department=' + encodeURIComponent(departmentName);
         url += '&_=' + Date.now();
 
-        console.log('Fetching department tickets:', url);
 
         // ✅ FIX: Added credentials: 'same-origin' to send session cookies
         fetch(url, {
@@ -570,7 +565,6 @@
             return response.json();
         })
         .then(data => {
-            console.log('Department data response:', data);
             if (data.success === false) throw new Error(data.message || 'Server error');
             if (data.html) {
                 modalBody.innerHTML = data.html;

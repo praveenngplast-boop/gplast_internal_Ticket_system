@@ -65,6 +65,7 @@ urlpatterns = [
     # NOTIFICATION URLS
     # ============================================================
     path('custom-admin/notifications/get/', views.get_notifications, name='get_notifications'),
+    path('custom-admin/notifications/refresh/', views.refresh_notifications, name='refresh_notifications'),
     path('custom-admin/notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
     path('custom-admin/notifications/mark-read/<int:ticket_id>/', views.mark_notification_read, name='mark_notification_read'),
 
@@ -77,7 +78,7 @@ urlpatterns = [
     path('custom-admin/settings/communication/', views.settings_communication, name='settings_communication'),
     path('custom-admin/settings/employees/', views.settings_employees_page, name='settings_employees_page'),
     path('custom-admin/settings/credentials/', views.settings_credentials_page, name='settings_credentials_page'),
-    path('custom-admin/settings/dept-employees/', views.settings_dept_employees, name='settings_dept_employees'),
+    # ❌ REMOVED: path('custom-admin/settings/dept-employees/', views.settings_dept_employees, name='settings_dept_employees'),
     path('custom-admin/settings/audit/', views.settings_audit_log, name='settings_audit_log'),
     path('custom-admin/settings/backup/', views.download_full_backup, name='download_full_backup'),
     
@@ -123,7 +124,6 @@ urlpatterns = [
     # ============================================================
     path('unit-head/dashboard/', unit_head_views.unit_head_dashboard, name='unit_head_dashboard'),
     path('unit-head/tickets/', unit_head_views.unit_head_all_tickets, name='unit_head_all_tickets'),
-    # ❌ REMOVED: path('unit-head/my-tickets/', unit_head_views.unit_head_my_tickets, name='unit_head_my_tickets'),
     path('unit-head/ticket/<int:ticket_id>/', unit_head_views.unit_head_ticket_detail, name='unit_head_ticket_detail'),
     path('unit-head/ticket/<int:ticket_id>/reply/', views.ticket_reply, name='unit_head_ticket_reply'),
     path('unit-head/reports/', unit_head_views.unit_head_reports, name='unit_head_reports'),

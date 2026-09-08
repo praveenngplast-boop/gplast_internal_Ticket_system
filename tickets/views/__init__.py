@@ -12,6 +12,7 @@ from .admin_views import (
     all_tickets,
     ticket_detail_admin,
     get_notifications,
+    refresh_notifications,  # ✅ ADD THIS LINE
     mark_all_notifications_read,
     mark_notification_read,
     test_notifications,
@@ -20,7 +21,6 @@ from .admin_views import (
     test_warning_message,
     test_info_message,
     download_audit_log_excel as admin_download_audit_log_excel,
-    # ✅ NEW: Target Date
     update_target_date,
 )
 
@@ -140,21 +140,6 @@ from .ajax_views import (
     search_tickets_ajax,
 )
 
-# ============================================================
-# ❌ REMOVE THIS BLOCK - It's now imported from settings_action above
-# ============================================================
-# from .erp_mapping_views import (
-#     erp_mapping_page,
-#     erp_mapping_add,
-#     erp_mapping_remove,
-#     erp_mapping_unmap,
-#     erp_mapping_list,
-#     erp_mapping_search_employees,
-#     erp_mapping_export_excel,
-#     erp_mapping_bulk_upload,
-#     erp_mapping_download_template,
-# )
-
 # Export all views
 __all__ = [
     # Auth views
@@ -172,6 +157,7 @@ __all__ = [
     'reports',
     'escalated_ticket_detail',
     'get_notifications',
+    'refresh_notifications',  # ✅ ADD THIS
     'mark_all_notifications_read',
     'mark_notification_read',
     'test_notifications',
@@ -180,7 +166,7 @@ __all__ = [
     'test_warning_message',
     'test_info_message',
     'admin_download_audit_log_excel',
-    'update_target_date',  # ✅ NEW
+    'update_target_date',
     
     # Employee views
     'employee_dashboard',

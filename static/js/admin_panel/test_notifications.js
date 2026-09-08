@@ -271,7 +271,3 @@ window.markNotificationRead = function(notificationId) {
     });
 };
 
-console.log('✅ Test Notifications JS loaded with fixed URLs');
-console.log('🔔 Notification GET URL:', NOTIFICATION_GET_URL);
-console.log('🔔 Mark All Read URL:', NOTIFICATION_MARK_ALL_READ_URL);
-console.log('🔔 Mark Read URL:', NOTIFICATION_MARK_READ_URL);

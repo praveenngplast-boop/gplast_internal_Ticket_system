@@ -1,3 +1,7 @@
+<!-- ============================================================
+     FILE: unit_head_ticket_detail.html
+     PATH: templates/unit_head/ticket_detail.html
+     ============================================================ -->
 {% extends 'base.html' %}
 {% load static %}
 
@@ -12,7 +16,7 @@
 <div class="ticket-detail-wrapper">
 
     <!-- ============================================================
-         HEADER
+         HEADER - Redesigned with Status Banner
          ============================================================ -->
     <div class="detail-header">
         <div class="detail-header-left">
@@ -23,16 +27,16 @@
                 <h1>Ticket #{{ ticket.ticket_number }}</h1>
                 <div class="subtitle">
                     <span class="badge-status badge-status-{{ ticket.status|lower }}">
-                        {{ ticket.status }}
+                        <i class="fa-solid fa-circle"></i> {{ ticket.status }}
                     </span>
                     <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
-                        {{ ticket.priority }}
+                        <i class="fa-solid fa-flag"></i> {{ ticket.priority }}
                     </span>
                     <span class="unit-badge-sm">
                         <i class="fa-solid fa-building"></i>
                         {{ ticket.unit.code }}
                     </span>
-                    <span style="font-size: 0.6rem;">
+                    <span class="timestamp-badge">
                         <i class="fa-regular fa-clock"></i>
                         {{ ticket.created_at|date:"d M Y, H:i" }}
                     </span>
@@ -50,169 +54,233 @@
     </div>
 
     <!-- ============================================================
-         MAIN GRID
+         STATUS BANNER - New Design Element
+         ============================================================ -->
+    <div class="status-banner status-banner-{{ ticket.status|lower }}">
+        <div class="status-banner-content">
+            <div class="status-banner-icon">
+                <i class="fa-solid {% if ticket.status == 'Open' %}fa-circle-check{% elif ticket.status == 'Assigned' %}fa-user-check{% elif ticket.status == 'Hold' %}fa-pause{% elif ticket.status == 'Escalated' %}fa-arrow-up{% else %}fa-circle-check{% endif %}"></i>
+            </div>
+            <div class="status-banner-info">
+                <span class="status-banner-title">Ticket Status: {{ ticket.status }}</span>
+                <span class="status-banner-subtitle">
+                    {% if ticket.status == 'Open' %}
+                        Awaiting assignment
+                    {% elif ticket.status == 'Assigned' %}
+                        Assigned to {{ ticket.assigned_person|default:"team member" }}
+                    {% elif ticket.status == 'Hold' %}
+                        On hold - {{ ticket.hold_reason|default:"Waiting for input" }}
+                    {% elif ticket.status == 'Escalated' %}
+                        Escalated for higher attention
+                    {% elif ticket.status == 'Closed' %}
+                        Resolved and closed
+                    {% else %}
+                        {{ ticket.status }}
+                    {% endif %}
+                </span>
+            </div>
+            {% if ticket.target_date %}
+            <div class="status-banner-target">
+                <i class="fa-regular fa-calendar-check"></i>
+                <div>
+                    <span class="target-label">Target Date</span>
+                    <span class="target-date">{{ ticket.target_date|date:"d M Y" }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MAIN GRID - Two Column Layout
          ============================================================ -->
     <div class="detail-grid">
 
         <!-- ===== LEFT COLUMN ===== -->
-        <div>
+        <div class="left-column">
 
-            <!-- ===== TICKET INFO ===== -->
+            <!-- ===== TICKET INFO - Card with New Design ===== -->
             <div class="detail-card">
                 <div class="card-header">
-                    <i class="fa-solid fa-info-circle"></i> Ticket Information
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-info-circle"></i>
+                    </div>
+                    <span>Ticket Information</span>
+                    <span class="card-header-badge">#{{ ticket.ticket_number }}</span>
                 </div>
                 <div class="card-body">
-                    <div class="info-row">
-                        <span class="label">Subject</span>
-                        <span class="value"><strong>{{ ticket.subject }}</strong></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Description</span>
-                        <span class="value">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label"><i class="fa-regular fa-rectangle-list"></i> Subject</span>
+                            <span class="info-value"><strong>{{ ticket.subject }}</strong></span>
+                        </div>
+                        <div class="info-item full-width">
+                            <span class="info-label"><i class="fa-regular fa-message"></i> Description</span>
                             <div class="desc-box">{{ ticket.description|default:"No description provided." }}</div>
-                        </span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Priority</span>
-                        <span class="value">
-                            <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
-                                {{ ticket.priority }}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="fa-regular fa-flag"></i> Priority</span>
+                            <span class="info-value">
+                                <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
+                                    {{ ticket.priority }}
+                                </span>
                             </span>
-                        </span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Error Type</span>
-                        <span class="value">{{ ticket.error_type|default:"Not Set" }}</span>
-                    </div>
-                    <!-- ===== TARGET DATE DISPLAY ===== -->
-                    <div class="info-row">
-                        <span class="label">Target Date</span>
-                        <span class="value">
-                            {% if ticket.target_date %}
-                                <span style="font-weight: 600; color: var(--brand-orange);">
-                                    <i class="fa-regular fa-calendar me-1"></i>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="fa-regular fa-bug"></i> Error Type</span>
+                            <span class="info-value">{{ ticket.error_type|default:"Not Set" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="fa-regular fa-calendar"></i> Target Date</span>
+                            <span class="info-value">
+                                {% if ticket.target_date %}
+                                    <span class="target-date-value">
+                                        <i class="fa-regular fa-calendar-check"></i>
+                                        {{ ticket.target_date|date:"d M Y" }}
+                                    </span>
+                                {% else %}
+                                    <span class="not-set">Not Set</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if ticket.assigned_person %}
+                        <div class="info-item">
+                            <span class="info-label"><i class="fa-regular fa-user"></i> Assigned To</span>
+                            <span class="info-value">
+                                <span class="assigned-user">
+                                    <i class="fa-regular fa-user-circle"></i>
+                                    {{ ticket.assigned_person }}
+                                </span>
+                                {% if ticket.target_date %}
+                                <span class="assigned-target">
+                                    <i class="fa-regular fa-calendar"></i>
                                     {{ ticket.target_date|date:"d M Y" }}
                                 </span>
-                            {% else %}
-                                <span style="color: var(--text-muted);">Not Set</span>
-                            {% endif %}
-                        </span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% if ticket.hold_reason %}
+                        <div class="info-item full-width">
+                            <span class="info-label"><i class="fa-regular fa-pause"></i> Hold Reason</span>
+                            <span class="info-value">{{ ticket.hold_reason }}</span>
+                        </div>
+                        {% endif %}
+                        {% if ticket.status == 'Closed' %}
+                        <div class="info-item full-width">
+                            <span class="info-label"><i class="fa-regular fa-circle-check"></i> Closing Details</span>
+                            <div class="closing-details">
+                                <div class="closing-row">
+                                    <span class="closing-label">Main Error:</span>
+                                    <span>{{ ticket.main_error_type|default:"N/A" }}</span>
+                                </div>
+                                <div class="closing-row">
+                                    <span class="closing-label">Sub Error:</span>
+                                    <span>{{ ticket.sub_error_type|default:"N/A" }}</span>
+                                </div>
+                                <div class="closing-row">
+                                    <span class="closing-label">Remarks:</span>
+                                    <span>{{ ticket.closing_remarks|default:"N/A" }}</span>
+                                </div>
+                                <div class="closing-row">
+                                    <span class="closing-label">Closed By:</span>
+                                    <span>{{ ticket.closed_by|default:"N/A" }}</span>
+                                </div>
+                                <div class="closing-row">
+                                    <span class="closing-label">Closed At:</span>
+                                    <span>{{ ticket.closed_at|date:"d M Y, H:i"|default:"N/A" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if ticket.vendor_ticket_number %}
+                        <div class="info-item">
+                            <span class="info-label"><i class="fa-regular fa-building"></i> Vendor Ticket</span>
+                            <span class="info-value"><span class="mono">{{ ticket.vendor_ticket_number }}</span></span>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% if ticket.status == 'Closed' %}
-                    <div class="info-row">
-                        <span class="label">Main Error</span>
-                        <span class="value">{{ ticket.main_error_type|default:"N/A" }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Sub Error</span>
-                        <span class="value">{{ ticket.sub_error_type|default:"N/A" }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Closing Remarks</span>
-                        <span class="value">{{ ticket.closing_remarks|default:"N/A" }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Closed By</span>
-                        <span class="value">{{ ticket.closed_by|default:"N/A" }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Closed At</span>
-                        <span class="value">{{ ticket.closed_at|date:"d M Y, H:i"|default:"N/A" }}</span>
-                    </div>
-                    {% endif %}
-                    {% if ticket.vendor_ticket_number %}
-                    <div class="info-row">
-                        <span class="label">Vendor Ticket</span>
-                        <span class="value"><span class="mono">{{ ticket.vendor_ticket_number }}</span></span>
-                    </div>
-                    {% endif %}
-                    {% if ticket.assigned_person %}
-                    <div class="info-row">
-                        <span class="label">Assigned To</span>
-                        <span class="value">
-                            {{ ticket.assigned_person }}
-                            {% if ticket.target_date %}
-                                <br><small style="color: var(--text-muted); font-size: 0.65rem;">
-                                    <i class="fa-regular fa-calendar me-1"></i>Target: {{ ticket.target_date|date:"d M Y" }}
-                                </small>
-                            {% endif %}
-                        </span>
-                    </div>
-                    {% endif %}
-                    {% if ticket.hold_reason %}
-                    <div class="info-row">
-                        <span class="label">Hold Reason</span>
-                        <span class="value">{{ ticket.hold_reason }}</span>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
 
-            <!-- ===== EMPLOYEE INFO ===== -->
+            <!-- ===== EMPLOYEE INFO - Card with New Design ===== -->
             <div class="detail-card">
                 <div class="card-header">
-                    <i class="fa-solid fa-user"></i> Employee Details
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <span>Employee Details</span>
+                    <span class="card-header-badge">
+                        <i class="fa-regular fa-id-card"></i> {{ ticket.employee_id }}
+                    </span>
                 </div>
                 <div class="card-body">
-                    <div class="info-row">
-                        <span class="label">Employee ID</span>
-                        <span class="value"><span class="mono">{{ ticket.employee_id }}</span></span>
+                    <div class="employee-profile">
+                        <div class="employee-avatar">
+                            <span>{{ ticket.employee_name|slice:":1"|upper }}</span>
+                        </div>
+                        <div class="employee-info">
+                            <div class="employee-name">{{ ticket.employee_name }}</div>
+                            <div class="employee-meta">
+                                <span><i class="fa-regular fa-id-card"></i> {{ ticket.employee_id }}</span>
+                                <span><i class="fa-regular fa-building"></i> {{ ticket.unit.full_name }}</span>
+                                <span><i class="fa-regular fa-layer-group"></i> {{ ticket.department.name }}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="info-row">
-                        <span class="label">Name</span>
-                        <span class="value">{{ ticket.employee_name }}</span>
+                    <div class="info-grid two-col">
+                        <div class="info-item">
+                            <span class="info-label"><i class="fa-regular fa-phone"></i> Mobile</span>
+                            <span class="info-value">{{ ticket.mobile|default:"N/A" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="fa-regular fa-envelope"></i> Email</span>
+                            <span class="info-value">{{ ticket.email|default:"N/A" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="fa-regular fa-desktop"></i> Screen</span>
+                            <span class="info-value">
+                                {% if screen_object %}
+                                    {{ screen_object.screen_name }} ({{ screen_object.screen_code }})
+                                {% else %}
+                                    {{ ticket.screen_number }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if erp_id %}
+                        <div class="info-item">
+                            <span class="info-label"><i class="fa-regular fa-database"></i> ERP ID</span>
+                            <span class="info-value"><span class="mono">{{ erp_id }}</span></span>
+                        </div>
+                        {% endif %}
                     </div>
-                    <div class="info-row">
-                        <span class="label">Mobile</span>
-                        <span class="value">{{ ticket.mobile|default:"N/A" }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Email</span>
-                        <span class="value">{{ ticket.email|default:"N/A" }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Unit</span>
-                        <span class="value">{{ ticket.unit.full_name }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Department</span>
-                        <span class="value">{{ ticket.department.name }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Screen</span>
-                        <span class="value">
-                            {% if screen_object %}
-                                {{ screen_object.screen_name }} ({{ screen_object.screen_code }})
-                            {% else %}
-                                {{ ticket.screen_number }}
-                            {% endif %}
-                        </span>
-                    </div>
-                    {% if erp_id %}
-                    <div class="info-row">
-                        <span class="label">ERP ID</span>
-                        <span class="value"><span class="mono">{{ erp_id }}</span></span>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
 
-            <!-- ===== ATTACHMENTS ===== -->
+            <!-- ===== ATTACHMENTS - Card with New Design ===== -->
             {% if attachments %}
             <div class="detail-card">
                 <div class="card-header">
-                    <i class="fa-solid fa-paperclip"></i> Attachments
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </div>
+                    <span>Attachments</span>
+                    <span class="card-header-badge">{{ attachments|length }}</span>
                 </div>
                 <div class="card-body">
-                    <div class="attachments-list">
+                    <div class="attachments-grid">
                         {% for attachment in attachments %}
-                        <a href="{{ attachment.file.url }}" target="_blank" class="attachment-item">
-                            <i class="fa-solid fa-file"></i>
-                            {{ attachment.name }}
-                            <span style="font-size: 0.5rem; color: var(--text-muted);">
-                                ({{ attachment.file.size|filesizeformat }})
-                            </span>
+                        <a href="{{ attachment.file.url }}" target="_blank" class="attachment-card">
+                            <div class="attachment-icon">
+                                <i class="fa-solid fa-file-lines"></i>
+                            </div>
+                            <div class="attachment-info">
+                                <div class="attachment-name">{{ attachment.name }}</div>
+                                <div class="attachment-size">{{ attachment.file.size|filesizeformat }}</div>
+                            </div>
+                            <div class="attachment-arrow">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </div>
                         </a>
                         {% endfor %}
                     </div>
@@ -220,133 +288,107 @@
             </div>
             {% endif %}
 
-            <!-- ===== HISTORY ===== -->
-            <div class="detail-card">
-                <div class="card-header">
-                    <i class="fa-solid fa-clock-rotate-left"></i> History / Timeline
-                </div>
-                <div class="card-body" style="max-height: 450px; overflow-y: auto;">
-                    {% for entry in history %}
-                    <div class="history-item">
-                        <div class="h-icon">
-                            <i class="fa-solid fa-circle"></i>
-                        </div>
-                        <div class="h-content">
-                            <div class="h-action">{{ entry.action }}</div>
-                            {% if entry.remarks %}
-                            <div class="h-detail">{{ entry.remarks }}</div>
-                            {% endif %}
-                            <div class="h-meta">
-                                <span>{{ entry.performed_by }}</span>
-                                <span>&middot;</span>
-                                <span>{{ entry.timestamp|date:"d M Y, H:i" }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div style="text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.75rem;">
-                        <i class="fa-regular fa-clock" style="display: block; font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.3;"></i>
-                        No history available
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
         </div>
 
-        {% include 'tickets/_ticket_replies.html' with reply_url=unit_head_reply_url %}
-
         <!-- ===== RIGHT COLUMN (SIDEBAR) ===== -->
-        <div>
+        <div class="right-column">
 
-            <!-- ===== METADATA ===== -->
+            <!-- ===== METADATA - Card with New Design ===== -->
             <div class="detail-card">
                 <div class="card-header">
-                    <i class="fa-solid fa-tag"></i> Metadata
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-tag"></i>
+                    </div>
+                    <span>Metadata</span>
                 </div>
                 <div class="card-body">
-                    <div class="sidebar-item">
-                        <span class="label">Created</span>
-                        <span class="value">{{ ticket.created_at|date:"d M Y, H:i" }}</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <span class="label">Updated</span>
-                        <span class="value">{{ ticket.updated_at|date:"d M Y, H:i" }}</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <span class="label">Created By</span>
-                        <span class="value">{{ ticket.created_by_user.username|default:"System" }}</span>
-                    </div>
-                    <div class="sidebar-item">
-                        <span class="label">Role</span>
-                        <span class="value">{{ ticket.created_by_role }}</span>
-                    </div>
-                    {% if ticket.status == 'Closed' and time_to_close %}
-                    <div class="sidebar-item">
-                        <span class="label">Time to Close</span>
-                        <span class="value">{{ time_to_close }}</span>
-                    </div>
-                    {% endif %}
-                    {% if ticket.escalated_at %}
-                    <div class="sidebar-item">
-                        <span class="label">Escalated</span>
-                        <span class="value">{{ ticket.escalated_at|date:"d M Y, H:i" }}</span>
-                    </div>
-                    {% endif %}
-                    <!-- ===== TARGET DATE IN METADATA ===== -->
-                    <div class="sidebar-item">
-                        <span class="label">Target Date</span>
-                        <span class="value">
-                            {% if ticket.target_date %}
-                                <span style="font-weight: 600; color: var(--brand-orange);">
-                                    {{ ticket.target_date|date:"d M Y" }}
-                                </span>
-                            {% else %}
-                                <span style="color: var(--text-muted);">Not Set</span>
-                            {% endif %}
-                        </span>
+                    <div class="metadata-grid">
+                        <div class="metadata-item">
+                            <span class="metadata-label">Created</span>
+                            <span class="metadata-value">{{ ticket.created_at|date:"d M Y, H:i" }}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Updated</span>
+                            <span class="metadata-value">{{ ticket.updated_at|date:"d M Y, H:i" }}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Created By</span>
+                            <span class="metadata-value">{{ ticket.created_by_user.username|default:"System" }}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Role</span>
+                            <span class="metadata-value">{{ ticket.created_by_role }}</span>
+                        </div>
+                        {% if ticket.status == 'Closed' and time_to_close %}
+                        <div class="metadata-item highlight">
+                            <span class="metadata-label">Time to Close</span>
+                            <span class="metadata-value">{{ time_to_close }}</span>
+                        </div>
+                        {% endif %}
+                        {% if ticket.escalated_at %}
+                        <div class="metadata-item highlight">
+                            <span class="metadata-label">Escalated</span>
+                            <span class="metadata-value">{{ ticket.escalated_at|date:"d M Y, H:i" }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="metadata-item">
+                            <span class="metadata-label">Target Date</span>
+                            <span class="metadata-value">
+                                {% if ticket.target_date %}
+                                    <span class="target-date-value">{{ ticket.target_date|date:"d M Y" }}</span>
+                                {% else %}
+                                    <span class="not-set">Not Set</span>
+                                {% endif %}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- ============================================================
-                 PRIORITY CHANGE SECTION
+                 PRIORITY CHANGE - Card with New Design
                  ============================================================ -->
             {% if ticket.status != 'Closed' %}
             <div class="detail-card">
                 <div class="card-header">
-                    <i class="fa-solid fa-arrow-up-wide-short"></i> Change Priority
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-arrow-up-wide-short"></i>
+                    </div>
+                    <span>Change Priority</span>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{% url 'unit_head_ticket_detail' ticket.id %}" id="priorityChangeForm">
                         {% csrf_token %}
                         <input type="hidden" name="action_type" value="ChangePriority">
                         
-                        <div class="priority-form-group">
-                            <label>Current Priority</label>
+                        <div class="form-group">
                             <div class="current-priority-display">
+                                <span class="priority-label">Current:</span>
                                 <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
                                     {{ ticket.priority }}
                                 </span>
-                                <span style="font-size: 0.6rem; color: var(--text-muted);">
-                                    <i class="fa-solid fa-arrow-right"></i> Change to:
+                                <span class="priority-arrow">
+                                    <i class="fa-solid fa-arrow-right"></i>
                                 </span>
                             </div>
                         </div>
                         
-                        <div class="priority-form-group">
-                            <label for="new_priority">New Priority <span style="color: #EF4444;">*</span></label>
-                            <select name="new_priority" id="new_priority" class="form-select" required>
-                                <option value="">Select Priority</option>
-                                <option value="Critical">Critical</option>
-                                <option value="High">High</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Low">Low</option>
-                            </select>
+                        <div class="form-group">
+                            <label for="new_priority">New Priority <span class="required">*</span></label>
+                            <div class="priority-select-wrapper">
+                                <select name="new_priority" id="new_priority" class="form-select" required>
+                                    <option value="">Select Priority</option>
+                                    <option value="Critical">🔴 Critical</option>
+                                    <option value="High">🟠 High</option>
+                                    <option value="Medium">🟡 Medium</option>
+                                    <option value="Low">🟢 Low</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </div>
                         </div>
                         
-                        <div class="priority-form-group">
-                            <label for="priority_reason">Reason for Change <span style="color: #EF4444;">*</span></label>
+                        <div class="form-group">
+                            <label for="priority_reason">Reason for Change <span class="required">*</span></label>
                             <textarea name="priority_reason" id="priority_reason" class="form-control" rows="2" placeholder="Why is the priority changing?" required></textarea>
                         </div>
                         
@@ -359,7 +401,10 @@
             {% else %}
             <div class="detail-card">
                 <div class="card-header">
-                    <i class="fa-solid fa-arrow-up-wide-short"></i> Change Priority
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-arrow-up-wide-short"></i>
+                    </div>
+                    <span>Change Priority</span>
                 </div>
                 <div class="card-body">
                     <div class="priority-disabled-msg">
@@ -371,29 +416,35 @@
             {% endif %}
 
             <!-- ============================================================
-                 TARGET DATE UPDATE (Only for Assigned tickets)
+                 TARGET DATE UPDATE - Card with New Design
                  ============================================================ -->
             {% if ticket.status == 'Assigned' %}
             <div class="detail-card">
                 <div class="card-header">
-                    <i class="fa-regular fa-calendar"></i> Update Target Date
+                    <div class="card-header-icon">
+                        <i class="fa-regular fa-calendar"></i>
+                    </div>
+                    <span>Update Target Date</span>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="targetDateForm">
                         {% csrf_token %}
                         <input type="hidden" name="action_type" value="UpdateTargetDate">
                         
-                        <div class="priority-form-group">
-                            <label for="target_date">New Target Date <span style="color: #EF4444;">*</span></label>
-                            <input type="date" name="target_date" id="targetDate" class="form-control" required
-                                   min="{{ today|date:'Y-m-d' }}"
-                                   value="{{ ticket.target_date|date:'Y-m-d'|default:'' }}">
-                            <small style="font-size: 0.6rem; color: var(--text-muted);">
-                                <i class="fa-regular fa-clock me-1"></i>Set the expected completion date
+                        <div class="form-group">
+                            <label for="target_date">New Target Date <span class="required">*</span></label>
+                            <div class="date-input-wrapper">
+                                <i class="fa-regular fa-calendar"></i>
+                                <input type="date" name="target_date" id="targetDate" class="form-control" required
+                                       min="{{ today|date:'Y-m-d' }}"
+                                       value="{{ ticket.target_date|date:'Y-m-d'|default:'' }}">
+                            </div>
+                            <small class="form-hint">
+                                <i class="fa-regular fa-clock"></i> Set the expected completion date
                             </small>
                         </div>
                         
-                        <button type="submit" class="btn-change-priority" style="margin-top: 0.5rem; background: linear-gradient(135deg, #3B82F6, #2563EB);">
+                        <button type="submit" class="btn-change-priority btn-update-date">
                             <i class="fa-regular fa-calendar-check"></i> Update Target Date
                         </button>
                     </form>
@@ -401,74 +452,115 @@
             </div>
             {% endif %}
 
-            <!-- ===== STATUS TIMELINE ===== -->
+            <!-- ===== STATUS TIMELINE - New Design ===== -->
             <div class="detail-card">
                 <div class="card-header">
-                    <i class="fa-solid fa-road"></i> Status Timeline
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-road"></i>
+                    </div>
+                    <span>Status Timeline</span>
                 </div>
                 <div class="card-body">
-                    <div class="sidebar-section">
+                    <div class="timeline">
                         <div class="timeline-item">
-                            <span class="dot dot-created"></span>
-                            <span class="t-label">Created</span>
-                            <span class="t-time">{{ ticket.created_at|date:"d M Y, H:i" }}</span>
+                            <div class="timeline-dot dot-created">
+                                <i class="fa-solid fa-plus"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <span class="timeline-label">Created</span>
+                                <span class="timeline-time">{{ ticket.created_at|date:"d M Y, H:i" }}</span>
+                            </div>
                         </div>
 
                         {% if ticket.assigned_person %}
                         <div class="timeline-item">
-                            <span class="dot dot-assigned"></span>
-                            <span class="t-label">Assigned</span>
-                            <span class="t-time">{{ ticket.assigned_person }}</span>
+                            <div class="timeline-dot dot-assigned">
+                                <i class="fa-solid fa-user-check"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <span class="timeline-label">Assigned</span>
+                                <span class="timeline-time">{{ ticket.assigned_person }}</span>
+                            </div>
                         </div>
                         {% endif %}
 
                         {% if ticket.hold_reason %}
                         <div class="timeline-item">
-                            <span class="dot dot-hold"></span>
-                            <span class="t-label">Hold</span>
-                            <span class="t-time" style="font-size: 0.5rem; max-width: 120px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ ticket.hold_reason }}">
-                                {{ ticket.hold_reason|truncatechars:15 }}
-                            </span>
+                            <div class="timeline-dot dot-hold">
+                                <i class="fa-solid fa-pause"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <span class="timeline-label">Hold</span>
+                                <span class="timeline-time" title="{{ ticket.hold_reason }}">{{ ticket.hold_reason|truncatechars:20 }}</span>
+                            </div>
                         </div>
                         {% endif %}
 
                         {% if ticket.escalated_at %}
                         <div class="timeline-item">
-                            <span class="dot dot-escalated"></span>
-                            <span class="t-label">Escalated</span>
-                            <span class="t-time">{{ ticket.escalated_at|date:"d M Y, H:i" }}</span>
+                            <div class="timeline-dot dot-escalated">
+                                <i class="fa-solid fa-arrow-up"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <span class="timeline-label">Escalated</span>
+                                <span class="timeline-time">{{ ticket.escalated_at|date:"d M Y, H:i" }}</span>
+                            </div>
                         </div>
                         {% endif %}
 
                         {% if ticket.status == 'Closed' %}
                         <div class="timeline-item">
-                            <span class="dot dot-closed"></span>
-                            <span class="t-label">Closed</span>
-                            <span class="t-time">{{ ticket.closed_at|date:"d M Y, H:i" }}</span>
+                            <div class="timeline-dot dot-closed">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <span class="timeline-label">Closed</span>
+                                <span class="timeline-time">{{ ticket.closed_at|date:"d M Y, H:i" }}</span>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- ===== UNIT INFO ===== -->
+            <!-- ===== UNIT INFO - Card with New Design ===== -->
             <div class="detail-card">
                 <div class="card-header">
-                    <i class="fa-solid fa-building"></i> Unit
+                    <div class="card-header-icon">
+                        <i class="fa-solid fa-building"></i>
+                    </div>
+                    <span>Unit Information</span>
                 </div>
-                <div class="card-body" style="text-align: center; padding: 0.75rem;">
-                    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">
-                        {{ ticket.unit.full_name }}
+                <div class="card-body unit-card-body">
+                    <div class="unit-icon-large">
+                        <i class="fa-solid fa-building-columns"></i>
                     </div>
-                    <div style="font-size: 0.6rem; color: var(--text-muted);">
-                        <i class="fa-solid fa-code"></i> {{ ticket.unit.code }}
-                    </div>
-                    <div style="font-size: 0.6rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                    <div class="unit-name">{{ ticket.unit.full_name }}</div>
+                    <div class="unit-code"><i class="fa-solid fa-code"></i> {{ ticket.unit.code }}</div>
+                    <div class="unit-department">
                         <i class="fa-regular fa-layer-group"></i> {{ ticket.department.name }}
                     </div>
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- ============================================================
+         REPLIES SECTION - Full Width with New Design
+         ============================================================ -->
+    <div class="replies-section">
+        <div class="detail-card replies-card">
+            <div class="card-header">
+                <div class="card-header-icon">
+                    <i class="fa-solid fa-comments"></i>
+                </div>
+                <span>Conversation</span>
+                <span class="card-header-badge">Replies</span>
+            </div>
+            <div class="card-body">
+                {% include 'tickets/_ticket_replies.html' with reply_url=unit_head_reply_url %}
+            </div>
         </div>
     </div>
 
@@ -525,6 +617,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     targetDate.focus();
                     return false;
                 }
+            }
+        });
+    }
+
+    // ============================================================
+    // PRIORITY CHANGE CONFIRMATION
+    // ============================================================
+    var priorityForm = document.getElementById('priorityChangeForm');
+    if (priorityForm) {
+        priorityForm.addEventListener('submit', function(e) {
+            var select = document.getElementById('new_priority');
+            var reason = document.getElementById('priority_reason');
+            if (!select.value) {
+                e.preventDefault();
+                alert('Please select a new priority.');
+                select.focus();
+                return false;
+            }
+            if (!reason.value.trim()) {
+                e.preventDefault();
+                alert('Please provide a reason for the priority change.');
+                reason.focus();
+                return false;
+            }
+            if (!confirm('Are you sure you want to change the priority to "' + select.value + '"?')) {
+                e.preventDefault();
+                return false;
             }
         });
     }

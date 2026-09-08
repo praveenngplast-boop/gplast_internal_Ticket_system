@@ -367,7 +367,4 @@ document.addEventListener('DOMContentLoaded', function() {
         setInterval(refreshNotifications, 30000);
     }
 
-    console.log('✅ Base.js loaded with fixed notification URLs');
-    console.log('🔔 Notification GET URL: /custom-admin/notifications/get/');
-    console.log('🔔 Mark All Read URL: /custom-admin/notifications/mark-all-read/');
 });

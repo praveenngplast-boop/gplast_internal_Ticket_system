@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.template.loader import render_to_string
 from datetime import timedelta
+from django.db.models import Q
 import logging
 
 from tickets.models import (

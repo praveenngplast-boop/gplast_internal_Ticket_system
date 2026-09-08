@@ -29,10 +29,33 @@ from tickets.models import (
 )
 from tickets.forms import TicketForm, TicketReplyForm
 from tickets.utils import send_ticket_email, validate_attachment
-from tickets.export_helpers import add_replies_sheet, append_replies_section
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def get_reply_text(reply):
+    """
+    Helper function to get reply text from TicketReply model.
+    Tries multiple common field names.
+    """
+    if not reply:
+        return ''
+    
+    # List of possible field names for the reply text
+    possible_fields = ['reply', 'reply_text', 'message', 'text', 'content', 'comment', 'body', 'description']
+    
+    for field in possible_fields:
+        if hasattr(reply, field):
+            value = getattr(reply, field)
+            if value:
+                return str(value)
+    
+    # If none of the above, try to get it as a string representation
+    try:
+        return str(reply)
+    except:
+        return ''
 
 
 # ============================================================
@@ -225,16 +248,6 @@ def create_ticket(request):
                 performed_by=request.user.username
             )
             
-            # ============================================================
-            # EMAIL SENDING DISABLED - COMMENTED OUT
-            # ============================================================
-            # try:
-            #     send_ticket_email(ticket, 'Created')
-            #     logger.info(f"Email sent for ticket {ticket.ticket_number}")
-            # except Exception as e:
-            #     logger.error(f"Failed to send email for ticket {ticket.ticket_number}: {e}")
-            # ============================================================
-            
             messages.success(request, f'Ticket #{ticket.ticket_number} created successfully!')
             return redirect('ticket_detail', ticket_id=ticket.id)
         else:
@@ -263,9 +276,9 @@ def create_ticket(request):
 
 
 # ============================================================
-# ALL TICKETS - WITH 30 DAY CLOSED FILTER AND EXCEL EXPORT - FIXED AJAX
+# ALL TICKETS - WITH 30 DAY CLOSED FILTER AND EXCEL EXPORT
 # ============================================================
-@login_required  # ✅ ADDED - Fixes the authentication issue for drill-down
+@login_required
 def all_tickets(request):
     """
     View all tickets with 30-day filter for closed tickets
@@ -274,14 +287,11 @@ def all_tickets(request):
     - Search works across ALL history
     - Pagination: 20 per page
     - Excel export with current filters
-    - ✅ AJAX support for drill-down with target date
     """
-    # ✅ Check if user is authenticated FIRST
     is_ajax = request.GET.get('ajax', 'false')
     if isinstance(is_ajax, str):
         is_ajax = is_ajax.lower() in ['true', '1', 'yes']
     
-    # ✅ If not authenticated and AJAX, return JSON error
     if not request.user.is_authenticated:
         if is_ajax:
             return JsonResponse({
@@ -304,14 +314,10 @@ def all_tickets(request):
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     
-    # Main Error Type and Sub Error Type filters
     main_error_type = request.GET.get('main_error_type', '').strip()
     sub_error_type = request.GET.get('sub_error_type', '').strip()
-    
-    # ✅ Filter parameter for drill-down
     filter_param = request.GET.get('filter', '').strip()
     
-    # 30-DAY CLOSED TICKETS FILTER (DEFAULT VIEW)
     if not status_filter:
         thirty_days_ago = timezone.now() - timedelta(days=30)
         tickets = tickets.filter(
@@ -321,11 +327,9 @@ def all_tickets(request):
     
     if status_filter:
         tickets = tickets.filter(status=status_filter)
-    
     if priority_filter:
         tickets = tickets.filter(priority=priority_filter)
     
-    # ✅ Apply filter parameter for drill-down
     if filter_param and filter_param != 'all':
         if filter_param == 'Open':
             tickets = tickets.filter(status='Open')
@@ -340,11 +344,8 @@ def all_tickets(request):
         elif filter_param == 'Critical':
             tickets = tickets.filter(priority='Critical')
     
-    # Apply Main Error Type filter
     if main_error_type and main_error_type != '':
         tickets = tickets.filter(main_error_type=main_error_type)
-    
-    # Apply Sub Error Type filter
     if sub_error_type and sub_error_type != '' and sub_error_type != 'All':
         tickets = tickets.filter(sub_error_type=sub_error_type)
     
@@ -384,15 +385,9 @@ def all_tickets(request):
         closed_at__gte=thirty_days_ago
     ).count()
     
-    # ============================================================
-    # EXCEL EXPORT - Export filtered tickets
-    # ============================================================
     if request.GET.get('export') == 'excel':
         return export_filtered_tickets_excel(request, tickets)
     
-    # ============================================================
-    # ✅ FIXED: AJAX RESPONSE - Return JSON with ticket data
-    # ============================================================
     if is_ajax:
         try:
             tickets_list = tickets[:50]
@@ -426,9 +421,6 @@ def all_tickets(request):
                 'count': 0
             }, status=500)
     
-    # ============================================================
-    # REGULAR PAGE RENDER
-    # ============================================================
     paginator = Paginator(tickets, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -452,7 +444,7 @@ def all_tickets(request):
 
 
 # ============================================================
-# MY TICKETS - WITH EXCEL EXPORT - FIXED AJAX
+# MY TICKETS - WITH EXCEL EXPORT
 # ============================================================
 @login_required
 def my_tickets(request):
@@ -467,11 +459,8 @@ def my_tickets(request):
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     
-    # Main Error Type and Sub Error Type filters
     main_error_type = request.GET.get('main_error_type', '').strip()
     sub_error_type = request.GET.get('sub_error_type', '').strip()
-    
-    # ✅ Filter parameter for drill-down
     filter_param = request.GET.get('filter', '').strip()
     
     selected_status = status_filter
@@ -481,17 +470,13 @@ def my_tickets(request):
     
     if status_filter:
         tickets = tickets.filter(status=status_filter)
-    
     if priority_filter:
         tickets = tickets.filter(priority=priority_filter)
-    
     if assigned_person_filter:
         tickets = tickets.filter(assigned_person=assigned_person_filter)
-    
     if ticket_number_filter:
         tickets = tickets.filter(ticket_number__icontains=ticket_number_filter)
     
-    # ✅ Apply filter parameter for drill-down
     if filter_param and filter_param != 'all':
         if filter_param == 'Open':
             tickets = tickets.filter(status='Open')
@@ -506,11 +491,8 @@ def my_tickets(request):
         elif filter_param == 'Critical':
             tickets = tickets.filter(priority='Critical')
     
-    # Apply Main Error Type filter
     if main_error_type and main_error_type != '':
         tickets = tickets.filter(main_error_type=main_error_type)
-    
-    # Apply Sub Error Type filter
     if sub_error_type and sub_error_type != '' and sub_error_type != 'All':
         tickets = tickets.filter(sub_error_type=sub_error_type)
     
@@ -560,15 +542,9 @@ def my_tickets(request):
     
     employees = EmployeeMaster.objects.filter(is_active=True).order_by('employee_name')
     
-    # ============================================================
-    # EXCEL EXPORT - Export filtered my tickets
-    # ============================================================
     if request.GET.get('export') == 'excel':
         return export_filtered_my_tickets_excel(request, tickets)
     
-    # ============================================================
-    # ✅ FIXED: AJAX RESPONSE - Return JSON with HTML
-    # ============================================================
     is_ajax = request.GET.get('ajax', 'false')
     if isinstance(is_ajax, str):
         is_ajax = is_ajax.lower() in ['true', '1', 'yes']
@@ -782,7 +758,9 @@ def export_filtered_tickets_excel(request, tickets_qs):
     for col_letter, width in column_widths.items():
         ws.column_dimensions[col_letter].width = width
     
+    # Add Replies Sheet
     add_replies_sheet(wb, tickets_qs)
+    
     wb.save(response)
     return response
 
@@ -945,13 +923,108 @@ def export_filtered_my_tickets_excel(request, tickets_qs):
     for col_letter, width in column_widths.items():
         ws.column_dimensions[col_letter].width = width
     
+    # Add Replies Sheet
     add_replies_sheet(wb, tickets_qs)
+    
     wb.save(response)
     return response
 
 
 # ============================================================
-# TICKET DETAIL VIEW - ✅ FIXED
+# ADD REPLIES SHEET HELPER - FIXED
+# ============================================================
+def add_replies_sheet(wb, tickets_qs):
+    """Add a separate sheet with all replies for the tickets"""
+    replies = TicketReply.objects.filter(ticket__in=tickets_qs).select_related('ticket', 'author').order_by('created_at')
+    
+    if not replies.exists():
+        return
+    
+    ws = wb.create_sheet("Replies")
+    
+    title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    data_font = Font(name='Calibri', size=10)
+    title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+    header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
+    thin_border = Border(
+        left=Side(style='thin', color='D0D0D0'),
+        right=Side(style='thin', color='D0D0D0'),
+        top=Side(style='thin', color='D0D0D0'),
+        bottom=Side(style='thin', color='D0D0D0')
+    )
+    
+    # Title
+    ws.merge_cells('A1:F1')
+    ws['A1'] = f"TICKET REPLIES - Total: {replies.count()}"
+    ws['A1'].font = title_font
+    ws['A1'].fill = title_fill
+    ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[1].height = 40
+    
+    # Headers
+    headers = ['Ticket #', 'Date/Time', 'Author', 'Role', 'Reply', 'Ticket Subject']
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col_idx)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = thin_border
+    ws.row_dimensions[3].height = 30
+    
+    current_tz = timezone.get_current_timezone()
+    
+    row_idx = 4
+    for reply in replies:
+        if reply.created_at:
+            if timezone.is_naive(reply.created_at):
+                utc_time = timezone.make_aware(reply.created_at, timezone.utc)
+            else:
+                utc_time = reply.created_at
+            created_at_local = utc_time.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+        else:
+            created_at_local = ''
+        
+        ws.cell(row=row_idx, column=1, value=reply.ticket.ticket_number).font = data_font
+        ws.cell(row=row_idx, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        ws.cell(row=row_idx, column=1).border = thin_border
+        
+        ws.cell(row=row_idx, column=2, value=created_at_local).font = data_font
+        ws.cell(row=row_idx, column=2).alignment = Alignment(horizontal='left', vertical='center')
+        ws.cell(row=row_idx, column=2).border = thin_border
+        
+        ws.cell(row=row_idx, column=3, value=reply.author_name or 'Unknown').font = data_font
+        ws.cell(row=row_idx, column=3).alignment = Alignment(horizontal='left', vertical='center')
+        ws.cell(row=row_idx, column=3).border = thin_border
+        
+        ws.cell(row=row_idx, column=4, value=reply.author_role or 'Employee').font = data_font
+        ws.cell(row=row_idx, column=4).alignment = Alignment(horizontal='left', vertical='center')
+        ws.cell(row=row_idx, column=4).border = thin_border
+        
+        # FIXED: Use helper function to get reply text
+        reply_text = get_reply_text(reply)
+        ws.cell(row=row_idx, column=5, value=reply_text).font = data_font
+        ws.cell(row=row_idx, column=5).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws.cell(row=row_idx, column=5).border = thin_border
+        
+        ws.cell(row=row_idx, column=6, value=reply.ticket.subject or '').font = data_font
+        ws.cell(row=row_idx, column=6).alignment = Alignment(horizontal='left', vertical='center')
+        ws.cell(row=row_idx, column=6).border = thin_border
+        
+        row_idx += 1
+    
+    # Column widths
+    ws.column_dimensions['A'].width = 18
+    ws.column_dimensions['B'].width = 22
+    ws.column_dimensions['C'].width = 25
+    ws.column_dimensions['D'].width = 15
+    ws.column_dimensions['E'].width = 50
+    ws.column_dimensions['F'].width = 35
+
+
+# ============================================================
+# TICKET DETAIL VIEW
 # ============================================================
 @login_required
 def employee_ticket_detail(request, ticket_id):
@@ -963,10 +1036,8 @@ def employee_ticket_detail(request, ticket_id):
     history = TicketHistory.objects.filter(ticket=ticket).order_by('timestamp')
     replies = ticket.replies.select_related('author').all()
     
-    # ✅ FIXED: Only filter by screen_code, NOT by pk
     screen_object = ScreenMaster.objects.filter(screen_code=ticket.screen_number).first()
     
-    # Build attachments list for display
     attachments = []
     if ticket.attachment_1:
         attachments.append({'file': ticket.attachment_1, 'name': 'Attachment 1'})
@@ -1020,15 +1091,56 @@ def ticket_detail(request, ticket_id):
 
 
 # ============================================================
-# DOWNLOAD INDIVIDUAL TICKET EXCEL
+# EMPLOYEE TICKET REPLY
+# ============================================================
+@login_required
+def employee_ticket_reply(request, ticket_id):
+    """Employee reply to a ticket"""
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    
+    if not request.user.is_staff and not _employee_ticket_scope(request.user).filter(pk=ticket.pk).exists():
+        messages.error(request, 'You do not have permission to reply to this ticket.')
+        return redirect('employee_all_tickets')
+    
+    if request.method != 'POST':
+        return redirect('ticket_detail', ticket_id=ticket.id)
+    
+    form = TicketReplyForm(request.POST)
+    if form.is_valid():
+        reply = form.save(commit=False)
+        reply.ticket = ticket
+        reply.author = request.user
+        reply.author_name = request.user.get_full_name() or request.user.username
+        reply.author_role = 'Employee'
+        reply.save()
+        
+        messages.success(request, 'Reply added successfully.')
+    else:
+        messages.error(request, 'Please fix the errors below.')
+    
+    return redirect('ticket_detail', ticket_id=ticket.id)
+
+
+# ============================================================
+# DOWNLOAD INDIVIDUAL TICKET EXCEL - WITH AUDIT HISTORY & REPLIES
 # ============================================================
 @login_required
 def download_individual_ticket_excel(request, ticket_id):
-    """Download a single ticket details as Excel file"""
+    """Download a single ticket details as Excel file with Audit History and Replies"""
     ticket = get_object_or_404(Ticket, id=ticket_id)
     if not request.user.is_staff and not _employee_ticket_scope(request.user).filter(pk=ticket.pk).exists():
         messages.error(request, 'You do not have permission to download this ticket.')
         return redirect('employee_all_tickets')
+    
+    history = TicketHistory.objects.filter(ticket=ticket).order_by('timestamp')
+    replies = ticket.replies.select_related('author').all().order_by('created_at')
+    
+    current_tz = timezone.get_current_timezone()
+    now_utc = timezone.now()
+    if timezone.is_naive(now_utc):
+        now_utc = timezone.make_aware(now_utc, timezone.utc)
+    now_local = now_utc.astimezone(current_tz)
+    report_time = now_local.strftime('%d-%b-%Y %I:%M:%S %p')
     
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -1036,17 +1148,23 @@ def download_individual_ticket_excel(request, ticket_id):
     response['Content-Disposition'] = f'attachment; filename=Ticket_{ticket.ticket_number}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     
     wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = f"Ticket {ticket.ticket_number}"
+    
+    # ============================================================
+    # SHEET 1: TICKET DETAILS
+    # ============================================================
+    ws1 = wb.active
+    ws1.title = "Ticket Details"
     
     title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
     section_font = Font(name='Calibri', size=12, bold=True, color='FFFFFF')
     label_font = Font(name='Calibri', size=11, bold=True, color='1A2A6C')
     data_font = Font(name='Calibri', size=11, color='333333')
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
     
     title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
     section_fill = PatternFill(start_color='FF6B00', end_color='FF6B00', fill_type='solid')
     label_fill = PatternFill(start_color='E8EDF5', end_color='E8EDF5', fill_type='solid')
+    header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
     thin_border = Border(
         left=Side(style='thin', color='D0D0D0'),
         right=Side(style='thin', color='D0D0D0'),
@@ -1055,22 +1173,22 @@ def download_individual_ticket_excel(request, ticket_id):
     )
     
     # Title
-    ws.merge_cells('A1:F1')
-    ws['A1'] = f"GPLAST TICKET DETAILS - {ticket.ticket_number}"
-    ws['A1'].font = title_font
-    ws['A1'].fill = title_fill
-    ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
-    ws.row_dimensions[1].height = 40
+    ws1.merge_cells('A1:F1')
+    ws1['A1'] = f"GPLAST TICKET DETAILS - {ticket.ticket_number}"
+    ws1['A1'].font = title_font
+    ws1['A1'].fill = title_fill
+    ws1['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws1.row_dimensions[1].height = 40
     
     row = 3
     
     # Basic Information
-    ws.merge_cells(f'A{row}:F{row}')
-    ws[f'A{row}'] = "BASIC INFORMATION"
-    ws[f'A{row}'].font = section_font
-    ws[f'A{row}'].fill = section_fill
-    ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
-    ws.row_dimensions[row].height = 30
+    ws1.merge_cells(f'A{row}:F{row}')
+    ws1[f'A{row}'] = "BASIC INFORMATION"
+    ws1[f'A{row}'].font = section_font
+    ws1[f'A{row}'].fill = section_fill
+    ws1[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws1.row_dimensions[row].height = 30
     row += 1
     
     basic_info = [
@@ -1086,62 +1204,91 @@ def download_individual_ticket_excel(request, ticket_id):
     ]
     
     for label, value in basic_info:
-        ws.cell(row=row, column=1, value=label).font = label_font
-        ws.cell(row=row, column=1).fill = label_fill
-        ws.cell(row=row, column=1).border = thin_border
-        ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        ws1.cell(row=row, column=1, value=label).font = label_font
+        ws1.cell(row=row, column=1).fill = label_fill
+        ws1.cell(row=row, column=1).border = thin_border
+        ws1.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
         
-        ws.cell(row=row, column=2, value=value).font = data_font
-        ws.cell(row=row, column=2).border = thin_border
-        ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
-        ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+        ws1.cell(row=row, column=2, value=value).font = data_font
+        ws1.cell(row=row, column=2).border = thin_border
+        ws1.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws1.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
         row += 1
     
     row += 1
     
     # Employee Details
-    ws.merge_cells(f'A{row}:F{row}')
-    ws[f'A{row}'] = "EMPLOYEE DETAILS"
-    ws[f'A{row}'].font = section_font
-    ws[f'A{row}'].fill = section_fill
-    ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
-    ws.row_dimensions[row].height = 30
+    ws1.merge_cells(f'A{row}:F{row}')
+    ws1[f'A{row}'] = "EMPLOYEE DETAILS"
+    ws1[f'A{row}'].font = section_font
+    ws1[f'A{row}'].fill = section_fill
+    ws1[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws1.row_dimensions[row].height = 30
     row += 1
     
     emp_info = [
         ('Employee Name', ticket.employee_name),
         ('Employee ID', ticket.employee_id),
-        ('Mobile', ticket.mobile),
-        ('Email', ticket.email),
+        ('Mobile', ticket.mobile or ''),
+        ('Email', ticket.email or ''),
         ('Unit', ticket.unit.full_name if ticket.unit else ''),
         ('Department', ticket.department.name if ticket.department else ''),
         ('Screen/Module', ticket.screen_number),
     ]
     
     for label, value in emp_info:
-        ws.cell(row=row, column=1, value=label).font = label_font
-        ws.cell(row=row, column=1).fill = label_fill
-        ws.cell(row=row, column=1).border = thin_border
-        ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        ws1.cell(row=row, column=1, value=label).font = label_font
+        ws1.cell(row=row, column=1).fill = label_fill
+        ws1.cell(row=row, column=1).border = thin_border
+        ws1.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
         
-        ws.cell(row=row, column=2, value=value).font = data_font
-        ws.cell(row=row, column=2).border = thin_border
-        ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
-        ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+        ws1.cell(row=row, column=2, value=value).font = data_font
+        ws1.cell(row=row, column=2).border = thin_border
+        ws1.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws1.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
         row += 1
     
     row += 1
+    
+    # Assignment & Status
+    ws1.merge_cells(f'A{row}:F{row}')
+    ws1[f'A{row}'] = "ASSIGNMENT & STATUS"
+    ws1[f'A{row}'].font = section_font
+    ws1[f'A{row}'].fill = section_fill
+    ws1[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws1.row_dimensions[row].height = 30
+    row += 1
+    
+    assign_info = [
+        ('Created By Role', ticket.created_by_role),
+        ('Assigned To', ticket.assigned_person or 'Not Assigned'),
+        ('Hold Reason', ticket.hold_reason or ''),
+        ('Vendor Ticket', ticket.vendor_ticket_number or ''),
+        ('Admin Creation Reason', ticket.admin_creation_reason or ''),
+    ]
+    
+    for label, value in assign_info:
+        ws1.cell(row=row, column=1, value=label).font = label_font
+        ws1.cell(row=row, column=1).fill = label_fill
+        ws1.cell(row=row, column=1).border = thin_border
+        ws1.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        
+        ws1.cell(row=row, column=2, value=value).font = data_font
+        ws1.cell(row=row, column=2).border = thin_border
+        ws1.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws1.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+        row += 1
     
     row += 1
     
     # Closing Details (if closed)
     if ticket.status == 'Closed':
-        ws.merge_cells(f'A{row}:F{row}')
-        ws[f'A{row}'] = "CLOSING DETAILS"
-        ws[f'A{row}'].font = section_font
-        ws[f'A{row}'].fill = section_fill
-        ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
-        ws.row_dimensions[row].height = 30
+        ws1.merge_cells(f'A{row}:F{row}')
+        ws1[f'A{row}'] = "CLOSING DETAILS"
+        ws1[f'A{row}'].font = section_font
+        ws1[f'A{row}'].fill = section_fill
+        ws1[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        ws1.row_dimensions[row].height = 30
         row += 1
         
         time_to_close_str = ''
@@ -1165,37 +1312,168 @@ def download_individual_ticket_excel(request, ticket_id):
         ]
         
         for label, value in closing_info:
-            ws.cell(row=row, column=1, value=label).font = label_font
-            ws.cell(row=row, column=1).fill = label_fill
-            ws.cell(row=row, column=1).border = thin_border
-            ws.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+            ws1.cell(row=row, column=1, value=label).font = label_font
+            ws1.cell(row=row, column=1).fill = label_fill
+            ws1.cell(row=row, column=1).border = thin_border
+            ws1.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
             
-            ws.cell(row=row, column=2, value=value).font = data_font
-            ws.cell(row=row, column=2).border = thin_border
-            ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
-            ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+            ws1.cell(row=row, column=2, value=value).font = data_font
+            ws1.cell(row=row, column=2).border = thin_border
+            ws1.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+            ws1.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
             row += 1
         
         row += 1
     
-    row = append_replies_section(
-        ws, row, ticket, section_font, section_font, data_font,
-        section_fill, section_fill, thin_border
-    )
-
-    # Footer
-    ws.merge_cells(f'A{row}:F{row}')
-    ws[f'A{row}'] = f"Report generated on {timezone.now().strftime('%d-%b-%Y %I:%M %p')} | GPLAST Support System"
-    ws[f'A{row}'].font = Font(name='Calibri', size=9, italic=True, color='666666')
-    ws[f'A{row}'].alignment = Alignment(horizontal='center', vertical='center')
-    ws.row_dimensions[row].height = 25
+    # Footer for Sheet 1
+    ws1.merge_cells(f'A{row}:F{row}')
+    ws1[f'A{row}'] = f"Report generated on {report_time} | GPLAST Support System"
+    ws1[f'A{row}'].font = Font(name='Calibri', size=9, italic=True, color='666666')
+    ws1[f'A{row}'].alignment = Alignment(horizontal='center', vertical='center')
+    ws1.row_dimensions[row].height = 25
     
-    ws.column_dimensions['A'].width = 28
-    ws.column_dimensions['B'].width = 35
-    ws.column_dimensions['C'].width = 30
-    ws.column_dimensions['D'].width = 30
-    ws.column_dimensions['E'].width = 15
-    ws.column_dimensions['F'].width = 15
+    ws1.column_dimensions['A'].width = 28
+    ws1.column_dimensions['B'].width = 35
+    ws1.column_dimensions['C'].width = 30
+    ws1.column_dimensions['D'].width = 30
+    ws1.column_dimensions['E'].width = 15
+    ws1.column_dimensions['F'].width = 15
+    
+    # ============================================================
+    # SHEET 2: AUDIT HISTORY
+    # ============================================================
+    ws2 = wb.create_sheet("Audit History")
+    
+    ws2.merge_cells('A1:D1')
+    ws2['A1'] = f"AUDIT HISTORY - Ticket #{ticket.ticket_number}"
+    ws2['A1'].font = title_font
+    ws2['A1'].fill = title_fill
+    ws2['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws2.row_dimensions[1].height = 40
+    
+    ws2.merge_cells('A2:D2')
+    ws2['A2'] = f"Generated: {report_time}  |  Total Entries: {history.count()}"
+    ws2['A2'].font = Font(name='Calibri', size=10, italic=True, color='666666')
+    ws2['A2'].alignment = Alignment(horizontal='center', vertical='center')
+    ws2.row_dimensions[2].height = 25
+    
+    headers2 = ['#', 'Timestamp', 'Action', 'Remarks', 'Performed By']
+    for col_idx, header in enumerate(headers2, 1):
+        cell = ws2.cell(row=4, column=col_idx)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = thin_border
+    ws2.row_dimensions[4].height = 30
+    
+    row_idx = 5
+    for idx, log in enumerate(history, 1):
+        if log.timestamp:
+            if timezone.is_naive(log.timestamp):
+                utc_time = timezone.make_aware(log.timestamp, timezone.utc)
+            else:
+                utc_time = log.timestamp
+            timestamp_local = utc_time.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+        else:
+            timestamp_local = ''
+        
+        ws2.cell(row=row_idx, column=1, value=idx).font = data_font
+        ws2.cell(row=row_idx, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        ws2.cell(row=row_idx, column=1).border = thin_border
+        
+        ws2.cell(row=row_idx, column=2, value=timestamp_local).font = data_font
+        ws2.cell(row=row_idx, column=2).alignment = Alignment(horizontal='left', vertical='center')
+        ws2.cell(row=row_idx, column=2).border = thin_border
+        
+        ws2.cell(row=row_idx, column=3, value=log.action).font = data_font
+        ws2.cell(row=row_idx, column=3).alignment = Alignment(horizontal='left', vertical='center')
+        ws2.cell(row=row_idx, column=3).border = thin_border
+        
+        ws2.cell(row=row_idx, column=4, value=log.remarks or '').font = data_font
+        ws2.cell(row=row_idx, column=4).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws2.cell(row=row_idx, column=4).border = thin_border
+        
+        ws2.cell(row=row_idx, column=5, value=log.get_performed_by_display()).font = data_font
+        ws2.cell(row=row_idx, column=5).alignment = Alignment(horizontal='left', vertical='center')
+        ws2.cell(row=row_idx, column=5).border = thin_border
+        
+        row_idx += 1
+    
+    ws2.column_dimensions['A'].width = 8
+    ws2.column_dimensions['B'].width = 22
+    ws2.column_dimensions['C'].width = 30
+    ws2.column_dimensions['D'].width = 50
+    ws2.column_dimensions['E'].width = 22
+    
+    # ============================================================
+    # SHEET 3: REPLIES - FIXED
+    # ============================================================
+    ws3 = wb.create_sheet("Replies")
+    
+    ws3.merge_cells('A1:D1')
+    ws3['A1'] = f"REPLIES - Ticket #{ticket.ticket_number}"
+    ws3['A1'].font = title_font
+    ws3['A1'].fill = title_fill
+    ws3['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws3.row_dimensions[1].height = 40
+    
+    ws3.merge_cells('A2:D2')
+    ws3['A2'] = f"Generated: {report_time}  |  Total Replies: {replies.count()}"
+    ws3['A2'].font = Font(name='Calibri', size=10, italic=True, color='666666')
+    ws3['A2'].alignment = Alignment(horizontal='center', vertical='center')
+    ws3.row_dimensions[2].height = 25
+    
+    headers3 = ['#', 'Date/Time', 'Author', 'Reply', 'Role']
+    for col_idx, header in enumerate(headers3, 1):
+        cell = ws3.cell(row=4, column=col_idx)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = thin_border
+    ws3.row_dimensions[4].height = 30
+    
+    row_idx = 5
+    for idx, reply in enumerate(replies, 1):
+        if reply.created_at:
+            if timezone.is_naive(reply.created_at):
+                utc_time = timezone.make_aware(reply.created_at, timezone.utc)
+            else:
+                utc_time = reply.created_at
+            created_at_local = utc_time.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+        else:
+            created_at_local = ''
+        
+        ws3.cell(row=row_idx, column=1, value=idx).font = data_font
+        ws3.cell(row=row_idx, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        ws3.cell(row=row_idx, column=1).border = thin_border
+        
+        ws3.cell(row=row_idx, column=2, value=created_at_local).font = data_font
+        ws3.cell(row=row_idx, column=2).alignment = Alignment(horizontal='left', vertical='center')
+        ws3.cell(row=row_idx, column=2).border = thin_border
+        
+        ws3.cell(row=row_idx, column=3, value=reply.author_name or 'Unknown').font = data_font
+        ws3.cell(row=row_idx, column=3).alignment = Alignment(horizontal='left', vertical='center')
+        ws3.cell(row=row_idx, column=3).border = thin_border
+        
+        # FIXED: Use helper function to get reply text
+        reply_text = get_reply_text(reply)
+        ws3.cell(row=row_idx, column=4, value=reply_text).font = data_font
+        ws3.cell(row=row_idx, column=4).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws3.cell(row=row_idx, column=4).border = thin_border
+        
+        ws3.cell(row=row_idx, column=5, value=reply.author_role or 'Employee').font = data_font
+        ws3.cell(row=row_idx, column=5).alignment = Alignment(horizontal='left', vertical='center')
+        ws3.cell(row=row_idx, column=5).border = thin_border
+        
+        row_idx += 1
+    
+    ws3.column_dimensions['A'].width = 8
+    ws3.column_dimensions['B'].width = 22
+    ws3.column_dimensions['C'].width = 25
+    ws3.column_dimensions['D'].width = 50
+    ws3.column_dimensions['E'].width = 18
     
     wb.save(response)
     return response

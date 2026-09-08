@@ -16,6 +16,260 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.style.paddingRight = '';
     }
 
+    // ============================================================
+    // ✅ FIX: Define drill-down functions FIRST before charts
+    // ============================================================
+    window.drillDownAdminTickets = function(filterValue) {
+        forceCleanupBackdrops();
+
+        var modalEl = document.getElementById('adminDrillDownModal');
+        var modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+
+        var modalBody = document.getElementById('adminDrillDownModalBody');
+        var statusLabel = document.getElementById('adminDrillDownStatusLabel');
+        var viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
+
+        var statusMap = {
+            'all': 'All Tickets',
+            'Open': 'Open Tickets',
+            'Assigned': 'Assigned Tickets',
+            'Hold': 'Hold Tickets',
+            'Escalated': 'Escalated Tickets',
+            'Closed': 'Closed Tickets',
+            'Critical': 'Critical Priority Tickets'
+        };
+        statusLabel.textContent = statusMap[filterValue] || filterValue || 'All Tickets';
+
+        var filterParam = 'status';
+        if (filterValue === 'Critical') { filterParam = 'priority'; }
+        else if (filterValue === 'all') { filterParam = ''; }
+
+        if (filterParam) {
+            viewAllBtn.href = adminAllTicketsUrl + "?" + filterParam + "=" + encodeURIComponent(filterValue);
+        } else {
+            viewAllBtn.href = adminAllTicketsUrl;
+        }
+
+        modalBody.innerHTML = `
+            <div class="modal-loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading tickets...</p>
+            </div>
+        `;
+
+        modal.show();
+
+        var url = adminAllTicketsUrl + "?ajax=1";
+        if (filterParam) { url += "&" + filterParam + "=" + encodeURIComponent(filterValue); }
+
+        // ✅ FIX: Added credentials: 'same-origin'
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        })
+        .then(function(response) {
+            if (response.status === 302 || response.status === 401) {
+                throw new Error('Your session has expired. Please login again.');
+            }
+            if (!response.ok) throw new Error('Server returned ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success === false) throw new Error(data.message || 'Server error');
+            if (data.html) {
+                modalBody.innerHTML = data.html;
+                if (data.count !== undefined) {
+                    statusLabel.textContent = (statusMap[filterValue] || filterValue || 'All Tickets') + ` (${data.count})`;
+                }
+            } else if (data.tickets && data.tickets.length > 0) {
+                // ✅ Handle tickets data directly
+                var html = '';
+                html += '<div class="table-responsive"><table class="table table-hover align-middle">';
+                html += '<thead><tr>';
+                html += '<th>Ticket #</th><th>Subject</th><th>Employee</th><th>Status</th><th>Priority</th>';
+                html += '<th>Target Date</th><th>Created</th><th>Action</th>';
+                html += '</tr></thead><tbody>';
+                
+                data.tickets.forEach(function(ticket) {
+                    var statusClass = ticket.status.toLowerCase();
+                    var priorityClass = ticket.priority.toLowerCase();
+                    var targetDate = ticket.target_date ? new Date(ticket.target_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Not Set';
+                    var createdDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+                    
+                    html += '<tr>';
+                    html += '<td><strong>' + ticket.ticket_number + '</strong></td>';
+                    html += '<td>' + (ticket.subject ? ticket.subject.substring(0, 30) + (ticket.subject.length > 30 ? '...' : '') : '') + '</td>';
+                    html += '<td>' + (ticket.employee_name || 'N/A') + '</td>';
+                    html += '<td><span class="badge-custom badge-status-' + statusClass + '">' + ticket.status + '</span></td>';
+                    html += '<td><span class="badge-priority badge-priority-' + priorityClass + '">' + ticket.priority + '</span></td>';
+                    html += '<td><span style="font-size: 0.75rem; ' + (ticket.target_date ? 'color: var(--brand-orange); font-weight: 600;' : 'color: var(--text-muted);') + '">' + targetDate + '</span></td>';
+                    html += '<td style="font-size:0.65rem;">' + createdDate + '</td>';
+                    html += '<td>';
+                    html += '<a href="/custom-admin/ticket/' + ticket.id + '/" class="btn-view btn-sm" target="_blank">';
+                    html += '<i class="fa-solid fa-eye"></i> View';
+                    html += '</a>';
+                    html += '</td>';
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table></div>';
+                html += '<div style="text-align: center; margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted);">';
+                html += '<i class="fa-regular fa-clock me-1"></i>Showing ' + data.tickets.length + ' tickets';
+                html += '</div>';
+                modalBody.innerHTML = html;
+            } else {
+                modalBody.innerHTML = `
+                    <div class="text-center py-4" style="color: var(--text-muted);">
+                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
+                        <p>No tickets found</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(function(error) {
+            console.error('Drill-down error:', error);
+            modalBody.innerHTML = `
+                <div class="text-center py-4" style="color: #EF4444;">
+                    <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
+                    <p><strong>Error loading tickets</strong></p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
+                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="window.drillDownAdminTickets('${filterValue}')">
+                        <i class="fa-solid fa-rotate me-1"></i>Retry
+                    </button>
+                    <a href="/login/?next=${encodeURIComponent(window.location.pathname)}" class="btn btn-primary-custom btn-sm mt-2" style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                        <i class="fa-solid fa-right-to-bracket"></i> Login Again
+                    </a>
+                </div>
+            `;
+        });
+    };
+
+    window.drillDownWithFilter = function(filterType, filterValue, filterLabel) {
+        forceCleanupBackdrops();
+
+        var modalEl = document.getElementById('adminDrillDownModal');
+        var modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+
+        var modalBody = document.getElementById('adminDrillDownModalBody');
+        var statusLabel = document.getElementById('adminDrillDownStatusLabel');
+        var viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
+
+        statusLabel.textContent = filterLabel || filterValue;
+
+        var url = adminAllTicketsUrl + "?ajax=1";
+        
+        if (filterType === 'unit') {
+            viewAllBtn.href = adminAllTicketsUrl + "?unit=" + encodeURIComponent(filterValue);
+            url += "&unit=" + encodeURIComponent(filterValue);
+        } else if (filterType === 'priority') {
+            viewAllBtn.href = adminAllTicketsUrl + "?priority=" + encodeURIComponent(filterValue);
+            url += "&priority=" + encodeURIComponent(filterValue);
+        } else if (filterType === 'errorType') {
+            viewAllBtn.href = adminAllTicketsUrl + "?main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+            url += "&main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+            statusLabel.textContent = 'Main Error: ' + filterValue + ' (Closed Tickets)';
+        } else if (filterType === 'subErrorType') {
+            viewAllBtn.href = adminAllTicketsUrl + "?sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+            url += "&sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
+            statusLabel.textContent = 'Sub Error: ' + filterValue + ' (Closed Tickets)';
+        } else {
+            viewAllBtn.href = adminAllTicketsUrl;
+        }
+
+        modalBody.innerHTML = `
+            <div class="modal-loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading tickets...</p>
+            </div>
+        `;
+
+        modal.show();
+
+        // ✅ FIX: Added credentials: 'same-origin'
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        })
+        .then(function(response) {
+            if (response.status === 302 || response.status === 401) {
+                throw new Error('Your session has expired. Please login again.');
+            }
+            if (!response.ok) throw new Error('Server returned ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success === false) throw new Error(data.message || 'Server error');
+            if (data.html) {
+                modalBody.innerHTML = data.html;
+                if (data.count !== undefined) {
+                    statusLabel.textContent = (filterLabel || filterValue) + ` (${data.count})`;
+                }
+            } else if (data.tickets && data.tickets.length > 0) {
+                // ✅ Handle tickets data directly
+                var html = '';
+                html += '<div class="table-responsive"><table class="table table-hover align-middle">';
+                html += '<thead><tr>';
+                html += '<th>Ticket #</th><th>Subject</th><th>Employee</th><th>Status</th><th>Priority</th>';
+                html += '<th>Target Date</th><th>Created</th><th>Action</th>';
+                html += '</tr></thead><tbody>';
+                
+                data.tickets.forEach(function(ticket) {
+                    var statusClass = ticket.status.toLowerCase();
+                    var priorityClass = ticket.priority.toLowerCase();
+                    var targetDate = ticket.target_date ? new Date(ticket.target_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Not Set';
+                    var createdDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+                    
+                    html += '<tr>';
+                    html += '<td><strong>' + ticket.ticket_number + '</strong></td>';
+                    html += '<td>' + (ticket.subject ? ticket.subject.substring(0, 30) + (ticket.subject.length > 30 ? '...' : '') : '') + '</td>';
+                    html += '<td>' + (ticket.employee_name || 'N/A') + '</td>';
+                    html += '<td><span class="badge-custom badge-status-' + statusClass + '">' + ticket.status + '</span></td>';
+                    html += '<td><span class="badge-priority badge-priority-' + priorityClass + '">' + ticket.priority + '</span></td>';
+                    html += '<td><span style="font-size: 0.75rem; ' + (ticket.target_date ? 'color: var(--brand-orange); font-weight: 600;' : 'color: var(--text-muted);') + '">' + targetDate + '</span></td>';
+                    html += '<td style="font-size:0.65rem;">' + createdDate + '</td>';
+                    html += '<td>';
+                    html += '<a href="/custom-admin/ticket/' + ticket.id + '/" class="btn-view btn-sm" target="_blank">';
+                    html += '<i class="fa-solid fa-eye"></i> View';
+                    html += '</a>';
+                    html += '</td>';
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table></div>';
+                html += '<div style="text-align: center; margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted);">';
+                html += '<i class="fa-regular fa-clock me-1"></i>Showing ' + data.tickets.length + ' tickets';
+                html += '</div>';
+                modalBody.innerHTML = html;
+            } else {
+                modalBody.innerHTML = `
+                    <div class="text-center py-4" style="color: var(--text-muted);">
+                        <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
+                        <p>No tickets found</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(function(error) {
+            console.error('Drill-down error:', error);
+            modalBody.innerHTML = `
+                <div class="text-center py-4" style="color: #EF4444;">
+                    <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
+                    <p><strong>Error loading tickets</strong></p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
+                    <button class="btn btn-primary-custom btn-sm mt-2" onclick="window.drillDownWithFilter('${filterType}', '${filterValue}', '${filterLabel}')">
+                        <i class="fa-solid fa-rotate me-1"></i>Retry
+                    </button>
+                    <a href="/login/?next=${encodeURIComponent(window.location.pathname)}" class="btn btn-primary-custom btn-sm mt-2" style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                        <i class="fa-solid fa-right-to-bracket"></i> Login Again
+                    </a>
+                </div>
+            `;
+        });
+    };
+
+    // ============================================================
+    // LOAD CHART DATA
+    // ============================================================
     var chartsData = {};
     try {
         var dataElement = document.getElementById('charts-data');
@@ -35,19 +289,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!label) return;
 
                 if (chartType === 'status') {
-                    drillDownAdminTickets(label);
+                    window.drillDownAdminTickets(label);
                 } else if (chartType === 'priority') {
-                    drillDownWithFilter('priority', label, 'Priority: ' + label);
+                    window.drillDownWithFilter('priority', label, 'Priority: ' + label);
                 } else if (chartType === 'unit') {
                     var unitData = chartsData.units || [];
                     var unit = unitData.find(function(u) {
                         return (u.label || u.name || u.unit) === label;
                     });
-                    drillDownWithFilter('unit', unit ? unit.id || unit.unit_id : label, 'Unit: ' + label);
+                    window.drillDownWithFilter('unit', unit ? unit.id || unit.unit_id : label, 'Unit: ' + label);
                 } else if (chartType === 'errorType') {
-                    drillDownWithFilter('errorType', label, 'Error Type: ' + label + ' (Closed Tickets)');
+                    window.drillDownWithFilter('errorType', label, 'Error Type: ' + label + ' (Closed Tickets)');
                 } else if (chartType === 'subErrorType') {
-                    drillDownWithFilter('subErrorType', label, 'Sub Error: ' + label + ' (Closed Tickets)');
+                    window.drillDownWithFilter('subErrorType', label, 'Sub Error: ' + label + ' (Closed Tickets)');
                 }
             });
         });
@@ -57,28 +311,25 @@ document.addEventListener('DOMContentLoaded', function() {
         if (chartType === 'status') {
             var statusData = chartsData.status || {};
             var statusLabels = Object.keys(statusData);
-            if (statusLabels.length > 0) drillDownAdminTickets(statusLabels[0]);
+            if (statusLabels.length > 0) window.drillDownAdminTickets(statusLabels[0]);
         } else if (chartType === 'unit') {
             var unitData = chartsData.units || [];
             if (unitData.length > 0) {
                 var firstUnit = unitData[0];
-                drillDownWithFilter('unit', firstUnit.id || firstUnit.unit_id, 'Unit: ' + (firstUnit.label || firstUnit.name || 'Unknown'));
+                window.drillDownWithFilter('unit', firstUnit.id || firstUnit.unit_id, 'Unit: ' + (firstUnit.label || firstUnit.name || 'Unknown'));
             }
         } else if (chartType === 'priority') {
             var priorityData = chartsData.priority || {};
             var priorityLabels = Object.keys(priorityData);
-            if (priorityLabels.length > 0) drillDownWithFilter('priority', priorityLabels[0], 'Priority: ' + priorityLabels[0]);
+            if (priorityLabels.length > 0) window.drillDownWithFilter('priority', priorityLabels[0], 'Priority: ' + priorityLabels[0]);
         } else if (chartType === 'errorType') {
             var errorTypeData = chartsData.mainErrorType || chartsData.errorType || {};
             var errorTypeLabels = Object.keys(errorTypeData);
             if (errorTypeLabels.length > 0) {
-                drillDownWithFilter('errorType', errorTypeLabels[0], 'Error Type: ' + errorTypeLabels[0] + ' (Closed Tickets)');
+                window.drillDownWithFilter('errorType', errorTypeLabels[0], 'Error Type: ' + errorTypeLabels[0] + ' (Closed Tickets)');
             }
         }
     };
-
-    window.drillDownAdminTickets = drillDownAdminTickets;
-    window.drillDownWithFilter = drillDownWithFilter;
 
     function generateLegend(legendId, labels, colors, chartType) {
         var container = document.getElementById(legendId);
@@ -147,6 +398,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return null;
         }
         var ctx = canvas.getContext('2d');
+        
+        // ✅ FIX: Store chart reference for click handler
         var chart = new Chart(ctx, {
             type: type || 'doughnut',
             data: {
@@ -175,20 +428,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 },
                 cutout: type === 'doughnut' ? '60%' : undefined,
-                onClick: function(event, elements) {
+                onClick: function(event, elements, chartInstance) {
                     if (elements.length > 0) {
                         var index = elements[0].index;
-                        var label = this.data.labels[index];
+                        var label = chartInstance.data.labels[index];
                         if (canvasId === 'statusChart') {
-                            drillDownAdminTickets(label);
+                            window.drillDownAdminTickets(label);
                         } else if (canvasId === 'priorityChart') {
-                            drillDownWithFilter('priority', label, 'Priority: ' + label);
+                            window.drillDownWithFilter('priority', label, 'Priority: ' + label);
                         } else if (canvasId === 'unitChart') {
                             var unitData = chartsData.units || [];
                             var unit = unitData.find(function(u) { return (u.label || u.name || u.unit) === label; });
-                            drillDownWithFilter('unit', unit ? unit.id || unit.unit_id : label, 'Unit: ' + label);
+                            window.drillDownWithFilter('unit', unit ? unit.id || unit.unit_id : label, 'Unit: ' + label);
                         } else if (canvasId === 'errorTypeChart') {
-                            drillDownWithFilter('errorType', label, 'Error Type: ' + label + ' (Closed Tickets)');
+                            window.drillDownWithFilter('errorType', label, 'Error Type: ' + label + ' (Closed Tickets)');
                         }
                     }
                 }
@@ -281,168 +534,6 @@ document.addEventListener('DOMContentLoaded', function() {
         modalEl.addEventListener('hide.bs.modal', function() { setTimeout(forceCleanupBackdrops, 50); });
     }
 });
-
-// ============================================================
-// DRILL DOWN FUNCTIONS - WITH AGING
-// ============================================================
-
-function drillDownAdminTickets(filterValue) {
-    forceCleanupBackdrops();
-
-    var modalEl = document.getElementById('adminDrillDownModal');
-    var modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
-
-    var modalBody = document.getElementById('adminDrillDownModalBody');
-    var statusLabel = document.getElementById('adminDrillDownStatusLabel');
-    var viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
-
-    var statusMap = {
-        'all': 'All Tickets',
-        'Open': 'Open Tickets',
-        'Assigned': 'Assigned Tickets',
-        'Hold': 'Hold Tickets',
-        'Escalated': 'Escalated Tickets',
-        'Closed': 'Closed Tickets',
-        'Critical': 'Critical Priority Tickets'
-    };
-    statusLabel.textContent = statusMap[filterValue] || filterValue || 'All Tickets';
-
-    var filterParam = 'status';
-    if (filterValue === 'Critical') { filterParam = 'priority'; }
-    else if (filterValue === 'all') { filterParam = ''; }
-
-    if (filterParam) {
-        viewAllBtn.href = adminAllTicketsUrl + "?" + filterParam + "=" + encodeURIComponent(filterValue);
-    } else {
-        viewAllBtn.href = adminAllTicketsUrl;
-    }
-
-    modalBody.innerHTML = `
-        <div class="modal-loading">
-            <i class="fa-solid fa-spinner fa-spin"></i>
-            <p>Loading tickets...</p>
-        </div>
-    `;
-
-    modal.show();
-
-    var url = adminAllTicketsUrl + "?ajax=1";
-    if (filterParam) { url += "&" + filterParam + "=" + encodeURIComponent(filterValue); }
-
-    fetch(url, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(function(response) {
-        if (!response.ok) throw new Error('Server returned ' + response.status);
-        return response.json();
-    })
-    .then(function(data) {
-        if (data.success === false) throw new Error(data.message || 'Server error');
-        if (data.html) {
-            modalBody.innerHTML = data.html;
-            if (data.count !== undefined) {
-                statusLabel.textContent = (statusMap[filterValue] || filterValue || 'All Tickets') + ` (${data.count})`;
-            }
-        } else {
-            modalBody.innerHTML = `
-                <div class="text-center py-4" style="color: var(--text-muted);">
-                    <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
-                    <p>No tickets found</p>
-                </div>
-            `;
-        }
-    })
-    .catch(function(error) {
-        modalBody.innerHTML = `
-            <div class="text-center py-4" style="color: #EF4444;">
-                <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
-                <p><strong>Error loading tickets</strong></p>
-                <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
-                <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownAdminTickets('${filterValue}')">
-                    <i class="fa-solid fa-rotate me-1"></i>Retry
-                </button>
-            </div>
-        `;
-    });
-}
-
-function drillDownWithFilter(filterType, filterValue, filterLabel) {
-    forceCleanupBackdrops();
-
-    var modalEl = document.getElementById('adminDrillDownModal');
-    var modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
-
-    var modalBody = document.getElementById('adminDrillDownModalBody');
-    var statusLabel = document.getElementById('adminDrillDownStatusLabel');
-    var viewAllBtn = document.getElementById('adminDrillDownViewAllBtn');
-
-    statusLabel.textContent = filterLabel;
-
-    var url = adminAllTicketsUrl + "?ajax=1";
-    
-    if (filterType === 'unit') {
-        viewAllBtn.href = adminAllTicketsUrl + "?unit=" + encodeURIComponent(filterValue);
-        url += "&unit=" + encodeURIComponent(filterValue);
-    } else if (filterType === 'priority') {
-        viewAllBtn.href = adminAllTicketsUrl + "?priority=" + encodeURIComponent(filterValue);
-        url += "&priority=" + encodeURIComponent(filterValue);
-    } else if (filterType === 'errorType') {
-        viewAllBtn.href = adminAllTicketsUrl + "?main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
-        url += "&main_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
-        statusLabel.textContent = 'Main Error: ' + filterValue + ' (Closed Tickets)';
-    } else if (filterType === 'subErrorType') {
-        viewAllBtn.href = adminAllTicketsUrl + "?sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
-        url += "&sub_error_type=" + encodeURIComponent(filterValue) + "&status=Closed";
-        statusLabel.textContent = 'Sub Error: ' + filterValue + ' (Closed Tickets)';
-    } else {
-        viewAllBtn.href = adminAllTicketsUrl;
-    }
-
-    modalBody.innerHTML = `
-        <div class="modal-loading">
-            <i class="fa-solid fa-spinner fa-spin"></i>
-            <p>Loading tickets...</p>
-        </div>
-    `;
-
-    modal.show();
-
-    fetch(url, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(function(response) {
-        if (!response.ok) throw new Error('Server returned ' + response.status);
-        return response.json();
-    })
-    .then(function(data) {
-        if (data.success === false) throw new Error(data.message || 'Server error');
-        if (data.html) {
-            modalBody.innerHTML = data.html;
-            if (data.count !== undefined) {
-                statusLabel.textContent = filterLabel + ` (${data.count})`;
-            }
-        } else {
-            modalBody.innerHTML = `
-                <div class="text-center py-4" style="color: var(--text-muted);">
-                    <i class="fa-solid fa-receipt fa-2x mb-2 d-block opacity-25" style="color: var(--brand-orange);"></i>
-                    <p>No tickets found</p>
-                </div>
-            `;
-        }
-    })
-    .catch(function(error) {
-        modalBody.innerHTML = `
-            <div class="text-center py-4" style="color: #EF4444;">
-                <i class="fa-solid fa-circle-exclamation fa-2x mb-2 d-block"></i>
-                <p><strong>Error loading tickets</strong></p>
-                <p style="font-size: 0.85rem; color: var(--text-muted);">${error.message || 'Please try again.'}</p>
-                <button class="btn btn-primary-custom btn-sm mt-2" onclick="drillDownWithFilter('${filterType}', '${filterValue}', '${filterLabel}')">
-                    <i class="fa-solid fa-rotate me-1"></i>Retry
-                </button>
-            </div>
-        `;
-    });
-}
 
 function forceCleanupBackdrops() {
     document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {

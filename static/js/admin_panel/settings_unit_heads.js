@@ -426,5 +426,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     setTimeout(updateTheme, 200);
 
-    console.log('✅ Unit Heads JS loaded successfully');
 }); 

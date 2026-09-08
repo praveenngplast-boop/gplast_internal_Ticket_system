@@ -107,18 +107,10 @@
         var exportBtn = document.querySelector('.btn-uh-export');
         if (exportBtn) {
             exportBtn.addEventListener('click', function() {
-                console.log('📊 Unit Head Reports: Exporting to Excel');
                 // You can add analytics tracking here
             });
         }
 
-        console.log('✅ Unit Head Reports loaded with auto-filter and theme sync');
-        console.log('📋 Report filters:', {
-            status: document.getElementById('status')?.value || 'All',
-            priority: document.getElementById('priority')?.value || 'All',
-            department: document.getElementById('department')?.value || 'All',
-            search: document.getElementById('search')?.value || ''
-        });
 
     });
 

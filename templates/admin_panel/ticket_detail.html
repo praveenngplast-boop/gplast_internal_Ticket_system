@@ -370,7 +370,7 @@
 ============================================ -->
 
 {% if ticket.status != 'Closed' %}
-<!-- ===== ASSIGN MODAL - FIXED with ticket ID in action ===== -->
+<!-- ===== ASSIGN MODAL ===== -->
 <div class="modal fade" id="assignModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
@@ -395,7 +395,7 @@
                     <div class="mb-3">
                         <label class="form-label"><i class="fa-regular fa-calendar"></i>Target Date <span class="required">*</span></label>
                         <input type="date" name="target_date" id="targetDate" class="form-control" required>
-                        <small class="text-muted" style="font-size: 0.65rem;">
+                        <small class="file-help-text">
                             <i class="fa-regular fa-clock me-1"></i>Set the expected completion date
                         </small>
                     </div>
@@ -527,14 +527,19 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-0">
+                    <div class="mb-3">
                         <label class="form-label"><i class="fa-regular fa-message"></i>Reason <span class="required">*</span></label>
                         <textarea name="remarks" id="reopenRemarks" class="form-control" rows="3" placeholder="Reason for reopening" required></textarea>
-                        <label class="form-label mt-3"><i class="fa-solid fa-paperclip"></i> Attachments</label>
-                        <input type="file" name="reopen_attachments" class="form-control" multiple>
-                        <small class="text-muted" style="font-size: 0.65rem;">Add one or more files. Each file can be up to 5 MB.</small>
                     </div>
-                    <small class="text-muted d-block mt-2" style="font-size: 0.65rem;">
+                    <div>
+                        <label class="form-label"><i class="fa-solid fa-paperclip"></i> Attachments</label>
+                        <!-- FIXED: styled file input -->
+                        <div class="file-input-wrapper">
+                            <input type="file" name="reopen_attachments" class="form-control" multiple>
+                        </div>
+                        <span class="file-help-text">Add one or more files. Each file can be up to 5 MB.</span>
+                    </div>
+                    <small class="file-help-text d-block mt-2" style="font-size: 0.65rem;">
                         <i class="fa-regular fa-clock me-1"></i>You can only reopen within <strong>48 hours</strong> of closing.
                     </small>
                 </div>

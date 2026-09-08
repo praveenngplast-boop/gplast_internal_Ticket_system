@@ -468,7 +468,6 @@ function drillDownUnitTicketsByDepartment(departmentName) {
     var baseUrl = document.getElementById('unitHeadAllTicketsUrl').getAttribute('data-url');
     var url = baseUrl + '?ajax=1&department=' + encodeURIComponent(departmentName) + '&_=' + Date.now();
     
-    console.log('Fetching department tickets:', url);
     
     fetch(url, {
         headers: {
@@ -484,7 +483,6 @@ function drillDownUnitTicketsByDepartment(departmentName) {
         return TicketUI.requestJson(response);
     })
     .then(function(data) {
-        console.log('Department data response:', data);
         if (!data.success) {
             throw new Error(data.message || 'Failed to load tickets');
         }

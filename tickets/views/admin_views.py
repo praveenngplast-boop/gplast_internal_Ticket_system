@@ -537,11 +537,6 @@ def ticket_detail_admin(request, pk):
                     remarks=remarks + (f" | Target Date: {target_date.strftime('%d-%b-%Y')}" if target_date else ""), 
                     performed_by=f"Admin {request.user.username}"
                 )
-                # ============================================================
-                # EMAIL SENDING DISABLED - COMMENTED OUT
-                # ============================================================
-                # send_ticket_email(ticket, 'Assigned')
-                # ============================================================
                 messages.success(request, f'Ticket assigned to {assigned_person}. Target date set to {target_date.strftime("%d-%b-%Y") if target_date else "Not set"}.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
@@ -559,11 +554,6 @@ def ticket_detail_admin(request, pk):
                     remarks=f"Reason: {hold_reason}", 
                     performed_by=f"Admin {request.user.username}"
                 )
-                # ============================================================
-                # EMAIL SENDING DISABLED - COMMENTED OUT
-                # ============================================================
-                # send_ticket_email(ticket, 'Hold')
-                # ============================================================
                 messages.success(request, 'Ticket placed on Hold.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
@@ -581,11 +571,6 @@ def ticket_detail_admin(request, pk):
                     remarks=remark_str, 
                     performed_by=f"Admin {request.user.username}"
                 )
-                # ============================================================
-                # EMAIL SENDING DISABLED - COMMENTED OUT
-                # ============================================================
-                # send_ticket_email(ticket, 'Escalated')
-                # ============================================================
                 messages.success(request, 'Ticket escalated to ERP vendor.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
@@ -613,11 +598,6 @@ def ticket_detail_admin(request, pk):
                         remarks=f"Main Error: {main_error_type} | Sub Error: {sub_error_type} | {closing_remarks}", 
                         performed_by=f"Admin {request.user.username}"
                     )
-                    # ============================================================
-                    # EMAIL SENDING DISABLED - COMMENTED OUT
-                    # ============================================================
-                    # send_ticket_email(ticket, 'Closed')
-                    # ============================================================
                     messages.success(request, 'Ticket closed successfully.')
                     return redirect('admin_ticket_detail', pk=ticket.id)
                 else:
@@ -761,6 +741,36 @@ def ticket_detail_admin(request, pk):
 
 
 # ============================================================
+# ✅ NEW: ADMIN TICKET REPLY
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='login')
+def admin_ticket_reply(request, ticket_id):
+    """
+    Admin reply to a ticket
+    """
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    
+    if request.method != 'POST':
+        return redirect('admin_ticket_detail', pk=ticket.id)
+    
+    form = TicketReplyForm(request.POST)
+    if form.is_valid():
+        reply = form.save(commit=False)
+        reply.ticket = ticket
+        reply.author = request.user
+        reply.author_name = request.user.get_full_name() or request.user.username
+        reply.author_role = 'Admin'
+        reply.save()
+        
+        messages.success(request, 'Reply added successfully.')
+    else:
+        messages.error(request, 'Please fix the errors below.')
+    
+    return redirect('admin_ticket_detail', pk=ticket.id)
+
+
+# ============================================================
 # ✅ NEW: UPDATE TARGET DATE (Standalone Endpoint)
 # ============================================================
 @login_required
@@ -817,6 +827,425 @@ def update_target_date(request, ticket_id):
 
 
 # ============================================================
+# DOWNLOAD INDIVIDUAL TICKET EXCEL - WITH AUDIT HISTORY & REPLIES
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='login')
+def download_individual_ticket_excel(request, ticket_id):
+    """
+    Download a single ticket details as Excel file
+    Includes: Ticket Details, Audit History, and Replies
+    """
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    history = ticket.history.all().order_by('timestamp')
+    replies = ticket.replies.select_related('author').all().order_by('created_at')
+    
+    current_tz = timezone.get_current_timezone()
+    now_utc = timezone.now()
+    if timezone.is_naive(now_utc):
+        now_utc = timezone.make_aware(now_utc, timezone.utc)
+    now_local = now_utc.astimezone(current_tz)
+    report_time = now_local.strftime('%d-%b-%Y %I:%M:%S %p')
+    
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename=Ticket_{ticket.ticket_number}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    
+    wb = openpyxl.Workbook()
+    
+    # ============================================================
+    # SHEET 1: TICKET DETAILS
+    # ============================================================
+    ws1 = wb.active
+    ws1.title = "Ticket Details"
+    
+    title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
+    section_font = Font(name='Calibri', size=12, bold=True, color='FFFFFF')
+    label_font = Font(name='Calibri', size=11, bold=True, color='1A2A6C')
+    data_font = Font(name='Calibri', size=11, color='333333')
+    
+    title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
+    section_fill = PatternFill(start_color='FF6B00', end_color='FF6B00', fill_type='solid')
+    label_fill = PatternFill(start_color='E8EDF5', end_color='E8EDF5', fill_type='solid')
+    thin_border = Border(
+        left=Side(style='thin', color='D0D0D0'),
+        right=Side(style='thin', color='D0D0D0'),
+        top=Side(style='thin', color='D0D0D0'),
+        bottom=Side(style='thin', color='D0D0D0')
+    )
+    
+    # Title
+    ws1.merge_cells('A1:F1')
+    ws1['A1'] = f"GPLAST TICKET DETAILS - {ticket.ticket_number}"
+    ws1['A1'].font = title_font
+    ws1['A1'].fill = title_fill
+    ws1['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws1.row_dimensions[1].height = 40
+    
+    row = 3
+    
+    # Basic Information
+    ws1.merge_cells(f'A{row}:F{row}')
+    ws1[f'A{row}'] = "BASIC INFORMATION"
+    ws1[f'A{row}'].font = section_font
+    ws1[f'A{row}'].fill = section_fill
+    ws1[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws1.row_dimensions[row].height = 30
+    row += 1
+    
+    basic_info = [
+        ('Ticket Number', ticket.ticket_number),
+        ('Subject', ticket.subject),
+        ('Description', ticket.description or ''),
+        ('Priority', ticket.priority),
+        ('Status', ticket.status),
+        ('Error Type', ticket.error_type or 'Not Set'),
+        ('Target Date', ticket.target_date.strftime('%d-%b-%Y') if ticket.target_date else 'Not Set'),
+        ('Created Date', timezone.localtime(ticket.created_at).strftime('%d-%b-%Y %I:%M %p') if ticket.created_at else ''),
+        ('Updated Date', ticket.updated_at.strftime('%d-%b-%Y %I:%M %p') if ticket.updated_at else ''),
+    ]
+    
+    for label, value in basic_info:
+        ws1.cell(row=row, column=1, value=label).font = label_font
+        ws1.cell(row=row, column=1).fill = label_fill
+        ws1.cell(row=row, column=1).border = thin_border
+        ws1.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        
+        ws1.cell(row=row, column=2, value=value).font = data_font
+        ws1.cell(row=row, column=2).border = thin_border
+        ws1.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws1.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+        row += 1
+    
+    row += 1
+    
+    # Employee Details
+    ws1.merge_cells(f'A{row}:F{row}')
+    ws1[f'A{row}'] = "EMPLOYEE DETAILS"
+    ws1[f'A{row}'].font = section_font
+    ws1[f'A{row}'].fill = section_fill
+    ws1[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws1.row_dimensions[row].height = 30
+    row += 1
+    
+    emp_info = [
+        ('Employee Name', ticket.employee_name),
+        ('Employee ID', ticket.employee_id),
+        ('Mobile', ticket.mobile or ''),
+        ('Email', ticket.email or ''),
+        ('Unit', ticket.unit.full_name if ticket.unit else ''),
+        ('Department', ticket.department.name if ticket.department else ''),
+        ('Screen/Module', ticket.screen_number),
+        ('ERP ID', erp_id if ticket.employee_id else 'Not Mapped'),
+    ]
+    
+    for label, value in emp_info:
+        ws1.cell(row=row, column=1, value=label).font = label_font
+        ws1.cell(row=row, column=1).fill = label_fill
+        ws1.cell(row=row, column=1).border = thin_border
+        ws1.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        
+        ws1.cell(row=row, column=2, value=value).font = data_font
+        ws1.cell(row=row, column=2).border = thin_border
+        ws1.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws1.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+        row += 1
+    
+    row += 1
+    
+    # Assignment & Status
+    ws1.merge_cells(f'A{row}:F{row}')
+    ws1[f'A{row}'] = "ASSIGNMENT & STATUS"
+    ws1[f'A{row}'].font = section_font
+    ws1[f'A{row}'].fill = section_fill
+    ws1[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws1.row_dimensions[row].height = 30
+    row += 1
+    
+    assign_info = [
+        ('Created By Role', ticket.created_by_role),
+        ('Assigned To', ticket.assigned_person or 'Not Assigned'),
+        ('Hold Reason', ticket.hold_reason or ''),
+        ('Vendor Ticket', ticket.vendor_ticket_number or ''),
+        ('Admin Creation Reason', ticket.admin_creation_reason or ''),
+    ]
+    
+    for label, value in assign_info:
+        ws1.cell(row=row, column=1, value=label).font = label_font
+        ws1.cell(row=row, column=1).fill = label_fill
+        ws1.cell(row=row, column=1).border = thin_border
+        ws1.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        
+        ws1.cell(row=row, column=2, value=value).font = data_font
+        ws1.cell(row=row, column=2).border = thin_border
+        ws1.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws1.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+        row += 1
+    
+    row += 1
+    
+    # Closing Details (if closed)
+    if ticket.status == 'Closed':
+        ws1.merge_cells(f'A{row}:F{row}')
+        ws1[f'A{row}'] = "CLOSING DETAILS"
+        ws1[f'A{row}'].font = section_font
+        ws1[f'A{row}'].fill = section_fill
+        ws1[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+        ws1.row_dimensions[row].height = 30
+        row += 1
+        
+        time_to_close_str = ''
+        if ticket.created_at and ticket.closed_at:
+            duration = ticket.closed_at - ticket.created_at
+            days = duration.days
+            hours = duration.seconds // 3600
+            minutes = (duration.seconds % 3600) // 60
+            if days > 0:
+                time_to_close_str = f"{days}d {hours}h {minutes}m"
+            else:
+                time_to_close_str = f"{hours}h {minutes}m"
+        
+        closing_info = [
+            ('Closed By', ticket.closed_by or ''),
+            ('Closed Date', timezone.localtime(ticket.closed_at).strftime('%d-%b-%Y %I:%M %p') if ticket.closed_at else ''),
+            ('Main Error Type', ticket.main_error_type or 'N/A'),
+            ('Sub Error Type', ticket.sub_error_type or 'N/A'),
+            ('Closing Remarks', ticket.closing_remarks or ''),
+            ('Time to Close', time_to_close_str),
+        ]
+        
+        for label, value in closing_info:
+            ws1.cell(row=row, column=1, value=label).font = label_font
+            ws1.cell(row=row, column=1).fill = label_fill
+            ws1.cell(row=row, column=1).border = thin_border
+            ws1.cell(row=row, column=1).alignment = Alignment(horizontal='left', vertical='center', indent=1)
+            
+            ws1.cell(row=row, column=2, value=value).font = data_font
+            ws1.cell(row=row, column=2).border = thin_border
+            ws1.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+            ws1.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
+            row += 1
+        
+        row += 1
+    
+    # Footer for Sheet 1
+    ws1.merge_cells(f'A{row}:F{row}')
+    ws1[f'A{row}'] = f"Report generated on {report_time} | GPLAST Support System"
+    ws1[f'A{row}'].font = Font(name='Calibri', size=9, italic=True, color='666666')
+    ws1[f'A{row}'].alignment = Alignment(horizontal='center', vertical='center')
+    ws1.row_dimensions[row].height = 25
+    
+    # Column widths for Sheet 1
+    ws1.column_dimensions['A'].width = 28
+    ws1.column_dimensions['B'].width = 35
+    ws1.column_dimensions['C'].width = 30
+    ws1.column_dimensions['D'].width = 30
+    ws1.column_dimensions['E'].width = 15
+    ws1.column_dimensions['F'].width = 15
+    
+    # ============================================================
+    # SHEET 2: AUDIT HISTORY
+    # ============================================================
+    ws2 = wb.create_sheet("Audit History")
+    
+    # Title for Sheet 2
+    ws2.merge_cells('A1:D1')
+    ws2['A1'] = f"AUDIT HISTORY - Ticket #{ticket.ticket_number}"
+    ws2['A1'].font = title_font
+    ws2['A1'].fill = title_fill
+    ws2['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws2.row_dimensions[1].height = 40
+    
+    ws2.merge_cells('A2:D2')
+    ws2['A2'] = f"Generated: {report_time}  |  Total Entries: {history.count()}"
+    ws2['A2'].font = Font(name='Calibri', size=10, italic=True, color='666666')
+    ws2['A2'].alignment = Alignment(horizontal='center', vertical='center')
+    ws2.row_dimensions[2].height = 25
+    
+    # Headers for Sheet 2
+    headers2 = ['#', 'Timestamp', 'Action', 'Remarks', 'Performed By']
+    for col_idx, header in enumerate(headers2, 1):
+        cell = ws2.cell(row=4, column=col_idx)
+        cell.value = header
+        cell.font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = thin_border
+    ws2.row_dimensions[4].height = 30
+    
+    # Data rows for Sheet 2
+    row_idx = 5
+    for idx, log in enumerate(history, 1):
+        if log.timestamp:
+            if timezone.is_naive(log.timestamp):
+                utc_time = timezone.make_aware(log.timestamp, timezone.utc)
+            else:
+                utc_time = log.timestamp
+            timestamp_local = utc_time.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+        else:
+            timestamp_local = ''
+        
+        ws2.cell(row=row_idx, column=1, value=idx).font = data_font
+        ws2.cell(row=row_idx, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        ws2.cell(row=row_idx, column=1).border = thin_border
+        
+        ws2.cell(row=row_idx, column=2, value=timestamp_local).font = data_font
+        ws2.cell(row=row_idx, column=2).alignment = Alignment(horizontal='left', vertical='center')
+        ws2.cell(row=row_idx, column=2).border = thin_border
+        
+        ws2.cell(row=row_idx, column=3, value=log.action).font = data_font
+        ws2.cell(row=row_idx, column=3).alignment = Alignment(horizontal='left', vertical='center')
+        ws2.cell(row=row_idx, column=3).border = thin_border
+        
+        ws2.cell(row=row_idx, column=4, value=log.remarks or '').font = data_font
+        ws2.cell(row=row_idx, column=4).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws2.cell(row=row_idx, column=4).border = thin_border
+        
+        ws2.cell(row=row_idx, column=5, value=log.get_performed_by_display()).font = data_font
+        ws2.cell(row=row_idx, column=5).alignment = Alignment(horizontal='left', vertical='center')
+        ws2.cell(row=row_idx, column=5).border = thin_border
+        
+        row_idx += 1
+    
+    # Column widths for Sheet 2
+    ws2.column_dimensions['A'].width = 8
+    ws2.column_dimensions['B'].width = 22
+    ws2.column_dimensions['C'].width = 30
+    ws2.column_dimensions['D'].width = 50
+    ws2.column_dimensions['E'].width = 22
+    
+    # ============================================================
+    # SHEET 3: REPLIES
+    # ============================================================
+    ws3 = wb.create_sheet("Replies")
+    
+    # Title for Sheet 3
+    ws3.merge_cells('A1:D1')
+    ws3['A1'] = f"REPLIES - Ticket #{ticket.ticket_number}"
+    ws3['A1'].font = title_font
+    ws3['A1'].fill = title_fill
+    ws3['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws3.row_dimensions[1].height = 40
+    
+    ws3.merge_cells('A2:D2')
+    ws3['A2'] = f"Generated: {report_time}  |  Total Replies: {replies.count()}"
+    ws3['A2'].font = Font(name='Calibri', size=10, italic=True, color='666666')
+    ws3['A2'].alignment = Alignment(horizontal='center', vertical='center')
+    ws3.row_dimensions[2].height = 25
+    
+    # Headers for Sheet 3
+    headers3 = ['#', 'Date/Time', 'Author', 'Reply', 'Role']
+    for col_idx, header in enumerate(headers3, 1):
+        cell = ws3.cell(row=4, column=col_idx)
+        cell.value = header
+        cell.font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = thin_border
+    ws3.row_dimensions[4].height = 30
+    
+    # Data rows for Sheet 3
+    row_idx = 5
+    for idx, reply in enumerate(replies, 1):
+        if reply.created_at:
+            if timezone.is_naive(reply.created_at):
+                utc_time = timezone.make_aware(reply.created_at, timezone.utc)
+            else:
+                utc_time = reply.created_at
+            created_at_local = utc_time.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+        else:
+            created_at_local = ''
+        
+        ws3.cell(row=row_idx, column=1, value=idx).font = data_font
+        ws3.cell(row=row_idx, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        ws3.cell(row=row_idx, column=1).border = thin_border
+        
+        ws3.cell(row=row_idx, column=2, value=created_at_local).font = data_font
+        ws3.cell(row=row_idx, column=2).alignment = Alignment(horizontal='left', vertical='center')
+        ws3.cell(row=row_idx, column=2).border = thin_border
+        
+        ws3.cell(row=row_idx, column=3, value=reply.author_name or 'Unknown').font = data_font
+        ws3.cell(row=row_idx, column=3).alignment = Alignment(horizontal='left', vertical='center')
+        ws3.cell(row=row_idx, column=3).border = thin_border
+        
+        ws3.cell(row=row_idx, column=4, value=reply.reply_text or '').font = data_font
+        ws3.cell(row=row_idx, column=4).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws3.cell(row=row_idx, column=4).border = thin_border
+        
+        ws3.cell(row=row_idx, column=5, value=reply.author_role or 'Admin').font = data_font
+        ws3.cell(row=row_idx, column=5).alignment = Alignment(horizontal='left', vertical='center')
+        ws3.cell(row=row_idx, column=5).border = thin_border
+        
+        row_idx += 1
+    
+    # Column widths for Sheet 3
+    ws3.column_dimensions['A'].width = 8
+    ws3.column_dimensions['B'].width = 22
+    ws3.column_dimensions['C'].width = 25
+    ws3.column_dimensions['D'].width = 50
+    ws3.column_dimensions['E'].width = 18
+    
+    # Save workbook
+    wb.save(response)
+    return response
+
+
+# ============================================================
+# GET EMPLOYEES BY DEPARTMENT (AJAX)
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='login')
+def get_employees_by_department(request):
+    """
+    AJAX endpoint to get employees by department
+    Used by department-employees page
+    """
+    department_id = request.GET.get('department_id')
+    
+    if not department_id:
+        return JsonResponse({
+            'success': False,
+            'message': 'Department ID is required',
+            'employees': [],
+            'count': 0
+        }, status=400)
+    
+    try:
+        # Get employees for this department
+        employees = EmployeeMaster.objects.filter(
+            department_id=department_id,
+            is_active=True
+        ).order_by('employee_name')
+        
+        employee_data = []
+        for emp in employees:
+            employee_data.append({
+                'id': emp.id,
+                'employee_id': emp.employee_id or '',
+                'employee_name': emp.employee_name or '',
+                'mobile': emp.mobile or '',
+                'email': emp.email or '',
+                'is_active': emp.is_active,
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'employees': employee_data,
+            'count': len(employee_data)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching employees by department: {e}")
+        return JsonResponse({
+            'success': False,
+            'message': str(e),
+            'employees': [],
+            'count': 0
+        }, status=500)
+
+
+# ============================================================
 # NOTIFICATION FUNCTIONS - FIXED FOR AJAX
 # ============================================================
 
@@ -861,6 +1290,37 @@ def get_notifications(request):
         'count': 0,
         'html': ''
     }, status=400)
+
+
+@login_required
+@user_passes_test(is_admin, login_url='login')
+def refresh_notifications(request):
+    """
+    AJAX view to refresh notification dropdown content - Admin Only
+    Returns HTML for the notification dropdown
+    """
+    try:
+        unviewed_count = Ticket.objects.filter(is_viewed=False).count()
+        unviewed_tickets = Ticket.objects.filter(is_viewed=False).order_by('-created_at')[:10]
+        
+        html = render_to_string('admin_panel/_notification_items.html', {
+            'unviewed_tickets': unviewed_tickets,
+            'unviewed_count': unviewed_count,
+        }, request=request)
+        
+        return JsonResponse({
+            'success': True,
+            'html': html,
+            'count': unviewed_count
+        })
+    except Exception as e:
+        logger.error(f"Error in refresh_notifications: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': str(e),
+            'html': '',
+            'count': 0
+        }, status=500)
 
 
 @login_required

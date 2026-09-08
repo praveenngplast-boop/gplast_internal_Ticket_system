@@ -541,5 +541,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     setTimeout(updateTheme, 200);
 
-    console.log('✅ Employees JS loaded - Mobile and Email are OPTIONAL');
 });
