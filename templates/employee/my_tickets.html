@@ -9,330 +9,326 @@
 
 {% block content %}
 <div class="tickets-wrapper">
-    <!-- ===== HEADER ===== -->
-    <div class="tickets-header">
-        <div class="tickets-header-content">
-            <div class="tickets-header-title">
-                <i class="fa-regular fa-receipt"></i>
-                <div class="title-text">
-                    <h1>My Support Tickets</h1>
-                    <div class="tickets-header-meta">
-                        <span><i class="fa-regular fa-file-lines"></i> Track your requests</span>
-                        <span class="count-badge">
-                            <i class="fa-regular fa-circle-check"></i>
-                            {{ page_obj.paginator.count }} Tickets
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="tickets-header-actions">
-                <a href="?{% for key, value in request.GET.items %}{% if key != 'export' %}{{ key }}={{ value }}&{% endif %}{% endfor %}export=excel" class="btn-excel">
-                    <i class="fa-solid fa-file-excel"></i>
-                    <span>Export Excel</span>
-                </a>
-                <a href="{% url 'create_ticket' %}" class="btn-primary-gradient">
-                    <i class="fa-solid fa-circle-plus"></i>
-                    <span>New Ticket</span>
-                </a>
-            </div>
-        </div>
-    </div>
 
-    <!-- ===== 30-DAY CLOSED TICKETS BANNER ===== -->
-    {% if not selected_status or selected_status == 'Closed' %}
-    <div class="thirty-day-banner">
-        <div class="banner-left">
-            <div class="banner-icon">
-                <i class="fa-solid fa-calendar-check"></i>
-            </div>
-            <div class="banner-text">
-                <span class="count-badge">
-                    <i class="fa-regular fa-circle-check"></i>
-                    {{ closed_count_30_days|default:0 }}
-                </span>
-                <span class="info-text">
-                    <i class="fa-regular fa-clock"></i>
-                    Your closed tickets in last 30 days
-                </span>
-                <span class="info-text" style="font-size: clamp(0.45rem, 0.5vw, 0.55rem); color: var(--text-muted);">
-                    <i class="fa-regular fa-circle-question"></i>
-                    Older closed tickets are archived
-                </span>
-            </div>
-        </div>
-        <div class="banner-right">
-            <a href="?status=Closed" class="view-all-btn">
-                <i class="fa-solid fa-eye"></i> View All Closed
-            </a>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- ===== FILTERS ===== -->
-    <div class="tickets-filters">
-        <form method="get" id="filterForm" action="{% url 'my_tickets' %}">
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label for="filterStatus"><i class="fa-regular fa-circle"></i> Status</label>
-                    <select class="filter-select" name="status" id="filterStatus">
-                        <option value="">All Statuses</option>
-                        {% for value, label in status_choices %}
-                            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="filterPriority"><i class="fa-solid fa-flag"></i> Priority</label>
-                    <select class="filter-select" name="priority" id="filterPriority">
-                        <option value="">All Priorities</option>
-                        {% for value, label in priority_choices %}
-                            <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="filterAssignedTo"><i class="fa-solid fa-user"></i> Assigned To</label>
-                    <select class="filter-select" name="assigned_person" id="filterAssignedTo">
-                        <option value="">All Assigned Persons</option>
-                        {% for employee in employees %}
-                            <option value="{{ employee.employee_name }}" {% if selected_assigned_person == employee.employee_name %}selected{% endif %}>
-                                {{ employee.employee_name }} ({{ employee.employee_id }})
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="filterSearch"><i class="fa-solid fa-search"></i> Search</label>
-                    <input class="filter-input" type="text" name="search" id="filterSearch" value="{{ search_query|default:'' }}" placeholder="Search tickets...">
-                </div>
-
-                <div class="filter-group">
-                    <label for="filterMainError"><i class="fa-solid fa-bug"></i> Main Error</label>
-                    <select class="filter-select" name="main_error_type" id="filterMainError">
-                        <option value="">All Error Types</option>
-                        <option value="Roadmap Error" {% if selected_main_error_type == 'Roadmap Error' %}selected{% endif %}>Roadmap Error</option>
-                        <option value="GPL Error" {% if selected_main_error_type == 'GPL Error' %}selected{% endif %}>GPL Error</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="filterSubError"><i class="fa-solid fa-bug"></i> Sub Error</label>
-                    <select class="filter-select" name="sub_error_type" id="filterSubError">
-                        <option value="">All</option>
-                        <option value="Database Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Database Error' %}selected{% endif %}>Database Error</option>
-                        <option value="Logic / Functional Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Logic / Functional Error' %}selected{% endif %}>Logic / Functional Error</option>
-                        <option value="Application Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Application Error' %}selected{% endif %}>Application Error</option>
-                        <option value="Calculation Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Calculation Error' %}selected{% endif %}>Calculation Error</option>
-                        <option value="Report / Print Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Report / Print Error' %}selected{% endif %}>Report / Print Error</option>
-                        <option value="Workflow / Approval Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Workflow / Approval Error' %}selected{% endif %}>Workflow / Approval Error</option>
-                        <option value="Integration / API Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Integration / API Error' %}selected{% endif %}>Integration / API Error</option>
-                        <option value="Barcode Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Barcode Error' %}selected{% endif %}>Barcode Error</option>
-                        <option value="Performance Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Performance Error' %}selected{% endif %}>Performance Error</option>
-                        <option value="Access / Permission Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Access / Permission Error' %}selected{% endif %}>Access / Permission Error</option>
-                        <option value="Master Data / Configuration Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Master Data / Configuration Error' %}selected{% endif %}>Master Data / Configuration Error</option>
-                        <option value="Other ERP Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Other ERP Error' %}selected{% endif %}>Other ERP Error</option>
-                        <option value="User / Data Entry Error" data-main="GPL Error" {% if selected_sub_error_type == 'User / Data Entry Error' %}selected{% endif %}>User / Data Entry Error</option>
-                        <option value="Process / Procedure Error" data-main="GPL Error" {% if selected_sub_error_type == 'Process / Procedure Error' %}selected{% endif %}>Process / Procedure Error</option>
-                        <option value="Master Data Error" data-main="GPL Error" {% if selected_sub_error_type == 'Master Data Error' %}selected{% endif %}>Master Data Error</option>
-                        <option value="Other GPL Error" data-main="GPL Error" {% if selected_sub_error_type == 'Other GPL Error' %}selected{% endif %}>Other GPL Error</option>
-                    </select>
-                </div>
-
-                <div class="filter-group" id="ticketNumberGroup" style="display: none;">
-                    <label for="filterTicketNumber"><i class="fa-solid fa-hashtag"></i> Ticket Number</label>
-                    <input class="filter-input" type="text" name="ticket_number" id="filterTicketNumber" value="{{ selected_ticket_number|default:'' }}" placeholder="TKT-0001">
-                </div>
-
-                <div class="filter-group" id="dateFromGroup" style="display: none;">
-                    <label for="filterDateFrom"><i class="fa-regular fa-calendar-plus"></i> From Date</label>
-                    <input class="filter-input" type="date" name="date_from" id="filterDateFrom" value="{{ date_from|default:'' }}">
-                </div>
-
-                <div class="filter-group" id="dateToGroup" style="display: none;">
-                    <label for="filterDateTo"><i class="fa-regular fa-calendar-check"></i> To Date</label>
-                    <input class="filter-input" type="date" name="date_to" id="filterDateTo" value="{{ date_to|default:'' }}">
-                </div>
-
-                <div class="filters-actions">
-                    <button type="submit" class="btn-filter btn-filter-primary">
-                        <i class="fa-solid fa-filter"></i> Apply Filters
-                    </button>
-                    <button type="button" class="btn-filter btn-filter-secondary" id="toggleAdvanced">
-                        <i class="fa-solid fa-sliders-horizontal"></i> Advanced
-                    </button>
-                    <button type="button" class="btn-filter btn-filter-danger" id="clearFilters">
-                        <i class="fa-solid fa-eraser"></i> Clear All
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- ===== TABLE ===== -->
-    <div class="tickets-table-wrapper">
-        <div class="tickets-table-header">
-            <h3>
-                <i class="fa-solid fa-list"></i>
-                Ticket Log
-            </h3>
-            <span class="timestamp">
-                <i class="fa-regular fa-clock"></i>
-                Updated: {% now "d-m-Y H:i" %}
+  <!-- ===== HEADER ===== -->
+  <header class="tickets-header">
+    <div class="tickets-header-content">
+      <div class="tickets-header-title">
+        <i class="fa-regular fa-receipt" aria-hidden="true"></i>
+        <div class="title-text">
+          <h1>My Support Tickets</h1>
+          <div class="tickets-header-meta">
+            <span><i class="fa-regular fa-file-lines" aria-hidden="true"></i> Track your requests</span>
+            <span class="count-badge">
+              <i class="fa-regular fa-circle-check" aria-hidden="true"></i>
+              {{ page_obj.paginator.count }} Tickets
             </span>
+          </div>
+        </div>
+      </div>
+      <div class="tickets-header-actions">
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'export' %}{{ key }}={{ value }}&{% endif %}{% endfor %}export=excel" class="btn-excel">
+          <i class="fa-solid fa-file-excel" aria-hidden="true"></i>
+          <span>Export Excel</span>
+        </a>
+        <a href="{% url 'create_ticket' %}" class="btn-primary-gradient">
+          <i class="fa-solid fa-circle-plus" aria-hidden="true"></i>
+          <span>New Ticket</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== 30‑DAY CLOSED TICKETS BANNER ===== -->
+  {% if not selected_status or selected_status == 'Closed' %}
+  <section class="thirty-day-banner" aria-label="Closed tickets summary">
+    <div class="banner-left">
+      <div class="banner-icon">
+        <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+      </div>
+      <div class="banner-text">
+        <span class="count-badge">
+          <i class="fa-regular fa-circle-check" aria-hidden="true"></i>
+          {{ closed_count_30_days|default:0 }}
+        </span>
+        <span class="info-text">
+          <i class="fa-regular fa-clock" aria-hidden="true"></i>
+          Your closed tickets in last 30 days
+        </span>
+        <span class="info-text info-archived">
+          <i class="fa-regular fa-circle-question" aria-hidden="true"></i>
+          Older closed tickets are archived
+        </span>
+      </div>
+    </div>
+    <div class="banner-right">
+      <a href="?status=Closed" class="view-all-btn">
+        <i class="fa-solid fa-eye" aria-hidden="true"></i> View All Closed
+      </a>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ===== FILTERS ===== -->
+  <section class="tickets-filters" aria-label="Ticket filters">
+    <form method="get" id="filterForm" action="{% url 'my_tickets' %}">
+      <div class="filters-grid">
+        <!-- Basic filters -->
+        <div class="filter-group">
+          <label for="filterStatus"><i class="fa-regular fa-circle" aria-hidden="true"></i> Status</label>
+          <select class="filter-select" name="status" id="filterStatus">
+            <option value="">All Statuses</option>
+            {% for value, label in status_choices %}
+              <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
         </div>
 
-        <div class="tickets-table-scroll">
-            <table class="tickets-table" id="ticketsTable">
-                <thead>
-                    <tr>
-                        <th>Ticket</th>
-                        <th>Created</th>
-                        <th>Subject</th>
-                        <th>Priority</th>
-                        <th>Status</th>
-                        <th>Error</th>
-                        <th>Target Date</th>
-                        <th>Assigned To</th>
-                        <th style="text-align: center;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ticket in page_obj %}
-                        <tr data-url="{% url 'ticket_detail' ticket.id %}">
-                            <td>
-                                <span class="ticket-number">
-                                    <i class="fa-regular fa-hashtag"></i>
-                                    {{ ticket.ticket_number }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="ticket-date">
-                                    {{ ticket.created_at|date:"d-m-Y" }}
-                                    <span class="time">{{ ticket.created_at|date:"h:i A" }}</span>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="ticket-subject" title="{{ ticket.subject }}">
-                                    <i class="fa-regular fa-message"></i>
-                                    {{ ticket.subject }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
-                                    <i class="fa-solid fa-flag"></i>
-                                    {{ ticket.priority }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge-status badge-status-{{ ticket.status|lower }}">
-                                    <i class="fa-solid fa-circle"></i>
-                                    {{ ticket.status }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if ticket.main_error_type and ticket.sub_error_type %}
-                                    <span class="badge-error-type {% if ticket.main_error_type == 'Roadmap Error' %}roadmap{% elif ticket.main_error_type == 'GPL Error' %}gpl{% else %}other{% endif %}">
-                                        {{ ticket.main_error_type }}
-                                        <span class="sub-text">→ {{ ticket.sub_error_type }}</span>
-                                    </span>
-                                {% elif ticket.main_error_type %}
-                                    <span class="badge-error-type {% if ticket.main_error_type == 'Roadmap Error' %}roadmap{% elif ticket.main_error_type == 'GPL Error' %}gpl{% else %}other{% endif %}">
-                                        {{ ticket.main_error_type }}
-                                    </span>
-                                {% elif ticket.error_type %}
-                                    <span class="badge-error-type other">
-                                        {{ ticket.error_type }}
-                                    </span>
-                                {% else %}
-                                    <span style="font-size: clamp(0.4rem, 0.5vw, 0.45rem); color: var(--text-muted);">—</span>
-                                {% endif %}
-                            </td>
-                            <!-- ===== TARGET DATE COLUMN ===== -->
-                            <td>
-                                {% if ticket.target_date %}
-                                    <span style="font-size: 0.7rem; font-weight: 600; color: var(--brand-orange, #FF6B00);">
-                                        <i class="fa-regular fa-calendar me-1"></i>
-                                        {{ ticket.target_date|date:"d M Y" }}
-                                    </span>
-                                {% else %}
-                                    <span style="font-size: 0.65rem; color: var(--text-muted, #8A9AB8);">
-                                        <i class="fa-regular fa-calendar me-1"></i>
-                                        Not Set
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <span class="ticket-assigned">
-                                    {% if ticket.status == 'Assigned' and ticket.assigned_person %}
-                                        <i class="fa-solid fa-user-gear"></i>
-                                        {{ ticket.assigned_person }}
-                                    {% else %}
-                                        <span class="empty">—</span>
-                                    {% endif %}
-                                </span>
-                            </td>
-                            <td style="text-align: center;">
-                                <a href="{% url 'ticket_detail' ticket.id %}" class="btn-view-details">
-                                    <i class="fa-solid fa-eye"></i>
-                                    <span>View</span>
-                                </a>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="9">
-                                <div class="empty-state">
-                                    <i class="fa-regular fa-folder-open"></i>
-                                    <h4>No Tickets Found</h4>
-                                    <p>You haven't created any support tickets yet, or none match your filters.</p>
-                                    <a href="{% url 'create_ticket' %}" class="btn-primary-gradient">
-                                        <i class="fa-solid fa-circle-plus"></i> Create Your First Ticket
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="filter-group">
+          <label for="filterPriority"><i class="fa-solid fa-flag" aria-hidden="true"></i> Priority</label>
+          <select class="filter-select" name="priority" id="filterPriority">
+            <option value="">All Priorities</option>
+            {% for value, label in priority_choices %}
+              <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
         </div>
 
-        {% if page_obj.has_other_pages %}
-        <div class="tickets-pagination">
-            <div class="pagination-controls">
-                {% if page_obj.has_previous %}
-                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" class="pagination-btn">
-                        <i class="fa-solid fa-chevron-left"></i> Prev
-                    </a>
+        <div class="filter-group">
+          <label for="filterAssignedTo"><i class="fa-solid fa-user" aria-hidden="true"></i> Assigned To</label>
+          <select class="filter-select" name="assigned_person" id="filterAssignedTo">
+            <option value="">All Assigned Persons</option>
+            {% for employee in employees %}
+              <option value="{{ employee.employee_name }}" {% if selected_assigned_person == employee.employee_name %}selected{% endif %}>
+                {{ employee.employee_name }} ({{ employee.employee_id }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filterSearch"><i class="fa-solid fa-search" aria-hidden="true"></i> Search</label>
+          <input class="filter-input" type="text" name="search" id="filterSearch" value="{{ search_query|default:'' }}" placeholder="Search tickets...">
+        </div>
+
+        <!-- Advanced filters (hidden by default) -->
+        <div class="filter-group advanced-filter" id="mainErrorGroup">
+          <label for="filterMainError"><i class="fa-solid fa-bug" aria-hidden="true"></i> Main Error</label>
+          <select class="filter-select" name="main_error_type" id="filterMainError">
+            <option value="">All Error Types</option>
+            <option value="Roadmap Error" {% if selected_main_error_type == 'Roadmap Error' %}selected{% endif %}>Roadmap Error</option>
+            <option value="GPL Error" {% if selected_main_error_type == 'GPL Error' %}selected{% endif %}>GPL Error</option>
+          </select>
+        </div>
+
+        <div class="filter-group advanced-filter" id="subErrorGroup">
+          <label for="filterSubError"><i class="fa-solid fa-bug" aria-hidden="true"></i> Sub Error</label>
+          <select class="filter-select" name="sub_error_type" id="filterSubError">
+            <option value="">All</option>
+            <option value="Database Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Database Error' %}selected{% endif %}>Database Error</option>
+            <option value="Logic / Functional Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Logic / Functional Error' %}selected{% endif %}>Logic / Functional Error</option>
+            <option value="Application Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Application Error' %}selected{% endif %}>Application Error</option>
+            <option value="Calculation Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Calculation Error' %}selected{% endif %}>Calculation Error</option>
+            <option value="Report / Print Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Report / Print Error' %}selected{% endif %}>Report / Print Error</option>
+            <option value="Workflow / Approval Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Workflow / Approval Error' %}selected{% endif %}>Workflow / Approval Error</option>
+            <option value="Integration / API Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Integration / API Error' %}selected{% endif %}>Integration / API Error</option>
+            <option value="Barcode Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Barcode Error' %}selected{% endif %}>Barcode Error</option>
+            <option value="Performance Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Performance Error' %}selected{% endif %}>Performance Error</option>
+            <option value="Access / Permission Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Access / Permission Error' %}selected{% endif %}>Access / Permission Error</option>
+            <option value="Master Data / Configuration Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Master Data / Configuration Error' %}selected{% endif %}>Master Data / Configuration Error</option>
+            <option value="Other ERP Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Other ERP Error' %}selected{% endif %}>Other ERP Error</option>
+            <option value="User / Data Entry Error" data-main="GPL Error" {% if selected_sub_error_type == 'User / Data Entry Error' %}selected{% endif %}>User / Data Entry Error</option>
+            <option value="Process / Procedure Error" data-main="GPL Error" {% if selected_sub_error_type == 'Process / Procedure Error' %}selected{% endif %}>Process / Procedure Error</option>
+            <option value="Master Data Error" data-main="GPL Error" {% if selected_sub_error_type == 'Master Data Error' %}selected{% endif %}>Master Data Error</option>
+            <option value="Other GPL Error" data-main="GPL Error" {% if selected_sub_error_type == 'Other GPL Error' %}selected{% endif %}>Other GPL Error</option>
+          </select>
+        </div>
+
+        <div class="filter-group advanced-filter" id="ticketNumberGroup">
+          <label for="filterTicketNumber"><i class="fa-solid fa-hashtag" aria-hidden="true"></i> Ticket Number</label>
+          <input class="filter-input" type="text" name="ticket_number" id="filterTicketNumber" value="{{ selected_ticket_number|default:'' }}" placeholder="TKT-0001">
+        </div>
+
+        <div class="filter-group advanced-filter" id="dateFromGroup">
+          <label for="filterDateFrom"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i> From Date</label>
+          <input class="filter-input" type="date" name="date_from" id="filterDateFrom" value="{{ date_from|default:'' }}">
+        </div>
+
+        <div class="filter-group advanced-filter" id="dateToGroup">
+          <label for="filterDateTo"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i> To Date</label>
+          <input class="filter-input" type="date" name="date_to" id="filterDateTo" value="{{ date_to|default:'' }}">
+        </div>
+
+        <!-- Action buttons -->
+        <div class="filters-actions">
+          <button type="submit" class="btn-filter btn-filter-primary">
+            <i class="fa-solid fa-filter" aria-hidden="true"></i> Apply Filters
+          </button>
+          <button type="button" class="btn-filter btn-filter-secondary" id="toggleAdvanced">
+            <i class="fa-solid fa-sliders-horizontal" aria-hidden="true"></i> Advanced
+          </button>
+          <button type="button" class="btn-filter btn-filter-danger" id="clearFilters">
+            <i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear All
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===== TICKET TABLE ===== -->
+  <section class="tickets-table-wrapper" aria-label="Ticket list">
+    <div class="tickets-table-header">
+      <h3><i class="fa-solid fa-list" aria-hidden="true"></i> Ticket Log</h3>
+      <span class="timestamp">
+        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+        Updated: {% now "d-m-Y H:i" %}
+      </span>
+    </div>
+
+    <div class="tickets-table-scroll">
+      <table class="tickets-table" id="ticketsTable">
+        <thead>
+          <tr>
+            <th>Ticket</th>
+            <th>Created</th>
+            <th>Subject</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Error</th>
+            <th>Target Date</th>
+            <th>Assigned To</th>
+            <th class="action-col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ticket in page_obj %}
+            <tr data-url="{% url 'ticket_detail' ticket.id %}">
+              <td data-label="Ticket">
+                <span class="ticket-number">
+                  <i class="fa-regular fa-hashtag" aria-hidden="true"></i>
+                  {{ ticket.ticket_number }}
+                </span>
+              </td>
+              <td data-label="Created">
+                <span class="ticket-date">
+                  {{ ticket.created_at|date:"d-m-Y" }}
+                  <span class="time">{{ ticket.created_at|date:"h:i A" }}</span>
+                </span>
+              </td>
+              <td data-label="Subject">
+                <span class="ticket-subject" title="{{ ticket.subject }}">
+                  <i class="fa-regular fa-message" aria-hidden="true"></i>
+                  {{ ticket.subject }}
+                </span>
+              </td>
+              <td data-label="Priority">
+                <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
+                  <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                  {{ ticket.priority }}
+                </span>
+              </td>
+              <td data-label="Status">
+                <span class="badge-status badge-status-{{ ticket.status|lower }}">
+                  <i class="fa-solid fa-circle" aria-hidden="true"></i>
+                  {{ ticket.status }}
+                </span>
+              </td>
+              <td data-label="Error">
+                {% if ticket.main_error_type and ticket.sub_error_type %}
+                  <span class="badge-error-type {% if ticket.main_error_type == 'Roadmap Error' %}roadmap{% elif ticket.main_error_type == 'GPL Error' %}gpl{% else %}other{% endif %}">
+                    {{ ticket.main_error_type }}
+                    <span class="sub-text">→ {{ ticket.sub_error_type }}</span>
+                  </span>
+                {% elif ticket.main_error_type %}
+                  <span class="badge-error-type {% if ticket.main_error_type == 'Roadmap Error' %}roadmap{% elif ticket.main_error_type == 'GPL Error' %}gpl{% else %}other{% endif %}">
+                    {{ ticket.main_error_type }}
+                  </span>
+                {% elif ticket.error_type %}
+                  <span class="badge-error-type other">{{ ticket.error_type }}</span>
                 {% else %}
-                    <span class="pagination-btn disabled"><i class="fa-solid fa-chevron-left"></i> Prev</span>
+                  <span class="no-error">—</span>
                 {% endif %}
-
-                {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                        <span class="pagination-btn active">{{ num }}</span>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                        <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}" class="pagination-btn">{{ num }}</a>
-                    {% endif %}
-                {% endfor %}
-
-                {% if page_obj.has_next %}
-                    <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" class="pagination-btn">
-                        Next <i class="fa-solid fa-chevron-right"></i>
-                    </a>
+              </td>
+              <td data-label="Target Date">
+                {% if ticket.target_date %}
+                  <span class="target-date">
+                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                    {{ ticket.target_date|date:"d M Y" }}
+                  </span>
                 {% else %}
-                    <span class="pagination-btn disabled">Next <i class="fa-solid fa-chevron-right"></i></span>
+                  <span class="target-date not-set">Not Set</span>
                 {% endif %}
-            </div>
-            <span class="pagination-info">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                ({{ page_obj.paginator.count }} total tickets)
-            </span>
-        </div>
+              </td>
+              <td data-label="Assigned To">
+                <span class="ticket-assigned">
+                  {% if ticket.status == 'Assigned' and ticket.assigned_person %}
+                    <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
+                    {{ ticket.assigned_person }}
+                  {% else %}
+                    <span class="empty">—</span>
+                  {% endif %}
+                </span>
+              </td>
+              <td data-label="Action" class="action-col">
+                <a href="{% url 'ticket_detail' ticket.id %}" class="btn-view-details">
+                  <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                  <span>View</span>
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="9">
+                <div class="empty-state">
+                  <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+                  <h4>No Tickets Found</h4>
+                  <p>You haven't created any support tickets yet, or none match your filters.</p>
+                  <a href="{% url 'create_ticket' %}" class="btn-primary-gradient">
+                    <i class="fa-solid fa-circle-plus" aria-hidden="true"></i> Create Your First Ticket
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== PAGINATION ===== -->
+    {% if page_obj.has_other_pages %}
+    <nav class="tickets-pagination" aria-label="Ticket pagination">
+      <div class="pagination-controls">
+        {% if page_obj.has_previous %}
+          <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" class="pagination-btn">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Prev
+          </a>
+        {% else %}
+          <span class="pagination-btn disabled"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Prev</span>
         {% endif %}
-    </div>
+
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+            <span class="pagination-btn active">{{ num }}</span>
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}" class="pagination-btn">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+          <a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" class="pagination-btn">
+            Next <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </a>
+        {% else %}
+          <span class="pagination-btn disabled">Next <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
+        {% endif %}
+      </div>
+      <span class="pagination-info">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        ({{ page_obj.paginator.count }} total tickets)
+      </span>
+    </nav>
+    {% endif %}
+  </section>
 </div>
 {% endblock %}
 
