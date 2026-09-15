@@ -1,117 +1,111 @@
-/* ============================================================
-   UNIT HEAD REPORTS JAVASCRIPT
-   ============================================================ */
-
-(function() {
+(function () {
     'use strict';
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
 
-        // ============================================================
-        // AUTO-SUBMIT ON FILTER CHANGE
-        // ============================================================
-        var filterForm = document.getElementById('filterForm');
+        const filterForm  = document.getElementById('filterForm');
         if (!filterForm) return;
 
-        var filterSelects = filterForm.querySelectorAll('select');
+        const searchInput = document.getElementById('search');
+        const dateFrom    = document.getElementById('date_from');
+        const dateTo      = document.getElementById('date_to');
+        const filtersBox  = document.getElementById('uhFilters');
+        const toggleBtn   = document.getElementById('uhFiltersToggle');
+        const filterCount = document.getElementById('uhFilterCount');
 
-        filterSelects.forEach(function(select) {
-            select.addEventListener('change', function() {
+        /* ------------------------------------------------------------
+           Auto-submit on select change
+           ------------------------------------------------------------ */
+        filterForm.querySelectorAll('select').forEach(function (sel) {
+            sel.addEventListener('change', function () {
                 filterForm.submit();
             });
         });
 
-        // ============================================================
-        // SEARCH WITH DEBOUNCE
-        // ============================================================
-        var searchInput = document.getElementById('search');
-        var searchTimeout;
-
-        function debounceSubmit() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(function() {
-                filterForm.submit();
-            }, 500);
-        }
-
+        /* ------------------------------------------------------------
+           Debounced search
+           ------------------------------------------------------------ */
+        let searchTimeout;
         if (searchInput) {
-            searchInput.addEventListener('input', debounceSubmit);
-        }
-
-        // ============================================================
-        // DATE INPUTS - Auto submit on change
-        // ============================================================
-        var dateFrom = document.getElementById('date_from');
-        var dateTo = document.getElementById('date_to');
-
-        if (dateFrom) {
-            dateFrom.addEventListener('change', function() {
-                filterForm.submit();
+            searchInput.addEventListener('input', function () {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function () {
+                    filterForm.submit();
+                }, 500);
             });
         }
 
-        if (dateTo) {
-            dateTo.addEventListener('change', function() {
-                filterForm.submit();
-            });
-        }
-
-        // ============================================================
-        // THEME SYNC FOR FORM CONTROLS
-        // ============================================================
-        function updateTheme() {
-            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            var inputs = document.querySelectorAll('.form-control, .form-select');
-            
-            inputs.forEach(function(input) {
-                if (isDark) {
-                    input.style.backgroundColor = 'rgba(255,255,255,0.05)';
-                    input.style.borderColor = 'rgba(255,255,255,0.08)';
-                    input.style.color = '#E8EDF5';
-                    input.style.webkitTextFillColor = '#E8EDF5';
-                } else {
-                    input.style.backgroundColor = '';
-                    input.style.borderColor = '';
-                    input.style.color = '';
-                    input.style.webkitTextFillColor = '';
-                }
-            });
-        }
-
-        var themeToggle = document.getElementById('themeToggleFloating');
-        if (themeToggle) {
-            themeToggle.addEventListener('click', function() {
-                setTimeout(updateTheme, 100);
-            });
-        }
-
-        var observer = new MutationObserver(function() {
-            updateTheme();
-        });
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-theme']
+        /* ------------------------------------------------------------
+           Date auto-submit with validation
+           ------------------------------------------------------------ */
+        [dateFrom, dateTo].forEach(function (el) {
+            if (el) {
+                el.addEventListener('change', function () {
+                    if (dateFrom && dateTo && dateFrom.value && dateTo.value
+                        && new Date(dateFrom.value) > new Date(dateTo.value)) {
+                        alert('The "Date From" cannot be later than the "Date To".');
+                        el.focus();
+                        return;
+                    }
+                    filterForm.submit();
+                });
+            }
         });
 
-        // Initial theme sync
-        setTimeout(updateTheme, 200);
+        /* ------------------------------------------------------------
+           Collapsible filter panel + active count
+           ------------------------------------------------------------ */
+        const ADV_KEY = 'uhr_filters_open';
 
-        // ============================================================
-        // TABLE ROW HOVER EFFECT - already handled by CSS
-        // ============================================================
-        // No additional JS needed
+        function countActive() {
+            let n = 0;
+            filterForm.querySelectorAll('select').forEach(function (el) {
+                if (el.value && el.value.trim() !== '') n++;
+            });
+            if (searchInput && searchInput.value.trim() !== '') n++;
+            if (dateFrom && dateFrom.value) n++;
+            if (dateTo && dateTo.value) n++;
+            return n;
+        }
 
-        // ============================================================
-        // EXPORT BUTTON - Track clicks for analytics (optional)
-        // ============================================================
-        var exportBtn = document.querySelector('.btn-uh-export');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', function() {
-                // You can add analytics tracking here
+        function refreshCount() {
+            if (!filterCount) return;
+            const n = countActive();
+            filterCount.textContent = n;
+            filterCount.style.display = n > 0 ? 'inline-block' : 'none';
+        }
+
+        if (countActive() > 0 || localStorage.getItem(ADV_KEY) === '1') {
+            filtersBox.classList.add('open');
+        }
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                filtersBox.classList.toggle('open');
+                localStorage.setItem(ADV_KEY, filtersBox.classList.contains('open') ? '1' : '0');
             });
         }
 
+        refreshCount();
 
+        /* ------------------------------------------------------------
+           Card click → navigate (unless clicking inner link)
+           ------------------------------------------------------------ */
+        document.querySelectorAll('.uh-card[data-url]').forEach(function (card, i) {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(8px)';
+            card.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+            setTimeout(function () {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, Math.min(i * 25, 300));
+
+            card.addEventListener('click', function (e) {
+                if (e.target.closest('a')) return;
+                const url = this.getAttribute('data-url');
+                if (url) window.location.href = url;
+            });
+        });
     });
 
 })();

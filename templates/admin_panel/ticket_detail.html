@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Admin Ticket Detail - {{ ticket.ticket_number }}{% endblock %}
+{% block title %}Ticket #{{ ticket.ticket_number }} - GPLAST{% endblock %}
 
 {% block extra_head %}
 {{ block.super }}
@@ -8,616 +8,642 @@
 {% endblock %}
 
 {% block content %}
-<div class="ticket-container">
+<div class="tk-wrap">
 
-    <!-- ========== HEADER ========== -->
-    <div class="ticket-header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <div>
-                <h1 class="header-title">
-                    <i class="fa-solid fa-screwdriver-wrench me-2"></i>
-                    Ticket #{{ ticket.ticket_number }}
-                </h1>
-                <div class="header-subtitle">
-                    <i class="fa-regular fa-calendar me-1"></i>
-                    {{ ticket.created_at|date:"d M Y h:i A" }}
-                    <span class="time-badge">
-                        <i class="fa-regular fa-clock me-1"></i>
-                        {{ ticket.created_at|timesince }} ago
-                    </span>
-                </div>
+    <!-- ============================================================
+         HERO
+         ============================================================ -->
+    <header class="tk-hero">
+        <div class="tk-hero-main">
+            <div class="tk-hero-eyebrow">
+                <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
+                Admin Ticket
             </div>
-            <div class="header-actions">
-                <a href="{% url 'all_tickets' %}" class="btn-back">
-                    <i class="fa-solid fa-arrow-left me-1"></i>Back
-                </a>
-                <a href="{% url 'admin_download_ticket_excel' ticket.id %}" class="btn-download-excel" target="_blank">
-                    <i class="fa-solid fa-file-excel"></i>
-                    <span>Download Excel</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========== ACTION BANNER ========== -->
-    <div class="action-banner">
-        <div class="banner-title">
-            <i class="fa-solid fa-gears"></i>
-            Lifecycle Actions
-            {% if ticket.status == 'Closed' and can_reopen %}
-                <span class="reopen-badge">
-                    <i class="fa-regular fa-clock me-1"></i>Reopen Available
+            <h1>#{{ ticket.ticket_number }}</h1>
+            <p>{{ ticket.subject }}</p>
+            <div class="tk-hero-meta">
+                <span class="tk-chip">
+                    <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    {{ ticket.employee_name }}
                 </span>
-            {% endif %}
+                <span class="tk-chip">
+                    <i class="fa-solid fa-building" aria-hidden="true"></i>
+                    {{ ticket.unit.code }}
+                </span>
+                <span class="tk-chip">
+                    <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                    {{ ticket.created_at|date:"d M Y, H:i" }}
+                </span>
+            </div>
         </div>
-        <div class="action-buttons">
+        <div class="tk-hero-side">
+            <span class="tk-badge tk-badge-{{ ticket.status|lower }} tk-badge-lg">
+                <i class="fa-solid fa-circle" aria-hidden="true"></i> {{ ticket.status }}
+            </span>
+            <span class="tk-badge tk-badge-{{ ticket.priority|lower }} tk-badge-lg">
+                <i class="fa-solid fa-flag" aria-hidden="true"></i> {{ ticket.priority }}
+            </span>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         KPI STRIP
+         ============================================================ -->
+    <section class="tk-kpi-strip">
+        <div class="tk-kpi">
+            <span class="tk-kpi-label">Age</span>
+            <strong class="tk-kpi-value">{{ ticket.created_at|timesince }}</strong>
+        </div>
+        <div class="tk-kpi">
+            <span class="tk-kpi-label">Assigned To</span>
+            <strong class="tk-kpi-value">
+                {% if ticket.assigned_person %}{{ ticket.assigned_person }}{% else %}—{% endif %}
+            </strong>
+        </div>
+        <div class="tk-kpi">
+            <span class="tk-kpi-label">Target Date</span>
+            <strong class="tk-kpi-value">
+                {% if ticket.target_date %}{{ ticket.target_date|date:"d M Y" }}{% else %}—{% endif %}
+            </strong>
+        </div>
+        <div class="tk-kpi">
+            <span class="tk-kpi-label">Origin</span>
+            <strong class="tk-kpi-value">
+                {% if ticket.created_by_role == 'Admin' %}Admin Created{% else %}Self-Created{% endif %}
+            </strong>
+        </div>
+        <div class="tk-kpi">
+            <span class="tk-kpi-label">Replies</span>
+            <strong class="tk-kpi-value">{{ ticket.replies.count }}</strong>
+        </div>
+        <div class="tk-kpi">
+            <span class="tk-kpi-label">Events</span>
+            <strong class="tk-kpi-value">{{ history|length }}</strong>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         LAYOUT
+         ============================================================ -->
+    <div class="tk-layout">
+
+        <!-- LEFT — ACTION RAIL -->
+        <aside class="tk-rail">
+            <div class="tk-rail-head">Actions</div>
+
             {% if ticket.status != 'Closed' %}
-                {% if ticket.status == 'Open' %}
-                    <button type="button" class="action-btn action-btn-assign" data-bs-toggle="modal" data-bs-target="#assignModal">
-                        <i class="fa-solid fa-user-plus"></i>Assign
-                    </button>
-                {% else %}
-                    <button type="button" class="action-btn action-btn-assign" data-bs-toggle="modal" data-bs-target="#assignModal">
-                        <i class="fa-solid fa-user-plus"></i>Re-Assign
-                    </button>
-                    <button type="button" class="action-btn action-btn-hold" data-bs-toggle="modal" data-bs-target="#holdModal">
-                        <i class="fa-solid fa-pause"></i>Hold
-                    </button>
-                    <button type="button" class="action-btn action-btn-escalate" data-bs-toggle="modal" data-bs-target="#escalateModal">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>Escalate
-                    </button>
-                    <button type="button" class="action-btn action-btn-close" data-bs-toggle="modal" data-bs-target="#closeModal">
-                        <i class="fa-solid fa-circle-check"></i>Close
-                    </button>
+                <button type="button" class="tk-rail-btn tk-rail-assign" data-sheet="sheet-assign">
+                    <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                    <span>{% if ticket.status == 'Open' %}Assign{% else %}Re-Assign{% endif %}</span>
+                </button>
+
+                {% if ticket.status != 'Open' %}
+                <button type="button" class="tk-rail-btn tk-rail-hold" data-sheet="sheet-hold">
+                    <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                    <span>Hold</span>
+                </button>
+
+                <button type="button" class="tk-rail-btn tk-rail-escalate" data-sheet="sheet-escalate">
+                    <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+                    <span>Escalate</span>
+                </button>
+
+                <button type="button" class="tk-rail-btn tk-rail-close" data-sheet="sheet-close">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <span>Close</span>
+                </button>
                 {% endif %}
             {% else %}
                 {% if can_reopen %}
-                    <button type="button" class="action-btn action-btn-reopen" data-bs-toggle="modal" data-bs-target="#reopenModal">
-                        <i class="fa-solid fa-envelope-open"></i>Reopen
-                        <span class="badge-reopen-time" id="reopen-timer-badge">Loading...</span>
-                    </button>
-                    <span class="action-status-msg">
-                        <i class="fa-regular fa-clock"></i>
-                        <span id="reopen-timer-text">Time left to reopen</span>
-                    </span>
+                <button type="button" class="tk-rail-btn tk-rail-reopen" data-sheet="sheet-reopen">
+                    <i class="fa-solid fa-envelope-open" aria-hidden="true"></i>
+                    <span>Reopen</span>
+                </button>
+                <div class="tk-rail-timer">
+                    <span class="tk-rail-timer-label">Time left</span>
+                    <strong id="reopen-timer-text">Loading…</strong>
+                </div>
                 {% else %}
-                    <span class="action-status-msg" style="color: var(--text-muted);">
-                        <i class="fa-regular fa-clock"></i>
-                        Cannot reopen (48+ hours elapsed)
-                    </span>
+                <div class="tk-rail-locked">
+                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                    <p>Closed &gt; 48 hours ago</p>
+                </div>
                 {% endif %}
             {% endif %}
-        </div>
-    </div>
 
-    <!-- ========== MAIN CONTENT ========== -->
-    <div class="row g-3">
-        <!-- LEFT COLUMN - Ticket Details -->
-        <div class="col-lg-8">
-            <div class="panel-card">
-                <div class="glass-header">
-                    <h6><i class="fa-solid fa-circle-info me-2"></i>Ticket Details</h6>
+            <div class="tk-rail-divider"></div>
+
+            <a href="{% url 'admin_download_ticket_excel' ticket.id %}"
+               class="tk-rail-btn tk-rail-excel" target="_blank">
+                <i class="fa-solid fa-file-excel" aria-hidden="true"></i>
+                <span>Download</span>
+            </a>
+            <a href="{% url 'all_tickets' %}" class="tk-rail-btn tk-rail-back">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                <span>All Tickets</span>
+            </a>
+        </aside>
+
+        <!-- RIGHT — MAIN -->
+        <main class="tk-main">
+
+            <!-- Ticket details -->
+            <section class="tk-card">
+                <div class="tk-card-head">
+                    <h2><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Ticket Details</h2>
                 </div>
-                <div class="card-body">
-                    <div class="details-grid">
-                        <!-- ===== SUBJECT ===== -->
-                        <div class="detail-item full-width highlight">
-                            <span class="detail-label">Subject</span>
-                            <div class="detail-value highlight-text">{{ ticket.subject }}</div>
+                <div class="tk-card-body">
+                    <div class="tk-info-grid">
+                        <div class="tk-info-block tk-span-2">
+                            <span class="tk-label">Description</span>
+                            <p class="tk-desc">{{ ticket.description|default:"No description provided." }}</p>
                         </div>
 
-                        <!-- ===== TOP STATUS CARD ===== -->
-                        <div class="top-status-card">
-                            <!-- Closing Details Section -->
-                            <div class="status-section">
-                                <div class="section-label">
-                                    <i class="fa-solid fa-circle-check" style="color: var(--success-color);"></i>
-                                    Closing Details
-                                </div>
-                                {% if ticket.status == 'Closed' %}
-                                    <div class="section-value">
-                                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem;">
-                                            <span><strong>Closed by:</strong> {{ ticket.closed_by|default:"GPLERPADMIN" }}</span>
-                                            <span><strong>Date:</strong> {{ ticket.closed_at|date:"d M Y h:i A"|default:"N/A" }}</span>
-                                            <span><strong>Time to close:</strong> {{ time_to_close|default:"N/A" }}</span>
-                                            <span style="width: 100%;"><strong>Remarks:</strong> {{ ticket.closing_remarks|default:"N/A" }}</span>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="section-value" style="color: var(--text-muted); font-weight: 400; font-size: 0.75rem;">
-                                        <i class="fa-regular fa-clock me-1"></i>Ticket is not yet closed
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <!-- Divider -->
-                            <div class="divider"></div>
-
-                            <!-- Vendor Tracking Section -->
-                            <div class="status-section">
-                                <div class="section-label">
-                                    <i class="fa-solid fa-cloud-arrow-up" style="color: #8B5CF6;"></i>
-                                    Vendor Tracking
-                                </div>
-                                {% if ticket.vendor_ticket_number %}
-                                    <div class="section-value">
-                                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; align-items: center;">
-                                            <span style="background: rgba(139, 92, 246, 0.1); padding: 0.1rem 0.6rem; border-radius: 50px; font-weight: 700; color: #8B5CF6; font-family: 'Courier New', monospace;">
-                                                {{ ticket.vendor_ticket_number }}
-                                            </span>
-                                            {% if ticket.escalated_at %}
-                                                <span style="font-size: 0.65rem; color: var(--text-muted);">
-                                                    <i class="fa-regular fa-clock me-1"></i>
-                                                    Escalated: {{ ticket.escalated_at|date:"d M Y h:i A" }}
-                                                </span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="section-value" style="color: var(--text-muted); font-weight: 400; font-size: 0.75rem;">
-                                        <i class="fa-regular fa-circle-minus me-1"></i>Not escalated to vendor
-                                    </div>
-                                {% endif %}
+                        <div class="tk-info-block">
+                            <span class="tk-label">Employee</span>
+                            <div class="tk-value">{{ ticket.employee_name }}</div>
+                        </div>
+                        <div class="tk-info-block">
+                            <span class="tk-label">Employee ID</span>
+                            <div class="tk-value tk-mono">{{ ticket.employee_id }}</div>
+                        </div>
+                        <div class="tk-info-block">
+                            <span class="tk-label">Email</span>
+                            <div class="tk-value">
+                                {% if ticket.email %}<a href="mailto:{{ ticket.email }}">{{ ticket.email }}</a>{% else %}<span class="tk-muted">—</span>{% endif %}
                             </div>
                         </div>
-
-                        <!-- ===== EMPLOYEE DETAILS ===== -->
-                        <div class="detail-item">
-                            <span class="detail-label">Employee</span>
-                            <div class="detail-value">{{ ticket.employee_name }}</div>
+                        <div class="tk-info-block">
+                            <span class="tk-label">Mobile</span>
+                            <div class="tk-value">{{ ticket.mobile|default:"—" }}</div>
                         </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Employee ID</span>
-                            <div class="detail-value">{{ ticket.employee_id }}</div>
+                        <div class="tk-info-block">
+                            <span class="tk-label">Department</span>
+                            <div class="tk-value">{{ ticket.department.name }}</div>
                         </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Email</span>
-                            <div class="detail-value"><a href="mailto:{{ ticket.email }}">{{ ticket.email }}</a></div>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Mobile</span>
-                            <div class="detail-value">{{ ticket.mobile }}</div>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Unit</span>
-                            <div class="detail-value">{{ ticket.unit.full_name }}</div>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Department</span>
-                            <div class="detail-value">{{ ticket.department.name }}</div>
-                        </div>
-
-                        <!-- ===== SCREEN / MODULE ===== -->
-                        <div class="detail-item">
-                            <span class="detail-label">Screen / Module</span>
-                            <div class="detail-value">
-                                {% if screen_object %}
-                                    {{ screen_object.screen_name }}
-                                {% else %}
-                                    {{ ticket.screen_number }}
-                                {% endif %}
+                        <div class="tk-info-block">
+                            <span class="tk-label">Screen / Module</span>
+                            <div class="tk-value">
+                                {% if screen_object %}{{ screen_object.screen_name }}{% else %}{{ ticket.screen_number }}{% endif %}
                             </div>
                         </div>
-
-                        <div class="detail-item">
-                            <span class="detail-label">Priority</span>
-                            <div class="detail-value">
-                                <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
+                        <div class="tk-info-block">
+                            <span class="tk-label">Error Type</span>
+                            <div class="tk-value">{{ ticket.error_type|default:"Not Set" }}</div>
+                        </div>
+                        <div class="tk-info-block">
+                            <span class="tk-label">Priority</span>
+                            <div class="tk-value">
+                                <span class="tk-badge tk-badge-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
                             </div>
                         </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Status</span>
-                            <div class="detail-value">
-                                <span class="badge-status badge-status-{{ ticket.status|lower }}">{{ ticket.status }}</span>
+                        <div class="tk-info-block">
+                            <span class="tk-label">Status</span>
+                            <div class="tk-value">
+                                <span class="tk-badge tk-badge-{{ ticket.status|lower }}">{{ ticket.status }}</span>
                             </div>
                         </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Origin</span>
-                            <div class="detail-value">
+                        <div class="tk-info-block">
+                            <span class="tk-label">Origin</span>
+                            <div class="tk-value">
                                 {% if ticket.created_by_role == 'Admin' %}
-                                    <span class="badge-origin badge-origin-admin">Admin Created</span>
+                                    <span class="tk-origin tk-origin-admin">Admin Created</span>
                                 {% else %}
-                                    <span class="badge-origin badge-origin-self">Self-Created</span>
+                                    <span class="tk-origin tk-origin-self">Self-Created</span>
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Assigned To</span>
-                            <div class="detail-value">
-                                {% if ticket.assigned_person %}
-                                    <span style="font-weight: 600; color: var(--brand-orange);">{{ ticket.assigned_person }}</span>
-                                    {% if ticket.target_date %}
-                                        <br><small style="color: var(--text-muted); font-size: 0.65rem;">
-                                            <i class="fa-regular fa-calendar me-1"></i>Target: {{ ticket.target_date|date:"d M Y" }}
-                                        </small>
-                                    {% endif %}
-                                {% else %}
-                                    <span style="color: var(--text-muted);">Not Assigned</span>
-                                {% endif %}
-                            </div>
+                        <div class="tk-info-block">
+                            <span class="tk-label">Last Updated</span>
+                            <div class="tk-value">{{ ticket.updated_at|date:"d M Y, H:i" }}</div>
                         </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Created</span>
-                            <div class="detail-value">{{ ticket.created_at|date:"d M Y h:i A" }}</div>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Updated</span>
-                            <div class="detail-value">{{ ticket.updated_at|date:"d M Y h:i A" }}</div>
-                        </div>
-
-                        <!-- ===== CLOSING DETAILS (When Closed) ===== -->
-                        {% if ticket.status == 'Closed' %}
-                        <div class="detail-item closing-details">
-                            <span class="detail-label">Closing Information</span>
-                            <div class="detail-value">
-                                <div class="closing-row">
-                                    <span class="closing-label">Main Error Type</span>
-                                    <span class="closing-value">{{ ticket.main_error_type|default:"N/A" }}</span>
-                                </div>
-                                <div class="closing-row">
-                                    <span class="closing-label">Sub Error Type</span>
-                                    <span class="closing-value">{{ ticket.sub_error_type|default:"N/A" }}</span>
-                                </div>
-                            </div>
+                        {% if ticket.vendor_ticket_number %}
+                        <div class="tk-info-block">
+                            <span class="tk-label">Vendor Ticket</span>
+                            <div class="tk-value tk-mono">{{ ticket.vendor_ticket_number }}</div>
                         </div>
                         {% endif %}
-
-                        <!-- ===== DESCRIPTION ===== -->
-                        <div class="detail-item detail-description">
-                            <span class="detail-label">Description</span>
-                            <div class="detail-value">{{ ticket.description|default:"No description provided." }}</div>
+                        {% if ticket.escalated_at %}
+                        <div class="tk-info-block">
+                            <span class="tk-label">Escalated At</span>
+                            <div class="tk-value">{{ ticket.escalated_at|date:"d M Y, H:i" }}</div>
                         </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
 
-                        <!-- ===== ATTACHMENTS ===== -->
-                        <div class="detail-item full-width">
-                            <span class="detail-label">Attachments</span>
-                            <div class="detail-value" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
-                                {% if ticket.attachment_1 %}
-                                    <a href="{{ ticket.attachment_1.url }}" target="_blank" class="btn-attachment">
-                                        <i class="fa-solid fa-paperclip me-1"></i>Attachment 1
-                                    </a>
-                                {% endif %}
-                                {% if ticket.attachment_2 %}
-                                    <a href="{{ ticket.attachment_2.url }}" target="_blank" class="btn-attachment">
-                                        <i class="fa-solid fa-paperclip me-1"></i>Attachment 2
-                                    </a>
-                                {% endif %}
-                                {% if ticket.attachment_3 %}
-                                    <a href="{{ ticket.attachment_3.url }}" target="_blank" class="btn-attachment">
-                                        <i class="fa-solid fa-paperclip me-1"></i>Attachment 3
-                                    </a>
-                                {% endif %}
-                                {% for reopen_attachment in ticket.reopen_attachments.all %}
-                                    <a href="{{ reopen_attachment.file.url }}" target="_blank" class="btn-attachment">
-                                        <i class="fa-solid fa-paperclip me-1"></i>{{ reopen_attachment.file.name|cut:"attachments/reopen/" }}
-                                    </a>
-                                {% endfor %}
-                                {% if not ticket.attachment_1 and not ticket.attachment_2 and not ticket.attachment_3 and not ticket.reopen_attachments.all %}
-                                    <span style="color: var(--text-muted); font-size: 0.75rem;">No attachments uploaded</span>
-                                {% endif %}
-                            </div>
+            <!-- Closing details -->
+            {% if ticket.status == 'Closed' %}
+            <section class="tk-card">
+                <div class="tk-card-head">
+                    <h2><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Closing Details</h2>
+                </div>
+                <div class="tk-card-body">
+                    <div class="tk-info-grid">
+                        <div class="tk-info-block">
+                            <span class="tk-label">Main Error Type</span>
+                            <div class="tk-value">{{ ticket.main_error_type|default:"N/A" }}</div>
+                        </div>
+                        <div class="tk-info-block">
+                            <span class="tk-label">Sub Error Type</span>
+                            <div class="tk-value">{{ ticket.sub_error_type|default:"N/A" }}</div>
+                        </div>
+                        <div class="tk-info-block tk-span-2">
+                            <span class="tk-label">Closing Remarks</span>
+                            <p class="tk-desc">{{ ticket.closing_remarks|default:"N/A" }}</p>
+                        </div>
+                        <div class="tk-info-block">
+                            <span class="tk-label">Closed By</span>
+                            <div class="tk-value">{{ ticket.closed_by|default:"N/A" }}</div>
+                        </div>
+                        <div class="tk-info-block">
+                            <span class="tk-label">Closed At</span>
+                            <div class="tk-value">{{ ticket.closed_at|date:"d M Y, H:i"|default:"N/A" }}</div>
+                        </div>
+                        <div class="tk-info-block tk-span-2">
+                            <span class="tk-label">Time to Close</span>
+                            <div class="tk-value">{{ time_to_close|default:"N/A" }}</div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
+            {% endif %}
 
-            <!-- ========== STATUS BOXES ========== -->
+            <!-- Hold note -->
             {% if ticket.status == 'Hold' and ticket.hold_reason %}
-            <div class="status-box status-box-hold">
-                <strong style="color: var(--warning-color);"><i class="fa-solid fa-pause me-1"></i>Hold Reason</strong>
+            <div class="tk-note tk-note-hold">
+                <div class="tk-note-head">
+                    <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                    Hold Reason
+                </div>
                 <p>{{ ticket.hold_reason }}</p>
             </div>
             {% endif %}
-        </div>
 
-        <!-- RIGHT COLUMN - Audit History -->
-        <div class="col-lg-4">
-            <div class="panel-card">
-                <div class="glass-header">
-                    <h6><i class="fa-solid fa-timeline me-2"></i>Audit History</h6>
-                    <span class="badge-count">{{ history|length }}</span>
+            <!-- Attachments -->
+            {% if ticket.attachment_1 or ticket.attachment_2 or ticket.attachment_3 or ticket.reopen_attachments.all %}
+            <section class="tk-card">
+                <div class="tk-card-head">
+                    <h2><i class="fa-solid fa-paperclip" aria-hidden="true"></i> Attachments</h2>
                 </div>
-                <div class="card-body">
-                    <div class="timeline-wrapper">
-                        <ul class="timeline">
-                            {% for log in history %}
-                            <li class="timeline-item">
-                                <div class="timeline-marker"></div>
-                                <div class="timeline-content">
-                                    <div class="timeline-time">{{ log.timestamp|date:"d M Y h:i A" }}</div>
-                                    <div class="timeline-title">
-                                        {% if 'Created' in log.action %}
-                                            <i class="fa-regular fa-plus-circle me-1"></i>
-                                        {% elif 'Assigned' in log.action %}
-                                            <i class="fa-regular fa-user-check me-1"></i>
-                                        {% elif 'Hold' in log.action %}
-                                            <i class="fa-regular fa-pause-circle me-1"></i>
-                                        {% elif 'Escalated' in log.action %}
-                                            <i class="fa-regular fa-cloud-arrow-up me-1"></i>
-                                        {% elif 'Closed' in log.action %}
-                                            <i class="fa-regular fa-check-circle me-1"></i>
-                                        {% elif 'Reopened' in log.action %}
-                                            <i class="fa-regular fa-envelope-open me-1"></i>
-                                        {% else %}
-                                            <i class="fa-regular fa-pen-to-square me-1"></i>
-                                        {% endif %}
-                                        {{ log.action }}
-                                    </div>
-                                    {% if log.remarks %}
-                                    <div class="timeline-body">{{ log.remarks }}</div>
-                                    {% endif %}
-                                    <span class="timeline-by">By: {{ log.get_performed_by_display }}</span>
-                                </div>
-                            </li>
-                            {% empty %}
-                            <li class="timeline-empty">
-                                <i class="fa-regular fa-clock"></i>
-                                <p>No audit logs found.</p>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+                <div class="tk-card-body">
+                    <ul class="tk-att-list">
+                        {% if ticket.attachment_1 %}
+                        <li><a href="{{ ticket.attachment_1.url }}" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                            <span class="tk-att-name">Attachment 1</span>
+                            <span class="tk-att-size">{{ ticket.attachment_1.size|filesizeformat }}</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </a></li>
+                        {% endif %}
+                        {% if ticket.attachment_2 %}
+                        <li><a href="{{ ticket.attachment_2.url }}" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                            <span class="tk-att-name">Attachment 2</span>
+                            <span class="tk-att-size">{{ ticket.attachment_2.size|filesizeformat }}</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </a></li>
+                        {% endif %}
+                        {% if ticket.attachment_3 %}
+                        <li><a href="{{ ticket.attachment_3.url }}" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                            <span class="tk-att-name">Attachment 3</span>
+                            <span class="tk-att-size">{{ ticket.attachment_3.size|filesizeformat }}</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </a></li>
+                        {% endif %}
+                        {% for reopen_attachment in ticket.reopen_attachments.all %}
+                        <li><a href="{{ reopen_attachment.file.url }}" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                            <span class="tk-att-name">{{ reopen_attachment.file.name|cut:"attachments/reopen/" }}</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </a></li>
+                        {% endfor %}
+                    </ul>
                 </div>
-            </div>
-        </div>
+            </section>
+            {% endif %}
+
+            <!-- Audit history -->
+            <section class="tk-card">
+                <div class="tk-card-head">
+                    <h2><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Audit History</h2>
+                    <span class="tk-count">{{ history|length }}</span>
+                </div>
+                <div class="tk-timeline">
+                    {% for log in history %}
+                    <article class="tk-tl-item">
+                        <div class="tk-tl-dot"></div>
+                        <div class="tk-tl-body">
+                            <header class="tk-tl-head">
+                                <strong>{{ log.action }}</strong>
+                                <time>{{ log.timestamp|date:"d M Y, H:i" }}</time>
+                            </header>
+                            {% if log.remarks %}
+                            <p class="tk-tl-remarks">{{ log.remarks }}</p>
+                            {% endif %}
+                            <span class="tk-tl-by">
+                                <i class="fa-regular fa-user" aria-hidden="true"></i>
+                                {{ log.get_performed_by_display }}
+                            </span>
+                        </div>
+                    </article>
+                    {% empty %}
+                    <p class="tk-empty">No audit logs found.</p>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Conversation — INSIDE main column -->
+            <section class="tk-card">
+                <div class="tk-card-head">
+                    <h2><i class="fa-solid fa-comments" aria-hidden="true"></i> Conversation</h2>
+                </div>
+                <div class="conversation">
+                    {% include 'tickets/_ticket_replies.html' with reply_url=admin_reply_url %}
+                </div>
+            </section>
+
+        </main>
     </div>
+
 </div>
+{# END .tk-wrap #}
 
-{% include 'tickets/_ticket_replies.html' with reply_url=admin_reply_url %}
 
-<!-- ============================================
-     MODALS
-============================================ -->
+<!-- ============================================================
+     SHEETS — custom modals, outside .tk-wrap
+     ============================================================ -->
 
 {% if ticket.status != 'Closed' %}
-<!-- ===== ASSIGN MODAL ===== -->
-<div class="modal fade" id="assignModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="assignForm">
-                {% csrf_token %}
-                <input type="hidden" name="action_type" value="Assign">
-                <div class="modal-header bg-assign">
-                    <h5 class="modal-title"><i class="fa-solid fa-user-gear"></i>Assign Ticket</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label"><i class="fa-regular fa-user"></i>Assigned Person <span class="required">*</span></label>
-                        <select name="assigned_person" id="assignPerson" class="form-select" required>
-                            <option value="">-- Select Employee --</option>
-                            {% for emp in employees %}
-                            <option value="{{ emp.employee_name }}">{{ emp.employee_name }} ({{ emp.employee_id }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <!-- ===== TARGET DATE FIELD ===== -->
-                    <div class="mb-3">
-                        <label class="form-label"><i class="fa-regular fa-calendar"></i>Target Date <span class="required">*</span></label>
-                        <input type="date" name="target_date" id="targetDate" class="form-control" required>
-                        <small class="file-help-text">
-                            <i class="fa-regular fa-clock me-1"></i>Set the expected completion date
-                        </small>
-                    </div>
-                    <div class="mb-0">
-                        <label class="form-label"><i class="fa-regular fa-message"></i>Remarks</label>
-                        <textarea name="remarks" class="form-control" rows="2" placeholder="Optional"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-modal-submit bg-assign">Assign Now</button>
-                </div>
-            </form>
-        </div>
+
+<div class="tk-sheet" id="sheet-assign" aria-hidden="true">
+    <div class="tk-sheet-backdrop" data-close-sheet></div>
+    <div class="tk-sheet-panel" role="dialog" aria-modal="true">
+        <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="assignForm">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="Assign">
+
+            <header class="tk-sheet-head tk-sheet-head-assign">
+                <span class="tk-sheet-icon"><i class="fa-solid fa-user-gear" aria-hidden="true"></i></span>
+                <h5>{% if ticket.status == 'Open' %}Assign Ticket{% else %}Re-Assign Ticket{% endif %}</h5>
+                <button type="button" class="tk-sheet-close" data-close-sheet aria-label="Close">&times;</button>
+            </header>
+
+            <div class="tk-sheet-body">
+                <label>Assigned Person <span class="req">*</span></label>
+                <select name="assigned_person" id="assignPerson" class="tk-input" required>
+                    <option value="">-- Select Employee --</option>
+                    {% for emp in employees %}
+                    <option value="{{ emp.employee_name }}">{{ emp.employee_name }} ({{ emp.employee_id }})</option>
+                    {% endfor %}
+                </select>
+
+                <label>Target Date <span class="req">*</span></label>
+                <input type="date" name="target_date" id="targetDate" class="tk-input" required>
+                <small class="tk-hint">Expected completion date</small>
+
+                <label>Remarks</label>
+                <textarea name="remarks" rows="2" class="tk-input" placeholder="Optional"></textarea>
+            </div>
+
+            <footer class="tk-sheet-foot">
+                <button type="button" class="tk-btn tk-btn-ghost" data-close-sheet>Cancel</button>
+                <button type="submit" class="tk-btn tk-btn-blue">Assign Now</button>
+            </footer>
+        </form>
     </div>
 </div>
 
-<!-- ===== HOLD MODAL ===== -->
-<div class="modal fade" id="holdModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="holdForm">
-                {% csrf_token %}
-                <input type="hidden" name="action_type" value="Hold">
-                <div class="modal-header bg-hold">
-                    <h5 class="modal-title"><i class="fa-solid fa-pause"></i>Put on Hold</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-0">
-                        <label class="form-label"><i class="fa-regular fa-message"></i>Reason <span class="required">*</span></label>
-                        <textarea name="hold_reason" id="holdReason" class="form-control" rows="3" placeholder="Reason for hold" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-modal-submit bg-hold">Hold Now</button>
-                </div>
-            </form>
-        </div>
+<div class="tk-sheet" id="sheet-hold" aria-hidden="true">
+    <div class="tk-sheet-backdrop" data-close-sheet></div>
+    <div class="tk-sheet-panel" role="dialog" aria-modal="true">
+        <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="holdForm">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="Hold">
+
+            <header class="tk-sheet-head tk-sheet-head-hold">
+                <span class="tk-sheet-icon"><i class="fa-solid fa-pause" aria-hidden="true"></i></span>
+                <h5>Put on Hold</h5>
+                <button type="button" class="tk-sheet-close" data-close-sheet aria-label="Close">&times;</button>
+            </header>
+
+            <div class="tk-sheet-body">
+                <label>Reason <span class="req">*</span></label>
+                <textarea name="hold_reason" rows="3" class="tk-input" required placeholder="Reason for hold"></textarea>
+            </div>
+
+            <footer class="tk-sheet-foot">
+                <button type="button" class="tk-btn tk-btn-ghost" data-close-sheet>Cancel</button>
+                <button type="submit" class="tk-btn tk-btn-amber">Hold Now</button>
+            </footer>
+        </form>
     </div>
 </div>
 
-<!-- ===== ESCALATE MODAL ===== -->
-<div class="modal fade" id="escalateModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="escalateForm">
-                {% csrf_token %}
-                <input type="hidden" name="action_type" value="Escalate">
-                <div class="modal-header bg-escalate">
-                    <h5 class="modal-title"><i class="fa-solid fa-cloud-arrow-up"></i>Escalate</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label"><i class="fa-regular fa-ticket"></i>Vendor Ticket #</label>
-                        <input type="text" name="vendor_ticket_number" class="form-control" placeholder="Optional">
-                    </div>
-                    <div class="mb-0">
-                        <label class="form-label"><i class="fa-regular fa-message"></i>Remarks</label>
-                        <textarea name="remarks" class="form-control" rows="2" placeholder="Optional"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-modal-submit bg-escalate">Escalate Now</button>
-                </div>
-            </form>
-        </div>
+<div class="tk-sheet" id="sheet-escalate" aria-hidden="true">
+    <div class="tk-sheet-backdrop" data-close-sheet></div>
+    <div class="tk-sheet-panel" role="dialog" aria-modal="true">
+        <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="escalateForm">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="Escalate">
+
+            <header class="tk-sheet-head tk-sheet-head-escalate">
+                <span class="tk-sheet-icon"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i></span>
+                <h5>Escalate Ticket</h5>
+                <button type="button" class="tk-sheet-close" data-close-sheet aria-label="Close">&times;</button>
+            </header>
+
+            <div class="tk-sheet-body">
+                <label>Vendor Ticket #</label>
+                <input type="text" name="vendor_ticket_number" class="tk-input" placeholder="Optional">
+
+                <label>Remarks</label>
+                <textarea name="remarks" rows="2" class="tk-input" placeholder="Optional"></textarea>
+            </div>
+
+            <footer class="tk-sheet-foot">
+                <button type="button" class="tk-btn tk-btn-ghost" data-close-sheet>Cancel</button>
+                <button type="submit" class="tk-btn tk-btn-purple">Escalate Now</button>
+            </footer>
+        </form>
     </div>
 </div>
 
-<!-- ===== CLOSE MODAL ===== -->
-<div class="modal fade" id="closeModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-        <div class="modal-content">
-            <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="closeForm">
-                {% csrf_token %}
-                <input type="hidden" name="action_type" value="Close">
-                <div class="modal-header bg-close">
-                    <h5 class="modal-title"><i class="fa-solid fa-circle-check"></i>Close Ticket</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Main Error Type -->
-                    <div class="mb-3">
-                        <label class="form-label"><i class="fa-solid fa-bug"></i>Error Type <span class="required">*</span></label>
-                        <select name="main_error_type" id="mainErrorType" class="form-select" required>
-                            <option value="">-- Select Error Type --</option>
-                            <option value="Roadmap Error">Roadmap Error</option>
-                            <option value="GPL Error">GPL Error</option>
-                        </select>
-                    </div>
+<div class="tk-sheet" id="sheet-close" aria-hidden="true">
+    <div class="tk-sheet-backdrop" data-close-sheet></div>
+    <div class="tk-sheet-panel" role="dialog" aria-modal="true">
+        <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="closeForm">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="Close">
 
-                    <!-- Sub Error Type -->
-                    <div class="mb-3 sub-error-group" id="subErrorGroup">
-                        <label class="sub-label"><i class="fa-solid fa-chevron-right"></i>Sub Error Type <span class="required">*</span></label>
-                        <select name="sub_error_type" id="subErrorType" class="form-select">
-                            <option value="">-- Select Sub Error Type --</option>
-                        </select>
-                    </div>
+            <header class="tk-sheet-head tk-sheet-head-close">
+                <span class="tk-sheet-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+                <h5>Close Ticket</h5>
+                <button type="button" class="tk-sheet-close" data-close-sheet aria-label="Close">&times;</button>
+            </header>
 
-                    <!-- Closing Remarks -->
-                    <div class="mb-0">
-                        <label class="form-label"><i class="fa-regular fa-message"></i>Closing Remarks <span class="required">*</span></label>
-                        <textarea name="closing_remarks" id="closingRemarks" class="form-control" rows="3" placeholder="Resolution details" required></textarea>
-                    </div>
+            <div class="tk-sheet-body">
+                <label>Error Type <span class="req">*</span></label>
+                <select name="main_error_type" id="mainErrorType" class="tk-input" required>
+                    <option value="">-- Select Error Type --</option>
+                    <option value="Roadmap Error">Roadmap Error</option>
+                    <option value="GPL Error">GPL Error</option>
+                </select>
+
+                <div class="tk-sub-error-group" id="subErrorGroup">
+                    <label>Sub Error Type <span class="req">*</span></label>
+                    <select name="sub_error_type" id="subErrorType" class="tk-input">
+                        <option value="">-- Select Sub Error Type --</option>
+                    </select>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-modal-submit bg-close">Close Now</button>
-                </div>
-            </form>
-        </div>
+
+                <label>Closing Remarks <span class="req">*</span></label>
+                <textarea name="closing_remarks" rows="3" class="tk-input" required placeholder="Resolution details"></textarea>
+            </div>
+
+            <footer class="tk-sheet-foot">
+                <button type="button" class="tk-btn tk-btn-ghost" data-close-sheet>Cancel</button>
+                <button type="submit" class="tk-btn tk-btn-green">Close Now</button>
+            </footer>
+        </form>
     </div>
 </div>
 
 {% else %}
-<!-- ===== REOPEN MODAL ===== -->
-<div class="modal fade" id="reopenModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="reopenForm" enctype="multipart/form-data">
-                {% csrf_token %}
-                <input type="hidden" name="action_type" value="Reopen">
-                <div class="modal-header bg-reopen">
-                    <h5 class="modal-title"><i class="fa-solid fa-envelope-open"></i>Reopen Ticket</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label"><i class="fa-regular fa-message"></i>Reason <span class="required">*</span></label>
-                        <textarea name="remarks" id="reopenRemarks" class="form-control" rows="3" placeholder="Reason for reopening" required></textarea>
-                    </div>
-                    <div>
-                        <label class="form-label"><i class="fa-solid fa-paperclip"></i> Attachments</label>
-                        <!-- FIXED: styled file input -->
-                        <div class="file-input-wrapper">
-                            <input type="file" name="reopen_attachments" class="form-control" multiple>
-                        </div>
-                        <span class="file-help-text">Add one or more files. Each file can be up to 5 MB.</span>
-                    </div>
-                    <small class="file-help-text d-block mt-2" style="font-size: 0.65rem;">
-                        <i class="fa-regular fa-clock me-1"></i>You can only reopen within <strong>48 hours</strong> of closing.
-                    </small>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-modal-submit bg-reopen">Reopen Now</button>
-                </div>
-            </form>
-        </div>
+
+<div class="tk-sheet" id="sheet-reopen" aria-hidden="true">
+    <div class="tk-sheet-backdrop" data-close-sheet></div>
+    <div class="tk-sheet-panel" role="dialog" aria-modal="true">
+        <form method="POST" action="{% url 'update_ticket_status' ticket.id %}"
+              id="reopenForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="Reopen">
+
+            <header class="tk-sheet-head tk-sheet-head-reopen">
+                <span class="tk-sheet-icon"><i class="fa-solid fa-envelope-open" aria-hidden="true"></i></span>
+                <h5>Reopen Ticket</h5>
+                <button type="button" class="tk-sheet-close" data-close-sheet aria-label="Close">&times;</button>
+            </header>
+
+            <div class="tk-sheet-body">
+                <label>Reason <span class="req">*</span></label>
+                <textarea name="remarks" rows="3" class="tk-input" required placeholder="Reason for reopening"></textarea>
+
+                <label>Attachments</label>
+                <input type="file" name="reopen_attachments" class="tk-input" multiple>
+                <small class="tk-hint">Each file up to 5 MB. Reopen only within 48 hours of closing.</small>
+            </div>
+
+            <footer class="tk-sheet-foot">
+                <button type="button" class="tk-btn tk-btn-ghost" data-close-sheet>Cancel</button>
+                <button type="submit" class="tk-btn tk-btn-purple">Reopen Now</button>
+            </footer>
+        </form>
     </div>
 </div>
+
 {% endif %}
 
-<!-- Hidden input for reopen deadline -->
 <input type="hidden" name="reopen_deadline_iso" value="{{ reopen_deadline_iso|default:'' }}">
 
 {% endblock %}
 
+
 {% block extra_js %}
 {{ block.super }}
-<script src="{% static 'js/admin_panel/ticket_detail.js' %}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // ============================================================
-    // TARGET DATE VALIDATION
-    // ============================================================
+document.addEventListener('DOMContentLoaded', function () {
+
+    /* ============================================================
+       SHEET OPEN / CLOSE
+       ============================================================ */
+    function openSheet(id) {
+        var sheet = document.getElementById(id);
+        if (!sheet) return;
+        sheet.classList.add('is-open');
+        sheet.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('tk-sheet-open');
+    }
+    function closeSheet(sheet) {
+        if (!sheet) return;
+        sheet.classList.remove('is-open');
+        sheet.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('tk-sheet-open');
+    }
+    function closeAll() {
+        document.querySelectorAll('.tk-sheet.is-open').forEach(closeSheet);
+    }
+
+    document.querySelectorAll('[data-sheet]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            openSheet(this.getAttribute('data-sheet'));
+        });
+    });
+
+    document.querySelectorAll('[data-close-sheet]').forEach(function (el) {
+        el.addEventListener('click', function () {
+            closeSheet(this.closest('.tk-sheet'));
+        });
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeAll();
+    });
+
+    /* ============================================================
+       TARGET DATE VALIDATION
+       ============================================================ */
     var targetDateInput = document.getElementById('targetDate');
     if (targetDateInput) {
-        var today = new Date();
-        var todayStr = today.toISOString().split('T')[0];
+        var todayStr = new Date().toISOString().split('T')[0];
         targetDateInput.setAttribute('min', todayStr);
-        
-        // Set default to 7 days from now
-        var futureDate = new Date(today);
+
+        var futureDate = new Date();
         futureDate.setDate(futureDate.getDate() + 7);
-        var futureStr = futureDate.toISOString().split('T')[0];
         if (!targetDateInput.value) {
-            targetDateInput.value = futureStr;
+            targetDateInput.value = futureDate.toISOString().split('T')[0];
         }
-        
-        targetDateInput.addEventListener('change', function() {
-            var selectedDate = this.value;
-            if (!selectedDate) return;
-            var selected = new Date(selectedDate);
-            var today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (selected < today) {
-                alert('Target date cannot be in the past. Please select a future date.');
+
+        targetDateInput.addEventListener('change', function () {
+            if (!this.value) return;
+            var picked = new Date(this.value);
+            var today = new Date(); today.setHours(0,0,0,0);
+            if (picked < today) {
+                alert('Target date cannot be in the past.');
                 this.value = todayStr;
             }
         });
     }
-    
-    // ============================================================
-    // ASSIGN FORM VALIDATION
-    // ============================================================
+
     var assignForm = document.getElementById('assignForm');
     if (assignForm) {
-        assignForm.addEventListener('submit', function(e) {
-            var targetDate = document.getElementById('targetDate');
-            if (targetDate) {
-                if (!targetDate.value) {
-                    e.preventDefault();
-                    alert('Please select a target date.');
-                    targetDate.focus();
-                    return false;
-                }
-                var selected = new Date(targetDate.value);
-                var today = new Date();
-                today.setHours(0, 0, 0, 0);
-                if (selected < today) {
-                    e.preventDefault();
-                    alert('Target date cannot be in the past. Please select a future date.');
-                    targetDate.focus();
-                    return false;
-                }
+        assignForm.addEventListener('submit', function (e) {
+            var input = document.getElementById('targetDate');
+            if (input) {
+                if (!input.value) { e.preventDefault(); alert('Please select a target date.'); input.focus(); return; }
+                var picked = new Date(input.value);
+                var today = new Date(); today.setHours(0,0,0,0);
+                if (picked < today) { e.preventDefault(); alert('Target date cannot be in the past.'); input.focus(); return; }
             }
         });
+    }
+
+    /* ============================================================
+       REOPEN COUNTDOWN
+       ============================================================ */
+    var deadlineISO = document.querySelector('input[name="reopen_deadline_iso"]')?.value || '';
+    var timerText = document.getElementById('reopen-timer-text');
+    if (deadlineISO && timerText) {
+        var deadline = new Date(deadlineISO).getTime();
+        setInterval(function () {
+            var distance = deadline - new Date().getTime();
+            if (distance < 0) { timerText.textContent = 'Expired'; return; }
+            var h = Math.floor(distance / 3600000);
+            var m = Math.floor((distance % 3600000) / 60000);
+            timerText.textContent = String(h).padStart(2,'0') + 'h ' + String(m).padStart(2,'0') + 'm';
+        }, 1000);
     }
 });
 </script>

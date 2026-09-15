@@ -17,6 +17,11 @@ STATUS_BY_REPORT = {
 }
 
 
+# ============================================================
+# EXISTING HELPERS — SCHEDULED REPORTS
+# (unchanged)
+# ============================================================
+
 def parse_emails(value):
     return [email.strip() for email in value.replace(';', ',').split(',') if email.strip()]
 
@@ -178,3 +183,73 @@ def send_scheduled_reports(schedule, *, force=False):
                 message.attach_alternative(build_report_email(report_names, unit, head.name), 'text/html')
                 sent += message.send()
     return sent
+
+
+# ============================================================
+# NEW: NOTIFICATION EMAIL HELPER
+# Used by tickets/services/notify.py for desktop-toast fallback
+# emails to assignees who do not have a Django User account.
+# ============================================================
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def send_notification_email(to_email, title, body, ticket=None, url=''):
+    """
+    Send a single notification email.
+
+    Args:
+        to_email : recipient address (string)
+        title    : subject line
+        body     : email body
+        ticket   : optional Ticket instance for context
+        url      : optional relative link to the ticket
+    """
+    if not to_email:
+        return
+
+    subject = f"[GPLAST] {title}"
+
+    lines = [body or '']
+    if ticket is not None:
+        lines.append('')
+        lines.append('---')
+        lines.append(f"Ticket: #{ticket.ticket_number}")
+        lines.append(f"Status: {ticket.status}")
+        lines.append(f"Priority: {ticket.priority}")
+        lines.append(f"Employee: {ticket.employee_name} ({ticket.employee_id})")
+        lines.append(f"Subject: {ticket.subject}")
+        if ticket.assigned_person:
+            lines.append(f"Assigned To: {ticket.assigned_person}")
+        if ticket.department:
+            lines.append(f"Department: {ticket.department.name}")
+
+    if url:
+        base = getattr(settings, 'APP_URL', '') or ''
+        full_url = url if url.startswith('http') else f"{base}{url}"
+        lines.append('')
+        lines.append(f"View: {full_url}")
+
+    lines.append('')
+    lines.append('—')
+    lines.append('GPLAST Ticket System')
+
+    message = '\n'.join(lines)
+
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
+    if not from_email:
+        logger.warning("DEFAULT_FROM_EMAIL not configured; skipping email.")
+        return
+
+    try:
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=message,
+            from_email=from_email,
+            to=[to_email],
+        )
+        email.send(fail_silently=False)
+    except Exception as e:
+        logger.warning(f"Failed to send notification email to {to_email}: {e}")

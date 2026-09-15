@@ -64,6 +64,25 @@ def get_user_role(user):
     return 'employee'
 
 
+def get_dashboard_url_for_user(user):
+    """
+    Return the appropriate dashboard URL for a given user.
+    Priority: Admin > Unit Head > Employee
+
+    Used after password change to send the user back to their home.
+    """
+    if not user.is_authenticated:
+        return '/login/'
+
+    if user.is_superuser or user.is_staff:
+        return '/custom-admin/dashboard/'
+
+    if is_unit_head(user):
+        return '/unit-head/dashboard/'
+
+    return '/dashboard/'
+
+
 # ============================================================
 # IP ADDRESS UTILITY
 # ============================================================
@@ -127,7 +146,7 @@ def send_ticket_email(subject, message, recipient_list, html_template=None, cont
         else:
             html_message = None
             plain_message = message
-        
+
         send_mail(
             subject=subject,
             message=plain_message,
@@ -153,15 +172,15 @@ def validate_attachment(file):
     # Max file size: 5MB
     MAX_FILE_SIZE = 5 * 1024 * 1024
     ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.png', '.jpg', '.jpeg', '.gif']
-    
+
     if file.size > MAX_FILE_SIZE:
         return False, "File size exceeds 5MB limit"
-    
+
     import os
     ext = os.path.splitext(file.name)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         return False, f"File type {ext} not allowed"
-    
+
     return True, "OK"
 
 
@@ -176,13 +195,13 @@ def reopen_ticket_logic(ticket, user, remarks=None):
     """
     from tickets.models import TicketHistory
     from django.utils import timezone
-    
+
     if ticket.status != 'Closed':
         return False, "Ticket is not closed."
-    
+
     if not ticket.can_reopen():
         return False, "Ticket cannot be reopened after 48 hours."
-    
+
     # Reopen the ticket
     ticket.status = 'Open'
     ticket.closed_at = None
@@ -191,7 +210,7 @@ def reopen_ticket_logic(ticket, user, remarks=None):
     ticket.main_error_type = None
     ticket.sub_error_type = None
     ticket.save()
-    
+
     # Add history
     TicketHistory.objects.create(
         ticket=ticket,
@@ -199,7 +218,7 @@ def reopen_ticket_logic(ticket, user, remarks=None):
         remarks=remarks or "Ticket reopened",
         performed_by=str(user.id)
     )
-    
+
     return True, "Ticket reopened successfully."
 
 
@@ -212,11 +231,11 @@ def _get_employee_directory_data(request):
     Get employee directory data with search
     """
     from tickets.models import EmployeeMaster
-    
+
     search = request.GET.get('search', '').strip()
-    
+
     employees = EmployeeMaster.objects.all().select_related('unit', 'department').order_by('employee_id')
-    
+
     if search:
         employees = employees.filter(
             models.Q(employee_id__icontains=search) |
@@ -224,7 +243,7 @@ def _get_employee_directory_data(request):
             models.Q(mobile__icontains=search) |
             models.Q(email__icontains=search)
         )
-    
+
     return employees, search
 
 
@@ -241,9 +260,9 @@ def _get_credentials_data():
     Get credentials data
     """
     from tickets.models import DepartmentCredential, Unit
-    
+
     all_credentials = DepartmentCredential.objects.all().select_related('unit', 'department').order_by('unit__code', 'department__name')
-    
+
     credentials_by_unit = []
     for unit in Unit.objects.filter(is_active=True).order_by('code'):
         creds = all_credentials.filter(unit=unit)
@@ -252,7 +271,7 @@ def _get_credentials_data():
                 'unit': unit,
                 'credentials': creds
             })
-    
+
     return all_credentials, credentials_by_unit
 
 
@@ -260,20 +279,20 @@ def _get_credentials_data():
 # SETTINGS AUDIT UTILITY
 # ============================================================
 
-def log_settings_change(request, action_type, setting_type, setting_name, 
+def log_settings_change(request, action_type, setting_type, setting_name,
                         old_value=None, new_value=None, change_summary=None, remarks=None):
     """
     Log a settings change to the audit log
     """
     from tickets.models import SettingsAuditLog
-    
+
     try:
         performed_by = request.user if request.user.is_authenticated else None
         performed_by_name = request.user.username if request.user.is_authenticated else 'System'
-        
+
         ip_address = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
-        
+
         SettingsAuditLog.objects.create(
             performed_by=performed_by,
             performed_by_name=performed_by_name,

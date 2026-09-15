@@ -18,6 +18,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.template import TemplateDoesNotExist
+from django.views.decorators.http import require_POST
 from datetime import datetime, timedelta
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -62,7 +63,6 @@ def admin_dashboard(request):
     unviewed_count = Ticket.objects.filter(is_viewed=False).count()
     unviewed_tickets = Ticket.objects.filter(is_viewed=False).order_by('-created_at')[:10]
     
-    # ✅ NEW: Get total Unit Heads count
     total_unit_heads = UnitHead.objects.filter(is_active=True).count()
     
     kpis = {
@@ -88,7 +88,6 @@ def admin_dashboard(request):
     
     closed_tickets = Ticket.objects.filter(status='Closed')
     
-    # Show main_error_type and sub_error_type stats
     main_error_counts = (
         closed_tickets
         .exclude(main_error_type__isnull=True)
@@ -134,7 +133,7 @@ def admin_dashboard(request):
 
 
 # ============================================================
-# CREATE TICKET - ADMIN (FIXED: Employee Details Fetch)
+# CREATE TICKET - ADMIN
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='login')
@@ -145,7 +144,6 @@ def create_ticket_admin(request):
     - Admin creation reason
     - Admin or Employee role selection
     - 3 attachment fields
-    - ✅ FIXED: Proper employee details fetch with ERP ID
     """
     employees = EmployeeMaster.objects.filter(is_active=True, can_assign_ticket=True).order_by('employee_name')
     
@@ -177,11 +175,12 @@ def create_ticket_admin(request):
                     performed_by=hist_perf
                 )
             
-            # ============================================================
-            # EMAIL SENDING DISABLED - COMMENTED OUT
-            # ============================================================
-            # send_ticket_email(ticket, 'Created')
-            # ============================================================
+            # ✅ Desktop toast: notify admins + unit head
+            try:
+                from tickets.services.notify import notify_ticket_created
+                notify_ticket_created(ticket, actor=request.user)
+            except Exception as _e:
+                logger.warning(f"notify_ticket_created failed: {_e}")
             
             messages.success(request, f'Ticket {ticket.ticket_number} created successfully by Admin!')
             return redirect('admin_dashboard')
@@ -191,12 +190,10 @@ def create_ticket_admin(request):
                     messages.error(request, f"{field}: {error}")
     else:
         form = AdminTicketForm()
-        # ✅ Set initial error_type choices for GET request
         form.fields['error_type'].choices = [('', 'Select Error Type'), ('New', 'New'), ('Repeated', 'Repeated')]
     
     all_screens = ScreenMaster.objects.all().order_by('screen_name')
     
-    # ✅ Get all units and departments for dropdown
     units = Unit.objects.filter(is_active=True).order_by('code')
     departments = Department.objects.filter(is_active=True).order_by('unit__code', 'name')
     
@@ -210,25 +207,37 @@ def create_ticket_admin(request):
 
 
 # ============================================================
-# ALL TICKETS - ADMIN (FIXED AJAX RESPONSE)
+# ALL TICKETS - ADMIN
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='login')
 def all_tickets(request):
     """
-    Admin ticket listing with filters, AJAX support, and pagination
+    Admin ticket listing with filters, AJAX support, and pagination.
+    Supports a "show" filter: active (default) / archived / all.
     """
     is_ajax = request.GET.get('ajax', False)
     
     if isinstance(is_ajax, str):
         is_ajax = is_ajax.lower() in ['true', '1', 'yes']
     
-    # ✅ Annotate tickets with ERP ID from ERPHolderMapping
     erp_subquery = ERPHolderMapping.objects.filter(
         employee__employee_id=OuterRef('employee_id')
     ).values('erp_user_id')[:1]
     
-    tickets_qs = Ticket.objects.all().order_by('-created_at').annotate(
+    # ✅ SHOW filter: active (default), archived, or all
+    show = request.GET.get('show', 'active').strip().lower()
+    if show not in ('active', 'archived', 'all'):
+        show = 'active'
+
+    if show == 'archived':
+        base_qs = Ticket.objects.archived_only()
+    elif show == 'all':
+        base_qs = Ticket.objects.with_archived()
+    else:
+        base_qs = Ticket.objects.all()   # default manager hides archived
+
+    tickets_qs = base_qs.order_by('-created_at').annotate(
         erp_id=Coalesce(Subquery(erp_subquery, output_field=CharField()), Value('Not Mapped'))
     )
     
@@ -246,17 +255,10 @@ def all_tickets(request):
     date_to = request.GET.get('date_to', '').strip()
     search = request.GET.get('search', '').strip()
     
-    # ✅ Main Error Type and Sub Error Type filters
     main_error_type = request.GET.get('main_error_type', '').strip()
     sub_error_type = request.GET.get('sub_error_type', '').strip()
-    
-    # ✅ ERP ID filter
     erp_id = request.GET.get('erp_id', '').strip()
-    
-    # ✅ Screen filter
     screen_number = request.GET.get('screen_number', '').strip()
-    
-    # ✅ Filter parameter for drill-down
     filter_param = request.GET.get('filter', '').strip()
     
     is_viewed = request.GET.get('is_viewed', '')
@@ -280,7 +282,6 @@ def all_tickets(request):
     elif category == 'critical': 
         tickets_qs = tickets_qs.filter(priority='Critical')
     
-    # ✅ Apply filter parameter for drill-down
     if filter_param and filter_param != 'all':
         if filter_param == 'Open':
             tickets_qs = tickets_qs.filter(status='Open')
@@ -310,19 +311,15 @@ def all_tickets(request):
     if ticket_number: 
         tickets_qs = tickets_qs.filter(ticket_number__icontains=ticket_number)
     
-    # ✅ Apply Main Error Type filter
     if main_error_type and main_error_type != '':
         tickets_qs = tickets_qs.filter(main_error_type=main_error_type)
     
-    # ✅ Apply Sub Error Type filter
     if sub_error_type and sub_error_type != '' and sub_error_type != 'All':
         tickets_qs = tickets_qs.filter(sub_error_type=sub_error_type)
         
-    # ✅ Apply Screen filter
     if screen_number:
         tickets_qs = tickets_qs.filter(screen_number=screen_number)
     
-    # ✅ Apply ERP ID filter
     if erp_id and erp_id != '':
         employee_ids_with_erp = ERPHolderMapping.objects.filter(
             erp_user_id__icontains=erp_id
@@ -362,15 +359,17 @@ def all_tickets(request):
         status='Closed',
         closed_at__gte=thirty_days_ago
     ).count()
+
+    # ✅ Excel export — respects the "show" filter
+    if request.GET.get('export') == 'excel':
+        if show == 'archived':
+            return export_archived_tickets_excel(request)
+        return export_filtered_tickets_excel(request, tickets_qs, show=show)
     
-    # ============================================================
-    # ✅ FIXED: AJAX RESPONSE - Return JSON with ticket data
-    # ============================================================
     if is_ajax:
         try:
             tickets = tickets_qs[:50]
             
-            # Build ticket data with target date
             tickets_data = []
             for ticket in tickets:
                 tickets_data.append({
@@ -402,9 +401,6 @@ def all_tickets(request):
                 'count': 0
             }, status=500)
     
-    # ============================================================
-    # REGULAR PAGE RENDER
-    # ============================================================
     paginator = Paginator(tickets_qs, 20)
     page_number = request.GET.get('page')
     try: 
@@ -439,13 +435,14 @@ def all_tickets(request):
         'selected_sub_error_type': sub_error_type,
         'selected_erp_id': erp_id,
         'selected_screen_number': screen_number,
+        'selected_show': show,
         'all_screens': ScreenMaster.objects.all().order_by('screen_name'),
     }
     return render(request, 'admin_panel/all_tickets.html', context)
 
 
 # ============================================================
-# TICKET DETAIL - ADMIN (UPDATED WITH PRIORITY CHANGE & TARGET DATE)
+# TICKET DETAIL - ADMIN
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='login')
@@ -454,7 +451,7 @@ def ticket_detail_admin(request, pk):
     Admin ticket detail view with full ticket management
     Includes: Assign, Hold, Escalate, Close, Reopen, Change Priority, and Target Date
     """
-    ticket = get_object_or_404(Ticket, pk=pk)
+    ticket = get_object_or_404(Ticket.objects.with_archived(), pk=pk)
     
     if not ticket.is_viewed:
         ticket.is_viewed = True
@@ -489,10 +486,8 @@ def ticket_detail_admin(request, pk):
     if ticket.attachment_3:
         attachments.append({'file': ticket.attachment_3, 'name': 'Attachment 3'})
     
-    # Initialize CloseTicketForm for GET requests
     close_form = CloseTicketForm()
     
-    # Get ERP ID for this ticket's employee
     erp_id = 'Not Mapped'
     if ticket.employee_id:
         erp_mapping = ERPHolderMapping.objects.filter(
@@ -501,7 +496,6 @@ def ticket_detail_admin(request, pk):
         if erp_mapping:
             erp_id = erp_mapping.erp_user_id
 
-    # ✅ FIXED: Only filter by screen_code, NOT by pk
     screen_object = ScreenMaster.objects.filter(screen_code=ticket.screen_number).first()
     
     if request.method == 'POST':
@@ -515,7 +509,6 @@ def ticket_detail_admin(request, pk):
                     messages.error(request, "Assigned Person Name is mandatory.")
                     return redirect('admin_ticket_detail', pk=ticket.id)
                 
-                # ✅ Get target date
                 target_date_str = request.POST.get('target_date', '').strip()
                 target_date = None
                 if target_date_str:
@@ -525,6 +518,7 @@ def ticket_detail_admin(request, pk):
                         messages.error(request, "Invalid target date format.")
                         return redirect('admin_ticket_detail', pk=ticket.id)
                 
+                old_status = ticket.status
                 ticket.status = 'Assigned'
                 ticket.assigned_person = assigned_person
                 if target_date:
@@ -537,6 +531,16 @@ def ticket_detail_admin(request, pk):
                     remarks=remarks + (f" | Target Date: {target_date.strftime('%d-%b-%Y')}" if target_date else ""), 
                     performed_by=f"Admin {request.user.username}"
                 )
+                
+                # ✅ Desktop toast: notify the assignee
+                try:
+                    from tickets.services.notify import notify_ticket_assigned, ticket_assignee
+                    _assignee_user = ticket_assignee(ticket)
+                    if _assignee_user:
+                        notify_ticket_assigned(ticket, _assignee_user, actor=request.user)
+                except Exception as _e:
+                    logger.warning(f"notify_ticket_assigned failed: {_e}")
+                
                 messages.success(request, f'Ticket assigned to {assigned_person}. Target date set to {target_date.strftime("%d-%b-%Y") if target_date else "Not set"}.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
@@ -545,6 +549,7 @@ def ticket_detail_admin(request, pk):
                 if not hold_reason: 
                     messages.error(request, "Hold Reason is mandatory.")
                     return redirect('admin_ticket_detail', pk=ticket.id)
+                old_status = ticket.status
                 ticket.status = 'Hold'
                 ticket.hold_reason = hold_reason
                 ticket.save()
@@ -554,11 +559,20 @@ def ticket_detail_admin(request, pk):
                     remarks=f"Reason: {hold_reason}", 
                     performed_by=f"Admin {request.user.username}"
                 )
+                
+                # ✅ Desktop toast
+                try:
+                    from tickets.services.notify import notify_status_changed
+                    notify_status_changed(ticket, old_status, 'Hold', actor=request.user)
+                except Exception as _e:
+                    logger.warning(f"notify_status_changed (Hold) failed: {_e}")
+                
                 messages.success(request, 'Ticket placed on Hold.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
             elif action_type == 'Escalate':
                 vendor_ticket = request.POST.get('vendor_ticket_number', '').strip()
+                old_status = ticket.status
                 ticket.status = 'Escalated'
                 if vendor_ticket: 
                     ticket.vendor_ticket_number = vendor_ticket
@@ -571,6 +585,14 @@ def ticket_detail_admin(request, pk):
                     remarks=remark_str, 
                     performed_by=f"Admin {request.user.username}"
                 )
+                
+                # ✅ Desktop toast
+                try:
+                    from tickets.services.notify import notify_status_changed
+                    notify_status_changed(ticket, old_status, 'Escalated', actor=request.user)
+                except Exception as _e:
+                    logger.warning(f"notify_status_changed (Escalate) failed: {_e}")
+                
                 messages.success(request, 'Ticket escalated to ERP vendor.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
@@ -582,6 +604,7 @@ def ticket_detail_admin(request, pk):
                     sub_error_type = close_form.cleaned_data['sub_error_type']
                     closing_remarks = close_form.cleaned_data['closing_remarks']
                     
+                    old_status = ticket.status
                     ticket.status = 'Closed'
                     ticket.closing_remarks = closing_remarks
                     ticket.closed_by = request.user.username
@@ -598,6 +621,14 @@ def ticket_detail_admin(request, pk):
                         remarks=f"Main Error: {main_error_type} | Sub Error: {sub_error_type} | {closing_remarks}", 
                         performed_by=f"Admin {request.user.username}"
                     )
+                    
+                    # ✅ Desktop toast
+                    try:
+                        from tickets.services.notify import notify_status_changed
+                        notify_status_changed(ticket, old_status, 'Closed', actor=request.user)
+                    except Exception as _e:
+                        logger.warning(f"notify_status_changed (Close) failed: {_e}")
+                    
                     messages.success(request, 'Ticket closed successfully.')
                     return redirect('admin_ticket_detail', pk=ticket.id)
                 else:
@@ -636,15 +667,21 @@ def ticket_detail_admin(request, pk):
                 except ValidationError as error:
                     messages.error(request, str(error))
                     return redirect('admin_ticket_detail', pk=ticket.id)
+                
+                old_status = ticket.status
                 reopen_ticket_logic(ticket, f"Admin {request.user.username}", remarks, uploaded_files)
+                
+                # ✅ Desktop toast
+                try:
+                    from tickets.services.notify import notify_status_changed
+                    notify_status_changed(ticket, old_status, 'Open', actor=request.user)
+                except Exception as _e:
+                    logger.warning(f"notify_status_changed (Reopen) failed: {_e}")
+                
                 messages.success(request, 'Ticket reopened successfully.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
                 
-            # ============================================================
-            # PRIORITY CHANGE ACTION
-            # ============================================================
             elif action_type == 'ChangePriority':
-                # Check if ticket is closed
                 if ticket.status == 'Closed':
                     messages.error(request, "Cannot change priority of a closed ticket.")
                     return redirect('admin_ticket_detail', pk=ticket.id)
@@ -652,25 +689,20 @@ def ticket_detail_admin(request, pk):
                 new_priority = request.POST.get('new_priority', '').strip()
                 priority_reason = request.POST.get('priority_reason', '').strip()
                 
-                # Validate priority
                 valid_priorities = ['Critical', 'High', 'Medium', 'Low']
                 if new_priority not in valid_priorities:
                     messages.error(request, "Invalid priority selected.")
                     return redirect('admin_ticket_detail', pk=ticket.id)
                 
-                # Validate reason
                 if not priority_reason:
                     messages.error(request, "Please provide a reason for changing priority.")
                     return redirect('admin_ticket_detail', pk=ticket.id)
                 
-                # Get old priority
                 old_priority = ticket.priority
                 
-                # Update priority
                 ticket.priority = new_priority
                 ticket.save()
                 
-                # Create history entry
                 history_remark = f"Priority changed from {old_priority} to {new_priority}. Reason: {priority_reason}"
                 TicketHistory.objects.create(
                     ticket=ticket,
@@ -679,12 +711,16 @@ def ticket_detail_admin(request, pk):
                     performed_by=f"Admin {request.user.username}"
                 )
                 
+                # ✅ Desktop toast
+                try:
+                    from tickets.services.notify import notify_priority_changed
+                    notify_priority_changed(ticket, old_priority, new_priority, actor=request.user)
+                except Exception as _e:
+                    logger.warning(f"notify_priority_changed failed: {_e}")
+                
                 messages.success(request, f'Priority changed from {old_priority} to {new_priority}.')
                 return redirect('admin_ticket_detail', pk=ticket.id)
             
-            # ============================================================
-            # ✅ NEW: UPDATE TARGET DATE
-            # ============================================================
             elif action_type == 'UpdateTargetDate':
                 target_date_str = request.POST.get('target_date', '').strip()
                 
@@ -695,7 +731,6 @@ def ticket_detail_admin(request, pk):
                 try:
                     target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
                     
-                    # Check if date is in the past
                     if target_date < timezone.now().date():
                         messages.error(request, "Target date cannot be in the past.")
                         return redirect('admin_ticket_detail', pk=ticket.id)
@@ -741,7 +776,7 @@ def ticket_detail_admin(request, pk):
 
 
 # ============================================================
-# ✅ NEW: ADMIN TICKET REPLY
+# ADMIN TICKET REPLY
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='login')
@@ -749,7 +784,7 @@ def admin_ticket_reply(request, ticket_id):
     """
     Admin reply to a ticket
     """
-    ticket = get_object_or_404(Ticket, id=ticket_id)
+    ticket = get_object_or_404(Ticket.objects.with_archived(), id=ticket_id)
     
     if request.method != 'POST':
         return redirect('admin_ticket_detail', pk=ticket.id)
@@ -763,6 +798,13 @@ def admin_ticket_reply(request, ticket_id):
         reply.author_role = 'Admin'
         reply.save()
         
+        # ✅ Desktop toast: notify creator + assignee
+        try:
+            from tickets.services.notify import notify_ticket_replied
+            notify_ticket_replied(ticket, reply, actor=request.user)
+        except Exception as _e:
+            logger.warning(f"notify_ticket_replied failed: {_e}")
+        
         messages.success(request, 'Reply added successfully.')
     else:
         messages.error(request, 'Please fix the errors below.')
@@ -771,7 +813,7 @@ def admin_ticket_reply(request, ticket_id):
 
 
 # ============================================================
-# ✅ NEW: UPDATE TARGET DATE (Standalone Endpoint)
+# UPDATE TARGET DATE (Standalone Endpoint)
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='login')
@@ -783,7 +825,7 @@ def update_target_date(request, ticket_id):
         return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
     
     try:
-        ticket = Ticket.objects.get(id=ticket_id)
+        ticket = Ticket.objects.with_archived().get(id=ticket_id)
     except Ticket.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Ticket not found'}, status=404)
     
@@ -796,11 +838,9 @@ def update_target_date(request, ticket_id):
         from datetime import date
         target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
         
-        # Check if date is in the past
         if target_date < date.today():
             return JsonResponse({'success': False, 'message': 'Target date cannot be in the past'})
         
-        # Check if ticket is assigned
         if ticket.status not in ['Assigned', 'Open']:
             return JsonResponse({'success': False, 'message': 'Ticket must be in Assigned or Open status to set target date'})
         
@@ -808,7 +848,6 @@ def update_target_date(request, ticket_id):
         ticket.target_date = target_date
         ticket.save()
         
-        # Log the change
         TicketHistory.objects.create(
             ticket=ticket,
             action="Target Date Updated",
@@ -827,7 +866,7 @@ def update_target_date(request, ticket_id):
 
 
 # ============================================================
-# DOWNLOAD INDIVIDUAL TICKET EXCEL - WITH AUDIT HISTORY & REPLIES
+# DOWNLOAD INDIVIDUAL TICKET EXCEL
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='login')
@@ -836,7 +875,7 @@ def download_individual_ticket_excel(request, ticket_id):
     Download a single ticket details as Excel file
     Includes: Ticket Details, Audit History, and Replies
     """
-    ticket = get_object_or_404(Ticket, id=ticket_id)
+    ticket = get_object_or_404(Ticket.objects.with_archived(), id=ticket_id)
     history = ticket.history.all().order_by('timestamp')
     replies = ticket.replies.select_related('author').all().order_by('created_at')
     
@@ -854,9 +893,6 @@ def download_individual_ticket_excel(request, ticket_id):
     
     wb = openpyxl.Workbook()
     
-    # ============================================================
-    # SHEET 1: TICKET DETAILS
-    # ============================================================
     ws1 = wb.active
     ws1.title = "Ticket Details"
     
@@ -868,6 +904,7 @@ def download_individual_ticket_excel(request, ticket_id):
     title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
     section_fill = PatternFill(start_color='FF6B00', end_color='FF6B00', fill_type='solid')
     label_fill = PatternFill(start_color='E8EDF5', end_color='E8EDF5', fill_type='solid')
+    header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
     thin_border = Border(
         left=Side(style='thin', color='D0D0D0'),
         right=Side(style='thin', color='D0D0D0'),
@@ -875,7 +912,6 @@ def download_individual_ticket_excel(request, ticket_id):
         bottom=Side(style='thin', color='D0D0D0')
     )
     
-    # Title
     ws1.merge_cells('A1:F1')
     ws1['A1'] = f"GPLAST TICKET DETAILS - {ticket.ticket_number}"
     ws1['A1'].font = title_font
@@ -885,7 +921,6 @@ def download_individual_ticket_excel(request, ticket_id):
     
     row = 3
     
-    # Basic Information
     ws1.merge_cells(f'A{row}:F{row}')
     ws1[f'A{row}'] = "BASIC INFORMATION"
     ws1[f'A{row}'].font = section_font
@@ -920,7 +955,6 @@ def download_individual_ticket_excel(request, ticket_id):
     
     row += 1
     
-    # Employee Details
     ws1.merge_cells(f'A{row}:F{row}')
     ws1[f'A{row}'] = "EMPLOYEE DETAILS"
     ws1[f'A{row}'].font = section_font
@@ -954,7 +988,6 @@ def download_individual_ticket_excel(request, ticket_id):
     
     row += 1
     
-    # Assignment & Status
     ws1.merge_cells(f'A{row}:F{row}')
     ws1[f'A{row}'] = "ASSIGNMENT & STATUS"
     ws1[f'A{row}'].font = section_font
@@ -985,7 +1018,6 @@ def download_individual_ticket_excel(request, ticket_id):
     
     row += 1
     
-    # Closing Details (if closed)
     if ticket.status == 'Closed':
         ws1.merge_cells(f'A{row}:F{row}')
         ws1[f'A{row}'] = "CLOSING DETAILS"
@@ -1029,14 +1061,12 @@ def download_individual_ticket_excel(request, ticket_id):
         
         row += 1
     
-    # Footer for Sheet 1
     ws1.merge_cells(f'A{row}:F{row}')
     ws1[f'A{row}'] = f"Report generated on {report_time} | GPLAST Support System"
     ws1[f'A{row}'].font = Font(name='Calibri', size=9, italic=True, color='666666')
     ws1[f'A{row}'].alignment = Alignment(horizontal='center', vertical='center')
     ws1.row_dimensions[row].height = 25
     
-    # Column widths for Sheet 1
     ws1.column_dimensions['A'].width = 28
     ws1.column_dimensions['B'].width = 35
     ws1.column_dimensions['C'].width = 30
@@ -1044,12 +1074,9 @@ def download_individual_ticket_excel(request, ticket_id):
     ws1.column_dimensions['E'].width = 15
     ws1.column_dimensions['F'].width = 15
     
-    # ============================================================
     # SHEET 2: AUDIT HISTORY
-    # ============================================================
     ws2 = wb.create_sheet("Audit History")
     
-    # Title for Sheet 2
     ws2.merge_cells('A1:D1')
     ws2['A1'] = f"AUDIT HISTORY - Ticket #{ticket.ticket_number}"
     ws2['A1'].font = title_font
@@ -1063,7 +1090,6 @@ def download_individual_ticket_excel(request, ticket_id):
     ws2['A2'].alignment = Alignment(horizontal='center', vertical='center')
     ws2.row_dimensions[2].height = 25
     
-    # Headers for Sheet 2
     headers2 = ['#', 'Timestamp', 'Action', 'Remarks', 'Performed By']
     for col_idx, header in enumerate(headers2, 1):
         cell = ws2.cell(row=4, column=col_idx)
@@ -1074,7 +1100,6 @@ def download_individual_ticket_excel(request, ticket_id):
         cell.border = thin_border
     ws2.row_dimensions[4].height = 30
     
-    # Data rows for Sheet 2
     row_idx = 5
     for idx, log in enumerate(history, 1):
         if log.timestamp:
@@ -1108,19 +1133,15 @@ def download_individual_ticket_excel(request, ticket_id):
         
         row_idx += 1
     
-    # Column widths for Sheet 2
     ws2.column_dimensions['A'].width = 8
     ws2.column_dimensions['B'].width = 22
     ws2.column_dimensions['C'].width = 30
     ws2.column_dimensions['D'].width = 50
     ws2.column_dimensions['E'].width = 22
     
-    # ============================================================
     # SHEET 3: REPLIES
-    # ============================================================
     ws3 = wb.create_sheet("Replies")
     
-    # Title for Sheet 3
     ws3.merge_cells('A1:D1')
     ws3['A1'] = f"REPLIES - Ticket #{ticket.ticket_number}"
     ws3['A1'].font = title_font
@@ -1134,7 +1155,6 @@ def download_individual_ticket_excel(request, ticket_id):
     ws3['A2'].alignment = Alignment(horizontal='center', vertical='center')
     ws3.row_dimensions[2].height = 25
     
-    # Headers for Sheet 3
     headers3 = ['#', 'Date/Time', 'Author', 'Reply', 'Role']
     for col_idx, header in enumerate(headers3, 1):
         cell = ws3.cell(row=4, column=col_idx)
@@ -1145,7 +1165,6 @@ def download_individual_ticket_excel(request, ticket_id):
         cell.border = thin_border
     ws3.row_dimensions[4].height = 30
     
-    # Data rows for Sheet 3
     row_idx = 5
     for idx, reply in enumerate(replies, 1):
         if reply.created_at:
@@ -1169,7 +1188,7 @@ def download_individual_ticket_excel(request, ticket_id):
         ws3.cell(row=row_idx, column=3).alignment = Alignment(horizontal='left', vertical='center')
         ws3.cell(row=row_idx, column=3).border = thin_border
         
-        ws3.cell(row=row_idx, column=4, value=reply.reply_text or '').font = data_font
+        ws3.cell(row=row_idx, column=4, value=reply.body or '').font = data_font
         ws3.cell(row=row_idx, column=4).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         ws3.cell(row=row_idx, column=4).border = thin_border
         
@@ -1179,14 +1198,12 @@ def download_individual_ticket_excel(request, ticket_id):
         
         row_idx += 1
     
-    # Column widths for Sheet 3
     ws3.column_dimensions['A'].width = 8
     ws3.column_dimensions['B'].width = 22
     ws3.column_dimensions['C'].width = 25
     ws3.column_dimensions['D'].width = 50
     ws3.column_dimensions['E'].width = 18
     
-    # Save workbook
     wb.save(response)
     return response
 
@@ -1199,7 +1216,6 @@ def download_individual_ticket_excel(request, ticket_id):
 def get_employees_by_department(request):
     """
     AJAX endpoint to get employees by department
-    Used by department-employees page
     """
     department_id = request.GET.get('department_id')
     
@@ -1212,7 +1228,6 @@ def get_employees_by_department(request):
         }, status=400)
     
     try:
-        # Get employees for this department
         employees = EmployeeMaster.objects.filter(
             department_id=department_id,
             is_active=True
@@ -1246,7 +1261,7 @@ def get_employees_by_department(request):
 
 
 # ============================================================
-# NOTIFICATION FUNCTIONS - FIXED FOR AJAX
+# NOTIFICATION FUNCTIONS
 # ============================================================
 
 @login_required
@@ -1254,9 +1269,7 @@ def get_employees_by_department(request):
 def get_notifications(request):
     """
     Get unviewed tickets for AJAX dropdown refresh
-    ✅ FIXED: Always returns JSON for AJAX requests
     """
-    # Check if it's an AJAX request
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if is_ajax:
@@ -1283,7 +1296,6 @@ def get_notifications(request):
                 'html': ''
             }, status=500)
     
-    # For non-AJAX requests, return a proper page or redirect
     return JsonResponse({
         'success': False,
         'message': 'Invalid request. This endpoint only accepts AJAX requests.',
@@ -1296,8 +1308,7 @@ def get_notifications(request):
 @user_passes_test(is_admin, login_url='login')
 def refresh_notifications(request):
     """
-    AJAX view to refresh notification dropdown content - Admin Only
-    Returns HTML for the notification dropdown
+    AJAX view to refresh notification dropdown content
     """
     try:
         unviewed_count = Ticket.objects.filter(is_viewed=False).count()
@@ -1328,7 +1339,6 @@ def refresh_notifications(request):
 def mark_all_notifications_read(request):
     """
     Mark all tickets as viewed
-    ✅ FIXED: Always returns JSON for AJAX requests
     """
     if request.method == 'POST':
         try:
@@ -1356,11 +1366,10 @@ def mark_all_notifications_read(request):
 def mark_notification_read(request, ticket_id):
     """
     Mark a single ticket as viewed
-    ✅ FIXED: Always returns JSON for AJAX requests
     """
     if request.method == 'POST':
         try:
-            ticket = get_object_or_404(Ticket, pk=ticket_id)
+            ticket = get_object_or_404(Ticket.objects.with_archived(), pk=ticket_id)
             ticket.is_viewed = True
             ticket.viewed_at = timezone.now()
             ticket.save()
@@ -1580,3 +1589,297 @@ def download_audit_log_excel(request):
     
     wb.save(response)
     return response
+
+
+# ============================================================
+# ARCHIVE / RESTORE VIEWS
+# ============================================================
+
+@login_required
+@user_passes_test(is_admin, login_url='login')
+@require_POST
+def restore_ticket(request, pk):
+    """
+    Restore a single archived ticket back to active lists.
+    """
+    ticket = get_object_or_404(Ticket.objects.with_archived(), pk=pk)
+
+    if ticket.restore():
+        TicketHistory.objects.create(
+            ticket=ticket,
+            action="Restored Ticket",
+            remarks="Restored from archive by admin",
+            performed_by=f"Admin {request.user.username}",
+        )
+        messages.success(request, f"Ticket #{ticket.ticket_number} restored.")
+    else:
+        messages.info(request, "Ticket is not archived.")
+
+    return redirect(f"{reverse('all_tickets')}?show=archived")
+
+
+@login_required
+@user_passes_test(is_admin, login_url='login')
+@require_POST
+def bulk_restore_tickets(request):
+    """
+    Restore multiple archived tickets at once.
+    Reads ticket_ids[] from POST.
+    """
+    ids = request.POST.getlist('ticket_ids')
+
+    if not ids:
+        messages.warning(request, "No tickets selected.")
+        return redirect(f"{reverse('all_tickets')}?show=archived")
+
+    qs = Ticket.objects.with_archived().filter(pk__in=ids, is_archived=True)
+
+    restored = 0
+    for ticket in qs:
+        ticket.is_archived = False
+        ticket.archived_at = None
+        ticket.archived_by = ""
+        ticket.save(update_fields=["is_archived", "archived_at", "archived_by"])
+
+        TicketHistory.objects.create(
+            ticket=ticket,
+            action="Restored Ticket",
+            remarks="Bulk restored from archive",
+            performed_by=f"Admin {request.user.username}",
+        )
+        restored += 1
+
+    if restored == 0:
+        messages.info(request, "No archived tickets matched the selection.")
+    else:
+        messages.success(request, f"Restored {restored} ticket(s).")
+
+    return redirect(f"{reverse('all_tickets')}?show=archived")
+
+
+@login_required
+@user_passes_test(is_admin, login_url='login')
+def export_archived_tickets_excel(request):
+    """
+    Export every archived ticket to Excel, with archive metadata.
+    """
+    tickets_qs = Ticket.objects.archived_only().order_by('-archived_at')
+
+    priority = request.GET.get('priority', '').strip()
+    unit_id = request.GET.get('unit', '').strip()
+    search = request.GET.get('search', '').strip()
+
+    if priority:
+        tickets_qs = tickets_qs.filter(priority=priority)
+    if unit_id:
+        tickets_qs = tickets_qs.filter(unit_id=unit_id)
+    if search:
+        tickets_qs = tickets_qs.filter(
+            Q(ticket_number__icontains=search) |
+            Q(subject__icontains=search) |
+            Q(employee_name__icontains=search)
+        )
+
+    current_tz = timezone.get_current_timezone()
+    now_utc = timezone.now()
+    if timezone.is_naive(now_utc):
+        now_utc = timezone.make_aware(now_utc, timezone.utc)
+    now_local = now_utc.astimezone(current_tz)
+    report_time = now_local.strftime('%d-%b-%Y %I:%M:%S %p')
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = (
+        f'attachment; filename=Archived_Tickets_'
+        f'{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    )
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Archived Tickets"
+
+    title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    data_font = Font(name='Calibri', size=10)
+    title_fill = PatternFill(start_color='475569', end_color='475569', fill_type='solid')
+    header_fill = PatternFill(start_color='64748B', end_color='64748B', fill_type='solid')
+    thin_border = Border(
+        left=Side(style='thin', color='D0D0D0'),
+        right=Side(style='thin', color='D0D0D0'),
+        top=Side(style='thin', color='D0D0D0'),
+        bottom=Side(style='thin', color='D0D0D0')
+    )
+
+    ws.merge_cells('A1:S1')
+    ws['A1'] = "ARCHIVED TICKETS - GPLAST SUPPORT SYSTEM"
+    ws['A1'].font = title_font
+    ws['A1'].fill = title_fill
+    ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[1].height = 45
+
+    ws.merge_cells('A2:S2')
+    ws['A2'] = (
+        f"Generated: {report_time}  |  "
+        f"Total Archived Tickets: {tickets_qs.count()}"
+    )
+    ws['A2'].font = Font(name='Calibri', size=10, italic=True, color='666666')
+    ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[2].height = 25
+
+    headers = [
+        'Ticket Number', 'Subject', 'Employee ID', 'Employee Name',
+        'Unit Code', 'Department', 'Priority', 'Status',
+        'Created At', 'Closed At', 'Time to Close',
+        'Assigned Person', 'Closed By',
+        'Main Error Type', 'Sub Error Type',
+        'Archived At', 'Archived By',
+        'Description', 'Closing Remarks',
+    ]
+
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=4, column=col_idx)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.border = thin_border
+    ws.row_dimensions[4].height = 30
+
+    row_idx = 5
+    for ticket in tickets_qs:
+        def fmt(dt):
+            if not dt:
+                return ''
+            if timezone.is_naive(dt):
+                dt = timezone.make_aware(dt, timezone.utc)
+            return dt.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p')
+
+        time_to_close = ''
+        if ticket.created_at and ticket.closed_at:
+            d = ticket.closed_at - ticket.created_at
+            time_to_close = f"{d.days}d {d.seconds // 3600}h {(d.seconds % 3600) // 60}m"
+
+        row_data = [
+            ticket.ticket_number,
+            ticket.subject,
+            ticket.employee_id,
+            ticket.employee_name,
+            ticket.unit.code if ticket.unit else '',
+            ticket.department.name if ticket.department else '',
+            ticket.priority,
+            ticket.status,
+            fmt(ticket.created_at),
+            fmt(ticket.closed_at),
+            time_to_close,
+            ticket.assigned_person or '',
+            ticket.closed_by or '',
+            ticket.main_error_type or 'N/A',
+            ticket.sub_error_type or 'N/A',
+            fmt(ticket.archived_at),
+            ticket.archived_by or '',
+            ticket.description or '',
+            ticket.closing_remarks or '',
+        ]
+
+        for col_idx, val in enumerate(row_data, 1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.value = val
+            cell.font = data_font
+            cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+            cell.border = thin_border
+        row_idx += 1
+
+    widths = {
+        'A': 16, 'B': 34, 'C': 14, 'D': 22, 'E': 12, 'F': 20,
+        'G': 12, 'H': 12, 'I': 22, 'J': 22, 'K': 14,
+        'L': 20, 'M': 18, 'N': 20, 'O': 20,
+        'P': 22, 'Q': 20, 'R': 40, 'S': 34,
+    }
+    for col, width in widths.items():
+        ws.column_dimensions[col].width = width
+
+    wb.save(response)
+    return response
+
+
+# ============================================================
+# DEDICATED ARCHIVE PAGE — browse and restore archived tickets
+# ============================================================
+
+@login_required
+@user_passes_test(is_admin, login_url='login')
+def archived_tickets(request):
+    """
+    Dedicated page for browsing and restoring archived tickets.
+    Shows only tickets where is_archived=True.
+    """
+    qs = Ticket.objects.archived_only().order_by('-archived_at')
+
+    search = request.GET.get('search', '').strip()
+    priority = request.GET.get('priority', '').strip()
+    unit_id = request.GET.get('unit', '').strip()
+    archived_by = request.GET.get('archived_by', '').strip()
+    date_from = request.GET.get('date_from', '').strip()
+    date_to = request.GET.get('date_to', '').strip()
+
+    if search:
+        qs = qs.filter(
+            Q(ticket_number__icontains=search) |
+            Q(subject__icontains=search) |
+            Q(employee_name__icontains=search) |
+            Q(employee_id__icontains=search)
+        )
+    if priority:
+        qs = qs.filter(priority=priority)
+    if unit_id:
+        qs = qs.filter(unit_id=unit_id)
+    if archived_by:
+        qs = qs.filter(archived_by__icontains=archived_by)
+
+    if date_from:
+        try:
+            d = datetime.strptime(date_from, '%Y-%m-%d').date()
+            from_dt = timezone.make_aware(datetime.combine(d, datetime.min.time()))
+            qs = qs.filter(archived_at__gte=from_dt)
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            d = datetime.strptime(date_to, '%Y-%m-%d').date()
+            to_dt = timezone.make_aware(datetime.combine(d, datetime.max.time()))
+            qs = qs.filter(archived_at__lte=to_dt)
+        except ValueError:
+            pass
+
+    total_archived = qs.count()
+    now = timezone.now()
+    today = now.date()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    archived_today = Ticket.objects.archived_only().filter(archived_at__date=today).count()
+    archived_month = Ticket.objects.archived_only().filter(archived_at__gte=month_start).count()
+    oldest = Ticket.objects.archived_only().order_by('archived_at').first()
+
+    paginator = Paginator(qs, 25)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    filter_query = request.GET.copy()
+    filter_query.pop('page', None)
+
+    context = {
+        'page_obj': page_obj,
+        'total_archived': total_archived,
+        'archived_today': archived_today,
+        'archived_month': archived_month,
+        'oldest_archive': oldest.archived_at if oldest else None,
+        'priority_choices': Ticket.PRIORITY_CHOICES,
+        'units': Unit.objects.filter(is_active=True).order_by('code'),
+        'selected_search': search,
+        'selected_priority': priority,
+        'selected_unit': unit_id,
+        'selected_archived_by': archived_by,
+        'date_from': date_from,
+        'date_to': date_to,
+        'filter_query': filter_query.urlencode(),
+    }
+    return render(request, 'admin_panel/archived_tickets.html', context)

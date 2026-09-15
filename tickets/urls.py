@@ -1,6 +1,7 @@
 # tickets/urls.py
 
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from . import views
 from tickets.views.settings_action import erp_mapping_views
 from tickets.views.reports_views import (
@@ -22,6 +23,9 @@ from tickets.views.settings_action import (
     credentials_download_template,
 )
 
+# ✅ NEW: Desktop notifications (Windows toast) views
+from tickets.views import notification_views
+
 
 urlpatterns = [
     # ============================================================
@@ -30,6 +34,22 @@ urlpatterns = [
     path('login/', views.CustomLoginView.as_view(), name='login'),
     path('role-redirect/', views.role_redirect, name='role_redirect'),
     path('logout/', views.custom_logout, name='custom_logout'),
+
+    # ============================================================
+    # ✅ PASSWORD CHANGE (self-service for logged-in users)
+    # ============================================================
+    path(
+        'password/change/',
+        views.CustomPasswordChangeView.as_view(),
+        name='password_change',
+    ),
+    path(
+        'password/change/done/',
+        auth_views.PasswordChangeDoneView.as_view(
+            template_name='auth/password_change_done.html',
+        ),
+        name='password_change_done',
+    ),
 
     # ============================================================
     # EMPLOYEE URLS
@@ -53,7 +73,7 @@ urlpatterns = [
     path('custom-admin/tickets/', views.all_tickets, name='all_tickets'),
     path('custom-admin/ticket/<int:pk>/', views.ticket_detail_admin, name='admin_ticket_detail'),
     path('custom-admin/ticket/<int:ticket_id>/reply/', views.ticket_reply, name='admin_ticket_reply'),
-    
+
     # REPORTS URLS
     path('custom-admin/reports/', reports, name='reports'),
     path('custom-admin/reports/escalated-aging/', escalated_aging_report, name='escalated_aging_report'),
@@ -62,12 +82,34 @@ urlpatterns = [
     path('custom-admin/export/closed-30-days/', export_closed_tickets_30_days, name='export_closed_30_days'),
 
     # ============================================================
-    # NOTIFICATION URLS
+    # ✅ ARCHIVE / RESTORE URLS
+    # ============================================================
+    path('custom-admin/archive/',
+         views.archived_tickets, name='archived_tickets'),
+
+    path('custom-admin/ticket/<int:pk>/restore/',
+         views.restore_ticket, name='restore_ticket'),
+
+    path('custom-admin/tickets/bulk-restore/',
+         views.bulk_restore_tickets, name='bulk_restore_tickets'),
+
+    path('custom-admin/tickets/export-archived/',
+         views.export_archived_tickets_excel, name='export_archived_tickets_excel'),
+
+    # ============================================================
+    # NOTIFICATION URLS (existing in-app notifications)
     # ============================================================
     path('custom-admin/notifications/get/', views.get_notifications, name='get_notifications'),
     path('custom-admin/notifications/refresh/', views.refresh_notifications, name='refresh_notifications'),
     path('custom-admin/notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
     path('custom-admin/notifications/mark-read/<int:ticket_id>/', views.mark_notification_read, name='mark_notification_read'),
+
+    # ============================================================
+    # ✅ DESKTOP (WINDOWS TOAST) NOTIFICATION ENDPOINTS
+    # ============================================================
+    path('notifications/poll/', notification_views.poll_notifications, name='notifications_poll'),
+    path('notifications/<int:notification_id>/read/', notification_views.mark_read, name='notifications_mark_read'),
+    path('notifications/read-all/', notification_views.mark_all_read, name='notifications_mark_all_read'),
 
     # ============================================================
     # SETTINGS URLS - GET PAGES
@@ -78,10 +120,9 @@ urlpatterns = [
     path('custom-admin/settings/communication/', views.settings_communication, name='settings_communication'),
     path('custom-admin/settings/employees/', views.settings_employees_page, name='settings_employees_page'),
     path('custom-admin/settings/credentials/', views.settings_credentials_page, name='settings_credentials_page'),
-    # ❌ REMOVED: path('custom-admin/settings/dept-employees/', views.settings_dept_employees, name='settings_dept_employees'),
     path('custom-admin/settings/audit/', views.settings_audit_log, name='settings_audit_log'),
     path('custom-admin/settings/backup/', views.download_full_backup, name='download_full_backup'),
-    
+
     path('custom-admin/settings/audit/download-excel/', views.admin_download_audit_log_excel, name='admin_download_audit_log_excel'),
 
     # ============================================================
@@ -114,7 +155,7 @@ urlpatterns = [
     path('custom-admin/settings/erp-mapping/export-excel/', erp_mapping_views.erp_mapping_export_excel, name='settings_erp_mapping_export_excel'),
     path('custom-admin/settings/erp-mapping/bulk-upload/', erp_mapping_views.erp_mapping_bulk_upload, name='settings_erp_mapping_bulk_upload'),
     path('custom-admin/settings/erp-mapping/download-template/', erp_mapping_views.erp_mapping_download_template, name='settings_erp_mapping_download_template'),
-    
+
     # AJAX URLs
     path('ajax/get-erp-mappings/', erp_mapping_views.erp_mapping_list, name='settings_erp_mapping_list'),
     path('ajax/search-employees/', erp_mapping_views.erp_mapping_search_employees, name='settings_erp_mapping_search_employees'),
@@ -158,18 +199,17 @@ urlpatterns = [
     path('custom-admin/settings/screen-mapping/remove/', views.screen_mapping_remove, name='screen_mapping_remove'),
     path('custom-admin/settings/screen-mapping/delete-erp/', screen_mapping_delete_erp, name='screen_mapping_delete_erp'),
     path('custom-admin/settings/screen-mapping/export/', views.screen_mapping_export_excel, name='screen_mapping_export_excel'),
-    # Screen Mapping Bulk Upload URLs
     path('custom-admin/settings/screen-mapping/bulk-upload/', views.screen_mapping_bulk_upload, name='screen_mapping_bulk_upload'),
     path('custom-admin/settings/screen-mapping/download-template/', views.screen_mapping_download_template, name='screen_mapping_download_template'),
 
     # ============================================================
-    # ✅ NEW: DEPARTMENTS BULK UPLOAD URLS
+    # ✅ DEPARTMENTS BULK UPLOAD URLS
     # ============================================================
     path('custom-admin/settings/departments/bulk-upload/', departments_bulk_upload, name='departments_bulk_upload'),
     path('custom-admin/settings/departments/download-template/', departments_download_template, name='departments_download_template'),
 
     # ============================================================
-    # ✅ NEW: CREDENTIALS BULK UPLOAD URLS
+    # ✅ CREDENTIALS BULK UPLOAD URLS
     # ============================================================
     path('custom-admin/settings/credentials/bulk-upload/', credentials_bulk_upload, name='credentials_bulk_upload'),
     path('custom-admin/settings/credentials/download-template/', credentials_download_template, name='credentials_download_template'),
@@ -182,9 +222,10 @@ urlpatterns = [
     path('ajax/get-employee/', views.ajax_get_employee_details, name='ajax_get_employee_details'),
     path('ajax/get-employees-by-department/', views.get_employees_by_department, name='get_employees_by_department'),
     path('ajax/get-screens-for-erp/', views.ajax_get_screens_for_erp, name='ajax_get_screens_for_erp'),
-    
+    path('custom-admin/archive/', views.archived_tickets, name='archived_tickets'),
+
     # ============================================================
-    # ✅ NEW: TARGET DATE URL (Update target date for assigned tickets)
+    # ✅ TARGET DATE URL (Update target date for assigned tickets)
     # ============================================================
     path('ticket/<int:ticket_id>/update-target-date/', views.update_target_date, name='update_target_date'),
 ]

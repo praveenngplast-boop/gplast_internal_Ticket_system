@@ -10,6 +10,7 @@ Utility functions for views
 - Get employee directory data
 - Get credentials data
 - Unit Head helper functions
+- Sync login password → department credential
 """
 
 from django.contrib.auth.models import User
@@ -117,6 +118,55 @@ def get_user_dashboard_url(user):
         return '/unit-head/dashboard/'
     
     return '/dashboard/'
+
+
+# ============================================================
+# ✅ NEW: SYNC LOGIN PASSWORD → DEPARTMENT CREDENTIAL
+# ============================================================
+def sync_department_credential_password(user, new_plain_password):
+    """
+    When a user changes their login password, mirror the new plain
+    password into the matching DepartmentCredential row (matched by username).
+
+    This keeps the credentials table (admin view) in sync with the
+    actual login password the user just set.
+
+    If no DepartmentCredential row matches this user's username,
+    nothing is updated and the function returns False.
+
+    Returns True if a row was updated, False otherwise.
+    """
+    if not user or not user.is_authenticated:
+        return False
+
+    if not new_plain_password:
+        return False
+
+    try:
+        cred = DepartmentCredential.objects.filter(username=user.username).first()
+        if not cred:
+            return False
+
+        cred.password = new_plain_password
+
+        # Only update `updated_at` if the field exists on the model
+        update_fields = ['password']
+        if hasattr(cred, 'updated_at'):
+            update_fields.append('updated_at')
+
+        cred.save(update_fields=update_fields)
+
+        logger.info(
+            f"Synced password for user '{user.username}' → "
+            f"DepartmentCredential id={cred.id}"
+        )
+        return True
+
+    except Exception as ex:
+        logger.error(
+            f"Failed to sync DepartmentCredential for '{user.username}': {ex}"
+        )
+        return False
 
 
 # ============================================================

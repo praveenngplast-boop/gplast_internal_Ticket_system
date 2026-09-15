@@ -11,265 +11,307 @@
 {% block content %}
 <div class="uh-report-container">
 
-    <!-- ============================================================
-         HEADER
-         ============================================================ -->
-    <div class="uh-report-header">
-        <div class="uh-report-header-content">
-            <div class="uh-report-header-title">
-                <div class="icon-box">
-                    <i class="fa-solid fa-file-excel"></i>
-                </div>
-                <div>
-                    <h1>Unit Reports</h1>
-                    <div class="subtitle">
-                        <i class="fa-regular fa-building"></i>
-                        <span>{{ unit_head_unit_name|default:unit_head_unit_code }}</span>
-                        <span class="uh-unit-badge">
-                            <i class="fa-solid fa-user-tie"></i>
-                            {{ unit_head_unit_code }}
-                        </span>
-                        <span style="color: var(--uh-report-text-muted); font-size: 0.6rem;">
-                            <i class="fa-regular fa-clock"></i>
-                            Updated: {% now "d M Y, H:i" %}
-                        </span>
-                    </div>
+    <!-- Header -->
+    <header class="uh-report-header">
+        <div class="uh-report-header-row">
+            <div>
+                <h1>Unit Reports</h1>
+                <div class="sub">
+                    <span>{{ unit_head_unit_name|default:unit_head_unit_code }}</span>
+                    <span class="uh-unit-badge">
+                        <i class="fa-solid fa-user-tie"></i>{{ unit_head_unit_code }}
+                    </span>
+                    <span>•</span>
+                    <span><strong>{{ page_obj.paginator.count }}</strong> ticket{{ page_obj.paginator.count|pluralize }}</span>
                 </div>
             </div>
             <div class="uh-report-actions">
-                <a href="{% url 'unit_head_dashboard' %}" class="btn-uh-back">
-                    <i class="fa-solid fa-arrow-left"></i> Back
+                <a href="{% url 'unit_head_dashboard' %}" class="uh-btn uh-btn-ghost">
+                    <i class="fa-solid fa-arrow-left"></i>Back
                 </a>
                 {% if page_obj %}
-                <a href="?export=excel{% if filter_query %}&{{ filter_query }}{% endif %}" class="btn-uh-export">
-                    <i class="fa-solid fa-file-excel"></i> Export Excel
+                <a href="?export=excel{% if filter_query %}&{{ filter_query }}{% endif %}" class="uh-btn uh-btn-success">
+                    <i class="fa-solid fa-file-excel"></i>Export Excel
                 </a>
                 {% endif %}
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- ============================================================
-         KPI CARDS
-         ============================================================ -->
-    <div class="uh-kpi-grid">
-        <div class="uh-kpi-card">
-            <span class="kpi-icon"><i class="fa-solid fa-ticket"></i></span>
-            <div class="kpi-number">{{ kpis.total }}</div>
-            <div class="kpi-label"><span class="kpi-dot total"></span>Total Tickets</div>
-        </div>
-        <div class="uh-kpi-card">
-            <span class="kpi-icon"><i class="fa-solid fa-circle-check"></i></span>
-            <div class="kpi-number" style="color: #22C55E;">{{ kpis.open }}</div>
-            <div class="kpi-label"><span class="kpi-dot open"></span>Open</div>
-        </div>
-        <div class="uh-kpi-card">
-            <span class="kpi-icon"><i class="fa-solid fa-user-check"></i></span>
-            <div class="kpi-number" style="color: #3B82F6;">{{ kpis.assigned }}</div>
-            <div class="kpi-label"><span class="kpi-dot assigned"></span>Assigned</div>
-        </div>
-        <div class="uh-kpi-card">
-            <span class="kpi-icon"><i class="fa-solid fa-pause"></i></span>
-            <div class="kpi-number" style="color: #F59E0B;">{{ kpis.hold }}</div>
-            <div class="kpi-label"><span class="kpi-dot hold"></span>On Hold</div>
-        </div>
-        <div class="uh-kpi-card">
-            <span class="kpi-icon"><i class="fa-solid fa-arrow-up"></i></span>
-            <div class="kpi-number" style="color: #8B5CF6;">{{ kpis.escalated }}</div>
-            <div class="kpi-label"><span class="kpi-dot escalated"></span>Escalated</div>
-        </div>
-        <div class="uh-kpi-card">
-            <span class="kpi-icon"><i class="fa-solid fa-check-double"></i></span>
-            <div class="kpi-number" style="color: #94A3B8;">{{ kpis.closed }}</div>
-            <div class="kpi-label"><span class="kpi-dot closed"></span>Closed</div>
-        </div>
-        <div class="uh-kpi-card" style="border-color: rgba(239, 68, 68, 0.15);">
-            <span class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-            <div class="kpi-number" style="color: #EF4444;">{{ kpis.critical }}</div>
-            <div class="kpi-label"><span class="kpi-dot critical"></span>Critical</div>
-        </div>
-    </div>
+    <!-- KPI Grid -->
+    <section class="uh-kpi-grid">
+        <a href="{% url 'unit_head_reports' %}" class="uh-kpi total">
+            <div class="top"><div class="icon"><i class="fa-solid fa-ticket"></i></div></div>
+            <div class="num">{{ kpis.total }}</div>
+            <div class="lbl">Total</div>
+        </a>
+        <a href="?status=Open" class="uh-kpi open">
+            <div class="top"><div class="icon"><i class="fa-solid fa-circle-dot"></i></div></div>
+            <div class="num">{{ kpis.open }}</div>
+            <div class="lbl">Open</div>
+        </a>
+        <a href="?status=Assigned" class="uh-kpi assigned">
+            <div class="top"><div class="icon"><i class="fa-solid fa-user-check"></i></div></div>
+            <div class="num">{{ kpis.assigned }}</div>
+            <div class="lbl">Assigned</div>
+        </a>
+        <a href="?status=Hold" class="uh-kpi hold">
+            <div class="top"><div class="icon"><i class="fa-solid fa-pause"></i></div></div>
+            <div class="num">{{ kpis.hold }}</div>
+            <div class="lbl">On Hold</div>
+        </a>
+        <a href="?status=Escalated" class="uh-kpi escalated">
+            <div class="top"><div class="icon"><i class="fa-solid fa-arrow-up"></i></div></div>
+            <div class="num">{{ kpis.escalated }}</div>
+            <div class="lbl">Escalated</div>
+        </a>
+        <a href="?status=Closed" class="uh-kpi closed">
+            <div class="top"><div class="icon"><i class="fa-solid fa-check-double"></i></div></div>
+            <div class="num">{{ kpis.closed }}</div>
+            <div class="lbl">Closed</div>
+        </a>
+        <a href="?priority=Critical" class="uh-kpi critical">
+            <div class="top"><div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div></div>
+            <div class="num">{{ kpis.critical }}</div>
+            <div class="lbl">Critical</div>
+        </a>
+    </section>
 
-    <!-- ============================================================
-         DEPARTMENT WISE SUMMARY
-         ============================================================ -->
+    <!-- Department chips -->
     {% if department_stats %}
-    <div class="uh-dept-summary">
-        <div class="dept-title">
-            <i class="fa-solid fa-building"></i>
-            Department-wise Ticket Distribution
-            <span style="font-size: 0.55rem; font-weight: 400; color: var(--uh-report-text-muted);">
-                (Click any department to filter)
-            </span>
+    <section class="uh-dept-section">
+        <div class="uh-dept-head">
+            <div class="uh-dept-title">
+                <i class="fa-solid fa-building"></i>Department Distribution
+            </div>
+            <span class="uh-dept-hint">Click a department to filter</span>
         </div>
-        <div class="uh-dept-grid">
+        <div class="uh-dept-chips">
             {% for dept in department_stats %}
-            <a href="{% url 'unit_head_reports' %}?department={{ dept.name|urlencode }}" 
-               class="uh-dept-card" 
-               title="Click to filter by {{ dept.name }}">
-                <div class="dept-name">{{ dept.name }}</div>
-                <div class="dept-count">{{ dept.count }}</div>
-                <div class="dept-label">Tickets</div>
+            <a href="{% url 'unit_head_reports' %}?department={{ dept.name|urlencode }}"
+               class="uh-dept-chip"
+               title="Filter by {{ dept.name }}">
+                <span class="chip-name">{{ dept.name }}</span>
+                <span class="chip-count">{{ dept.count }}</span>
             </a>
             {% endfor %}
         </div>
-    </div>
+    </section>
     {% endif %}
 
-    <!-- ============================================================
-         FILTERS
-         ============================================================ -->
-    <div class="uh-filters">
+    <!-- Filter bar -->
+    <section class="uh-filters" id="uhFilters">
         <form method="GET" action="{% url 'unit_head_reports' %}" id="filterForm">
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label for="status">Status</label>
-                    <select name="status" id="status" class="form-select">
-                        <option value="">All Status</option>
-                        {% for status_code, status_label in status_choices %}
-                        <option value="{{ status_code }}" {% if selected_status == status_code %}selected{% endif %}>
-                            {{ status_label }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
 
-                <div class="filter-group">
-                    <label for="priority">Priority</label>
-                    <select name="priority" id="priority" class="form-select">
-                        <option value="">All Priority</option>
-                        {% for priority_code, priority_label in priority_choices %}
-                        <option value="{{ priority_code }}" {% if selected_priority == priority_code %}selected{% endif %}>
-                            {{ priority_label }}
-                        </option>
-                        {% endfor %}
-                    </select>
+            <div class="uh-filters-top">
+                <div class="uh-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="search" id="search"
+                           value="{{ search_query|default:'' }}"
+                           placeholder="Search by ticket number or subject…">
                 </div>
+                <button type="button" class="uh-filters-toggle" id="uhFiltersToggle">
+                    <i class="fa-solid fa-sliders"></i>
+                    Filters
+                    <span class="badge" id="uhFilterCount">0</span>
+                    <i class="fa-solid fa-chevron-down chev"></i>
+                </button>
+            </div>
 
-                <div class="filter-group">
-                    <label for="department">Department</label>
-                    <select name="department" id="department" class="form-select">
-                        <option value="">All Departments</option>
-                        {% for dept in all_departments %}
-                        <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>
-                            {{ dept.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="uh-filters-body">
+                <div class="uh-filters-inner">
+                    <div class="uh-grid">
 
-                <div class="filter-group">
-                    <label for="date_from">Date From</label>
-                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
-                </div>
+                        <div class="uh-field">
+                            <label><i class="fa-solid fa-circle"></i> Status</label>
+                            <select name="status" id="status" class="uh-select">
+                                <option value="">All Status</option>
+                                {% for status_code, status_label in status_choices %}
+                                <option value="{{ status_code }}" {% if selected_status == status_code %}selected{% endif %}>
+                                    {{ status_label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                <div class="filter-group">
-                    <label for="date_to">Date To</label>
-                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
-                </div>
+                        <div class="uh-field">
+                            <label><i class="fa-solid fa-flag"></i> Priority</label>
+                            <select name="priority" id="priority" class="uh-select">
+                                <option value="">All Priority</option>
+                                {% for priority_code, priority_label in priority_choices %}
+                                <option value="{{ priority_code }}" {% if selected_priority == priority_code %}selected{% endif %}>
+                                    {{ priority_label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                <div class="filter-group">
-                    <label for="search">Search</label>
-                    <input type="text" name="search" id="search" class="form-control"
-                           placeholder="Ticket #, subject..." value="{{ search_query }}">
-                </div>
+                        <div class="uh-field">
+                            <label><i class="fa-solid fa-building"></i> Department</label>
+                            <select name="department" id="department" class="uh-select">
+                                <option value="">All Departments</option>
+                                {% for dept in all_departments %}
+                                <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                <div class="filter-actions">
-                    <button type="submit" class="btn-filter">
-                        <i class="fa-solid fa-filter"></i> Apply
-                    </button>
-                    {% if selected_status or selected_priority or selected_department or date_from or date_to or search_query %}
-                    <a href="{% url 'unit_head_reports' %}" class="btn-filter-outline">
-                        <i class="fa-solid fa-times"></i> Clear
-                    </a>
-                    {% endif %}
+                        <div class="uh-field">
+                            <label><i class="fa-regular fa-calendar-plus"></i> Date From</label>
+                            <input type="date" name="date_from" id="date_from" class="uh-input" value="{{ date_from|default:'' }}">
+                        </div>
+
+                        <div class="uh-field">
+                            <label><i class="fa-regular fa-calendar-check"></i> Date To</label>
+                            <input type="date" name="date_to" id="date_to" class="uh-input" value="{{ date_to|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="uh-filter-actions">
+                        {% if selected_status or selected_priority or selected_department or date_from or date_to or search_query %}
+                        <a href="{% url 'unit_head_reports' %}" class="uh-btn uh-btn-danger-ghost">
+                            <i class="fa-solid fa-eraser"></i> Clear All
+                        </a>
+                        {% endif %}
+                        <button type="submit" class="uh-btn uh-btn-primary">
+                            <i class="fa-solid fa-filter"></i> Apply Filters
+                        </button>
+                    </div>
                 </div>
             </div>
         </form>
+    </section>
+
+    <!-- Results toolbar -->
+    <div class="uh-toolbar">
+        <div class="uh-toolbar-title">
+            <i class="fa-solid fa-list-ul"></i> Ticket List
+            <span class="count">{{ page_obj.paginator.count }}</span>
+        </div>
+        <div class="uh-toolbar-meta">
+            <i class="fa-regular fa-clock"></i> Updated {% now "d M Y, H:i" %}
+        </div>
     </div>
 
-    <!-- ============================================================
-         TABLE - REPORTS DATA
-         ============================================================ -->
-    <div class="uh-table-wrapper">
-        <div class="table-header">
-            <span class="title">
-                <i class="fa-solid fa-list-ul"></i> Ticket List
-            </span>
-            <span class="count">
-                Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
-            </span>
-        </div>
-        <div class="uh-table-scroll">
-            <table class="uh-table">
-                <thead>
-                    <tr>
-                        <th>Ticket #</th>
-                        <th>Subject</th>
-                        <th>Employee</th>
-                        <th>Department</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Created</th>
-                        <th class="text-center">View</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ticket in page_obj %}
-                    <tr>
-                        <td><span class="ticket-number"><a href="{% url 'unit_head_ticket_detail' ticket.id %}">#{{ ticket.ticket_number }}</a></span></td>
-                        <td style="max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ ticket.subject }}</td>
-                        <td>{{ ticket.employee_name|default:ticket.employee_id }}</td>
-                        <td class="dept-name-td">{{ ticket.department.name|default:"N/A" }}</td>
-                        <td><span class="badge-sm badge-sm-status-{{ ticket.status|lower }}">{{ ticket.status }}</span></td>
-                        <td><span class="badge-sm badge-sm-priority-{{ ticket.priority|lower }}">{{ ticket.priority }}</span></td>
-                        <td style="font-size: 0.6rem;">{{ ticket.created_at|date:"d M Y, H:i" }}</td>
-                        <td class="text-center" style="white-space: nowrap;">
-                            <a href="{% url 'unit_head_ticket_detail' ticket.id %}" class="btn-uh-view" title="View Ticket Details">
-                                <i class="fa-solid fa-eye"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8">
-                            <div class="uh-empty-state">
-                                <i class="fa-regular fa-ticket"></i>
-                                <p>No tickets found for this unit.</p>
-                                {% if search_query or selected_status or selected_priority or selected_department %}
-                                <p style="font-size: 0.65rem; margin-top: 0.25rem;">Try adjusting your filters.</p>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <!-- Ticket list -->
+    {% if page_obj %}
+    <div class="uh-list">
+        {% for ticket in page_obj %}
+        <article class="uh-card status-{{ ticket.status|lower }}"
+                 data-url="{% url 'unit_head_ticket_detail' ticket.id %}">
 
-        <!-- ============================================================
-             PAGINATION
-             ============================================================ -->
-        {% if page_obj.paginator.num_pages > 1 %}
-        <div class="uh-pagination">
-            <div class="step-links">
-                {% if page_obj.has_previous %}
-                <a href="?page=1{% if filter_query %}&{{ filter_query }}{% endif %}">&laquo; First</a>
-                <a href="?page={{ page_obj.previous_page_number }}{% if filter_query %}&{{ filter_query }}{% endif %}">Previous</a>
-                {% endif %}
+            <div class="uh-card-body">
+                <div class="uh-card-head">
+                    <span class="uh-card-id">
+                        <i class="fa-regular fa-hashtag"></i>{{ ticket.ticket_number }}
+                    </span>
 
-                <span class="current">
-                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                </span>
+                    <span class="uh-badge status-{{ ticket.status|lower }}">
+                        <i class="fa-solid fa-circle"></i>{{ ticket.status }}
+                    </span>
 
-                {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if filter_query %}&{{ filter_query }}{% endif %}">Next</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}{% if filter_query %}&{{ filter_query }}{% endif %}">Last &raquo;</a>
-                {% endif %}
+                    <span class="uh-badge priority-{{ ticket.priority|lower }}">
+                        <i class="fa-solid fa-flag"></i>{{ ticket.priority }}
+                    </span>
+
+                    {% if ticket.department %}
+                    <span class="uh-dept-tag">
+                        <i class="fa-solid fa-building"></i>{{ ticket.department.name }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <h3 class="uh-card-subject">{{ ticket.subject }}</h3>
+
+                <div class="uh-card-meta">
+                    <span class="item">
+                        <i class="fa-regular fa-user"></i>
+                        <strong>{{ ticket.employee_name|default:ticket.employee_id }}</strong>
+                    </span>
+                </div>
             </div>
-        </div>
+
+            <div class="uh-card-side">
+                <div class="uh-card-date">
+                    <div class="d">{{ ticket.created_at|date:"d M Y" }}</div>
+                    <div>{{ ticket.created_at|date:"h:i A" }}</div>
+                </div>
+                <a href="{% url 'unit_head_ticket_detail' ticket.id %}" class="uh-view">
+                    <i class="fa-solid fa-arrow-right"></i><span>View Details</span>
+                </a>
+            </div>
+
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="uh-empty">
+        <i class="fa-regular fa-folder-open"></i>
+        <h4>No tickets found</h4>
+        <p>
+            {% if search_query or selected_status or selected_priority or selected_department or date_from or date_to %}
+                No tickets match your filters. Try adjusting them.
+            {% else %}
+                No tickets have been created for this unit yet.
+            {% endif %}
+        </p>
+        {% if search_query or selected_status or selected_priority or selected_department or date_from or date_to %}
+        <a href="{% url 'unit_head_reports' %}" class="uh-btn uh-btn-primary">
+            <i class="fa-solid fa-rotate-right"></i> Reset Filters
+        </a>
         {% endif %}
     </div>
+    {% endif %}
+
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="uh-pager">
+        <div class="uh-pager-info">
+            Showing <strong>{{ page_obj.start_index }}</strong>–<strong>{{ page_obj.end_index }}</strong>
+            of <strong>{{ page_obj.paginator.count }}</strong> tickets
+        </div>
+
+        <div class="uh-pager-controls">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if filter_query %}&{{ filter_query }}{% endif %}" class="uh-page-btn" title="First">
+                    <i class="fa-solid fa-angles-left"></i>
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if filter_query %}&{{ filter_query }}{% endif %}" class="uh-page-btn">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </a>
+            {% else %}
+                <span class="uh-page-btn disabled"><i class="fa-solid fa-angles-left"></i></span>
+                <span class="uh-page-btn disabled"><i class="fa-solid fa-chevron-left"></i></span>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                    <span class="uh-page-btn active">{{ num }}</span>
+                {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                    <a href="?page={{ num }}{% if filter_query %}&{{ filter_query }}{% endif %}" class="uh-page-btn">{{ num }}</a>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}{% if filter_query %}&{{ filter_query }}{% endif %}" class="uh-page-btn">{{ num }}</a>
+                {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                    <span class="uh-page-ellipsis">…</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if filter_query %}&{{ filter_query }}{% endif %}" class="uh-page-btn">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if filter_query %}&{{ filter_query }}{% endif %}" class="uh-page-btn" title="Last">
+                    <i class="fa-solid fa-angles-right"></i>
+                </a>
+            {% else %}
+                <span class="uh-page-btn disabled"><i class="fa-solid fa-chevron-right"></i></span>
+                <span class="uh-page-btn disabled"><i class="fa-solid fa-angles-right"></i></span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 
 </div>
 {% endblock %}

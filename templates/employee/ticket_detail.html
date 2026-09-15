@@ -9,487 +9,422 @@
 
 {% block content %}
 <div class="ticket-detail-container">
-    <div class="row mb-3">
-        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div>
-                <h2 class="fw-bold mb-1" style="font-size: clamp(1.1rem, 2vw, 1.6rem); color: var(--text-primary);">
-                    <i class="fa-solid fa-file-invoice me-2" style="color: var(--brand-orange);"></i>
-                    Ticket #{{ ticket.ticket_number }}
-                </h2>
-                <p class="mb-0" style="font-size: clamp(0.7rem, 1vw, 0.85rem); color: var(--text-secondary);">
-                    <i class="fa-regular fa-calendar me-1"></i>
-                    Raised on {{ ticket.created_at|date:"d-b-Y h:i A" }}
-                    <span class="badge rounded-pill ms-2 px-2 py-1" style="font-size: clamp(0.5rem, 0.7vw, 0.6rem); background: rgba(255, 107, 0, 0.08); color: var(--brand-orange); border: 1px solid rgba(255, 107, 0, 0.1);">
-                        <i class="fa-regular fa-clock me-1"></i>
-                        {{ ticket.created_at|timesince }} ago
-                    </span>
-                </p>
+
+    <!-- ============================================================
+         HEADER
+         ============================================================ -->
+    <header class="td-header">
+        <div class="td-header-left">
+            <div class="td-header-icon">
+                <i class="fa-solid fa-file-invoice" aria-hidden="true"></i>
             </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <!-- Excel Download Button -->
-                <a href="{% url 'employee_download_ticket_excel' ticket.id %}" class="btn-excel-download" target="_blank">
-                    <i class="fa-solid fa-file-excel me-1"></i>Download Excel
-                </a>
-                <a href="{% url 'my_tickets' %}" class="btn-back">
-                    <i class="fa-solid fa-arrow-left me-2"></i>Back to My Tickets
-                </a>
+            <div class="td-header-title">
+                <h1>Ticket #{{ ticket.ticket_number }}</h1>
+                <div class="td-header-meta">
+                    <span>
+                        <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                        {{ ticket.created_at|date:"d M Y, H:i" }}
+                    </span>
+                    <span class="td-badge td-badge-{{ ticket.status|lower }}">
+                        <i class="fa-solid fa-circle" aria-hidden="true"></i> {{ ticket.status }}
+                    </span>
+                    <span class="td-badge td-badge-{{ ticket.priority|lower }}">
+                        <i class="fa-solid fa-flag" aria-hidden="true"></i> {{ ticket.priority }}
+                    </span>
+                </div>
             </div>
         </div>
+
+        <div class="td-header-actions">
+            <a href="{% url 'employee_download_ticket_excel' ticket.id %}" class="td-btn td-btn-green" target="_blank">
+                <i class="fa-solid fa-file-excel" aria-hidden="true"></i> Download
+            </a>
+            <a href="{% url 'my_tickets' %}" class="td-btn td-btn-ghost">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back
+            </a>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         HOLD / ESCALATED NOTES
+         ============================================================ -->
+    {% if ticket.status == 'Hold' and ticket.hold_reason %}
+    <div class="td-status-note note-hold">
+        <div class="note-title">
+            <i class="fa-solid fa-pause" aria-hidden="true"></i> Hold Reason
+        </div>
+        <p>{{ ticket.hold_reason }}</p>
     </div>
+    {% endif %}
 
-    <div class="row g-3">
-        <div class="col-lg-7">
-            <div class="card panel-card h-100">
-                <div class="card-header glass-header py-2">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fa-solid fa-circle-info me-2"></i>Issue Information
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="details-grid">
-                        <div class="detail-item ticket-number">
-                            <span class="detail-label">
-                                <i class="fa-regular fa-hashtag"></i> Ticket Number
-                            </span>
-                            <div class="detail-value">
-                                #{{ ticket.ticket_number }}
-                            </div>
-                        </div>
-
-                        <div class="detail-subject">
-                            <span class="detail-label">
-                                <i class="fa-regular fa-heading"></i> Subject
-                            </span>
-                            <div class="detail-value">{{ ticket.subject }}</div>
-                        </div>
-
-                        <!-- ===== TOP STATUS CARD ===== -->
-                        <div class="top-status-card">
-                            <!-- Closing Details Section -->
-                            <div class="status-section">
-                                <div class="section-label">
-                                    <i class="fa-solid fa-circle-check" style="color: var(--success-color);"></i>
-                                    Closing Details
-                                </div>
-                                {% if ticket.status == 'Closed' %}
-                                    <div class="section-value">
-                                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem;">
-                                            <span><strong>Closed by:</strong> {{ ticket.closed_by|default:"N/A" }}</span>
-                                            <span><strong>Date:</strong> {{ ticket.closed_at|date:"d M Y h:i A"|default:"N/A" }}</span>
-                                            <span><strong>Time to close:</strong> {{ time_to_close|default:"N/A" }}</span>
-                                            <span style="width: 100%;"><strong>Remarks:</strong> {{ ticket.closing_remarks|default:"No remarks provided." }}</span>
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="section-value" style="color: var(--text-muted); font-weight: 400; font-size: 0.75rem;">
-                                        <i class="fa-regular fa-clock me-1"></i>Ticket is not yet closed
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <!-- Divider -->
-                            <div class="divider"></div>
-
-                            <!-- Vendor Tracking Section -->
-                            <div class="status-section">
-                                <div class="section-label">
-                                    <i class="fa-solid fa-cloud-arrow-up" style="color: #8B5CF6;"></i>
-                                    Vendor Tracking
-                                </div>
-                                {% if ticket.vendor_ticket_number %}
-                                    <div class="section-value">
-                                        <div style="display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; align-items: center;">
-                                            <span style="background: rgba(139, 92, 246, 0.1); padding: 0.1rem 0.6rem; border-radius: 50px; font-weight: 700; color: #8B5CF6; font-family: 'Courier New', monospace;">
-                                                {{ ticket.vendor_ticket_number }}
-                                            </span>
-                                            {% if ticket.escalated_at %}
-                                                <span style="font-size: 0.65rem; color: var(--text-muted);">
-                                                    <i class="fa-regular fa-clock me-1"></i>
-                                                    Escalated: {{ ticket.escalated_at|date:"d M Y h:i A" }}
-                                                </span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <div class="section-value" style="color: var(--text-muted); font-weight: 400; font-size: 0.75rem;">
-                                        <i class="fa-regular fa-circle-minus me-1"></i>Not escalated to vendor
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="detail-divider"></div>
-
-                        <div class="detail-item">
-                            <span class="detail-label">
-                                <i class="fa-regular fa-building"></i> Unit
-                            </span>
-                            <div class="detail-value">
-                                {{ ticket.unit.full_name }}
-                                <span class="badge rounded-pill ms-1" style="font-size: 0.45rem; background: rgba(255, 107, 0, 0.08); color: var(--brand-orange); border: 1px solid rgba(255, 107, 0, 0.1);">
-                                    {{ ticket.unit.code }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="detail-item">
-                            <span class="detail-label">
-                                <i class="fa-regular fa-layer-group"></i> Department
-                            </span>
-                            <div class="detail-value">{{ ticket.department.name }}</div>
-                        </div>
-
-                        <div class="detail-item">
-                            <span class="detail-label">
-                                <i class="fa-regular fa-display"></i> Screen Number
-                            </span>
-                            <div class="detail-value">
-                                {% if screen_object %}
-                                    {{ screen_object.screen_name }}
-                                {% else %}
-                                    {{ ticket.screen_number }}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="detail-item">
-                            <span class="detail-label">
-                                <i class="fa-regular fa-bug"></i> Error Type
-                            </span>
-                            <div class="detail-value">{{ ticket.error_type|default:"Not Set" }}</div>
-                        </div>
-
-                        <div class="detail-item highlight-status">
-                            <span class="detail-label">
-                                <i class="fa-solid fa-flag"></i> Priority
-                            </span>
-                            <div class="detail-value">
-                                <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
-                                    <i class="fa-solid fa-flag"></i>
-                                    {{ ticket.priority }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="detail-item highlight-status">
-                            <span class="detail-label">
-                                <i class="fa-regular fa-circle"></i> Status
-                            </span>
-                            <div class="detail-value">
-                                <span class="badge-custom badge-status-{{ ticket.status|lower }}">
-                                    <i class="fa-solid fa-circle me-1" style="font-size: 0.3rem;"></i>
-                                    {{ ticket.status }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- ===== ASSIGNED TO WITH TARGET DATE ===== -->
-                        <div class="detail-item">
-                            <span class="detail-label">
-                                <i class="fa-regular fa-user-check"></i> Assigned To
-                            </span>
-                            <div class="detail-value">
-                                {% if ticket.assigned_person %}
-                                    <span style="font-weight: 600; color: var(--brand-orange);">{{ ticket.assigned_person }}</span>
-                                    {% if ticket.target_date %}
-                                        <br><small style="color: var(--text-muted); font-size: 0.65rem;">
-                                            <i class="fa-regular fa-calendar me-1"></i>Target Date: {{ ticket.target_date|date:"d M Y" }}
-                                        </small>
-                                    {% endif %}
-                                {% else %}
-                                    <span style="color: var(--text-muted);">Not Assigned</span>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="detail-item">
-                            <span class="detail-label">
-                                <i class="fa-regular fa-calendar-plus"></i> Created
-                            </span>
-                            <div class="detail-value">
-                                {{ ticket.created_at|date:"d M Y" }}
-                                <span class="detail-helper d-block">
-                                    {{ ticket.created_at|date:"h:i A" }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="detail-item">
-                            <span class="detail-label">
-                                <i class="fa-regular fa-calendar-check"></i> Last Updated
-                            </span>
-                            <div class="detail-value">
-                                {{ ticket.updated_at|date:"d M Y" }}
-                                <span class="detail-helper d-block">
-                                    {{ ticket.updated_at|date:"h:i A" }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="detail-divider"></div>
-
-                        <div class="detail-description">
-                            <span class="detail-label" style="margin-bottom: 0.3rem;">
-                                <i class="fa-regular fa-align-left"></i> Detailed Description
-                            </span>
-                            <div class="detail-value">
-                                {{ ticket.description|default:"No description provided." }}
-                            </div>
-                        </div>
-
-                        <!-- ===== ATTACHMENTS ===== -->
-                        <div class="detail-attachment">
-                            <span class="detail-label" style="margin-bottom: 0.3rem;">
-                                <i class="fa-regular fa-paperclip"></i> Attachments
-                            </span>
-                            <div class="detail-value" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
-                                {% if ticket.attachment_1 %}
-                                    <a href="{{ ticket.attachment_1.url }}" target="_blank" class="btn-attachment">
-                                        <i class="fa-solid fa-paperclip me-1"></i>Attachment 1
-                                    </a>
-                                {% endif %}
-                                {% if ticket.attachment_2 %}
-                                    <a href="{{ ticket.attachment_2.url }}" target="_blank" class="btn-attachment">
-                                        <i class="fa-solid fa-paperclip me-1"></i>Attachment 2
-                                    </a>
-                                {% endif %}
-                                {% if ticket.attachment_3 %}
-                                    <a href="{{ ticket.attachment_3.url }}" target="_blank" class="btn-attachment">
-                                        <i class="fa-solid fa-paperclip me-1"></i>Attachment 3
-                                    </a>
-                                {% endif %}
-                                {% for reopen_attachment in ticket.reopen_attachments.all %}
-                                    <a href="{{ reopen_attachment.file.url }}" target="_blank" class="btn-attachment">
-                                        <i class="fa-solid fa-paperclip me-1"></i>{{ reopen_attachment.file.name|cut:"attachments/reopen/" }}
-                                    </a>
-                                {% endfor %}
-                                {% if not ticket.attachment_1 and not ticket.attachment_2 and not ticket.attachment_3 and not ticket.reopen_attachments.all %}
-                                    <span style="color: var(--text-muted); font-size: 0.75rem;">No attachments uploaded</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== HOLD REASON BOX ===== -->
-            {% if ticket.status == 'Hold' and ticket.hold_reason %}
-            <div class="status-box status-box-hold">
-                <span class="detail-label" style="color: #F59E0B; font-size: 0.65rem;">
-                    <i class="fa-solid fa-pause me-1"></i>Hold Reason
-                </span>
-                <p class="mb-0" style="font-size: 0.85rem; color: var(--text-secondary);">
-                    {{ ticket.hold_reason }}
-                </p>
-            </div>
+    {% if ticket.status == 'Escalated' and not ticket.vendor_ticket_number %}
+    <div class="td-status-note note-escalated">
+        <div class="note-title">
+            <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Escalated Status
+        </div>
+        <p>
+            This ticket has been escalated to the ERP vendor.
+            {% if ticket.escalated_at %}
+                <br><span class="td-muted">Escalated on: {{ ticket.escalated_at|date:"d M Y, h:i A" }}</span>
             {% endif %}
+        </p>
+    </div>
+    {% endif %}
 
-            <!-- ===== ESCALATED STATUS BOX ===== -->
-            {% if ticket.status == 'Escalated' and not ticket.vendor_ticket_number %}
-            <div class="status-box status-box-escalated">
-                <span class="detail-label" style="color: #8B5CF6; font-size: 0.65rem;">
-                    <i class="fa-solid fa-cloud-arrow-up me-1"></i>Escalated Status
-                </span>
-                <p class="mb-0" style="font-size: 0.85rem; color: var(--text-secondary);">
-                    This ticket has been escalated to the ERP vendor.
-                    {% if ticket.escalated_at %}
-                        <br><small style="color: var(--text-muted);">Escalated on: {{ ticket.escalated_at|date:"d M Y h:i A" }}</small>
+    <!-- ============================================================
+         TICKET INFORMATION
+         ============================================================ -->
+    <section class="td-section">
+        <div class="td-section-head">
+            <h2><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Ticket Information</h2>
+        </div>
+        <div class="td-table-wrap">
+            <table class="td-table">
+                <tbody>
+                    <tr>
+                        <th>Subject</th>
+                        <td colspan="3"><strong>{{ ticket.subject }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Description</th>
+                        <td colspan="3" class="preserve-lines">{{ ticket.description|default:"No description provided." }}</td>
+                    </tr>
+                    <tr>
+                        <th>Priority</th>
+                        <td>
+                            <span class="td-badge td-badge-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
+                        </td>
+                        <th>Status</th>
+                        <td>
+                            <span class="td-badge td-badge-{{ ticket.status|lower }}">{{ ticket.status }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Error Type</th>
+                        <td>{{ ticket.error_type|default:"Not Set" }}</td>
+                        <th>Screen / Module</th>
+                        <td>
+                            {% if screen_object %}{{ screen_object.screen_name }}{% else %}{{ ticket.screen_number|default:"N/A" }}{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Unit</th>
+                        <td>
+                            {{ ticket.unit.full_name }}
+                            <span class="td-muted td-small">({{ ticket.unit.code }})</span>
+                        </td>
+                        <th>Department</th>
+                        <td>{{ ticket.department.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Assigned To</th>
+                        <td>
+                            {% if ticket.assigned_person %}
+                                <strong>{{ ticket.assigned_person }}</strong>
+                            {% else %}
+                                <span class="td-muted">Not assigned</span>
+                            {% endif %}
+                        </td>
+                        <th>Target Date</th>
+                        <td>
+                            {% if ticket.target_date %}
+                                <span class="td-date-value">{{ ticket.target_date|date:"d M Y" }}</span>
+                            {% else %}
+                                <span class="td-muted">Not Set</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if ticket.vendor_ticket_number %}
+                    <tr>
+                        <th>Vendor Ticket</th>
+                        <td class="td-mono">{{ ticket.vendor_ticket_number }}</td>
+                        <th>Escalated At</th>
+                        <td>
+                            {% if ticket.escalated_at %}
+                                {{ ticket.escalated_at|date:"d M Y, h:i A" }}
+                            {% else %}
+                                <span class="td-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
                     {% endif %}
+                    {% if ticket.status == 'Closed' %}
+                    <tr>
+                        <th>Main Error</th>
+                        <td>{{ ticket.main_error_type|default:"N/A" }}</td>
+                        <th>Sub Error</th>
+                        <td>{{ ticket.sub_error_type|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Closing Remarks</th>
+                        <td colspan="3">{{ ticket.closing_remarks|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Closed By</th>
+                        <td>{{ ticket.closed_by|default:"N/A" }}</td>
+                        <th>Closed At</th>
+                        <td>{{ ticket.closed_at|date:"d M Y, h:i A"|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Time to Close</th>
+                        <td colspan="3">{{ time_to_close|default:"N/A" }}</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         TIMELINE
+         ============================================================ -->
+    <section class="td-section">
+        <div class="td-section-head">
+            <h2><i class="fa-solid fa-road" aria-hidden="true"></i> Timeline</h2>
+        </div>
+        <div class="td-table-wrap">
+            <table class="td-table">
+                <tbody>
+                    <tr>
+                        <th>Created</th>
+                        <td>{{ ticket.created_at|date:"d M Y, H:i" }}</td>
+                        <th>Last Updated</th>
+                        <td>{{ ticket.updated_at|date:"d M Y, H:i" }}</td>
+                    </tr>
+                    {% if ticket.escalated_at %}
+                    <tr>
+                        <th>Escalated</th>
+                        <td>{{ ticket.escalated_at|date:"d M Y, H:i" }}</td>
+                        <th>Vendor Ticket</th>
+                        <td>{{ ticket.vendor_ticket_number|default:"—" }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if ticket.status == 'Closed' %}
+                    <tr>
+                        <th>Closed</th>
+                        <td>{{ ticket.closed_at|date:"d M Y, H:i" }}</td>
+                        <th>Time to Close</th>
+                        <td>{{ time_to_close|default:"—" }}</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         ATTACHMENTS
+         ============================================================ -->
+    {% if ticket.attachment_1 or ticket.attachment_2 or ticket.attachment_3 or ticket.reopen_attachments.all %}
+    <section class="td-section">
+        <div class="td-section-head">
+            <h2><i class="fa-solid fa-paperclip" aria-hidden="true"></i> Attachments</h2>
+        </div>
+        <div class="td-section-body">
+            <ul class="td-attachment-list">
+                {% if ticket.attachment_1 %}
+                <li>
+                    <a href="{{ ticket.attachment_1.url }}" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                        <span class="td-attachment-name">Attachment 1</span>
+                        <span class="td-attachment-size">{{ ticket.attachment_1.size|filesizeformat }}</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    </a>
+                </li>
+                {% endif %}
+                {% if ticket.attachment_2 %}
+                <li>
+                    <a href="{{ ticket.attachment_2.url }}" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                        <span class="td-attachment-name">Attachment 2</span>
+                        <span class="td-attachment-size">{{ ticket.attachment_2.size|filesizeformat }}</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    </a>
+                </li>
+                {% endif %}
+                {% if ticket.attachment_3 %}
+                <li>
+                    <a href="{{ ticket.attachment_3.url }}" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                        <span class="td-attachment-name">Attachment 3</span>
+                        <span class="td-attachment-size">{{ ticket.attachment_3.size|filesizeformat }}</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    </a>
+                </li>
+                {% endif %}
+                {% for reopen_attachment in ticket.reopen_attachments.all %}
+                <li>
+                    <a href="{{ reopen_attachment.file.url }}" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                        <span class="td-attachment-name">{{ reopen_attachment.file.name|cut:"attachments/reopen/" }}</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ============================================================
+         AUDIT HISTORY
+         ============================================================ -->
+    <section class="td-section">
+        <div class="td-section-head">
+            <h2><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Audit History</h2>
+            <span class="td-count">{{ history|length }}</span>
+        </div>
+        <div class="td-table-wrap">
+            <table class="td-table">
+                <thead>
+                    <tr>
+                        <th style="width:44px;text-align:center;">#</th>
+                        <th style="width:170px;">Timestamp</th>
+                        <th style="width:24%;">Action</th>
+                        <th>Remarks</th>
+                        <th style="width:150px;">Performed By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in history %}
+                    <tr>
+                        <td style="text-align:center;" class="td-muted">{{ forloop.counter }}</td>
+                        <td class="td-muted">{{ log.timestamp|date:"d M Y, H:i" }}</td>
+                        <td><strong>{{ log.action }}</strong></td>
+                        <td class="preserve-lines">{{ log.remarks|default:"—" }}</td>
+                        <td class="td-muted">{{ log.get_performed_by_display }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align:center;" class="td-muted">No history records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         CONVERSATION
+         ============================================================ -->
+    <section class="td-section">
+        <div class="td-section-head">
+            <h2><i class="fa-solid fa-comments" aria-hidden="true"></i> Conversation</h2>
+        </div>
+        <div class="conversation">
+            {% include 'tickets/_ticket_replies.html' with reply_url=employee_reply_url %}
+        </div>
+    </section>
+
+    <!-- ============================================================
+         REOPEN
+         ============================================================ -->
+    {% if ticket.status == 'Closed' %}
+    <section class="td-section">
+        <div class="td-section-head">
+            <h2><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reopen Ticket</h2>
+        </div>
+        <div class="td-reopen-card">
+            {% if can_reopen %}
+                <p class="td-muted td-small" style="margin:0 0 0.75rem;">If the issue persists, you can reopen this ticket.</p>
+                <button type="button"
+                        class="td-btn td-btn-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#reopenModal">
+                    <i class="fa-solid fa-envelope-open" aria-hidden="true"></i> Reopen Ticket
+                </button>
+                <div class="td-reopen-timer">
+                    <span class="timer-label">Time left to reopen</span>
+                    <span id="reopen-timer">Loading...</span>
+                </div>
+            {% else %}
+                <p class="td-muted td-small" style="margin:0;">
+                    This ticket was closed more than <strong>48 hours</strong> ago and can no longer be reopened.
                 </p>
-            </div>
             {% endif %}
         </div>
+    </section>
+    {% endif %}
 
-        <div class="col-lg-5">
-            <div class="card panel-card h-100">
-                <div class="card-header glass-header py-2 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fa-solid fa-timeline me-2"></i>Audit History
-                    </h5>
-                    <span class="badge rounded-pill px-2 py-1" style="font-size: 0.6rem; background: rgba(255, 107, 0, 0.08); color: var(--brand-orange); border: 1px solid rgba(255, 107, 0, 0.1);">
-                        {{ history|length }}
-                    </span>
-                </div>
-                <div class="card-body">
-                    <div class="timeline-wrapper">
-                        <ul class="timeline mb-0">
-                            {% for log in history %}
-                                <li class="timeline-item">
-                                    <div class="timeline-marker"></div>
-                                    <div class="timeline-content">
-                                        <div class="timeline-time">
-                                            <i class="fa-regular fa-clock me-1"></i>
-                                            {{ log.timestamp|date:"d-b-Y h:i A" }}
-                                        </div>
-                                        <div class="timeline-title">
-                                            {% if 'Created' in log.action %}
-                                                <i class="fa-regular fa-plus-circle me-1"></i>
-                                            {% elif 'Assigned' in log.action %}
-                                                <i class="fa-regular fa-user-check me-1"></i>
-                                            {% elif 'Hold' in log.action %}
-                                                <i class="fa-regular fa-pause-circle me-1"></i>
-                                            {% elif 'Escalated' in log.action %}
-                                                <i class="fa-regular fa-cloud-arrow-up me-1"></i>
-                                            {% elif 'Closed' in log.action %}
-                                                <i class="fa-regular fa-check-circle me-1"></i>
-                                            {% elif 'Reopened' in log.action %}
-                                                <i class="fa-regular fa-envelope-open me-1"></i>
-                                            {% else %}
-                                                <i class="fa-regular fa-pen-to-square me-1"></i>
-                                            {% endif %}
-                                            {{ log.action }}
-                                        </div>
-                                        {% if log.remarks %}
-                                            <div class="timeline-body">{{ log.remarks }}</div>
-                                        {% endif %}
-                                        <span class="timeline-by">
-                                            <i class="fa-regular fa-user me-1"></i>
-                                            By: {{ log.get_performed_by_display }}
-                                        </span>
-                                    </div>
-                                </li>
-                            {% empty %}
-                                <li class="text-center py-4" style="color: var(--text-muted);">
-                                    <i class="fa-regular fa-clock fa-2x mb-2 d-block opacity-25"></i>
-                                    <span style="font-size: 0.85rem;">No history records found.</span>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {% include 'tickets/_ticket_replies.html' with reply_url=employee_reply_url %}
-
-        <!-- ===== REOPEN SECTION ===== -->
-        {% if ticket.status == 'Closed' %}
-            <div class="col-12">
-                <div class="card panel-card">
-                    <div class="card-header glass-header py-2">
-                        <h5 class="fw-bold mb-0">
-                            <i class="fa-solid fa-rotate-left me-2"></i>Ticket Actions
-                        </h5>
-                    </div>
-                    <div class="card-body p-3 text-center">
-                        {% if can_reopen %}
-                            <p class="small mb-2" style="color: var(--text-muted); font-size: 0.8rem;">
-                                If the issue persists, you can reopen this ticket.
-                            </p>
-                            <button type="button" class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#reopenModal" style="font-size: 0.85rem !important; padding: 0.4rem 1.5rem !important;">
-                                <i class="fa-solid fa-envelope-open me-2"></i>Reopen Ticket
-                            </button>
-                            <div class="reopen-timer-box">
-                                <span class="timer-label d-block"><i class="fa-regular fa-clock me-1"></i>Time left to reopen:</span>
-                                <span id="reopen-timer">Loading...</span>
-                            </div>
-                        {% else %}
-                            <div class="text-center py-2">
-                                <i class="fa-regular fa-clock fa-2x mb-2 d-block opacity-25" style="color: var(--text-muted);"></i>
-                                <p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem;">
-                                    This ticket was closed more than <strong>48 hours</strong> ago and can no longer be reopened.
-                                </p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-    </div>
 </div>
 
-<!-- ===== REOPEN MODAL ===== -->
+<!-- ============================================================
+     REOPEN MODAL
+     ============================================================ -->
+{% if ticket.status == 'Closed' and can_reopen %}
 <div class="modal fade" id="reopenModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content" style="background: var(--td-card); color: var(--td-text); border: 1px solid var(--td-border);">
             <form method="POST" action="{% url 'update_ticket_status' ticket.id %}" id="reopenForm" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="Reopen">
-                <div class="modal-header" style="background: var(--brand-gradient);">
-                    <h5 class="modal-title fw-bold">
-                        <i class="fa-solid fa-envelope-open me-2"></i>Reopen Ticket
+                <div class="modal-header" style="border-bottom: 1px solid var(--td-border);">
+                    <h5 class="modal-title" style="color: var(--td-text);">
+                        <i class="fa-solid fa-envelope-open" aria-hidden="true"></i> Reopen Ticket
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-bold" style="color: var(--text-secondary); font-size: 0.85rem;">
-                            <i class="fa-regular fa-message me-1"></i>Reason for Reopening <span class="text-danger">*</span>
+                        <label for="reopen-remarks" style="display:block; margin-bottom:0.35rem; font-size:0.8rem; font-weight:600; color: var(--td-text);">
+                            Reason for Reopening <span style="color:#EF4444;">*</span>
                         </label>
-                        <textarea name="remarks" class="form-control" rows="4" placeholder="Please describe why this ticket needs to be reopened (e.g., 'The issue is happening again.')" required style="min-height: 80px;"></textarea>
-                        <label class="form-label fw-bold mt-3" style="color: var(--text-secondary); font-size: 0.85rem;">
-                            <i class="fa-solid fa-paperclip me-1"></i>Attachments
+                        <textarea id="reopen-remarks" name="remarks" rows="4" required
+                                  placeholder="Why does this ticket need to be reopened?"
+                                  style="width:100%; box-sizing:border-box; padding:0.6rem 0.8rem; border-radius:8px; border:1px solid var(--td-border); background: var(--td-card); color: var(--td-text); font-family:inherit;"></textarea>
+
+                        <label for="reopen-files" style="display:block; margin:0.75rem 0 0.35rem; font-size:0.8rem; font-weight:600; color: var(--td-text);">
+                            Attachments
                         </label>
-                        <input type="file" name="reopen_attachments" class="form-control" multiple>
-                        <small class="text-muted" style="font-size: 0.7rem;">Add one or more files. Each file can be up to 5 MB.</small>
-                        <small class="text-muted" style="font-size: 0.7rem;">
-                            <i class="fa-regular fa-clock me-1"></i>You can only reopen within <strong>48 hours</strong> of closing.
-                        </small>
+                        <input id="reopen-files" type="file" name="reopen_attachments" multiple
+                               style="width:100%; color: var(--td-text);">
+                        <p class="td-muted td-small" style="margin-top:0.35rem;">
+                            Optional. Each file up to 5&nbsp;MB. Reopening is possible only within 48 hours of closing.
+                        </p>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 50px;">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="background: var(--brand-gradient) !important; border: none !important; border-radius: 50px; padding: 0.4rem 1.5rem;">
-                        <i class="fa-solid fa-envelope-open me-1"></i>Reopen Now
+                <div class="modal-footer" style="border-top: 1px solid var(--td-border);">
+                    <button type="button" class="td-btn td-btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="td-btn td-btn-primary">
+                        <i class="fa-solid fa-envelope-open" aria-hidden="true"></i> Reopen Now
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+{% endif %}
 
-<!-- Hidden input for reopen deadline -->
 <input type="hidden" name="reopen_deadline_iso" value="{{ reopen_deadline_iso|default:'' }}">
 
 {% endblock %}
 
 {% block extra_js %}
 {{ block.super }}
-<script src="{% static 'js/employee/ticket_detail.js' %}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // ============================================================
-    // REOPEN COUNTDOWN TIMER
-    // ============================================================
+document.addEventListener('DOMContentLoaded', function () {
     var deadlineISO = document.querySelector('input[name="reopen_deadline_iso"]')?.value || '';
     var timerElement = document.getElementById('reopen-timer');
-    
+
     if (deadlineISO && timerElement) {
         var deadline = new Date(deadlineISO).getTime();
-        
-        var interval = setInterval(function() {
-            var now = new Date().getTime();
-            var distance = deadline - now;
-            
+        var interval = setInterval(function () {
+            var distance = deadline - new Date().getTime();
             if (distance < 0) {
                 clearInterval(interval);
-                timerElement.innerHTML = 'Expired';
+                timerElement.textContent = 'Expired';
                 timerElement.style.color = '#EF4444';
-                var reopenBtn = document.querySelector('.btn-primary-custom');
-                if (reopenBtn) {
-                    reopenBtn.disabled = true;
-                    reopenBtn.style.opacity = '0.5';
-                }
                 return;
             }
-            
-            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var hours   = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            
-            var h = String(hours).padStart(2, '0');
-            var m = String(minutes).padStart(2, '0');
-            var s = String(seconds).padStart(2, '0');
-            
-            timerElement.innerHTML = h + ':' + m + ':' + s;
-            
-            if (hours < 1) {
-                timerElement.style.color = '#EF4444';
-            } else if (hours < 6) {
-                timerElement.style.color = '#F59E0B';
-            } else {
-                timerElement.style.color = '#3B82F6';
-            }
+            timerElement.textContent =
+                String(hours).padStart(2, '0') + ':' +
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0');
+
+            timerElement.style.color = hours < 1 ? '#EF4444' : (hours < 6 ? '#F59E0B' : '');
         }, 1000);
     }
 });

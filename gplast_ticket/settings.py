@@ -72,11 +72,13 @@ DATABASES = {
     }
 }
 
+# ============================================================
+# ✅ PASSWORD VALIDATION - GPLAST CUSTOM POLICY
+# Length: 4–14 characters only. All character types allowed.
+# No similarity check, no common-password check, no numeric check.
+# ============================================================
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {'NAME': 'tickets.validators.SimpleLengthValidator'},
 ]
 
 LANGUAGE_CODE = 'en-us'

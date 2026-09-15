@@ -1,0 +1,771 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Archived Tickets - GPLAST{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin_panel/all_tickets.css' %}">
+
+<style>
+/* ============================================================
+   ARCHIVE PAGE — dedicated slate-themed design
+   ============================================================ */
+
+.archive-page {
+    --arc-primary: #475569;
+    --arc-primary-dark: #334155;
+    --arc-primary-light: #64748B;
+    --arc-accent: #8B5CF6;
+    --arc-bg: rgba(71, 85, 105, 0.06);
+    --arc-border: rgba(71, 85, 105, 0.18);
+    --arc-radius: 14px;
+
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 1.25rem 2rem;
+    animation: arcFadeIn 0.4s ease;
+}
+
+@keyframes arcFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Hero header --- */
+.archive-hero {
+    position: relative;
+    padding: 1.5rem 2rem;
+    border-radius: var(--arc-radius);
+    background: linear-gradient(135deg, var(--arc-primary) 0%, var(--arc-primary-dark) 100%);
+    color: #fff;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+}
+.archive-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+    pointer-events: none;
+}
+.archive-hero-inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    z-index: 1;
+}
+.archive-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.archive-hero-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+.archive-hero h1 {
+    margin: 0;
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+    line-height: 1.1;
+    color: #fff;
+}
+.archive-hero p {
+    margin: 0.35rem 0 0;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.75);
+}
+.archive-hero-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.archive-hero-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    transition: background 0.15s ease;
+}
+.archive-hero-btn:hover {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    text-decoration: none;
+}
+.archive-hero-btn-primary {
+    background: #fff;
+    color: var(--arc-primary-dark);
+    border-color: #fff;
+}
+.archive-hero-btn-primary:hover {
+    background: #F1F5F9;
+    color: var(--arc-primary-dark);
+}
+
+/* --- KPI strip --- */
+.archive-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+.archive-kpi {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.archive-kpi:hover {
+    transform: translateY(-2px);
+    border-color: var(--arc-primary-light);
+}
+.archive-kpi-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+.archive-kpi-label i { color: var(--arc-primary-light); }
+.archive-kpi-value {
+    font-family: 'Fraunces', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-primary);
+}
+.archive-kpi-value.small {
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+}
+
+/* --- Filters --- */
+.archive-filters {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+.archive-filters form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+    align-items: end;
+}
+.archive-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.archive-filter-group label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.archive-filter-group label i { color: var(--arc-primary-light); }
+.archive-filter-group input,
+.archive-filter-group select {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg, #fff);
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    font-family: inherit;
+}
+.archive-filter-group input:focus,
+.archive-filter-group select:focus {
+    outline: none;
+    border-color: var(--arc-primary);
+    box-shadow: 0 0 0 3px rgba(71, 85, 105, 0.12);
+}
+.archive-filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    grid-column: 1 / -1;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+.archive-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-family: inherit;
+}
+.archive-btn-primary {
+    background: var(--arc-primary);
+    color: #fff;
+}
+.archive-btn-primary:hover { background: var(--arc-primary-dark); color: #fff; text-decoration: none; }
+.archive-btn-ghost {
+    background: transparent;
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+.archive-btn-ghost:hover { border-color: var(--arc-primary); color: var(--arc-primary); text-decoration: none; }
+.archive-btn-excel {
+    background: #16A34A;
+    color: #fff;
+}
+.archive-btn-excel:hover { background: #15803D; color: #fff; text-decoration: none; }
+
+/* --- Table section --- */
+.archive-table-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.archive-table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 1.25rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+.archive-table-head h2 {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.archive-table-head h2 i { color: var(--arc-primary-light); }
+.archive-bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+.archive-bulk-bar strong {
+    color: var(--arc-primary);
+    font-size: 1rem;
+}
+
+.archive-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.archive-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+.archive-table thead th {
+    position: sticky;
+    top: 0;
+    padding: 0.7rem 0.9rem;
+    text-align: left;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+    z-index: 2;
+}
+.archive-table tbody td {
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    vertical-align: middle;
+}
+.archive-table tbody tr:last-child td { border-bottom: 0; }
+.archive-table tbody tr:hover { background: rgba(71, 85, 105, 0.04); }
+
+.archive-table .cell-check { width: 40px; text-align: center; }
+.archive-table .cell-check input {
+    width: 16px; height: 16px; cursor: pointer;
+    accent-color: var(--arc-primary);
+}
+.archive-table .cell-ticket {
+    font-weight: 700;
+    color: var(--arc-primary);
+}
+.archive-table .cell-ticket a {
+    color: var(--arc-primary);
+    text-decoration: none;
+}
+.archive-table .cell-ticket a:hover { text-decoration: underline; }
+.archive-table .cell-archived-at {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+.archive-table .cell-archived-by {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+}
+.archive-table .btn-restore {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+    background: #16A34A;
+    border: none;
+    cursor: pointer;
+}
+.archive-table .btn-restore:hover { background: #15803D; }
+.archive-table .btn-view {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--arc-primary);
+    border: 1px solid var(--border-color);
+    background: transparent;
+    text-decoration: none;
+}
+.archive-table .btn-view:hover {
+    border-color: var(--arc-primary);
+    color: var(--arc-primary);
+    text-decoration: none;
+}
+
+.archive-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+}
+.archive-empty i {
+    display: block;
+    font-size: 2.5rem;
+    opacity: 0.25;
+    margin-bottom: 0.75rem;
+}
+.archive-empty h3 {
+    margin: 0 0 0.35rem;
+    font-family: 'Fraunces', serif;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+.archive-empty p { margin: 0; font-size: 0.85rem; }
+
+/* Pagination */
+.archive-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+.archive-pagination a,
+.archive-pagination span {
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+}
+.archive-pagination a { border-color: var(--border-color); }
+.archive-pagination a:hover {
+    border-color: var(--arc-primary);
+    color: var(--arc-primary);
+    text-decoration: none;
+}
+.archive-pagination .active {
+    background: var(--arc-primary);
+    color: #fff;
+}
+.archive-pagination .info {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* --- Dark mode --- */
+html[data-theme="dark"] .archive-page { --arc-bg: rgba(255,255,255,0.04); --arc-border: rgba(255,255,255,0.08); }
+html[data-theme="dark"] .archive-kpi { background: rgba(255,255,255,0.03); }
+html[data-theme="dark"] .archive-kpi-value { color: #E8EDF5; }
+html[data-theme="dark"] .archive-filters { background: rgba(255,255,255,0.03); }
+html[data-theme="dark"] .archive-filter-group input,
+html[data-theme="dark"] .archive-filter-group select { background: rgba(255,255,255,0.05); color: #E8EDF5; border-color: rgba(255,255,255,0.08); }
+html[data-theme="dark"] .archive-table-wrap { background: rgba(255,255,255,0.03); }
+html[data-theme="dark"] .archive-table thead th { background: rgba(255,255,255,0.04); }
+html[data-theme="dark"] .archive-table tbody td { color: #B7C3D9; }
+html[data-theme="dark"] .archive-table tbody tr:hover { background: rgba(255,255,255,0.04); }
+html[data-theme="dark"] .archive-table .cell-archived-at,
+html[data-theme="dark"] .archive-table .cell-archived-by { color: #8A98B4; }
+html[data-theme="dark"] .archive-btn-ghost { color: #B7C3D9; }
+html[data-theme="dark"] .archive-pagination a { color: #B7C3D9; }
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .archive-page { padding-inline: 0.75rem; }
+    .archive-hero { padding: 1.1rem 1.25rem; }
+    .archive-hero h1 { font-size: 1.2rem; }
+    .archive-hero-actions { width: 100%; }
+    .archive-hero-actions .archive-hero-btn { flex: 1; justify-content: center; }
+    .archive-kpis { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+    .archive-kpi { padding: 0.75rem; }
+    .archive-kpi-value { font-size: 1.2rem; }
+    .archive-filters form { grid-template-columns: 1fr; }
+    .archive-table thead { display: none; }
+    .archive-table,
+    .archive-table tbody,
+    .archive-table tr,
+    .archive-table td {
+        display: block;
+        width: 100%;
+    }
+    .archive-table tbody tr {
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .archive-table tbody tr:last-child { border-bottom: 0; }
+    .archive-table tbody td {
+        padding: 0.35rem 0;
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+    .archive-table tbody td::before {
+        content: attr(data-label);
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+    .archive-table .cell-check {
+        justify-content: flex-start;
+    }
+    .archive-table .cell-check::before { content: none; }
+    .archive-table td[data-label="Actions"] {
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
+        margin-top: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="archive-page">
+
+    <!-- ============================================================
+         HERO
+         ============================================================ -->
+    <header class="archive-hero">
+        <div class="archive-hero-inner">
+            <div class="archive-hero-left">
+                <div class="archive-hero-icon">
+                    <i class="fa-solid fa-box-archive"></i>
+                </div>
+                <div>
+                    <h1>Archived Tickets</h1>
+                    <p>Closed tickets older than 90 days. Restore any ticket to bring it back to active lists.</p>
+                </div>
+            </div>
+            <div class="archive-hero-actions">
+                <a href="{% url 'all_tickets' %}" class="archive-hero-btn">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Active
+                </a>
+                <a href="{% url 'export_archived_tickets_excel' %}" class="archive-hero-btn archive-hero-btn-primary">
+                    <i class="fa-solid fa-file-excel"></i> Export All
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         KPI STRIP
+         ============================================================ -->
+    <section class="archive-kpis">
+        <div class="archive-kpi">
+            <span class="archive-kpi-label"><i class="fa-solid fa-box-archive"></i> Total Archived</span>
+            <strong class="archive-kpi-value">{{ total_archived }}</strong>
+        </div>
+        <div class="archive-kpi">
+            <span class="archive-kpi-label"><i class="fa-solid fa-calendar-day"></i> Archived Today</span>
+            <strong class="archive-kpi-value">{{ archived_today }}</strong>
+        </div>
+        <div class="archive-kpi">
+            <span class="archive-kpi-label"><i class="fa-solid fa-calendar"></i> This Month</span>
+            <strong class="archive-kpi-value">{{ archived_month }}</strong>
+        </div>
+        <div class="archive-kpi">
+            <span class="archive-kpi-label"><i class="fa-solid fa-clock-rotate-left"></i> Oldest Archive</span>
+            <strong class="archive-kpi-value small">
+                {% if oldest_archive %}{{ oldest_archive|date:"d M Y" }}{% else %}—{% endif %}
+            </strong>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         FILTERS
+         ============================================================ -->
+    <section class="archive-filters">
+        <form method="get" action="{% url 'archived_tickets' %}">
+            <div class="archive-filter-group">
+                <label><i class="fa-solid fa-search"></i> Search</label>
+                <input type="text" name="search" value="{{ selected_search }}"
+                       placeholder="Ticket, subject, employee...">
+            </div>
+            <div class="archive-filter-group">
+                <label><i class="fa-solid fa-flag"></i> Priority</label>
+                <select name="priority">
+                    <option value="">All priorities</option>
+                    {% for value, label in priority_choices %}
+                        <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="archive-filter-group">
+                <label><i class="fa-solid fa-building"></i> Unit</label>
+                <select name="unit">
+                    <option value="">All units</option>
+                    {% for u in units %}
+                        <option value="{{ u.id }}" {% if selected_unit == u.id|stringformat:'s' %}selected{% endif %}>
+                            {{ u.code }} — {{ u.full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="archive-filter-group">
+                <label><i class="fa-solid fa-user-check"></i> Archived By</label>
+                <input type="text" name="archived_by" value="{{ selected_archived_by }}"
+                       placeholder="System (auto) or admin name">
+            </div>
+            <div class="archive-filter-group">
+                <label><i class="fa-regular fa-calendar-plus"></i> From</label>
+                <input type="date" name="date_from" value="{{ date_from }}">
+            </div>
+            <div class="archive-filter-group">
+                <label><i class="fa-regular fa-calendar-check"></i> To</label>
+                <input type="date" name="date_to" value="{{ date_to }}">
+            </div>
+
+            <div class="archive-filter-actions">
+                <button type="submit" class="archive-btn archive-btn-primary">
+                    <i class="fa-solid fa-filter"></i> Apply
+                </button>
+                <a href="{% url 'archived_tickets' %}" class="archive-btn archive-btn-ghost">
+                    <i class="fa-solid fa-rotate-right"></i> Clear
+                </a>
+                <a href="{% url 'export_archived_tickets_excel' %}?{{ filter_query }}" class="archive-btn archive-btn-excel">
+                    <i class="fa-solid fa-file-excel"></i> Export Filtered
+                </a>
+            </div>
+        </form>
+    </section>
+
+    <!-- ============================================================
+         TABLE
+         ============================================================ -->
+    <section class="archive-table-wrap">
+        <div class="archive-table-head">
+            <h2><i class="fa-solid fa-list"></i> Archived Tickets</h2>
+
+            <form method="post" action="{% url 'bulk_restore_tickets' %}" id="bulkRestoreForm" class="archive-bulk-bar">
+                {% csrf_token %}
+                <span class="selection-info">
+                    Selected: <strong id="selectedCount">0</strong>
+                </span>
+                <button type="submit" class="archive-btn archive-btn-primary" id="bulkRestoreBtn" disabled
+                        onclick="return confirm('Restore selected tickets to active lists?');">
+                    <i class="fa-solid fa-box-open"></i> Restore Selected
+                </button>
+            </form>
+        </div>
+
+        <div class="archive-scroll">
+            <table class="archive-table">
+                <thead>
+                    <tr>
+                        <th class="cell-check">
+                            <input type="checkbox" id="checkAll" aria-label="Select all">
+                        </th>
+                        <th>Ticket</th>
+                        <th>Subject</th>
+                        <th>Employee</th>
+                        <th>Priority</th>
+                        <th>Closed</th>
+                        <th>Archived</th>
+                        <th>Archived By</th>
+                        <th style="text-align:center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in page_obj %}
+                    <tr>
+                        <td class="cell-check" data-label="Select">
+                            <input type="checkbox" name="ticket_ids" value="{{ t.pk }}" class="row-check">
+                        </td>
+                        <td class="cell-ticket" data-label="Ticket">
+                            <a href="{% url 'admin_ticket_detail' t.pk %}">#{{ t.ticket_number }}</a>
+                        </td>
+                        <td data-label="Subject">{{ t.subject|truncatechars:60 }}</td>
+                        <td data-label="Employee">{{ t.employee_name }}</td>
+                        <td data-label="Priority">
+                            <span class="badge-priority badge-priority-{{ t.priority|lower }}">{{ t.priority }}</span>
+                        </td>
+                        <td class="cell-archived-at" data-label="Closed">
+                            {{ t.closed_at|date:"d M Y"|default:"—" }}
+                        </td>
+                        <td class="cell-archived-at" data-label="Archived">
+                            {{ t.archived_at|date:"d M Y, H:i"|default:"—" }}
+                        </td>
+                        <td class="cell-archived-by" data-label="Archived By">
+                            {{ t.archived_by|default:"—" }}
+                        </td>
+                        <td data-label="Actions" style="text-align:center; white-space:nowrap;">
+                            <a href="{% url 'admin_ticket_detail' t.pk %}" class="btn-view">
+                                <i class="fa-solid fa-eye"></i> View
+                            </a>
+                            <button type="submit"
+                                    formaction="{% url 'restore_ticket' t.pk %}"
+                                    formmethod="post"
+                                    class="btn-restore"
+                                    onclick="return confirm('Restore ticket #{{ t.ticket_number }} to active lists?');">
+                                <i class="fa-solid fa-box-open"></i> Restore
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="archive-empty">
+                                <i class="fa-solid fa-box-archive"></i>
+                                <h3>No Archived Tickets</h3>
+                                <p>Tickets are auto-archived when they have been closed for more than 90 days.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <nav class="archive-pagination">
+            {% if page_obj.has_previous %}
+                <a href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                    ‹ Prev
+                </a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="active">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page_obj.next_page_number }}">
+                    Next ›
+                </a>
+            {% endif %}
+
+            <span class="info">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                &middot; {{ page_obj.paginator.count }} tickets
+            </span>
+        </nav>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var checkAll = document.getElementById('checkAll');
+    var rowChecks = document.querySelectorAll('.row-check');
+    var selectedCount = document.getElementById('selectedCount');
+    var bulkBtn = document.getElementById('bulkRestoreBtn');
+
+    function updateCount() {
+        var n = document.querySelectorAll('.row-check:checked').length;
+        selectedCount.textContent = n;
+        bulkBtn.disabled = (n === 0);
+    }
+
+    if (checkAll) {
+        checkAll.addEventListener('change', function () {
+            rowChecks.forEach(function (c) { c.checked = checkAll.checked; });
+            updateCount();
+        });
+    }
+
+    rowChecks.forEach(function (c) {
+        c.addEventListener('change', function () {
+            if (!c.checked && checkAll) checkAll.checked = false;
+            if (document.querySelectorAll('.row-check:checked').length === rowChecks.length && checkAll) {
+                checkAll.checked = true;
+            }
+            updateCount();
+        });
+    });
+
+    updateCount();
+});
+</script>
+{% endblock %}

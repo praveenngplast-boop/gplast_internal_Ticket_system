@@ -1,83 +1,87 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+    'use strict';
 
-    // ============================================================
-    // AUTO-SUBMIT ON FILTER CHANGE
-    // ============================================================
-    var filterForm = document.getElementById('filterForm');
-    var filterSelects = filterForm.querySelectorAll('select');
+    const filterForm  = document.getElementById('filterForm');
+    const searchInput = document.getElementById('search');
+    const filtersBox  = document.getElementById('uhFilters');
+    const toggleBtn   = document.getElementById('uhFiltersToggle');
+    const filterCount = document.getElementById('uhFilterCount');
 
-    filterSelects.forEach(function(select) {
-        select.addEventListener('change', function() {
+    if (!filterForm) return;
+
+    /* ------------------------------------------------------------
+       Auto-submit on select change
+       ------------------------------------------------------------ */
+    filterForm.querySelectorAll('select').forEach(function (sel) {
+        sel.addEventListener('change', function () {
             filterForm.submit();
         });
     });
 
-    // ============================================================
-    // SEARCH WITH DEBOUNCE
-    // ============================================================
-    var searchInput = document.getElementById('search');
-    var searchTimeout;
-
-    function debounceSubmit() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(function() {
-            filterForm.submit();
-        }, 500);
-    }
-
+    /* ------------------------------------------------------------
+       Debounced search
+       ------------------------------------------------------------ */
+    let searchTimeout;
     if (searchInput) {
-        searchInput.addEventListener('input', debounceSubmit);
-    }
-
-    // ============================================================
-    // THEME SYNC
-    // ============================================================
-    function updateTheme() {
-        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        var inputs = document.querySelectorAll('.form-control, .form-select');
-        inputs.forEach(function(input) {
-            if (isDark) {
-                input.style.backgroundColor = 'rgba(255,255,255,0.05)';
-                input.style.borderColor = 'rgba(255,255,255,0.08)';
-                input.style.color = '#E8EDF5';
-                input.style.webkitTextFillColor = '#E8EDF5';
-            } else {
-                input.style.backgroundColor = '';
-                input.style.borderColor = '';
-                input.style.color = '';
-                input.style.webkitTextFillColor = '';
-            }
-        });
-
-        var selects = document.querySelectorAll('.form-select');
-        selects.forEach(function(select) {
-            var options = select.querySelectorAll('option');
-            options.forEach(function(option) {
-                if (isDark) {
-                    option.style.backgroundColor = '#1A1A2E';
-                    option.style.color = '#E8EDF5';
-                } else {
-                    option.style.backgroundColor = '';
-                    option.style.color = '';
-                }
-            });
+        searchInput.addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function () {
+                filterForm.submit();
+            }, 500);
         });
     }
 
-    var themeToggle = document.getElementById('themeToggleFloating');
-    if (themeToggle) {
-        themeToggle.addEventListener('click', function() {
-            setTimeout(updateTheme, 100);
+    /* ------------------------------------------------------------
+       Collapsible filter panel + active count
+       ------------------------------------------------------------ */
+    const ADV_KEY = 'uh_filters_open';
+
+    function countActive() {
+        let n = 0;
+        filterForm.querySelectorAll('select').forEach(function (el) {
+            if (el.value && el.value.trim() !== '') n++;
+        });
+        if (searchInput && searchInput.value.trim() !== '') n++;
+        return n;
+    }
+
+    function refreshCount() {
+        if (!filterCount) return;
+        const n = countActive();
+        filterCount.textContent = n;
+        filterCount.style.display = n > 0 ? 'inline-block' : 'none';
+    }
+
+    // Auto-open if there are active filters or saved preference
+    if (countActive() > 0 || localStorage.getItem(ADV_KEY) === '1') {
+        filtersBox.classList.add('open');
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function () {
+            filtersBox.classList.toggle('open');
+            localStorage.setItem(ADV_KEY, filtersBox.classList.contains('open') ? '1' : '0');
         });
     }
 
-    var observer = new MutationObserver(function() {
-        updateTheme();
+    refreshCount();
+
+    /* ------------------------------------------------------------
+       Card click → navigate (unless clicking an inner link)
+       ------------------------------------------------------------ */
+    document.querySelectorAll('.uh-card[data-url]').forEach(function (card, i) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(8px)';
+        card.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        setTimeout(function () {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, Math.min(i * 25, 300));
+
+        card.addEventListener('click', function (e) {
+            if (e.target.closest('a')) return;
+            const url = this.getAttribute('data-url');
+            if (url) window.location.href = url;
+        });
     });
-    observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-theme']
-    });
-    setTimeout(updateTheme, 200);
-
 });

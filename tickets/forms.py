@@ -2,13 +2,56 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.contrib.auth.models import User
+
 from tickets.models import (
-    Ticket, Unit, Department, AdminContact, AdminNotificationEmail, 
+    Ticket, Unit, Department, AdminContact, AdminNotificationEmail,
     EmployeeMaster, DepartmentCredential, ERPHolderMapping, UnitHead, TicketReply
 )
 from tickets.utils import validate_attachment
 
 
+# ============================================================
+# CUSTOM PASSWORD CHANGE FORM
+# GPLAST policy: 4–14 chars, new ≠ old
+# Used by BOTH users and admins
+# ============================================================
+class CustomPasswordChangeForm(PasswordChangeForm):
+    """
+    Password change form enforcing GPLAST policy:
+      - Length 4–14 (enforced by SimpleLengthValidator in settings)
+      - New password must differ from the current one
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Apply the same widget classes across all password fields
+        for name, field in self.fields.items():
+            field.widget.attrs.update({
+                'class': 'form-control',
+                'placeholder': field.label or 'Enter password',
+                'autocomplete': 'new-password' if 'new' in name else 'current-password',
+            })
+
+    def clean(self):
+        cleaned = super().clean()
+        old = cleaned.get("old_password")
+        new = cleaned.get("new_password1")
+
+        if old and new and old == new:
+            self.add_error(
+                "new_password1",
+                "Your new password cannot be the same as your current password.",
+            )
+        return cleaned
+
+
+# Keep the old class name as an alias so existing imports still work
+AdminPasswordChangeForm = CustomPasswordChangeForm
+
+
+# ============================================================
+# TICKET REPLY FORM
+# ============================================================
 class TicketReplyForm(forms.ModelForm):
     class Meta:
         model = TicketReply
@@ -49,7 +92,7 @@ class TicketForm(forms.ModelForm):
         fields = [
             'unit', 'department', 'employee_id', 'employee_name',
             'mobile', 'email', 'screen_number', 'subject',
-            'description', 'priority', 'error_type', 
+            'description', 'priority', 'error_type',
             'attachment_1', 'attachment_2', 'attachment_3'
         ]
         widgets = {
@@ -60,17 +103,17 @@ class TicketForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['unit'].queryset = Unit.objects.filter(is_active=True)
         self.fields['department'].queryset = Department.objects.filter(is_active=True)
-        
+
         # ✅ Make mobile and email optional
         self.fields['mobile'].required = False
         self.fields['email'].required = False
-        
+
         # ✅ Set help texts and placeholders for optional fields
         self.fields['mobile'].help_text = '10 digits only (optional)'
         self.fields['email'].help_text = 'Valid email format (optional)'
         self.fields['mobile'].widget.attrs.update({'placeholder': '10 digits (optional)'})
         self.fields['email'].widget.attrs.update({'placeholder': 'email@example.com (optional)'})
-        
+
         for name, field in self.fields.items():
             if isinstance(field.widget, (forms.Select, forms.RadioSelect)):
                 field.widget.attrs.update({'class': 'form-select'})
@@ -90,37 +133,37 @@ class TicketForm(forms.ModelForm):
 
     def clean_mobile(self):
         mobile = self.cleaned_data.get('mobile')
-        
+
         if mobile is None or mobile == '':
             return None
-        
+
         mobile = mobile.strip()
-        
+
         if mobile == '':
             return None
-        
+
         if not mobile.isdigit():
             raise ValidationError("Mobile number must contain only digits.")
-        
+
         if len(mobile) != 10:
             raise ValidationError("Mobile number must be exactly 10 digits.")
-        
+
         return mobile
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        
+
         if email is None or email == '':
             return None
-        
+
         email = email.strip()
-        
+
         if email == '':
             return None
-        
+
         if '@' not in email or '.' not in email:
             raise ValidationError("Please enter a valid email address.")
-        
+
         return email
 
     def clean_description(self):
@@ -157,7 +200,7 @@ class TicketForm(forms.ModelForm):
         cleaned_data = super().clean()
         unit = cleaned_data.get('unit')
         department = cleaned_data.get('department')
-        
+
         if unit and department:
             if department.unit != unit:
                 raise ValidationError({"department": "Selected department does not belong to the selected unit."})
@@ -183,7 +226,6 @@ class AdminTicketForm(TicketForm):
         self.fields['admin_creation_reason'].widget.attrs.update({'class': 'form-select'})
         self.initial['created_by_role'] = 'Admin'
 
-        # Also update error_type for AdminTicketForm to only New and Repeated
         EMPLOYEE_ERROR_TYPE_CHOICES = [
             ('New', 'New'),
             ('Repeated', 'Repeated'),
@@ -194,20 +236,20 @@ class AdminTicketForm(TicketForm):
         cleaned_data = super().clean()
         created_by_role = cleaned_data.get('created_by_role')
         admin_creation_reason = cleaned_data.get('admin_creation_reason')
-        
+
         if created_by_role == 'Admin' and not admin_creation_reason:
             raise ValidationError({
                 "admin_creation_reason": "Reason for Admin Creation is mandatory when Created By is 'Admin'."
             })
-            
+
         if created_by_role == 'Employee':
             cleaned_data['admin_creation_reason'] = None
-            
+
         return cleaned_data
 
 
 # ============================================================
-# UNIT HEAD FORM - NEW
+# UNIT HEAD FORM
 # ============================================================
 class UnitHeadForm(forms.ModelForm):
     """
@@ -223,16 +265,16 @@ class UnitHeadForm(forms.ModelForm):
         }),
         label='Username'
     )
-    
+
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter password (min 8 characters)'
+            'placeholder': 'Enter password (4–14 characters)'
         }),
         required=False,
         label='Password'
     )
-    
+
     confirm_password = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
@@ -255,9 +297,9 @@ class UnitHeadForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.is_edit = kwargs.pop('is_edit', False)
         super().__init__(*args, **kwargs)
-        
+
         self.fields['unit'].queryset = Unit.objects.filter(is_active=True)
-        
+
         if self.is_edit:
             self.fields['password'].required = False
             self.fields['password'].help_text = 'Leave blank to keep current password'
@@ -267,110 +309,114 @@ class UnitHeadForm(forms.ModelForm):
 
     def clean_username(self):
         username = self.cleaned_data.get('username', '').strip().lower()
-        
+
         if not username:
             raise ValidationError("Username is required.")
-        
+
         if len(username) < 3:
             raise ValidationError("Username must be at least 3 characters.")
-        
+
         existing_user = User.objects.filter(username=username)
         if self.instance and self.instance.pk and self.instance.user:
             existing_user = existing_user.exclude(pk=self.instance.user.pk)
-        
+
         if existing_user.exists():
             raise ValidationError(f"Username '{username}' is already taken. Please choose another.")
-        
+
         return username
 
     def clean_password(self):
         password = self.cleaned_data.get('password')
-        
+
         if self.is_edit and not password:
             return password
-        
+
         if not self.is_edit and not password:
             raise ValidationError("Password is required.")
-        
-        if password and len(password) < 8:
-            raise ValidationError("Password must be at least 8 characters.")
-        
+
+        # ✅ GPLAST policy: 4–14 characters
+        if password and len(password) < 4:
+            raise ValidationError("Password must be at least 4 characters.")
+
+        if password and len(password) > 14:
+            raise ValidationError("Password must be at most 14 characters.")
+
         return password
 
     def clean_confirm_password(self):
         password = self.cleaned_data.get('password')
         confirm_password = self.cleaned_data.get('confirm_password')
-        
+
         if self.is_edit and not password and not confirm_password:
             return confirm_password
-        
+
         if password != confirm_password:
             raise ValidationError("Passwords do not match.")
-        
+
         return confirm_password
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').strip().lower()
-        
+
         if not email:
             raise ValidationError("Email is required.")
-        
+
         if '@' not in email or '.' not in email:
             raise ValidationError("Please enter a valid email address.")
-        
+
         existing = UnitHead.objects.filter(email=email)
         if self.instance and self.instance.pk:
             existing = existing.exclude(pk=self.instance.pk)
-        
+
         if self.instance and self.instance.pk and self.instance.user:
             existing_user = User.objects.filter(email=email).exclude(pk=self.instance.user.pk)
         else:
             existing_user = User.objects.filter(email=email)
-        
+
         if existing.exists() or existing_user.exists():
             raise ValidationError("This email is already in use.")
-        
+
         return email
 
     def clean(self):
         cleaned_data = super().clean()
         unit = cleaned_data.get('unit')
-        
+
         if not unit:
             raise ValidationError({"unit": "Please select a unit for this Unit Head."})
-        
+
         existing = UnitHead.objects.filter(unit=unit)
         if self.instance and self.instance.pk:
             existing = existing.exclude(pk=self.instance.pk)
-        
+
         if existing.exists():
             raise ValidationError({
                 "unit": f"This unit already has a head: {existing.first().name}"
             })
-        
+
         return cleaned_data
 
     def save(self, commit=True):
         unit_head = super().save(commit=False)
-        
+
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
         email = self.cleaned_data.get('email')
         name = self.cleaned_data.get('name')
-        
+
         user = None
         if self.instance and self.instance.pk:
             user = self.instance.user
-        
+
         if user:
             user.username = username
             user.email = email
             user.first_name = name.split()[0] if name else ''
             user.last_name = ' '.join(name.split()[1:]) if name and len(name.split()) > 1 else ''
-            
+
             if password:
                 user.set_password(password)
-            
+
             if commit:
                 user.save()
         else:
@@ -383,26 +429,16 @@ class UnitHeadForm(forms.ModelForm):
             user.last_name = ' '.join(name.split()[1:]) if name and len(name.split()) > 1 else ''
             user.is_staff = False
             user.is_superuser = False
-            
+
             if commit:
                 user.save()
-        
+
         unit_head.user = user
-        
+
         if commit:
             unit_head.save()
-        
+
         return unit_head
-
-
-# ============================================================
-# ADMIN PASSWORD CHANGE FORM
-# ============================================================
-class AdminPasswordChangeForm(PasswordChangeForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for name, field in self.fields.items():
-            field.widget.attrs.update({'class': 'form-control', 'placeholder': f"Enter {field.label}"})
 
 
 # ============================================================
@@ -412,7 +448,11 @@ class AdminSetUserPasswordForm(SetPasswordForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
-            field.widget.attrs.update({'class': 'form-control', 'placeholder': f"Enter {field.label}"})
+            field.widget.attrs.update({
+                'class': 'form-control',
+                'placeholder': field.label or 'Enter password',
+                'autocomplete': 'new-password',
+            })
 
 
 # ============================================================
@@ -420,8 +460,8 @@ class AdminSetUserPasswordForm(SetPasswordForm):
 # ============================================================
 class UserSelectionForm(forms.Form):
     user = forms.ModelChoiceField(
-        queryset=User.objects.filter(is_staff=False).order_by('username'), 
-        label="Select Employee User", 
+        queryset=User.objects.filter(is_staff=False).order_by('username'),
+        label="Select Employee User",
         widget=forms.Select(attrs={'class': 'form-select'})
     )
 
@@ -454,7 +494,10 @@ class UnitForm(forms.ModelForm):
             if name == 'is_active':
                 field.widget.attrs.update({'class': 'form-check-input'})
             else:
-                field.widget.attrs.update({'class': 'form-control', 'placeholder': f"Enter {name.replace('_', ' ')}"})
+                field.widget.attrs.update({
+                    'class': 'form-control',
+                    'placeholder': f"Enter {name.replace('_', ' ')}"
+                })
 
     def clean_code(self):
         code = self.cleaned_data.get('code', '').upper()
@@ -464,7 +507,7 @@ class UnitForm(forms.ModelForm):
 
 
 # ============================================================
-# DEPARTMENT FORM - ✅ WITH DUPLICATE VALIDATION
+# DEPARTMENT FORM
 # ============================================================
 class DepartmentForm(forms.ModelForm):
     class Meta:
@@ -480,29 +523,32 @@ class DepartmentForm(forms.ModelForm):
             elif name == 'unit':
                 field.widget.attrs.update({'class': 'form-select'})
             else:
-                field.widget.attrs.update({'class': 'form-control', 'placeholder': 'Enter Department Name'})
+                field.widget.attrs.update({
+                    'class': 'form-control',
+                    'placeholder': 'Enter Department Name'
+                })
 
     def clean(self):
         cleaned_data = super().clean()
         unit = cleaned_data.get('unit')
         name = cleaned_data.get('name')
-        
+
         if unit and name:
             name = name.strip()
-            
+
             existing = Department.objects.filter(
                 unit=unit,
                 name__iexact=name
             )
-            
+
             if self.instance and self.instance.pk:
                 existing = existing.exclude(pk=self.instance.pk)
-            
+
             if existing.exists():
                 raise ValidationError(
                     f'A department named "{name}" already exists in unit "{unit.code}". Please use a different name.'
                 )
-        
+
         return cleaned_data
 
 
@@ -516,7 +562,10 @@ class AdminNotificationEmailForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['email'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Enter Email Address'})
+        self.fields['email'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Enter Email Address'
+        })
         self.fields['is_active'].widget.attrs.update({'class': 'form-check-input'})
 
 
@@ -535,7 +584,7 @@ class DepartmentCredentialForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['unit'].queryset = Unit.objects.filter(is_active=True)
         self.fields['department'].queryset = Department.objects.filter(is_active=True)
-        
+
         for name, field in self.fields.items():
             if name == 'is_active':
                 field.widget.attrs.update({'class': 'form-check-input'})
@@ -548,7 +597,7 @@ class DepartmentCredentialForm(forms.ModelForm):
         cleaned_data = super().clean()
         unit = cleaned_data.get('unit')
         department = cleaned_data.get('department')
-        
+
         if unit and department:
             if department.unit != unit:
                 raise ValidationError({
@@ -558,7 +607,7 @@ class DepartmentCredentialForm(forms.ModelForm):
 
 
 # ============================================================
-# CLOSE TICKET FORM - FIXED
+# CLOSE TICKET FORM
 # ============================================================
 class CloseTicketForm(forms.Form):
     """
@@ -573,13 +622,13 @@ class CloseTicketForm(forms.Form):
         ],
         widget=forms.Select(attrs={'class': 'form-select', 'id': 'mainErrorType'})
     )
-    
+
     sub_error_type = forms.ChoiceField(
         choices=[],
         required=False,
         widget=forms.Select(attrs={'class': 'form-select', 'id': 'subErrorType'})
     )
-    
+
     closing_remarks = forms.CharField(
         widget=forms.Textarea(attrs={
             'class': 'form-control',
@@ -590,11 +639,10 @@ class CloseTicketForm(forms.Form):
         required=True,
         label='Closing Remarks'
     )
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        # ✅ Define sub-error choices for each main error type
+
         self.roadmap_sub_errors = [
             ('', '-- Select Sub Error Type --'),
             ('Database Error', 'Database Error'),
@@ -610,7 +658,7 @@ class CloseTicketForm(forms.Form):
             ('Master Data / Configuration Error', 'Master Data / Configuration Error'),
             ('Other ERP Error', 'Other ERP Error'),
         ]
-        
+
         self.gpl_sub_errors = [
             ('', '-- Select Sub Error Type --'),
             ('User / Data Entry Error', 'User / Data Entry Error'),
@@ -618,24 +666,20 @@ class CloseTicketForm(forms.Form):
             ('Master Data Error', 'Master Data Error'),
             ('Other GPL Error', 'Other GPL Error'),
         ]
-        
-        # ✅ Set initial sub_error_type choices
+
         self.fields['sub_error_type'].choices = [('', '-- Select Sub Error Type --')]
-        
-        # ✅ If data is bound and main_error_type is set, update sub_error_type choices
+
         if self.data and self.data.get('main_error_type'):
             self._update_sub_error_choices(self.data.get('main_error_type'))
-        
-        # Add widget classes
+
         for name, field in self.fields.items():
             if hasattr(field.widget, 'attrs'):
                 if 'class' not in field.widget.attrs:
                     field.widget.attrs.update({'class': 'form-control'})
                 if isinstance(field.widget, forms.Select):
                     field.widget.attrs.update({'class': 'form-select'})
-    
+
     def _update_sub_error_choices(self, main_error_type):
-        """Update sub_error_type choices based on main_error_type"""
         if main_error_type == 'Roadmap Error':
             self.fields['sub_error_type'].choices = self.roadmap_sub_errors
             self.fields['sub_error_type'].required = True
@@ -645,30 +689,27 @@ class CloseTicketForm(forms.Form):
         else:
             self.fields['sub_error_type'].choices = [('', '-- Select Sub Error Type --')]
             self.fields['sub_error_type'].required = False
-    
+
     def clean(self):
         cleaned_data = super().clean()
         main_error = cleaned_data.get('main_error_type')
         sub_error = cleaned_data.get('sub_error_type')
         closing_remarks = cleaned_data.get('closing_remarks')
-        
-        # ✅ Update sub_error_type choices based on main_error_type
+
         if main_error:
             self._update_sub_error_choices(main_error)
-        
-        # Validate sub_error_type when main_error_type is selected
+
         if main_error and main_error in ['Roadmap Error', 'GPL Error']:
             if not sub_error or sub_error == '':
                 raise ValidationError({
                     'sub_error_type': 'Please select a sub-error type for the selected error category.'
                 })
-        
-        # Validate closing remarks
+
         if closing_remarks and len(closing_remarks.strip()) < 5:
             raise ValidationError({
                 'closing_remarks': 'Closing remarks must be at least 5 characters.'
             })
-        
+
         return cleaned_data
 
 
@@ -676,9 +717,6 @@ class CloseTicketForm(forms.Form):
 # ERP USER ID MAPPING FORM
 # ============================================================
 class ERPHolderMappingForm(forms.ModelForm):
-    """
-    Form for mapping ERP User IDs to Employee IDs
-    """
     class Meta:
         model = ERPHolderMapping
         fields = ['erp_user_id', 'employee']
@@ -695,7 +733,7 @@ class ERPHolderMappingForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['employee'].queryset = EmployeeMaster.objects.filter(is_active=True).order_by('employee_id')
-        
+
         self.fields['erp_user_id'].help_text = "Enter the ERP User ID (e.g., 0001, 0002)"
         self.fields['employee'].help_text = "Select the employee to map to this ERP User ID"
 
@@ -709,7 +747,7 @@ class ERPHolderMappingForm(forms.ModelForm):
         cleaned_data = super().clean()
         erp_user_id = cleaned_data.get('erp_user_id')
         employee = cleaned_data.get('employee')
-        
+
         if erp_user_id and employee:
             instance = self.instance
             exists = ERPHolderMapping.objects.filter(
@@ -718,10 +756,11 @@ class ERPHolderMappingForm(forms.ModelForm):
             )
             if instance and instance.pk:
                 exists = exists.exclude(pk=instance.pk)
-            
+
             if exists.exists():
                 raise ValidationError(
-                    f'Mapping already exists: ERP {erp_user_id} → {employee.employee_id} ({employee.employee_name})'
+                    f'Mapping already exists: ERP {erp_user_id} → '
+                    f'{employee.employee_id} ({employee.employee_name})'
                 )
-        
+
         return cleaned_data

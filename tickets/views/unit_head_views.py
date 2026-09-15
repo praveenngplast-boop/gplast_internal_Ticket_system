@@ -78,7 +78,7 @@ def unit_head_required(view_func):
 
 
 # ============================================================
-# UNIT HEAD DASHBOARD - UPDATED WITH DEPARTMENT CHART
+# UNIT HEAD DASHBOARD
 # ============================================================
 @login_required
 @unit_head_required
@@ -96,10 +96,8 @@ def unit_head_dashboard(request):
         messages.error(request, "Your unit head profile is not properly configured.")
         return redirect('employee_dashboard')
     
-    # Get tickets for this unit only
     unit_tickets = Ticket.objects.filter(unit=unit)
     
-    # KPIs
     kpis = {
         'total': unit_tickets.count(),
         'open': unit_tickets.filter(status='Open').count(),
@@ -110,15 +108,12 @@ def unit_head_dashboard(request):
         'critical': unit_tickets.filter(priority='Critical').count(),
     }
     
-    # Status chart
     status_counts = list(unit_tickets.values('status').annotate(count=Count('id')))
     chart_status = {item['status']: item['count'] for item in status_counts}
     
-    # Priority chart
     prio_counts = list(unit_tickets.values('priority').annotate(count=Count('id')))
     chart_priority = {item['priority']: item['count'] for item in prio_counts}
     
-    # Department Distribution Chart
     dept_counts = list(
         unit_tickets
         .filter(department__isnull=False)
@@ -128,7 +123,6 @@ def unit_head_dashboard(request):
     )
     chart_department = {item['department__name']: item['count'] for item in dept_counts}
     
-    # Monthly chart (last 12 months)
     twelve_months_ago = timezone.now() - timedelta(days=365)
     monthly_counts = {}
     for i in range(12):
@@ -144,7 +138,6 @@ def unit_head_dashboard(request):
     chart_monthly = [{'label': k, 'value': v} for k, v in monthly_counts.items()]
     chart_monthly.reverse()
     
-    # Build charts_data with proper JSON serializable data
     charts_data = {
         'status': chart_status,
         'priority': chart_priority,
@@ -152,7 +145,6 @@ def unit_head_dashboard(request):
         'monthly': chart_monthly,
     }
     
-    # Recent tickets
     recent_tickets = unit_tickets.order_by('-created_at')[:10]
     
     context = {
@@ -185,7 +177,6 @@ def unit_head_all_tickets(request):
         messages.error(request, "Your unit head profile is not properly configured.")
         return redirect('employee_dashboard')
     
-    # Annotate tickets with ERP ID from ERPHolderMapping
     erp_subquery = ERPHolderMapping.objects.filter(
         employee__employee_id=OuterRef('employee_id')
     ).values('erp_user_id')[:1]
@@ -194,7 +185,6 @@ def unit_head_all_tickets(request):
         erp_id=Coalesce(Subquery(erp_subquery, output_field=CharField()), Value('Not Mapped'))
     )
     
-    # Get filter parameters
     status = request.GET.get('status', '')
     priority = request.GET.get('priority', '')
     filter_param = request.GET.get('filter', '').strip()
@@ -206,15 +196,12 @@ def unit_head_all_tickets(request):
     sub_error_type = request.GET.get('sub_error_type', '').strip()
     department = request.GET.get('department', '').strip()
 
-    # Dashboard drill-downs send a shared filter parameter. Normalize it into
-    # the same status/priority filters used by the full Unit Head page.
     if filter_param and filter_param != 'all':
         if filter_param == 'Critical':
             priority = 'Critical'
         elif filter_param in {'Open', 'Assigned', 'Hold', 'Escalated', 'Closed'}:
             status = filter_param
     
-    # Apply filters
     if status:
         tickets_qs = tickets_qs.filter(status=status)
     if priority:
@@ -248,7 +235,6 @@ def unit_head_all_tickets(request):
         except ValueError:
             pass
     
-    # Search filter
     if search:
         tickets_qs = tickets_qs.filter(
             Q(ticket_number__icontains=search) |
@@ -258,12 +244,10 @@ def unit_head_all_tickets(request):
             Q(department__name__icontains=search)
         )
     
-    # CHECK IF AJAX REQUEST FOR DRILL-DOWN MODAL
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     if is_ajax:
         tickets = tickets_qs[:50]
-        # Build ticket data with target date for JSON response
         tickets_data = []
         for ticket in tickets:
             tickets_data.append({
@@ -283,7 +267,6 @@ def unit_head_all_tickets(request):
             'count': tickets_qs.count()
         })
     
-    # REGULAR PAGE RENDER
     paginator = Paginator(tickets_qs, 20)
     page_number = request.GET.get('page')
     try:
@@ -293,7 +276,6 @@ def unit_head_all_tickets(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
     
-    # Build filter query for pagination
     filter_query = request.GET.copy()
     filter_query.pop('page', None)
     
@@ -340,7 +322,6 @@ def unit_head_my_tickets(request):
         created_by_user=request.user
     ).order_by('-created_at')
     
-    # Get filter parameters
     status = request.GET.get('status', '')
     priority = request.GET.get('priority', '')
     ticket_number = request.GET.get('ticket_number', '').strip()
@@ -348,7 +329,6 @@ def unit_head_my_tickets(request):
     date_to = request.GET.get('date_to', '').strip()
     search = request.GET.get('search', '').strip()
     
-    # Apply filters
     if status:
         tickets_qs = tickets_qs.filter(status=status)
     if priority:
@@ -380,7 +360,6 @@ def unit_head_my_tickets(request):
             Q(employee_name__icontains=search)
         )
     
-    # KPIs
     total = tickets_qs.count()
     open_tickets = tickets_qs.filter(status='Open').count()
     assigned_tickets = tickets_qs.filter(status='Assigned').count()
@@ -388,7 +367,6 @@ def unit_head_my_tickets(request):
     escalated_tickets = tickets_qs.filter(status='Escalated').count()
     closed_tickets = tickets_qs.filter(status='Closed').count()
     
-    # Pagination
     paginator = Paginator(tickets_qs, 20)
     page_number = request.GET.get('page')
     try:
@@ -398,7 +376,6 @@ def unit_head_my_tickets(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
     
-    # Build filter query for pagination
     filter_query = request.GET.copy()
     filter_query.pop('page', None)
     
@@ -422,7 +399,7 @@ def unit_head_my_tickets(request):
         'date_from': date_from,
         'date_to': date_to,
         'search_query': search,
-        'filter_query': filter_query.urlencode(),
+        'filter_query': filter_query.encode(),
     }
     return render(request, 'unit_head/my_tickets.html', context)
 
@@ -450,7 +427,6 @@ def unit_head_ticket_detail(request, ticket_id):
     
     ticket = get_object_or_404(Ticket, id=ticket_id)
     
-    # Security: Ensure ticket belongs to unit head's unit
     if ticket.unit != unit:
         messages.error(request, "You do not have permission to view this ticket.")
         return redirect('unit_head_all_tickets')
@@ -463,7 +439,6 @@ def unit_head_ticket_detail(request, ticket_id):
         time_to_close = ticket.closed_at - ticket.created_at
         time_to_close_str = format_timedelta_display(time_to_close)
     
-    # Attachments
     attachments = []
     if ticket.attachment_1:
         attachments.append({'file': ticket.attachment_1, 'name': 'Attachment 1'})
@@ -472,7 +447,6 @@ def unit_head_ticket_detail(request, ticket_id):
     if ticket.attachment_3:
         attachments.append({'file': ticket.attachment_3, 'name': 'Attachment 3'})
     
-    # Get ERP ID for this ticket's employee
     erp_id = 'Not Mapped'
     if ticket.employee_id:
         erp_mapping = ERPHolderMapping.objects.filter(
@@ -481,16 +455,11 @@ def unit_head_ticket_detail(request, ticket_id):
         if erp_mapping:
             erp_id = erp_mapping.erp_user_id
     
-    # Get screen object (view only)
     screen_object = ScreenMaster.objects.filter(screen_code=ticket.screen_number).first()
     
-    # HANDLE POST REQUESTS
     if request.method == 'POST':
         action_type = request.POST.get('action_type')
         
-        # ============================================================
-        # PRIORITY CHANGE
-        # ============================================================
         if action_type == 'ChangePriority':
             if ticket.status == 'Closed':
                 messages.error(request, "Cannot change priority of a closed ticket.")
@@ -521,12 +490,16 @@ def unit_head_ticket_detail(request, ticket_id):
                     performed_by=f"Unit Head {unit_head.name}"
                 )
                 
+                # ✅ Desktop toast: notify assignee
+                try:
+                    from tickets.services.notify import notify_priority_changed
+                    notify_priority_changed(ticket, old_priority, new_priority, actor=request.user)
+                except Exception as _e:
+                    logger.warning(f"notify_priority_changed failed: {_e}")
+                
                 messages.success(request, f'Priority changed from {old_priority} to {new_priority}.')
                 return redirect('unit_head_ticket_detail', ticket_id=ticket.id)
         
-        # ============================================================
-        # ✅ NEW: UPDATE TARGET DATE
-        # ============================================================
         elif action_type == 'UpdateTargetDate':
             target_date_str = request.POST.get('target_date', '').strip()
             
@@ -537,12 +510,10 @@ def unit_head_ticket_detail(request, ticket_id):
             try:
                 target_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
                 
-                # Check if date is in the past
                 if target_date < timezone.now().date():
                     messages.error(request, "Target date cannot be in the past.")
                     return redirect('unit_head_ticket_detail', ticket_id=ticket.id)
                 
-                # Check if ticket is assigned
                 if ticket.status not in ['Assigned', 'Open']:
                     messages.error(request, "Target date can only be set for Assigned or Open tickets.")
                     return redirect('unit_head_ticket_detail', ticket_id=ticket.id)
@@ -588,7 +559,7 @@ def unit_head_ticket_detail(request, ticket_id):
 
 
 # ============================================================
-# UNIT HEAD - DOWNLOAD TICKET EXCEL (WITH TARGET DATE)
+# UNIT HEAD - DOWNLOAD TICKET EXCEL
 # ============================================================
 @login_required
 @unit_head_required
@@ -605,7 +576,6 @@ def unit_head_download_ticket_excel(request, ticket_id):
     
     ticket = get_object_or_404(Ticket, id=ticket_id)
     
-    # Security: Ensure ticket belongs to unit head's unit
     if ticket.unit != unit:
         messages.error(request, "You do not have permission to download this ticket.")
         return redirect('unit_head_all_tickets')
@@ -642,7 +612,6 @@ def unit_head_download_ticket_excel(request, ticket_id):
         bottom=Side(style='thin', color='D0D0D0')
     )
     
-    # Title
     ws.merge_cells('A1:F1')
     ws['A1'] = f"GPLAST TICKET DETAILS - {ticket.ticket_number}"
     ws['A1'].font = title_font
@@ -652,7 +621,6 @@ def unit_head_download_ticket_excel(request, ticket_id):
     
     row = 3
     
-    # Basic Information
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = "BASIC INFORMATION"
     ws[f'A{row}'].font = section_font
@@ -661,7 +629,6 @@ def unit_head_download_ticket_excel(request, ticket_id):
     ws.row_dimensions[row].height = 30
     row += 1
     
-    # ✅ Include Target Date
     target_date_str = ticket.target_date.strftime('%d-%b-%Y') if ticket.target_date else 'Not Set'
     
     basic_info = [
@@ -671,7 +638,7 @@ def unit_head_download_ticket_excel(request, ticket_id):
         ('Priority', ticket.priority),
         ('Status', ticket.status),
         ('Error Type', ticket.error_type or 'Not Set'),
-        ('Target Date', target_date_str),  # ✅ NEW
+        ('Target Date', target_date_str),
         ('Created Date', timezone.localtime(ticket.created_at).strftime('%d-%b-%Y %I:%M %p') if ticket.created_at else ''),
         ('Updated Date', ticket.updated_at.strftime('%d-%b-%Y %I:%M %p') if ticket.updated_at else ''),
     ]
@@ -689,7 +656,6 @@ def unit_head_download_ticket_excel(request, ticket_id):
     
     row += 1
     
-    # Employee Details
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = "EMPLOYEE DETAILS"
     ws[f'A{row}'].font = section_font
@@ -722,7 +688,6 @@ def unit_head_download_ticket_excel(request, ticket_id):
     
     row += 1
     
-    # Assignment & Status
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = "ASSIGNMENT & STATUS"
     ws[f'A{row}'].font = section_font
@@ -752,7 +717,6 @@ def unit_head_download_ticket_excel(request, ticket_id):
     
     row += 1
     
-    # Closing Details (if closed)
     if ticket.status == 'Closed':
         ws.merge_cells(f'A{row}:F{row}')
         ws[f'A{row}'] = "CLOSING DETAILS"
@@ -800,7 +764,6 @@ def unit_head_download_ticket_excel(request, ticket_id):
         section_fill, section_fill, thin_border
     )
 
-    # Footer
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = f"Report generated on {timezone.now().strftime('%d-%b-%Y %I:%M %p')} | GPLAST Support System"
     ws[f'A{row}'].font = Font(name='Calibri', size=9, italic=True, color='666666')
@@ -819,7 +782,7 @@ def unit_head_download_ticket_excel(request, ticket_id):
 
 
 # ============================================================
-# UNIT HEAD - REPORTS (WITH TARGET DATE)
+# UNIT HEAD - REPORTS
 # ============================================================
 @login_required
 @unit_head_required
@@ -839,7 +802,6 @@ def unit_head_reports(request):
     
     unit_tickets = Ticket.objects.filter(unit=unit)
     
-    # Get filter parameters
     status = request.GET.get('status', '')
     priority = request.GET.get('priority', '')
     main_error_type = request.GET.get('main_error_type', '').strip()
@@ -848,7 +810,6 @@ def unit_head_reports(request):
     date_to = request.GET.get('date_to', '').strip()
     search = request.GET.get('search', '').strip()
     
-    # Department filter
     department_param = request.GET.get('department', '').strip()
     department_id = None
     
@@ -898,7 +859,6 @@ def unit_head_reports(request):
             Q(employee_name__icontains=search)
         )
     
-    # KPIs
     kpis = {
         'total': unit_tickets.count(),
         'open': unit_tickets.filter(status='Open').count(),
@@ -909,7 +869,6 @@ def unit_head_reports(request):
         'critical': unit_tickets.filter(priority='Critical').count(),
     }
     
-    # Department stats
     dept_stats = (
         unit_tickets
         .values('department_id', 'department__name')
@@ -923,7 +882,6 @@ def unit_head_reports(request):
     
     all_departments = Department.objects.filter(unit=unit, is_active=True).order_by('name')
     
-    # Pagination
     paginator = Paginator(tickets_qs, 15)
     page_number = request.GET.get('page')
     try:
@@ -933,11 +891,9 @@ def unit_head_reports(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
     
-    # Export
     if request.GET.get('export') == 'excel':
         return unit_head_export_filtered_tickets_excel(request, tickets_qs, unit)
     
-    # Build filter query for pagination
     filter_query = request.GET.copy()
     filter_query.pop('page', None)
     
@@ -967,7 +923,7 @@ def unit_head_reports(request):
 
 
 # ============================================================
-# UNIT HEAD - EXPORT CLOSED TICKETS (30 DAYS) - WITH TARGET DATE
+# UNIT HEAD - EXPORT CLOSED TICKETS (30 DAYS)
 # ============================================================
 @login_required
 @unit_head_required
@@ -1002,7 +958,6 @@ def unit_head_export_closed_tickets_30_days(request):
     )
     response['Content-Disposition'] = f'attachment; filename=Closed_Tickets_{unit.code}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     
-    # Build mapping of employee_id to ERP ID
     employee_ids = tickets_qs.values_list('employee_id', flat=True).distinct()
     erp_mappings = {}
     if employee_ids:
@@ -1041,7 +996,6 @@ def unit_head_export_closed_tickets_30_days(request):
     ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[2].height = 25
     
-    # ✅ UPDATED: Added Target Date column
     headers = [
         'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
         'Employee ID', 'ERP ID', 'Employee Name', 'Mobile', 'Email', 'Screen/Module',
@@ -1114,7 +1068,7 @@ def unit_head_export_closed_tickets_30_days(request):
 
 
 # ============================================================
-# UNIT HEAD - EXPORT FILTERED TICKETS EXCEL (WITH TARGET DATE)
+# UNIT HEAD - EXPORT FILTERED TICKETS EXCEL
 # ============================================================
 def unit_head_export_filtered_tickets_excel(request, tickets_qs, unit):
     """
@@ -1133,7 +1087,6 @@ def unit_head_export_filtered_tickets_excel(request, tickets_qs, unit):
     )
     response['Content-Disposition'] = f'attachment; filename=Tickets_Report_{unit.code}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     
-    # Build mapping of employee_id to ERP ID
     employee_ids = tickets_qs.values_list('employee_id', flat=True).distinct()
     erp_mappings = {}
     if employee_ids:
@@ -1172,7 +1125,6 @@ def unit_head_export_filtered_tickets_excel(request, tickets_qs, unit):
     ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[2].height = 25
     
-    # ✅ UPDATED: Added Target Date column
     headers = [
         'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
         'Employee ID', 'ERP ID', 'Employee Name', 'Mobile', 'Email', 'Screen/Module',

@@ -189,7 +189,7 @@ def generate_ticket_number():
     """Generate a unique ticket number"""
     from .models import Ticket
     
-    last_ticket = Ticket.objects.all().order_by('id').last()
+    last_ticket = Ticket.objects.with_archived().order_by('id').last()
     
     if last_ticket and last_ticket.ticket_number:
         ticket_num = last_ticket.ticket_number
@@ -211,6 +211,31 @@ def generate_ticket_number():
         new_number = 1
     
     return f"{new_number:04d}"
+
+
+# ============================================================
+# TICKET MANAGER — hides archived tickets by default
+# ============================================================
+class TicketManager(models.Manager):
+    """
+    Default manager for Ticket.
+
+    Hides archived tickets from every normal query:
+        Ticket.objects.all()         -> active tickets only
+        Ticket.objects.filter(...)   -> active tickets only
+
+    Use these to see archived tickets:
+        Ticket.objects.with_archived()   -> everything
+        Ticket.objects.archived_only()   -> archived only
+    """
+    def get_queryset(self):
+        return super().get_queryset().filter(is_archived=False)
+
+    def with_archived(self):
+        return super().get_queryset()
+
+    def archived_only(self):
+        return super().get_queryset().filter(is_archived=True)
 
 
 class Ticket(models.Model):
@@ -316,7 +341,7 @@ class Ticket(models.Model):
         blank=True, 
         null=True,
         verbose_name="Sub Error Type",
-        help_text="Select the sub-error type based on the main error category"
+        help_text="Select the sub error type based on the main error category"
     )
     
     # ============================================================
@@ -361,6 +386,29 @@ class Ticket(models.Model):
         default=False,
         help_text="Notification email has been sent to admin"
     )
+
+    # ============================================================
+    # ✅ NEW: ARCHIVE FIELDS
+    # ============================================================
+    is_archived = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Hidden from active lists, kept in database",
+    )
+    archived_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the ticket was archived",
+    )
+    archived_by = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        help_text="Username or 'System (auto)'",
+    )
+
+    # Custom manager — hides archived tickets by default
+    objects = TicketManager()
 
     def save(self, *args, **kwargs):
         if not self.ticket_number:
@@ -447,6 +495,36 @@ class Ticket(models.Model):
         if self.is_closed():
             return []
         return ['Critical', 'High', 'Medium', 'Low']
+
+    # ============================================================
+    # ✅ NEW: ARCHIVE HELPERS
+    # ============================================================
+    def archive(self, actor="System (auto)"):
+        """
+        Soft-archive this ticket. Hides it from active lists.
+        Returns True if state changed, False if already archived.
+        """
+        from django.utils import timezone
+        if self.is_archived:
+            return False
+        self.is_archived = True
+        self.archived_at = timezone.now()
+        self.archived_by = actor
+        self.save(update_fields=["is_archived", "archived_at", "archived_by"])
+        return True
+
+    def restore(self):
+        """
+        Restore an archived ticket to active lists.
+        Returns True if state changed, False if not archived.
+        """
+        if not self.is_archived:
+            return False
+        self.is_archived = False
+        self.archived_at = None
+        self.archived_by = ""
+        self.save(update_fields=["is_archived", "archived_at", "archived_by"])
+        return True
 
 
 class TicketHistory(models.Model):
@@ -694,3 +772,114 @@ class ScreenMapping(models.Model):
 
     def __str__(self):
         return f"{self.screen.screen_code} → ERP {self.erp_user_id}"
+
+
+# ============================================================
+# ✅ NEW: DESKTOP NOTIFICATION MODEL
+# ============================================================
+class Notification(models.Model):
+    """
+    Stores notifications that are delivered to users as native
+    Windows desktop toasts (via the browser Notification API).
+
+    One row = one toast for one recipient.
+    The browser polls /notifications/poll/ for rows newer than
+    the last id it saw, and turns each into a Windows toast.
+    """
+    EVENT_CHOICES = [
+        ('created',          'Ticket created'),
+        ('assigned',         'Ticket assigned'),
+        ('replied',          'New reply'),
+        ('status_changed',   'Status changed'),
+        ('priority_changed', 'Priority changed'),
+        ('sla_risk',         'SLA at risk'),
+        ('sla_breach',       'SLA breached'),
+        ('escalated',        'Escalated'),
+        ('mentioned',        'Mentioned'),
+    ]
+
+    recipient = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+        verbose_name="Recipient",
+        help_text="User who should see this notification"
+    )
+    actor = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+        verbose_name="Actor",
+        help_text="User who triggered this notification (optional)"
+    )
+    ticket = models.ForeignKey(
+        'Ticket',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+        verbose_name="Ticket",
+        help_text="Ticket this notification relates to (optional)"
+    )
+    event = models.CharField(
+        max_length=40,
+        choices=EVENT_CHOICES,
+        verbose_name="Event"
+    )
+    title = models.CharField(
+        max_length=200,
+        verbose_name="Title",
+        help_text="Main line shown in the Windows toast"
+    )
+    body = models.TextField(
+        blank=True,
+        verbose_name="Body",
+        help_text="Secondary line shown in the Windows toast"
+    )
+    url = models.CharField(
+        max_length=300,
+        blank=True,
+        verbose_name="URL",
+        help_text="Where to navigate when the toast is clicked"
+    )
+
+    is_read = models.BooleanField(
+        default=False,
+        verbose_name="Is Read"
+    )
+    read_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Read At"
+    )
+    emailed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Emailed At",
+        help_text="Set when the email fallback has been sent"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Created At"
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Notification'
+        verbose_name_plural = 'Notifications'
+        indexes = [
+            models.Index(fields=['recipient', 'is_read', '-created_at']),
+            models.Index(fields=['recipient', 'id']),
+        ]
+
+    def __str__(self):
+        return f"{self.event} → {self.recipient} (#{self.ticket_id or '-'})"
+
+    def mark_read(self):
+        from django.utils import timezone
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save(update_fields=['is_read', 'read_at'])

@@ -1,0 +1,449 @@
+/* ============================================================
+   GPLAST — Shell Animations
+   Motion layer only. No layout, no colors — safe to remove.
+   ============================================================ */
+
+
+/* ============================================================
+   1. WELCOME TEXT — fade + slight slide in
+   ============================================================ */
+
+.shell-navbar-welcome {
+    animation: welcomeIn 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+    animation-delay: 0.15s;
+}
+
+@keyframes welcomeIn {
+    from { opacity: 0; transform: translateX(8px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+
+/* ============================================================
+   1b. NAVBAR GREETING — two-line block (left, after logo)
+   ============================================================ */
+
+.shell-navbar-divider {
+    width: 1px;
+    height: 26px;
+    background: var(--border-color);
+    margin: 0 4px;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.shell-navbar-greeting {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    min-width: 0;
+    max-width: 220px;
+    line-height: 1.15;
+    animation: greetingIn 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+    animation-delay: 0.15s;
+    user-select: none;
+}
+
+@keyframes greetingIn {
+    from { opacity: 0; transform: translateX(6px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.shell-greeting-line {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.shell-greeting-user {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.shell-greeting-avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--brand-gradient);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(255, 107, 0, 0.28);
+}
+
+.shell-greeting-name {
+    font-family: 'Fraunces', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.1;
+}
+
+/* Responsive greeting */
+@media (max-width: 991px) {
+    .shell-navbar-greeting { max-width: 160px; }
+    .shell-greeting-line { font-size: 0.62rem; }
+    .shell-greeting-name { font-size: 0.78rem; }
+}
+
+@media (max-width: 640px) {
+    .shell-navbar-greeting { max-width: 120px; }
+    .shell-greeting-avatar { display: none; }
+}
+
+@media (max-width: 480px) {
+    .shell-navbar-divider { display: none; }
+    .shell-navbar-greeting { max-width: 90px; }
+    .shell-greeting-line { display: none; }
+}
+
+
+/* ============================================================
+   2. NAVBAR LOGO — subtle breathing on idle
+   ============================================================ */
+
+.shell-navbar-logo {
+    animation: logoFadeIn 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+@keyframes logoFadeIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+.shell-navbar-logo img {
+    animation: logoBreathe 6s ease-in-out infinite;
+    will-change: transform;
+    transform-origin: center;
+}
+
+@keyframes logoBreathe {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.035); }
+}
+
+.shell-navbar-logo:hover img {
+    animation: none;
+    transform: scale(1.08);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+
+/* ============================================================
+   3. RAIL TOGGLE — bars gently morph on click
+   ============================================================ */
+
+.shell-rail-toggle i {
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: inline-block;
+}
+
+.shell-rail-toggle[aria-expanded="false"] i {
+    transform: rotate(-90deg);
+}
+
+.shell-rail-toggle:active i {
+    transform: scale(0.85);
+}
+
+
+/* ============================================================
+   4. RAIL ITEMS — staggered entrance on load
+   ============================================================ */
+
+.shell-rail-btn {
+    animation: railItemIn 0.45s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+.shell-rail-btn:nth-child(1) { animation-delay: 0.05s; }
+.shell-rail-btn:nth-child(2) { animation-delay: 0.10s; }
+.shell-rail-btn:nth-child(3) { animation-delay: 0.15s; }
+.shell-rail-btn:nth-child(4) { animation-delay: 0.20s; }
+.shell-rail-btn:nth-child(5) { animation-delay: 0.25s; }
+.shell-rail-btn:nth-child(6) { animation-delay: 0.30s; }
+.shell-rail-btn:nth-child(7) { animation-delay: 0.35s; }
+.shell-rail-btn:nth-child(8) { animation-delay: 0.40s; }
+
+@keyframes railItemIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.shell-rail-btn:hover .shell-rail-icon {
+    animation: iconPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes iconPop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.22) rotate(-4deg); }
+    70%  { transform: scale(1.10) rotate(2deg); }
+    100% { transform: scale(1.08) rotate(0); }
+}
+
+.shell-rail-btn.active .shell-rail-icon {
+    animation: activeHalo 2.4s ease-in-out infinite;
+}
+
+@keyframes activeHalo {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.06); }
+}
+
+
+/* ============================================================
+   5. RAIL AVATAR — subtle ring pulse on load
+   ============================================================ */
+
+.shell-rail-avatar {
+    animation: railAvatarIn 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+    animation-delay: 0.45s;
+}
+
+@keyframes railAvatarIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.shell-rail-avatar .shell-avatar-circle {
+    position: relative;
+}
+
+.shell-rail-avatar .shell-avatar-circle::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2px solid var(--brand-orange);
+    opacity: 0;
+    animation: avatarRing 3.5s ease-out infinite;
+    pointer-events: none;
+}
+
+@keyframes avatarRing {
+    0%   { opacity: 0.5; transform: scale(0.95); }
+    80%  { opacity: 0;   transform: scale(1.35); }
+    100% { opacity: 0;   transform: scale(1.35); }
+}
+
+.shell-rail-avatar[aria-expanded="true"] .shell-avatar-circle::after {
+    animation: none;
+    opacity: 0;
+}
+
+
+/* ============================================================
+   6. PROFILE MENU — smooth card entrance
+   ============================================================ */
+
+.shell-profile-menu.open {
+    animation: menuSlide 0.32s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+@keyframes menuSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.shell-profile-menu.open .shell-menu-item {
+    animation: menuItemIn 0.3s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+.shell-profile-menu.open .shell-menu-item:nth-child(1) { animation-delay: 0.02s; }
+.shell-profile-menu.open .shell-menu-item:nth-child(2) { animation-delay: 0.05s; }
+.shell-profile-menu.open .shell-menu-item:nth-child(3) { animation-delay: 0.08s; }
+.shell-profile-menu.open .shell-menu-item:nth-child(4) { animation-delay: 0.11s; }
+.shell-profile-menu.open .shell-menu-item:nth-child(5) { animation-delay: 0.14s; }
+
+@keyframes menuItemIn {
+    from { opacity: 0; transform: translateX(-4px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+
+/* ============================================================
+   7. NOTIFICATION BELL — enhanced wiggle
+   ============================================================ */
+
+.shell-bell {
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.shell-bell:hover i {
+    animation: bellWiggle 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: top center;
+}
+
+@keyframes bellWiggle {
+    0%   { transform: rotate(0); }
+    15%  { transform: rotate(-15deg); }
+    30%  { transform: rotate(12deg); }
+    45%  { transform: rotate(-9deg); }
+    60%  { transform: rotate(6deg); }
+    75%  { transform: rotate(-3deg); }
+    100% { transform: rotate(0); }
+}
+
+.shell-bell-badge:not(.hidden) {
+    animation: badgePulseSoft 2.5s ease-in-out infinite;
+}
+
+@keyframes badgePulseSoft {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+    }
+}
+
+
+/* ============================================================
+   8. CONTENT — fade-up on route change
+   ============================================================ */
+
+.shell-content > * {
+    animation: contentIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    animation-delay: 0.1s;
+}
+
+@keyframes contentIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ============================================================
+   9. TOASTS — spring in + shake on error
+   ============================================================ */
+
+.toast-custom {
+    animation: toastSpring 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes toastSpring {
+    0%   { opacity: 0; transform: translateX(50px) scale(0.9); }
+    60%  { opacity: 1; transform: translateX(-4px) scale(1.02); }
+    100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.toast-custom.toast-error {
+    animation:
+        toastSpring 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+        toastShake 0.5s ease 0.4s;
+}
+
+@keyframes toastShake {
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-6px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(4px); }
+}
+
+
+/* ============================================================
+   10. CONFIRM MODAL — pop in
+   ============================================================ */
+
+#confirmModal .modal-content {
+    animation: modalPop 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+@keyframes modalPop {
+    from { opacity: 0; transform: scale(0.9) translateY(-8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+
+/* ============================================================
+   11. TOOLTIP — smooth fade + slide from direction
+   ============================================================ */
+
+.shell-tip {
+    transition: opacity 0.16s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.shell-tip[data-placement="right"]:not(.show) {
+    transform: translate(-6px, -50%);
+}
+
+.shell-tip[data-placement="left"]:not(.show) {
+    transform: translate(6px, -50%);
+}
+
+.shell-tip[data-placement="top"]:not(.show) {
+    transform: translateY(-4px);
+}
+
+.shell-tip[data-placement="bottom"]:not(.show) {
+    transform: translateY(4px);
+}
+
+.shell-tip.show {
+    transform: translate(0, -50%);
+}
+.shell-tip[data-placement="top"].show,
+.shell-tip[data-placement="bottom"].show {
+    transform: translate(0, 0);
+}
+
+
+/* ============================================================
+   12. GREETING — glue to logo (override safety net)
+   Guarantees the greeting stays next to the logo, no matter
+   what flex/margin rules exist in base.css
+   ============================================================ */
+
+.shell-navbar-left {
+    flex: 0 1 auto;
+    justify-content: flex-start;
+    max-width: 60%;
+}
+
+.shell-navbar-right {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.shell-navbar-greeting {
+    flex: 0 1 auto;
+    margin-left: 0;
+}
+
+
+/* ============================================================
+   13. ACCESSIBILITY — respect reduced motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

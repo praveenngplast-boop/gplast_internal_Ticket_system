@@ -80,120 +80,34 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================================
-    // CONFIRMATION MODAL HANDLING
+    // CONFIRMATION MODAL — delegate to base.js's showConfirmation()
+    // base.js already owns #confirmModal and #confirmModalYesBtn
     // ============================================================
-    var confirmModalEl = document.getElementById('confirmModal');
-    var confirmBody = document.getElementById('confirmModalBody');
-    var confirmYesBtn = document.getElementById('confirmModalYesBtn');
-    var confirmCancelBtn = document.getElementById('confirmModalCancelBtn');
-    var currentFormToSubmit = null;
-    var isProcessing = false;
-
-    function showConfirmModal(message, form) {
-        if (!confirmModalEl || !confirmBody) return false;
-
-        confirmBody.textContent = message || 'Are you sure?';
-        currentFormToSubmit = form;
-
-        if (window.bootstrap && window.bootstrap.Modal) {
-            var modal = new bootstrap.Modal(confirmModalEl, {
-                backdrop: 'static',
-                keyboard: true,
-                focus: true
-            });
-            modal.show();
-            return true;
-        } else {
-            return confirm(message || 'Are you sure?');
-        }
-    }
-
     document.querySelectorAll('form[data-confirm]').forEach(function(form) {
         form.addEventListener('submit', function(e) {
             var message = this.getAttribute('data-confirm');
-            if (message) {
-                e.preventDefault();
-                e.stopPropagation();
+            if (!message) return;
 
-                document.querySelectorAll('.modal.show').forEach(function(m) {
-                    if (m.id !== 'confirmModal') {
-                        var inst = bootstrap.Modal.getInstance(m);
-                        if (inst) inst.hide();
-                    }
-                });
+            // Only intercept if the global helper exists
+            if (typeof window.showConfirmation !== 'function') return;
 
-                showConfirmModal(message, this);
-            }
-        });
-    });
-
-    if (confirmYesBtn) {
-        confirmYesBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
 
-            if (isProcessing || !currentFormToSubmit) return;
-            isProcessing = true;
+            var targetForm = this;
 
-            var form = currentFormToSubmit;
-            currentFormToSubmit = null;
-
-            var modalInstance = bootstrap.Modal.getInstance(confirmModalEl);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-
-            setTimeout(function() {
-                if (form && form.tagName === 'FORM') {
-                    var submittedInput = document.createElement('input');
-                    submittedInput.type = 'hidden';
-                    submittedInput.name = '_confirmed';
-                    submittedInput.value = 'true';
-                    form.appendChild(submittedInput);
-
-                    form.classList.add('confirmed');
-                    form.submit();
-                }
-                isProcessing = false;
-            }, 300);
+            window.showConfirmation(message, function() {
+                // Remove the data-confirm attribute so we don't loop
+                targetForm.removeAttribute('data-confirm');
+                targetForm.submit();
+            });
         });
-    }
-
-    if (confirmCancelBtn) {
-        confirmCancelBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            currentFormToSubmit = null;
-            var modalInstance = bootstrap.Modal.getInstance(confirmModalEl);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-        });
-    }
-
-    if (confirmModalEl) {
-        confirmModalEl.addEventListener('hidden.bs.modal', function() {
-            currentFormToSubmit = null;
-            isProcessing = false;
-        });
-    }
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && confirmModalEl && confirmModalEl.classList.contains('show')) {
-            currentFormToSubmit = null;
-            isProcessing = false;
-            var modalInstance = bootstrap.Modal.getInstance(confirmModalEl);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-        }
     });
 
     // ============================================================
     // BULK UPLOAD - CREDENTIALS
     // ============================================================
     var selectedFile = null;
-    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
 
     function getCsrfToken() {
         var name = 'csrftoken';
@@ -207,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return '';
     }
 
-    csrfToken = getCsrfToken();
+    var csrfToken = getCsrfToken();
 
     window.handleBulkFileSelect = function(event) {
         var file = event.target.files[0];

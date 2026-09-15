@@ -2,6 +2,7 @@
 
 from .auth_views import (
     CustomLoginView,
+    CustomPasswordChangeView,   # ✅ ADDED
     role_redirect,
     custom_logout,
 )
@@ -12,7 +13,7 @@ from .admin_views import (
     all_tickets,
     ticket_detail_admin,
     get_notifications,
-    refresh_notifications,  # ✅ ADD THIS LINE
+    refresh_notifications,
     mark_all_notifications_read,
     mark_notification_read,
     test_notifications,
@@ -22,6 +23,11 @@ from .admin_views import (
     test_info_message,
     download_audit_log_excel as admin_download_audit_log_excel,
     update_target_date,
+    # ✅ NEW: Archive / Restore views
+    archived_tickets,
+    restore_ticket,
+    bulk_restore_tickets,
+    export_archived_tickets_excel,
 )
 
 # ✅ Import Reports Views from separate file
@@ -144,9 +150,10 @@ from .ajax_views import (
 __all__ = [
     # Auth views
     'CustomLoginView',
+    'CustomPasswordChangeView',   # ✅ ADDED
     'role_redirect',
     'custom_logout',
-    
+
     # Admin views
     'admin_dashboard',
     'create_ticket_admin',
@@ -157,7 +164,7 @@ __all__ = [
     'reports',
     'escalated_ticket_detail',
     'get_notifications',
-    'refresh_notifications',  # ✅ ADD THIS
+    'refresh_notifications',
     'mark_all_notifications_read',
     'mark_notification_read',
     'test_notifications',
@@ -167,7 +174,12 @@ __all__ = [
     'test_info_message',
     'admin_download_audit_log_excel',
     'update_target_date',
-    
+    # ✅ NEW: Archive / Restore views
+    'archived_tickets',
+    'restore_ticket',
+    'bulk_restore_tickets',
+    'export_archived_tickets_excel',
+
     # Employee views
     'employee_dashboard',
     'create_ticket',
@@ -182,7 +194,7 @@ __all__ = [
     'get_employee_details',
     'export_filtered_tickets_excel',
     'export_filtered_my_tickets_excel',
-    
+
     # Unit Head views
     'unit_head_dashboard',
     'unit_head_all_tickets',
@@ -192,7 +204,7 @@ __all__ = [
     'unit_head_download_ticket_excel',
     'unit_head_export_closed_tickets_30_days',
     'unit_head_export_filtered_tickets_excel',
-    
+
     # Settings views
     'settings_page',
     'settings_email_reports',
@@ -205,7 +217,7 @@ __all__ = [
     'settings_download_audit_log_excel',
     'download_full_backup',
     'settings_screen_master',
-    
+
     # Settings Actions
     'settings_contact',
     'settings_units',
@@ -233,7 +245,7 @@ __all__ = [
     'screen_mapping_download_template',
     'settings_unit_heads_page',
     'settings_unit_heads',
-    
+
     # ERP USER ID MAPPING VIEWS
     'erp_mapping_page',
     'erp_mapping_add',
@@ -244,7 +256,7 @@ __all__ = [
     'erp_mapping_export_excel',
     'erp_mapping_bulk_upload',
     'erp_mapping_download_template',
-    
+
     # AJAX views
     'get_units',
     'get_departments_by_unit',

@@ -126,3 +126,82 @@ def mark_all_notifications_read(request):
     except Exception as e:
         logger.error(f"Error marking all notifications as read: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+# ============================================================
+# ✅ NEW: DESKTOP (WINDOWS TOAST) NOTIFICATION ENDPOINTS
+# Used by static/js/shared/desktop_notifications.js
+# ============================================================
+
+from django.utils import timezone as _tz
+from django.views.decorators.http import require_GET, require_POST
+from tickets.models import Notification
+
+
+@login_required
+@require_GET
+def poll_notifications(request):
+    """Return new notifications for the logged-in user as JSON."""
+    try:
+        since = int(request.GET.get('since', 0))
+    except (TypeError, ValueError):
+        since = 0
+
+    qs = Notification.objects.filter(recipient=request.user)
+
+    if since > 0:
+        qs = qs.filter(id__gt=since)
+    else:
+        cutoff = _tz.now() - _tz.timedelta(hours=24)
+        qs = qs.filter(created_at__gte=cutoff)
+
+    qs = qs.order_by('id')[:50]
+
+    items = [
+        {
+            'id': n.id,
+            'event': n.event,
+            'title': n.title,
+            'body': n.body,
+            'url': n.url,
+            'created_at': n.created_at.isoformat(),
+        }
+        for n in qs
+    ]
+
+    last_id = items[-1]['id'] if items else since
+
+    unread_count = Notification.objects.filter(
+        recipient=request.user,
+        is_read=False,
+    ).count()
+
+    return JsonResponse({
+        'notifications': items,
+        'last_id': last_id,
+        'unread_count': unread_count,
+    })
+
+
+@login_required
+@require_POST
+def mark_read(request, notification_id):
+    """Mark a single notification as read (only the recipient can)."""
+    updated = Notification.objects.filter(
+        id=notification_id,
+        recipient=request.user,
+        is_read=False,
+    ).update(is_read=True, read_at=_tz.now())
+
+    return JsonResponse({'updated': updated})
+
+
+@login_required
+@require_POST
+def mark_all_read(request):
+    """Mark all unread notifications for the logged-in user as read."""
+    updated = Notification.objects.filter(
+        recipient=request.user,
+        is_read=False,
+    ).update(is_read=True, read_at=_tz.now())
+
+    return JsonResponse({'updated': updated})

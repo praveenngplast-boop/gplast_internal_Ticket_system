@@ -6,6 +6,10 @@ from tickets.forms import TicketReplyForm
 from tickets.models import Ticket, TicketReply, UnitHead
 from .employee_views import _employee_ticket_scope
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def _reply_context(user, ticket):
     if user.is_staff:
@@ -52,5 +56,13 @@ def ticket_reply(request, ticket_id):
     reply.author_name = author_name
     reply.author_role = role
     reply.save()
+
+    # ✅ Desktop toast: notify creator + assignee
+    try:
+        from tickets.services.notify import notify_ticket_replied
+        notify_ticket_replied(ticket, reply, actor=request.user)
+    except Exception as _e:
+        logger.warning(f"notify_ticket_replied failed: {_e}")
+
     messages.success(request, 'Your reply was added to the ticket.')
     return _reply_redirect(request.user, ticket)

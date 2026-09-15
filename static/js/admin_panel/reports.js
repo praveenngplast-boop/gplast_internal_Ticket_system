@@ -1,187 +1,212 @@
-document.addEventListener('DOMContentLoaded', function() {
-    var filterForm = document.getElementById('filterForm');
-    var unitSelect = document.getElementById('id_unit');
-    var deptSelect = document.getElementById('id_department');
-    var categoryInput = document.getElementById('categoryInput');
-    var quickFilterBtns = document.querySelectorAll('.quick-filter-btn');
+document.addEventListener('DOMContentLoaded', function () {
+    'use strict';
 
-    // Dynamic Sub Error Type based on Main Error Type
-    var mainErrorTypeSelect = document.getElementById('id_main_error_type');
-    var subErrorTypeSelect = document.getElementById('id_sub_error_type');
+    const filterForm      = document.getElementById('filterForm');
+    const unitSelect      = document.getElementById('id_unit');
+    const deptSelect      = document.getElementById('id_department');
+    const categoryInput   = document.getElementById('categoryInput');
+    const quickFilterBtns = document.querySelectorAll('.rp-quick a');
 
-    // Store all options with their data-main attribute
-    var allSubErrorOptions = [];
-    var allOptions = subErrorTypeSelect.querySelectorAll('option');
-    allOptions.forEach(function(opt) {
-        if (opt.value !== '') {
-            allSubErrorOptions.push({
-                value: opt.value,
-                text: opt.textContent,
-                mainType: opt.getAttribute('data-main') || '',
-                selected: opt.selected
-            });
-        }
-    });
+    const mainErrorTypeSelect = document.getElementById('id_main_error_type');
+    const subErrorTypeSelect  = document.getElementById('id_sub_error_type');
 
-    // Function to update sub-error options based on main error type
+    const filtersBox   = document.getElementById('rpFilters');
+    const filtersBtn   = document.getElementById('rpFiltersToggle');
+    const filterCount  = document.getElementById('rpFilterCount');
+
+    /* ------------------------------------------------------------
+       Sub Error Type cascade
+       ------------------------------------------------------------ */
+    const allSubErrorOptions = [];
+    if (subErrorTypeSelect) {
+        subErrorTypeSelect.querySelectorAll('option').forEach(function (opt) {
+            if (opt.value !== '') {
+                allSubErrorOptions.push({
+                    value: opt.value,
+                    text: opt.textContent,
+                    mainType: opt.getAttribute('data-main') || ''
+                });
+            }
+        });
+    }
+
     function updateSubErrorOptions() {
-        var selectedMain = mainErrorTypeSelect.value;
-        var currentValue = subErrorTypeSelect.value;
+        if (!subErrorTypeSelect || !mainErrorTypeSelect) return;
 
-        // Clear current options (keep "All")
+        const selectedMain = mainErrorTypeSelect.value;
+        const currentValue = subErrorTypeSelect.value;
+
         subErrorTypeSelect.innerHTML = '<option value="">All</option>';
 
-        // Filter options based on selected main error type
-        var filteredOptions = [];
-        if (selectedMain === 'Roadmap Error') {
-            filteredOptions = allSubErrorOptions.filter(function(opt) {
-                return opt.mainType === 'Roadmap Error';
-            });
-        } else if (selectedMain === 'GPL Error') {
-            filteredOptions = allSubErrorOptions.filter(function(opt) {
-                return opt.mainType === 'GPL Error';
-            });
-        } else {
-            // Show all options
-            filteredOptions = allSubErrorOptions;
+        let filtered = allSubErrorOptions;
+        if (selectedMain === 'Roadmap Error' || selectedMain === 'GPL Error') {
+            filtered = allSubErrorOptions.filter(o => o.mainType === selectedMain);
         }
 
-        // Add filtered options to the select
-        filteredOptions.forEach(function(opt) {
-            var option = document.createElement('option');
-            option.value = opt.value;
-            option.textContent = opt.text;
-            option.setAttribute('data-main', opt.mainType);
-            if (opt.value === currentValue) {
-                option.selected = true;
-            }
+        filtered.forEach(function (o) {
+            const option = document.createElement('option');
+            option.value = o.value;
+            option.textContent = o.text;
+            option.setAttribute('data-main', o.mainType);
+            if (o.value === currentValue) option.selected = true;
             subErrorTypeSelect.appendChild(option);
         });
     }
 
-    // Run on page load to set initial state
-    setTimeout(updateSubErrorOptions, 50);
-
-    // Update when Main Error Type changes
     if (mainErrorTypeSelect) {
-        mainErrorTypeSelect.addEventListener('change', function() {
-            updateSubErrorOptions();
-        });
+        setTimeout(updateSubErrorOptions, 0);
+        mainErrorTypeSelect.addEventListener('change', updateSubErrorOptions);
     }
 
+    /* ------------------------------------------------------------
+       Unit → Department cascade
+       ------------------------------------------------------------ */
+    const selectedDepartment = '{{ selected_department|default:"" }}';
+
     function loadDepartments(unitId, selectedDeptId) {
+        if (!deptSelect) return;
+
         if (!unitId) {
             deptSelect.innerHTML = '<option value="">All Departments</option>';
-            deptSelect.disabled = true;
+            deptSelect.disabled = false;
             return;
         }
 
         deptSelect.disabled = true;
-        deptSelect.innerHTML = '<option value="">Loading...</option>';
+        deptSelect.innerHTML = '<option value="">Loading…</option>';
 
-        fetch('/ajax/get-departments/?unit_id=' + unitId, {
+        fetch('/ajax/get-departments/?unit_id=' + encodeURIComponent(unitId), {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
             }
         })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
+        .then(r => r.json())
+        .then(function (data) {
             deptSelect.innerHTML = '<option value="">All Departments</option>';
             if (data.departments && data.departments.length) {
-                data.departments.forEach(function(dept) {
-                    var opt = document.createElement('option');
+                data.departments.forEach(function (dept) {
+                    const opt = document.createElement('option');
                     opt.value = dept.id;
                     opt.textContent = dept.name;
-                    if (selectedDeptId && dept.id == selectedDeptId) {
+                    if (selectedDeptId && String(dept.id) === String(selectedDeptId)) {
                         opt.selected = true;
                     }
                     deptSelect.appendChild(opt);
                 });
-                deptSelect.disabled = false;
             } else {
-                deptSelect.innerHTML += '<option value="">No departments available</option>';
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'No departments available';
+                deptSelect.appendChild(opt);
             }
+            deptSelect.disabled = false;
         })
-        .catch(function() {
+        .catch(function () {
             deptSelect.innerHTML = '<option value="">Error loading departments</option>';
-            deptSelect.disabled = true;
+            deptSelect.disabled = false;
         });
     }
 
-    var initialUnitId = unitSelect.value;
-    var initialDeptId = '{{ selected_department|default:"" }}';
-
-    if (initialUnitId) {
-        loadDepartments(initialUnitId, initialDeptId);
-    } else {
-        deptSelect.disabled = true;
+    if (unitSelect && deptSelect) {
+        const initialUnit = unitSelect.value;
+        if (initialUnit) {
+            loadDepartments(initialUnit, selectedDepartment);
+        } else {
+            deptSelect.disabled = false;
+        }
+        unitSelect.addEventListener('change', function () {
+            loadDepartments(this.value, '');
+        });
     }
 
-    unitSelect.addEventListener('change', function() {
-        loadDepartments(this.value, '');
-    });
-
-    quickFilterBtns.forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
+    /* ------------------------------------------------------------
+       Quick pills — preserve error values
+       ------------------------------------------------------------ */
+    quickFilterBtns.forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
             e.preventDefault();
-            var url = new URL(this.href);
-            var category = url.searchParams.get('category');
-            if (categoryInput) {
-                categoryInput.value = category;
-            }
-            // Preserve error type values before submitting
+            const url = new URL(this.href, window.location.origin);
+            const category = url.searchParams.get('category') || 'all';
+
+            if (categoryInput) categoryInput.value = category;
+
             if (mainErrorTypeSelect && mainErrorTypeSelect.value) {
-                var currentUrl = new URL(window.location.href);
-                currentUrl.searchParams.set('main_error_type', mainErrorTypeSelect.value);
-                if (subErrorTypeSelect && subErrorTypeSelect.value) {
-                    currentUrl.searchParams.set('sub_error_type', subErrorTypeSelect.value);
-                }
-                window.location.href = currentUrl.toString();
-                return;
+                appendHidden('main_error_type', mainErrorTypeSelect.value);
             }
+            if (subErrorTypeSelect && subErrorTypeSelect.value) {
+                appendHidden('sub_error_type', subErrorTypeSelect.value);
+            }
+
             filterForm.submit();
         });
     });
 
-    var rows = document.querySelectorAll('#reportsTable tbody tr');
-    rows.forEach(function(row, index) {
-        if (row.querySelector('.empty-state')) return;
-        row.style.opacity = '0';
-        row.style.animation = 'fadeIn 0.3s ease forwards';
-        row.style.animationDelay = (index * 0.04) + 's';
-    });
-
-    function updateThemeStyles() {
-        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        var inputs = document.querySelectorAll('.filter-input, .filter-select');
-        inputs.forEach(function(input) {
-            if (isDark) {
-                input.style.backgroundColor = 'rgba(255,255,255,0.05)';
-                input.style.borderColor = 'rgba(255,255,255,0.08)';
-                input.style.color = '#E8EDF5';
-            } else {
-                input.style.backgroundColor = '';
-                input.style.borderColor = '';
-                input.style.color = '';
-            }
-        });
+    function appendHidden(name, value) {
+        const existing = filterForm.querySelector('input[data-temp="' + name + '"]');
+        if (existing) existing.remove();
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        input.setAttribute('data-temp', name);
+        filterForm.appendChild(input);
     }
 
-    var themeToggle = document.getElementById('themeToggleFloating');
-    if (themeToggle) {
-        themeToggle.addEventListener('click', function() {
-            setTimeout(updateThemeStyles, 100);
-        });
+    /* ------------------------------------------------------------
+       Collapsible advanced filters
+       ------------------------------------------------------------ */
+    const ADV_KEY = 'rp_filters_open';
+
+    // Auto-open if there are active advanced filters OR user preference
+    const hasActiveAdvanced = countActiveFilters() > 0;
+    if (hasActiveAdvanced || localStorage.getItem(ADV_KEY) === '1') {
+        filtersBox.classList.add('open');
     }
 
-    var observer = new MutationObserver(function() {
-        updateThemeStyles();
-    });
-    observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-theme']
+    filtersBtn.addEventListener('click', function () {
+        filtersBox.classList.toggle('open');
+        localStorage.setItem(ADV_KEY, filtersBox.classList.contains('open') ? '1' : '0');
     });
 
-    setTimeout(updateThemeStyles, 200);
+    /* ------------------------------------------------------------
+       Active filter count
+       ------------------------------------------------------------ */
+    function countActiveFilters() {
+        if (!filterForm) return 0;
+        let count = 0;
+
+        const cat = categoryInput ? categoryInput.value : '';
+        if (cat && cat !== 'all') count++;
+
+        filterForm.querySelectorAll('select, input[type="text"], input[type="date"]').forEach(function (el) {
+            if (el.type === 'hidden') return;
+            if (el.name === 'per_page') return;
+            if (el.name === 'vendor_ticket_number' && !el.value.trim()) return; // skip empty search
+            if (el.value && el.value.trim() !== '') count++;
+        });
+        return count;
+    }
+
+    function refreshFilterCount() {
+        if (!filterCount) return;
+        const n = countActiveFilters();
+        filterCount.textContent = n;
+        filterCount.style.display = n > 0 ? 'inline-block' : 'none';
+    }
+
+    refreshFilterCount();
+
+    /* ------------------------------------------------------------
+       Card entrance animation
+       ------------------------------------------------------------ */
+    document.querySelectorAll('.rp-card').forEach(function (card, i) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(8px)';
+        card.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        setTimeout(function () {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, Math.min(i * 25, 300));
+    });
 });

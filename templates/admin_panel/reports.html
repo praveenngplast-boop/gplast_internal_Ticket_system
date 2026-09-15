@@ -8,440 +8,440 @@
 {% endblock %}
 
 {% block content %}
-<div class="reports-wrapper">
+<div class="rp-wrap">
 
-    <div class="reports-header">
-        <div class="reports-header-content">
-            <div class="reports-header-title">
-                <div class="icon-box">
-                    <i class="fa-solid fa-file-excel"></i>
+    <!-- Header -->
+    <header class="rp-header">
+        <div class="rp-header-row">
+            <div>
+                <h1>Reports &amp; Export Center</h1>
+                <div class="sub">
+                    Browse and export tickets —
+                    <strong>{{ total_count|default:tickets.paginator.count }}</strong> records found
                 </div>
-                <div>
-                    <h1>Reports & Export Center</h1>
-                    <div class="subtitle">
-                        <i class="fa-regular fa-clock"></i>
-                        <span>Filter and export ticket data</span>
-                        <span class="count-badge">
-                            <i class="fa-regular fa-circle-check"></i>
-                            {{ total_count|default:tickets.paginator.count }} Tickets
-                        </span>
-                    </div>
-                </div>
-                <a href="{% url 'escalated_aging_report' %}" class="btn-reports btn-reports-primary">
+            </div>
+            <div class="rp-header-actions">
+                <a href="{% url 'escalated_aging_report' %}" class="rp-btn rp-btn-ghost">
                     <i class="fa-solid fa-hourglass-half"></i> Escalated Aging
                 </a>
+                <button type="submit" form="filterForm" name="export" value="true" class="rp-btn rp-btn-primary">
+                    <i class="fa-solid fa-file-excel"></i> Export Excel
+                </button>
             </div>
         </div>
+    </header>
+
+    <!-- Stats -->
+    <div class="rp-stats">
+        <a href="?category=all" class="rp-stat total">
+            <div class="top">
+                <div class="icon"><i class="fa-solid fa-inbox"></i></div>
+            </div>
+            <div class="num">{{ total_count|default:0 }}</div>
+            <div class="lbl">Total Tickets</div>
+        </a>
+        <a href="?category=open" class="rp-stat open">
+            <div class="top">
+                <div class="icon"><i class="fa-solid fa-circle-dot"></i></div>
+            </div>
+            <div class="num">{{ open_count|default:0 }}</div>
+            <div class="lbl">Open</div>
+        </a>
+        <a href="?category=assigned" class="rp-stat assigned">
+            <div class="top">
+                <div class="icon"><i class="fa-solid fa-user-check"></i></div>
+            </div>
+            <div class="num">{{ assigned_count|default:0 }}</div>
+            <div class="lbl">Assigned</div>
+        </a>
+        <a href="?category=hold" class="rp-stat hold">
+            <div class="top">
+                <div class="icon"><i class="fa-solid fa-pause"></i></div>
+            </div>
+            <div class="num">{{ hold_count|default:0 }}</div>
+            <div class="lbl">On Hold</div>
+        </a>
+        <a href="?category=escalated" class="rp-stat escalated">
+            <div class="top">
+                <div class="icon"><i class="fa-solid fa-arrow-up"></i></div>
+            </div>
+            <div class="num">{{ escalated_count|default:0 }}</div>
+            <div class="lbl">Escalated</div>
+        </a>
+        <a href="?category=closed" class="rp-stat closed">
+            <div class="top">
+                <div class="icon"><i class="fa-solid fa-check-double"></i></div>
+            </div>
+            <div class="num">{{ closed_count|default:0 }}</div>
+            <div class="lbl">Closed</div>
+        </a>
     </div>
 
-    <div class="stats-row">
-        <div class="stat-card stat-total">
-            <div class="stat-number">{{ total_count|default:0 }}</div>
-            <div class="stat-label">Total Tickets</div>
-            <div class="stat-bar"></div>
-        </div>
-        <div class="stat-card stat-open">
-            <div class="stat-number">{{ open_count|default:0 }}</div>
-            <div class="stat-label"><span class="dot"></span> Open</div>
-            <div class="stat-bar"></div>
-        </div>
-        <div class="stat-card stat-assigned">
-            <div class="stat-number">{{ assigned_count|default:0 }}</div>
-            <div class="stat-label"><span class="dot"></span> Assigned</div>
-            <div class="stat-bar"></div>
-        </div>
-        <div class="stat-card stat-hold">
-            <div class="stat-number">{{ hold_count|default:0 }}</div>
-            <div class="stat-label"><span class="dot"></span> Hold</div>
-            <div class="stat-bar"></div>
-        </div>
-        <div class="stat-card stat-escalated">
-            <div class="stat-number">{{ escalated_count|default:0 }}</div>
-            <div class="stat-label"><span class="dot"></span> Escalated</div>
-            <div class="stat-bar"></div>
-        </div>
-        <div class="stat-card stat-closed">
-            <div class="stat-number">{{ closed_count|default:0 }}</div>
-            <div class="stat-label"><span class="dot"></span> Closed</div>
-            <div class="stat-bar"></div>
-        </div>
-    </div>
+    <!-- Filter bar -->
+    <section class="rp-filters" id="rpFilters">
+        <form method="GET" action="{% url 'reports' %}" id="filterForm">
+            <input type="hidden" name="category" value="{{ category|default:'all' }}" id="categoryInput">
+            <input type="hidden" name="per_page" value="{{ per_page|default:25 }}" id="perPageInput">
 
-    <div class="filter-card">
-        <div class="filter-card-header">
-            <h3>
-                <i class="fa-solid fa-filter"></i>
-                Filter Tickets
-            </h3>
-            <span class="result-count">
-                <i class="fa-solid fa-list"></i>
-                <strong>{{ total_count|default:tickets.paginator.count }}</strong> ticket(s) found
-            </span>
-        </div>
-        <div class="filter-card-body">
-            <form method="GET" action="{% url 'reports' %}" id="filterForm">
-                <input type="hidden" name="category" value="{{ category|default:'all' }}" id="categoryInput">
-
-                <div class="quick-filters">
-                    <a href="?category=all" class="quick-filter-btn {% if category == 'all' %}active{% endif %}">
-                        <i class="fa-solid fa-list"></i> All
-                    </a>
-                    <a href="?category=open" class="quick-filter-btn {% if category == 'open' %}active{% endif %}">
-                        <i class="fa-solid fa-circle"></i> Open
-                    </a>
-                    <a href="?category=assigned" class="quick-filter-btn {% if category == 'assigned' %}active{% endif %}">
-                        <i class="fa-solid fa-user-check"></i> Assigned
-                    </a>
-                    <a href="?category=hold" class="quick-filter-btn {% if category == 'hold' %}active{% endif %}">
-                        <i class="fa-solid fa-pause"></i> Hold
-                    </a>
-                    <a href="?category=escalated" class="quick-filter-btn {% if category == 'escalated' %}active{% endif %}">
-                        <i class="fa-solid fa-arrow-up"></i> Escalated
-                    </a>
-                    <a href="?category=closed" class="quick-filter-btn {% if category == 'closed' %}active{% endif %}">
-                        <i class="fa-solid fa-check-circle"></i> Closed
-                    </a>
-                    <a href="?category=escalated_closed" class="quick-filter-btn {% if category == 'escalated_closed' %}active{% endif %}">
-                        <i class="fa-solid fa-arrow-up-right-dots"></i> Esc &amp; Closed
-                    </a>
-                    <a href="?category=reopened" class="quick-filter-btn {% if category == 'reopened' %}active{% endif %}">
-                        <i class="fa-solid fa-rotate-left"></i> Reopened
-                    </a>
+            <div class="rp-filters-top">
+                <div class="rp-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="vendor_ticket_number"
+                           value="{{ selected_vendor_ticket|default:'' }}"
+                           placeholder="Search vendor ticket number…">
                 </div>
+                <button type="button" class="rp-filters-toggle" id="rpFiltersToggle">
+                    <i class="fa-solid fa-sliders"></i>
+                    Advanced Filters
+                    <span class="badge" id="rpFilterCount">0</span>
+                    <i class="fa-solid fa-chevron-down chev"></i>
+                </button>
+            </div>
 
-                <div class="filter-grid">
-                    <div class="filter-group">
-                        <label for="id_unit"><i class="fa-regular fa-building"></i> Unit</label>
-                        <select name="unit" id="id_unit" class="filter-select">
-                            <option value="">All Units</option>
-                            {% for unit in units %}
-                            <option value="{{ unit.id }}" {% if selected_unit == unit.id|stringformat:"s" %}selected{% endif %}>
-                                {{ unit.code }} - {{ unit.full_name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
+            <!-- Quick pills -->
+            <div class="rp-quick">
+                <a href="?category=all" class="{% if category == 'all' or not category %}active{% endif %}">
+                    <i class="fa-solid fa-list"></i> All
+                </a>
+                <a href="?category=open" class="{% if category == 'open' %}active{% endif %}">
+                    <i class="fa-solid fa-circle"></i> Open
+                </a>
+                <a href="?category=assigned" class="{% if category == 'assigned' %}active{% endif %}">
+                    <i class="fa-solid fa-user-check"></i> Assigned
+                </a>
+                <a href="?category=hold" class="{% if category == 'hold' %}active{% endif %}">
+                    <i class="fa-solid fa-pause"></i> Hold
+                </a>
+                <a href="?category=escalated" class="{% if category == 'escalated' %}active{% endif %}">
+                    <i class="fa-solid fa-arrow-up"></i> Escalated
+                </a>
+                <a href="?category=closed" class="{% if category == 'closed' %}active{% endif %}">
+                    <i class="fa-solid fa-check"></i> Closed
+                </a>
+                <a href="?category=escalated_closed" class="{% if category == 'escalated_closed' %}active{% endif %}">
+                    <i class="fa-solid fa-arrow-up-right-dots"></i> Esc &amp; Closed
+                </a>
+                <a href="?category=reopened" class="{% if category == 'reopened' %}active{% endif %}">
+                    <i class="fa-solid fa-rotate-left"></i> Reopened
+                </a>
+            </div>
 
-                    <div class="filter-group">
-                        <label for="id_department"><i class="fa-regular fa-layer-group"></i> Department</label>
-                        <select name="department" id="id_department" class="filter-select" data-show-all="true">
-                            <option value="">All Departments</option>
-                            {% for dept in departments %}
-                            <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>
-                                {{ dept.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
+            <!-- Advanced filters (collapsible) -->
+            <div class="rp-filters-body">
+                <div class="rp-filters-inner">
+                    <div class="rp-grid">
 
-                    <div class="filter-group">
-                        <label for="id_priority"><i class="fa-solid fa-flag"></i> Priority</label>
-                        <select name="priority" id="id_priority" class="filter-select">
-                            <option value="">All Priorities</option>
-                            {% for p in priority_choices %}
-                            <option value="{{ p.0 }}" {% if selected_priority == p.0 %}selected{% endif %}>{{ p.1 }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="id_status"><i class="fa-solid fa-circle"></i> Status</label>
-                        <select name="status" id="id_status" class="filter-select">
-                            <option value="">All Statuses</option>
-                            {% for s in status_choices %}
-                            <option value="{{ s.0 }}" {% if selected_status == s.0 %}selected{% endif %}>{{ s.1 }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="id_assigned_person"><i class="fa-solid fa-user"></i> Assigned</label>
-                        <select name="assigned_person" id="id_assigned_person" class="filter-select">
-                            <option value="">All Assigned Persons</option>
-                            {% for employee in employees %}
-                            <option value="{{ employee.employee_name }}" {% if selected_assigned_person == employee.employee_name %}selected{% endif %}>
-                                {{ employee.employee_name }} ({{ employee.employee_id }})
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="id_erp_id"><i class="fa-solid fa-id-card"></i> ERP ID</label>
-                        <select name="erp_id" id="id_erp_id" class="filter-select">
-                            <option value="">All ERP IDs</option>
-                            {% for erp in erp_ids %}
-                            <option value="{{ erp }}" {% if selected_erp_id == erp %}selected{% endif %}>
-                                {{ erp }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="id_vendor_ticket"><i class="fa-solid fa-ticket"></i> Vendor Ticket</label>
-                        <input type="text" name="vendor_ticket_number" id="id_vendor_ticket" class="filter-input" 
-                               value="{{ selected_vendor_ticket|default:'' }}" placeholder="Enter vendor ticket...">
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="id_reopened"><i class="fa-solid fa-rotate-left"></i> Reopened</label>
-                        <select name="is_reopened" id="id_reopened" class="filter-select">
-                            <option value="" {% if not is_reopened %}selected{% endif %}>All</option>
-                            <option value="yes" {% if is_reopened == 'yes' %}selected{% endif %}>Reopened Only</option>
-                            <option value="no" {% if is_reopened == 'no' %}selected{% endif %}>Never Reopened</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="id_created_by"><i class="fa-solid fa-user-tag"></i> Created By</label>
-                        <select name="created_by_role" id="id_created_by" class="filter-select">
-                            <option value="">All</option>
-                            {% for c in created_by_choices %}
-                            <option value="{{ c.0 }}" {% if selected_created_by_role == c.0 %}selected{% endif %}>{{ c.1 }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="id_main_error_type"><i class="fa-solid fa-bug"></i> Main Error Type</label>
-                        <select name="main_error_type" id="id_main_error_type" class="filter-select">
-                            <option value="">All Error Types</option>
-                            <option value="Roadmap Error" {% if selected_main_error_type == 'Roadmap Error' %}selected{% endif %}>Roadmap Error</option>
-                            <option value="GPL Error" {% if selected_main_error_type == 'GPL Error' %}selected{% endif %}>GPL Error</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="id_sub_error_type"><i class="fa-solid fa-bug"></i> Sub Error Type</label>
-                        <select name="sub_error_type" id="id_sub_error_type" class="filter-select">
-                            <option value="">All</option>
-                            <option value="Database Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Database Error' %}selected{% endif %}>Database Error</option>
-                            <option value="Logic / Functional Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Logic / Functional Error' %}selected{% endif %}>Logic / Functional Error</option>
-                            <option value="Application Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Application Error' %}selected{% endif %}>Application Error</option>
-                            <option value="Calculation Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Calculation Error' %}selected{% endif %}>Calculation Error</option>
-                            <option value="Report / Print Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Report / Print Error' %}selected{% endif %}>Report / Print Error</option>
-                            <option value="Workflow / Approval Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Workflow / Approval Error' %}selected{% endif %}>Workflow / Approval Error</option>
-                            <option value="Integration / API Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Integration / API Error' %}selected{% endif %}>Integration / API Error</option>
-                            <option value="Barcode Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Barcode Error' %}selected{% endif %}>Barcode Error</option>
-                            <option value="Performance Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Performance Error' %}selected{% endif %}>Performance Error</option>
-                            <option value="Access / Permission Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Access / Permission Error' %}selected{% endif %}>Access / Permission Error</option>
-                            <option value="Master Data / Configuration Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Master Data / Configuration Error' %}selected{% endif %}>Master Data / Configuration Error</option>
-                            <option value="Other ERP Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Other ERP Error' %}selected{% endif %}>Other ERP Error</option>
-                            <option value="User / Data Entry Error" data-main="GPL Error" {% if selected_sub_error_type == 'User / Data Entry Error' %}selected{% endif %}>User / Data Entry Error</option>
-                            <option value="Process / Procedure Error" data-main="GPL Error" {% if selected_sub_error_type == 'Process / Procedure Error' %}selected{% endif %}>Process / Procedure Error</option>
-                            <option value="Master Data Error" data-main="GPL Error" {% if selected_sub_error_type == 'Master Data Error' %}selected{% endif %}>Master Data Error</option>
-                            <option value="Other GPL Error" data-main="GPL Error" {% if selected_sub_error_type == 'Other GPL Error' %}selected{% endif %}>Other GPL Error</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="id_created_start"><i class="fa-regular fa-calendar-plus"></i> Created Date</label>
-                        <div class="date-range">
-                            <input type="date" name="created_start" id="id_created_start" class="filter-input" 
-                                   value="{{ created_start|default:'' }}" placeholder="From">
-                            <span class="date-sep">to</span>
-                            <input type="date" name="created_end" id="id_created_end" class="filter-input" 
-                                   value="{{ created_end|default:'' }}" placeholder="To">
+                        <div class="rp-field">
+                            <label><i class="fa-regular fa-building"></i> Unit</label>
+                            <select name="unit" id="id_unit" class="rp-select">
+                                <option value="">All Units</option>
+                                {% for unit in units %}
+                                <option value="{{ unit.id }}" {% if selected_unit == unit.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ unit.code }} — {{ unit.full_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </div>
 
-                    <div class="filter-group">
-                        <label for="id_closed_start"><i class="fa-regular fa-calendar-check"></i> Closed Date</label>
-                        <div class="date-range">
-                            <input type="date" name="closed_start" id="id_closed_start" class="filter-input" 
-                                   value="{{ closed_start|default:'' }}" placeholder="From">
-                            <span class="date-sep">to</span>
-                            <input type="date" name="closed_end" id="id_closed_end" class="filter-input" 
-                                   value="{{ closed_end|default:'' }}" placeholder="To">
+                        <div class="rp-field">
+                            <label><i class="fa-regular fa-layer-group"></i> Department</label>
+                            <select name="department" id="id_department" class="rp-select">
+                                <option value="">All Departments</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </div>
 
-                    <div class="filter-group">
-                        <label for="id_escalated_start"><i class="fa-regular fa-calendar-arrow-up"></i> Escalated Date</label>
-                        <div class="date-range">
-                            <input type="date" name="escalated_start" id="id_escalated_start" class="filter-input" 
-                                   value="{{ escalated_start|default:'' }}" placeholder="From">
-                            <span class="date-sep">to</span>
-                            <input type="date" name="escalated_end" id="id_escalated_end" class="filter-input" 
-                                   value="{{ escalated_end|default:'' }}" placeholder="To">
+                        <div class="rp-field">
+                            <label><i class="fa-solid fa-flag"></i> Priority</label>
+                            <select name="priority" class="rp-select">
+                                <option value="">All Priorities</option>
+                                {% for p in priority_choices %}
+                                <option value="{{ p.0 }}" {% if selected_priority == p.0 %}selected{% endif %}>{{ p.1 }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </div>
-                </div>
 
-                <div class="filter-actions">
-                    <a href="{% url 'reports' %}" class="btn-reports btn-reports-secondary">
-                        <i class="fa-solid fa-times"></i> Clear Filters
-                    </a>
-                    <button type="submit" class="btn-reports btn-reports-primary">
-                        <i class="fa-solid fa-filter"></i> Apply Filters
-                    </button>
-                    <button type="submit" name="export" value="true" class="btn-reports btn-reports-success">
-                        <i class="fa-solid fa-file-export"></i> Export to Excel
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+                        <div class="rp-field">
+                            <label><i class="fa-solid fa-circle"></i> Status</label>
+                            <select name="status" class="rp-select">
+                                <option value="">All Statuses</option>
+                                {% for s in status_choices %}
+                                <option value="{{ s.0 }}" {% if selected_status == s.0 %}selected{% endif %}>{{ s.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-    <div class="table-card">
-        <div class="table-card-header">
-            <h3>
-                <i class="fa-solid fa-list-check"></i>
-                Filtered Results
-            </h3>
-            <span class="timestamp">
-                <i class="fa-regular fa-clock"></i>
-                Updated: {% now "d-m-Y H:i" %}
-            </span>
-        </div>
+                        <div class="rp-field">
+                            <label><i class="fa-solid fa-user"></i> Assigned To</label>
+                            <select name="assigned_person" class="rp-select">
+                                <option value="">All Persons</option>
+                                {% for employee in employees %}
+                                <option value="{{ employee.employee_name }}" {% if selected_assigned_person == employee.employee_name %}selected{% endif %}>
+                                    {{ employee.employee_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-        <div class="table-responsive">
-            <table class="reports-table" id="reportsTable">
-                <thead>
-                    <tr>
-                        <th style="min-width: 85px;">Ticket #</th>
-                        <th style="min-width: 130px;">Subject</th>
-                        <th style="min-width: 60px;">Unit</th>
-                        <th style="min-width: 80px;">Department</th>
-                        <th style="min-width: 75px;">Status</th>
-                        <th style="min-width: 70px;">Priority</th>
-                        <th style="min-width: 120px;">Error Type</th>
-                        <th style="min-width: 100px;">Created</th>
-                        <th style="min-width: 80px;">Assigned To</th>
-                        <th style="min-width: 70px;">ERP ID</th>
-                        <th style="text-align: center; min-width: 55px;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ticket in tickets %}
-                    <tr>
-                        <td>
-                            <span class="ticket-number-cell">
-                                <i class="fa-regular fa-hashtag"></i>
-                                {{ ticket.ticket_number }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="ticket-subject-cell" title="{{ ticket.subject }}">
-                                {{ ticket.subject|truncatechars:35 }}
-                            </span>
-                            {% if ticket.is_reopened %}
-                            <span class="badge-reopened">
-                                <i class="fa-solid fa-rotate-left"></i> Reopened
-                            </span>
-                            {% endif %}
-                        </td>
-                        <td>{{ ticket.unit.code|default:"-" }}</td>
-                        <td>{{ ticket.department.name|default:"-" }}</td>
-                        <td>
-                            <span class="badge-status badge-status-{{ ticket.status|lower }}">
-                                <i class="fa-solid fa-circle"></i>
-                                {{ ticket.status }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge-priority badge-priority-{{ ticket.priority|lower }}">
-                                <i class="fa-solid fa-flag"></i>
-                                {{ ticket.priority }}
-                            </span>
-                        </td>
-                        <td>
-                            {% if ticket.main_error_type and ticket.sub_error_type %}
-                                <span class="badge-error-type {% if ticket.main_error_type == 'Roadmap Error' %}roadmap{% elif ticket.main_error_type == 'GPL Error' %}gpl{% else %}old{% endif %}">
-                                    {{ ticket.main_error_type }}
-                                    <span class="sub-text">→ {{ ticket.sub_error_type }}</span>
-                                </span>
-                            {% elif ticket.main_error_type %}
-                                <span class="badge-error-type {% if ticket.main_error_type == 'Roadmap Error' %}roadmap{% elif ticket.main_error_type == 'GPL Error' %}gpl{% else %}old{% endif %}">
-                                    {{ ticket.main_error_type }}
-                                </span>
-                            {% elif ticket.error_type %}
-                                <span class="badge-error-type old">
-                                    {{ ticket.error_type }}
-                                </span>
-                            {% else %}
-                                <span style="font-size: clamp(0.4rem, 0.5vw, 0.45rem); color: var(--text-muted);">—</span>
-                            {% endif %}
-                        </td>
-                        <td style="font-size: clamp(0.5rem, 0.65vw, 0.6rem); white-space: nowrap;">
-                            {{ ticket.created_at|date:"d M Y" }}
-                            <span style="display: block; font-size: 0.45rem; color: var(--text-muted);">
-                                {{ ticket.created_at|date:"h:i A" }}
-                            </span>
-                        </td>
-                        <td style="font-size: clamp(0.5rem, 0.65vw, 0.6rem);">
-                            {{ ticket.assigned_person|default:"<span style='color: var(--text-muted);'>—</span>" }}
-                        </td>
-                        <td>
-                            <span class="erp-id-cell">
-                                <i class="fa-regular fa-id-card"></i>
-                                {% if ticket.erp_id %}
-                                    {{ ticket.erp_id }}
-                                {% else %}
-                                    <span style="color: var(--text-muted);">Not Mapped</span>
-                                {% endif %}
-                            </span>
-                        </td>
-                        <td style="text-align: center;">
-                            <a href="{% url 'admin_ticket_detail' ticket.pk %}" class="btn-view-details">
-                                <i class="fa-solid fa-eye"></i>
-                                <span>View</span>
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="11">
-                            <div class="empty-state">
-                                <i class="fa-regular fa-folder-open empty-icon"></i>
-                                <h4>No Tickets Found</h4>
-                                <p>No tickets match your filter criteria. Try adjusting your filters.</p>
-                                <a href="{% url 'reports' %}" class="btn-reports btn-reports-primary">
-                                    <i class="fa-solid fa-undo"></i> Reset Filters
-                                </a>
+                        <div class="rp-field">
+                            <label><i class="fa-solid fa-user-tag"></i> Created By</label>
+                            <select name="created_by_role" class="rp-select">
+                                <option value="">All</option>
+                                {% for c in created_by_choices %}
+                                <option value="{{ c.0 }}" {% if selected_created_by_role == c.0 %}selected{% endif %}>{{ c.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="rp-field">
+                            <label><i class="fa-solid fa-id-card"></i> ERP ID</label>
+                            <select name="erp_id" class="rp-select">
+                                <option value="">All ERP IDs</option>
+                                {% for erp in erp_ids %}
+                                <option value="{{ erp }}" {% if selected_erp_id == erp %}selected{% endif %}>{{ erp }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="rp-field">
+                            <label><i class="fa-solid fa-rotate-left"></i> Reopened</label>
+                            <select name="is_reopened" class="rp-select">
+                                <option value="" {% if not is_reopened %}selected{% endif %}>All</option>
+                                <option value="yes" {% if is_reopened == 'yes' %}selected{% endif %}>Reopened only</option>
+                                <option value="no" {% if is_reopened == 'no' %}selected{% endif %}>Never reopened</option>
+                            </select>
+                        </div>
+
+                        <div class="rp-field">
+                            <label><i class="fa-solid fa-bug"></i> Main Error</label>
+                            <select name="main_error_type" id="id_main_error_type" class="rp-select">
+                                <option value="">All Error Types</option>
+                                <option value="Roadmap Error" {% if selected_main_error_type == 'Roadmap Error' %}selected{% endif %}>Roadmap Error</option>
+                                <option value="GPL Error" {% if selected_main_error_type == 'GPL Error' %}selected{% endif %}>GPL Error</option>
+                            </select>
+                        </div>
+
+                        <div class="rp-field">
+                            <label><i class="fa-solid fa-bug"></i> Sub Error</label>
+                            <select name="sub_error_type" id="id_sub_error_type" class="rp-select">
+                                <option value="">All</option>
+                                <option value="Database Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Database Error' %}selected{% endif %}>Database Error</option>
+                                <option value="Logic / Functional Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Logic / Functional Error' %}selected{% endif %}>Logic / Functional Error</option>
+                                <option value="Application Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Application Error' %}selected{% endif %}>Application Error</option>
+                                <option value="Calculation Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Calculation Error' %}selected{% endif %}>Calculation Error</option>
+                                <option value="Report / Print Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Report / Print Error' %}selected{% endif %}>Report / Print Error</option>
+                                <option value="Workflow / Approval Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Workflow / Approval Error' %}selected{% endif %}>Workflow / Approval Error</option>
+                                <option value="Integration / API Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Integration / API Error' %}selected{% endif %}>Integration / API Error</option>
+                                <option value="Barcode Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Barcode Error' %}selected{% endif %}>Barcode Error</option>
+                                <option value="Performance Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Performance Error' %}selected{% endif %}>Performance Error</option>
+                                <option value="Access / Permission Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Access / Permission Error' %}selected{% endif %}>Access / Permission Error</option>
+                                <option value="Master Data / Configuration Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Master Data / Configuration Error' %}selected{% endif %}>Master Data / Configuration Error</option>
+                                <option value="Other ERP Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Other ERP Error' %}selected{% endif %}>Other ERP Error</option>
+                                <option value="User / Data Entry Error" data-main="GPL Error" {% if selected_sub_error_type == 'User / Data Entry Error' %}selected{% endif %}>User / Data Entry Error</option>
+                                <option value="Process / Procedure Error" data-main="GPL Error" {% if selected_sub_error_type == 'Process / Procedure Error' %}selected{% endif %}>Process / Procedure Error</option>
+                                <option value="Master Data Error" data-main="GPL Error" {% if selected_sub_error_type == 'Master Data Error' %}selected{% endif %}>Master Data Error</option>
+                                <option value="Other GPL Error" data-main="GPL Error" {% if selected_sub_error_type == 'Other GPL Error' %}selected{% endif %}>Other GPL Error</option>
+                            </select>
+                        </div>
+
+                        <div class="rp-field">
+                            <label><i class="fa-regular fa-calendar-plus"></i> Created Date</label>
+                            <div class="rp-dates">
+                                <div class="rp-date-line">
+                                    <span class="tag">From</span>
+                                    <input type="date" name="created_start" class="rp-input" value="{{ created_start|default:'' }}">
+                                </div>
+                                <div class="rp-date-line">
+                                    <span class="tag">To</span>
+                                    <input type="date" name="created_end" class="rp-input" value="{{ created_end|default:'' }}">
+                                </div>
                             </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                        </div>
 
-        {% if tickets.has_other_pages %}
-        <div class="pagination-wrapper">
-            <div class="pagination-controls">
-                {% if tickets.has_previous %}
-                    <a href="?{{ filter_query }}&page={{ tickets.previous_page_number }}" class="pagination-btn">
-                        <i class="fa-solid fa-chevron-left"></i> Prev
-                    </a>
-                {% else %}
-                    <span class="pagination-btn disabled"><i class="fa-solid fa-chevron-left"></i> Prev</span>
-                {% endif %}
+                        <div class="rp-field">
+                            <label><i class="fa-regular fa-calendar-check"></i> Closed Date</label>
+                            <div class="rp-dates">
+                                <div class="rp-date-line">
+                                    <span class="tag">From</span>
+                                    <input type="date" name="closed_start" class="rp-input" value="{{ closed_start|default:'' }}">
+                                </div>
+                                <div class="rp-date-line">
+                                    <span class="tag">To</span>
+                                    <input type="date" name="closed_end" class="rp-input" value="{{ closed_end|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
 
-                {% for num in tickets.paginator.page_range %}
-                    {% if tickets.number == num %}
-                        <span class="pagination-btn active">{{ num }}</span>
-                    {% elif num > tickets.number|add:'-3' and num < tickets.number|add:'3' %}
-                        <a href="?{{ filter_query }}&page={{ num }}" class="pagination-btn">{{ num }}</a>
-                    {% endif %}
-                {% endfor %}
+                        <div class="rp-field">
+                            <label><i class="fa-regular fa-calendar"></i> Escalated Date</label>
+                            <div class="rp-dates">
+                                <div class="rp-date-line">
+                                    <span class="tag">From</span>
+                                    <input type="date" name="escalated_start" class="rp-input" value="{{ escalated_start|default:'' }}">
+                                </div>
+                                <div class="rp-date-line">
+                                    <span class="tag">To</span>
+                                    <input type="date" name="escalated_end" class="rp-input" value="{{ escalated_end|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                {% if tickets.has_next %}
-                    <a href="?{{ filter_query }}&page={{ tickets.next_page_number }}" class="pagination-btn">
-                        Next <i class="fa-solid fa-chevron-right"></i>
-                    </a>
-                {% else %}
-                    <span class="pagination-btn disabled">Next <i class="fa-solid fa-chevron-right"></i></span>
-                {% endif %}
+                    <div class="rp-filter-actions">
+                        <a href="{% url 'reports' %}" class="rp-btn rp-btn-ghost">
+                            <i class="fa-solid fa-xmark"></i> Clear All
+                        </a>
+                        <button type="submit" class="rp-btn rp-btn-primary">
+                            <i class="fa-solid fa-filter"></i> Apply Filters
+                        </button>
+                    </div>
+                </div>
             </div>
-            <span class="pagination-info">
-                Page {{ tickets.number }} of {{ tickets.paginator.num_pages }}
-                ({{ tickets.paginator.count }} total)
-            </span>
+        </form>
+    </section>
+
+    <!-- Results toolbar -->
+    <div class="rp-toolbar">
+        <div class="rp-toolbar-title">
+            <i class="fa-solid fa-list-ul"></i> Results
+            <span class="count">{{ tickets.paginator.count|default:0 }}</span>
         </div>
-        {% endif %}
+        <div class="rp-toolbar-meta">
+            <i class="fa-regular fa-clock"></i> Updated {% now "d M Y, H:i" %}
+        </div>
     </div>
+
+    <!-- Ticket list -->
+    {% if tickets %}
+    <div class="rp-list">
+        {% for ticket in tickets %}
+        <article class="rp-card status-{{ ticket.status|lower }}">
+
+            <div class="rp-card-body">
+                <div class="rp-card-head">
+                    <span class="rp-card-id">
+                        <i class="fa-regular fa-hashtag"></i>{{ ticket.ticket_number }}
+                    </span>
+
+                    <span class="rp-badge status-{{ ticket.status|lower }}">
+                        <i class="fa-solid fa-circle"></i>{{ ticket.status }}
+                    </span>
+
+                    <span class="rp-badge priority-{{ ticket.priority|lower }}">
+                        <i class="fa-solid fa-flag"></i>{{ ticket.priority }}
+                    </span>
+
+                    {% if ticket.is_reopened %}
+                    <span class="rp-badge reopened">
+                        <i class="fa-solid fa-rotate-left"></i> Reopened
+                    </span>
+                    {% endif %}
+                </div>
+
+                <h3 class="rp-card-subject">{{ ticket.subject }}</h3>
+
+                <div class="rp-card-meta">
+                    {% if ticket.unit %}
+                    <span class="item"><i class="fa-regular fa-building"></i><strong>{{ ticket.unit.code }}</strong></span>
+                    {% endif %}
+                    {% if ticket.department %}
+                    <span class="item"><i class="fa-regular fa-layer-group"></i>{{ ticket.department.name }}</span>
+                    {% endif %}
+                    {% if ticket.main_error_type %}
+                    <span class="item">
+                        <i class="fa-solid fa-bug"></i>
+                        {{ ticket.main_error_type }}{% if ticket.sub_error_type %} · {{ ticket.sub_error_type }}{% endif %}
+                    </span>
+                    {% elif ticket.error_type %}
+                    <span class="item"><i class="fa-solid fa-bug"></i>{{ ticket.error_type }}</span>
+                    {% endif %}
+                    <span class="item">
+                        <i class="fa-regular fa-id-card"></i>
+                        {% if ticket.erp_id %}<strong>{{ ticket.erp_id }}</strong>{% else %}ERP not mapped{% endif %}
+                    </span>
+                    <span class="item">
+                        <i class="fa-regular fa-user"></i>
+                        {% if ticket.assigned_person %}{{ ticket.assigned_person }}{% else %}Unassigned{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="rp-card-side">
+                <div class="rp-card-date">
+                    <div class="d">{{ ticket.created_at|date:"d M Y" }}</div>
+                    <div>{{ ticket.created_at|date:"h:i A" }}</div>
+                </div>
+                <a href="{% url 'admin_ticket_detail' ticket.pk %}" class="rp-view">
+                    <i class="fa-solid fa-arrow-right"></i><span>View Details</span>
+                </a>
+            </div>
+
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="rp-empty">
+        <i class="fa-regular fa-folder-open"></i>
+        <h4>No tickets found</h4>
+        <p>No tickets match your filters. Try clearing them or adjusting the criteria.</p>
+        <a href="{% url 'reports' %}" class="rp-btn rp-btn-primary">
+            <i class="fa-solid fa-rotate-right"></i> Reset Filters
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Pagination -->
+    {% if tickets.paginator.num_pages > 1 %}
+    <div class="rp-pager">
+        <div class="rp-pager-info">
+            Showing <strong>{{ tickets.start_index }}</strong>–<strong>{{ tickets.end_index }}</strong>
+            of <strong>{{ tickets.paginator.count }}</strong> tickets
+        </div>
+
+        <div class="rp-pager-controls">
+            {% if tickets.has_previous %}
+                <a href="?{{ filter_query }}&page=1" class="rp-page-btn" title="First">
+                    <i class="fa-solid fa-angles-left"></i>
+                </a>
+                <a href="?{{ filter_query }}&page={{ tickets.previous_page_number }}" class="rp-page-btn">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </a>
+            {% else %}
+                <span class="rp-page-btn disabled"><i class="fa-solid fa-angles-left"></i></span>
+                <span class="rp-page-btn disabled"><i class="fa-solid fa-chevron-left"></i></span>
+            {% endif %}
+
+            {% for num in tickets.paginator.page_range %}
+                {% if num == tickets.number %}
+                    <span class="rp-page-btn active">{{ num }}</span>
+                {% elif num == 1 or num == tickets.paginator.num_pages %}
+                    <a href="?{{ filter_query }}&page={{ num }}" class="rp-page-btn">{{ num }}</a>
+                {% elif num > tickets.number|add:'-3' and num < tickets.number|add:'3' %}
+                    <a href="?{{ filter_query }}&page={{ num }}" class="rp-page-btn">{{ num }}</a>
+                {% elif num == tickets.number|add:'-3' or num == tickets.number|add:'3' %}
+                    <span class="rp-page-ellipsis">…</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if tickets.has_next %}
+                <a href="?{{ filter_query }}&page={{ tickets.next_page_number }}" class="rp-page-btn">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </a>
+                <a href="?{{ filter_query }}&page={{ tickets.paginator.num_pages }}" class="rp-page-btn" title="Last">
+                    <i class="fa-solid fa-angles-right"></i>
+                </a>
+            {% else %}
+                <span class="rp-page-btn disabled"><i class="fa-solid fa-chevron-right"></i></span>
+                <span class="rp-page-btn disabled"><i class="fa-solid fa-angles-right"></i></span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}
 
