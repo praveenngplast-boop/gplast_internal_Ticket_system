@@ -10,121 +10,252 @@
 
 {% block content %}
 <main class="settings-dashboard">
+
+    <!-- ============================================================
+         HERO
+         ============================================================ -->
     <header class="settings-hero">
-        <div>
-            <div class="settings-kicker"><i class="fa-solid fa-sliders"></i> Control Center</div>
-            <h1>System Settings</h1>
-            <p>Manage the configuration, people, integrations, and records that keep the GPLAST support system running.</p>
+        <div class="settings-hero-inner">
+            <div class="settings-hero-left">
+                <div class="settings-kicker">
+                    <i class="fa-solid fa-sliders"></i> Control Center
+                </div>
+                <h1>System Settings</h1>
+                <p>Manage the configuration, people, and records that keep the GPLAST support system running.</p>
+            </div>
+            <a href="{% url 'admin_dashboard' %}" class="settings-back">
+                <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
-        <a href="{% url 'admin_dashboard' %}" class="settings-back">
-            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
-        </a>
     </header>
 
     <!-- ============================================================
-         CONFIGURATION SECTION
-    ============================================================ -->
-    <section class="settings-section" aria-labelledby="configuration-heading">
-        <div class="settings-section-heading">
-            <h2 id="configuration-heading">Configuration</h2>
-            <span>Core operating settings</span>
+         TWO-COLUMN WORKSPACE
+         ============================================================ -->
+    <div class="settings-workspace">
+
+        <!-- ============ LEFT COLUMN ============ -->
+        <div class="settings-column settings-column-left">
+
+            <!-- INFRASTRUCTURE -->
+            <section class="settings-block">
+                <div class="settings-block-head">
+                    <div class="settings-block-icon">
+                        <i class="fa-solid fa-gears"></i>
+                    </div>
+                    <div class="settings-block-title">
+                        <h2>Infrastructure</h2>
+                        <p>Core operating configuration</p>
+                    </div>
+                    <span class="settings-block-count">4</span>
+                </div>
+                <div class="settings-list">
+                    <a href="{% url 'settings_units_departments' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #2563EB; --row-soft: #EFF6FF;">
+                            <i class="fa-solid fa-building"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>Units &amp; Departments</strong>
+                            <small>Organizational structure</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                    <a href="{% url 'settings_communication' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #059669; --row-soft: #ECFDF5;">
+                            <i class="fa-solid fa-envelope"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>Communication</strong>
+                            <small>Contacts, notifications, scheduled reports</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                    <a href="{% url 'settings_credentials_page' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #DC2626; --row-soft: #FEF2F2;">
+                            <i class="fa-solid fa-key"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>Department Credentials</strong>
+                            <small>Department-level access</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                    <a href="{% url 'settings_erp_mapping' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #D97706; --row-soft: #FFFBEB;">
+                            <i class="fa-solid fa-id-card"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>ERP User ID Mapping</strong>
+                            <small>Map ERP IDs to employees</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                </div>
+            </section>
+
+            <!-- RECORDS -->
+            <section class="settings-block">
+                <div class="settings-block-head">
+                    <div class="settings-block-icon">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                    </div>
+                    <div class="settings-block-title">
+                        <h2>Records</h2>
+                        <p>Traceability and technical mapping</p>
+                    </div>
+                    <span class="settings-block-count">4</span>
+                </div>
+                <div class="settings-list">
+                    <a href="{% url 'settings_audit_log' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #4F46E5; --row-soft: #EEF2FF;">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>Audit Logs</strong>
+                            <small>Administrator activity history</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                    <a href="{% url 'settings_screen_master' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #0284C7; --row-soft: #F0F9FF;">
+                            <i class="fa-solid fa-desktop"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>Screen Master</strong>
+                            <small>ERP screens and modules</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                    <a href="{% url 'settings_screen_mapping' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #9333EA; --row-soft: #FAF5FF;">
+                            <i class="fa-solid fa-link"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>Screen Mapping</strong>
+                            <small>Map ERP users to screens</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                    <a href="{% url 'settings_error_type_master' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #EF4444; --row-soft: #FEF2F2;">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>Error Type Master</strong>
+                            <small>Main &amp; Sub error types</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                </div>
+            </section>
         </div>
-        <div class="settings-grid">
-            <a href="{% url 'settings_units_departments' %}" class="settings-card" style="--card-accent: #2563EB; --card-soft: #EFF6FF;">
-                <span class="settings-icon"><i class="fa-solid fa-building"></i></span>
-                <span class="settings-card-content"><h3>Units &amp; Departments</h3><p>Manage organizational units and department structure.</p></span>
-                <span class="settings-card-action">Configure <i class="fa-solid fa-arrow-right"></i></span>
-            </a>
-            <a href="{% url 'settings_communication' %}" class="settings-card" style="--card-accent: #059669; --card-soft: #ECFDF5;">
-                <span class="settings-icon"><i class="fa-solid fa-envelope"></i></span>
-                <span class="settings-card-content"><h3>Communication</h3><p>Manage contacts, notifications, and scheduled reports.</p></span>
-                <span class="settings-card-action">Configure <i class="fa-solid fa-arrow-right"></i></span>
-            </a>
-            <a href="{% url 'settings_credentials_page' %}" class="settings-card" style="--card-accent: #DC2626; --card-soft: #FEF2F2;">
-                <span class="settings-icon"><i class="fa-solid fa-key"></i></span>
-                <span class="settings-card-content"><h3>Department Credentials</h3><p>Manage department-level access credentials.</p></span>
-                <span class="settings-card-action">Configure <i class="fa-solid fa-arrow-right"></i></span>
-            </a>
+
+        <!-- ============ RIGHT COLUMN ============ -->
+        <div class="settings-column settings-column-right">
+
+            <!-- PEOPLE & ACCESS -->
+            <section class="settings-block">
+                <div class="settings-block-head">
+                    <div class="settings-block-icon">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <div class="settings-block-title">
+                        <h2>People &amp; Access</h2>
+                        <p>Directory and permissions</p>
+                    </div>
+                    <span class="settings-block-count">5</span>
+                </div>
+                <div class="settings-list">
+                    <a href="{% url 'settings_employees_page' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #7C3AED; --row-soft: #F5F3FF;">
+                            <i class="fa-solid fa-users"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>Employee Master</strong>
+                            <small>Manage employees and assignment permissions</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                    <a href="{% url 'settings_unit_heads_page' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #8B5CF6; --row-soft: #F5F3FF;">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>Unit Head Management</strong>
+                            <small>Login credentials and unit assignments</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                    <a href="{% url 'settings_auditor_page' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #0EA5E9; --row-soft: #F0F9FF;">
+                            <i class="fa-solid fa-eye"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>Auditor Credentials</strong>
+                            <small>Read-only oversight accounts</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                    <a href="{% url 'settings_admin_users' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #FF6B00; --row-soft: #FFF6EE;">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>Admin Users</strong>
+                            <small>System administrators and access</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                    <a href="{% url 'settings_erp_mapping' %}" class="settings-row">
+                        <span class="settings-row-icon" style="--row-accent: #D97706; --row-soft: #FFFBEB;">
+                            <i class="fa-solid fa-id-card"></i>
+                        </span>
+                        <span class="settings-row-content">
+                            <strong>ERP User Mapping</strong>
+                            <small>Link ERP IDs to employees</small>
+                        </span>
+                        <i class="fa-solid fa-arrow-right settings-row-arrow"></i>
+                    </a>
+                </div>
+            </section>
+
+            <!-- BACKUP & RECOVERY -->
+            <section class="settings-block settings-block--backup">
+                <div class="settings-block-head">
+                    <div class="settings-block-icon settings-block-icon--backup">
+                        <i class="fa-solid fa-database"></i>
+                    </div>
+                    <div class="settings-block-title">
+                        <h2>Backup &amp; Recovery</h2>
+                        <p>Administrator only</p>
+                    </div>
+                </div>
+                <a href="{% url 'download_full_backup' %}" class="settings-backup-card">
+                    <span class="settings-backup-icon">
+                        <i class="fa-solid fa-file-export"></i>
+                    </span>
+                    <span class="settings-backup-content">
+                        <strong>Full System Backup</strong>
+                        <small>Download all system records in one timestamped Excel workbook.</small>
+                    </span>
+                    <span class="settings-backup-action">
+                        <i class="fa-solid fa-download"></i>
+                        Download
+                    </span>
+                </a>
+            </section>
         </div>
-    </section>
+    </div>
 
     <!-- ============================================================
-         PEOPLE & ACCESS SECTION
-    ============================================================ -->
-    <section class="settings-section" aria-labelledby="people-heading">
-        <div class="settings-section-heading">
-            <h2 id="people-heading">People &amp; Access</h2>
-            <span>Directory and permissions</span>
-        </div>
-        <div class="settings-grid">
-            <a href="{% url 'settings_employees_page' %}" class="settings-card" style="--card-accent: #7C3AED; --card-soft: #F5F3FF;">
-                <span class="settings-icon"><i class="fa-solid fa-users"></i></span>
-                <span class="settings-card-content"><h3>Employee Master</h3><p>Manage employees and assignment permissions.</p></span>
-                <span class="settings-card-action">Configure <i class="fa-solid fa-arrow-right"></i></span>
-            </a>
-            
-            <!-- ✅ Unit Head Management Card -->
-            <a href="{% url 'settings_unit_heads_page' %}" class="settings-card settings-card--unit-head">
-                <span class="settings-icon"><i class="fa-solid fa-user-tie"></i></span>
-                <span class="settings-card-content"><h3>Unit Head Management</h3><p>Manage unit heads with login credentials and unit assignments.</p></span>
-                <span class="settings-card-action">Manage <i class="fa-solid fa-arrow-right"></i></span>
-            </a>
-            
-            <a href="{% url 'settings_erp_mapping' %}" class="settings-card" style="--card-accent: #D97706; --card-soft: #FFFBEB;">
-                <span class="settings-icon"><i class="fa-solid fa-id-card"></i></span>
-                <span class="settings-card-content"><h3>ERP User ID Mapping</h3><p>Map ERP IDs to employee IDs for ticket creation.</p></span>
-                <span class="settings-card-action">Configure <i class="fa-solid fa-arrow-right"></i></span>
-            </a>
-        </div>
-    </section>
-
-    <!-- ============================================================
-         SYSTEM RECORDS SECTION
-    ============================================================ -->
-    <section class="settings-section" aria-labelledby="system-heading">
-        <div class="settings-section-heading">
-            <h2 id="system-heading">System Records</h2>
-            <span>Traceability and technical mapping</span>
-        </div>
-        <div class="settings-grid">
-            <a href="{% url 'settings_audit_log' %}" class="settings-card" style="--card-accent: #4F46E5; --card-soft: #EEF2FF;">
-                <span class="settings-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
-                <span class="settings-card-content"><h3>Audit Logs</h3><p>Review administrator changes and system activity.</p></span>
-                <span class="settings-card-action">View Logs <i class="fa-solid fa-arrow-right"></i></span>
-            </a>
-            <a href="{% url 'settings_screen_master' %}" class="settings-card" style="--card-accent: #0284C7; --card-soft: #F0F9FF;">
-                <span class="settings-icon"><i class="fa-solid fa-desktop"></i></span>
-                <span class="settings-card-content"><h3>Screen Master</h3><p>Manage ERP screen and module definitions.</p></span>
-                <span class="settings-card-action">Configure <i class="fa-solid fa-arrow-right"></i></span>
-            </a>
-            <a href="{% url 'settings_screen_mapping' %}" class="settings-card" style="--card-accent: #9333EA; --card-soft: #FAF5FF;">
-                <span class="settings-icon"><i class="fa-solid fa-link"></i></span>
-                <span class="settings-card-content"><h3>Screen Mapping</h3><p>Map ERP user IDs to screens and modules.</p></span>
-                <span class="settings-card-action">Configure <i class="fa-solid fa-arrow-right"></i></span>
-            </a>
-        </div>
-    </section>
-
-    <!-- ============================================================
-         BACKUP & RECOVERY SECTION
-    ============================================================ -->
-    <section class="settings-section" aria-labelledby="backup-heading">
-        <div class="settings-section-heading">
-            <h2 id="backup-heading">Backup &amp; Recovery</h2>
-            <span>Administrator only</span>
-        </div>
-        <a href="{% url 'download_full_backup' %}" class="settings-card settings-card--backup">
-            <span class="settings-icon"><i class="fa-solid fa-file-export"></i></span>
-            <span class="settings-card-content"><h3>Full System Backup</h3><p>Download all system records in one timestamped Excel workbook.</p></span>
-            <span class="settings-card-action"><i class="fa-solid fa-download"></i> Download Full Backup</span>
-        </a>
-    </section>
-
+         FOOTER
+         ============================================================ -->
     <footer class="settings-footer">
         <span class="settings-status"></span>
         <span>Settings are applied immediately</span>
         <span aria-hidden="true">&middot;</span>
         <span>{% now "d M Y, H:i" %}</span>
     </footer>
+
 </main>
 {% endblock %}

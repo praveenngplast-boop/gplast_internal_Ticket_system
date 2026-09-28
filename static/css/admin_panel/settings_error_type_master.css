@@ -1,0 +1,1302 @@
+/* ============================================================
+   GPLAST — ERROR TYPE MASTER
+   Two-column admin page for managing Main + Sub error types
+   ============================================================ */
+
+
+/* ============================================================
+   VARIABLES
+   ============================================================ */
+
+:root {
+    --etm-bg: #FFFFFF;
+    --etm-bg-subtle: #F8FAFC;
+    --etm-bg-alt: #F1F5F9;
+    --etm-bg-hover: #F1F5F9;
+    --etm-border: #E8EDF5;
+    --etm-border-strong: #CBD5E1;
+    --etm-text: #1A2A6C;
+    --etm-text-soft: #4A5A7A;
+    --etm-text-muted: #7A8AA5;
+    --etm-orange: #FF6B00;
+    --etm-orange-dark: #E05A00;
+    --etm-orange-grad: linear-gradient(135deg, #FF6B00 0%, #FF8C38 100%);
+    --etm-success: #22C55E;
+    --etm-danger: #EF4444;
+    --etm-info: #3B82F6;
+    --etm-warning: #F59E0B;
+    --etm-shadow-sm: 0 1px 4px rgba(0,0,0,0.05);
+    --etm-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    --etm-shadow-lg: 0 12px 40px rgba(0,0,0,0.15);
+    --etm-radius: 14px;
+    --etm-radius-sm: 8px;
+    --etm-radius-xs: 6px;
+    --etm-t: all 0.2s cubic-bezier(0.4,0,0.2,1);
+    --etm-t-bounce: all 0.28s cubic-bezier(0.34,1.4,0.64,1);
+}
+
+[data-theme="dark"] {
+    --etm-bg: #12121F;
+    --etm-bg-subtle: #0A0A1A;
+    --etm-bg-alt: #1A1A2E;
+    --etm-bg-hover: #1A1A2E;
+    --etm-border: rgba(255,255,255,0.08);
+    --etm-border-strong: rgba(255,255,255,0.15);
+    --etm-text: #E8EDF5;
+    --etm-text-soft: #A8B8D8;
+    --etm-text-muted: #6A7A9A;
+    --etm-shadow-sm: 0 1px 4px rgba(0,0,0,0.3);
+    --etm-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    --etm-shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
+}
+
+
+/* ============================================================
+   PAGE WRAPPER
+   ============================================================ */
+
+.etm-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1rem 2rem;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--etm-text);
+    animation: etmFade 0.4s ease;
+}
+@keyframes etmFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.etm-header {
+    background: var(--etm-bg);
+    border: 1px solid var(--etm-border);
+    border-radius: var(--etm-radius);
+    padding: 1.4rem 1.75rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--etm-shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+.etm-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--etm-orange-grad);
+}
+
+.etm-header-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+
+.etm-header-info {
+    flex: 1 1 300px;
+    min-width: 0;
+}
+.etm-header-info h1 {
+    margin: 0 0 0.4rem;
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--etm-text);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    line-height: 1.2;
+}
+.etm-header-info h1 i {
+    color: var(--etm-orange);
+    font-size: 1.35rem;
+}
+.etm-header-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--etm-text-soft);
+    line-height: 1.5;
+}
+.etm-header-info p strong {
+    color: var(--etm-text);
+    font-weight: 700;
+}
+
+.etm-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+
+/* ============================================================
+   STATS STRIP
+   ============================================================ */
+
+.etm-stats {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--etm-border);
+}
+.etm-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 1rem;
+    background: var(--etm-bg-subtle);
+    border: 1px solid var(--etm-border);
+    border-radius: 100px;
+    line-height: 1;
+}
+.etm-stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--etm-orange);
+    line-height: 1;
+}
+.etm-stat-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--etm-text-muted);
+    font-weight: 700;
+}
+.etm-stat-success .etm-stat-value { color: var(--etm-success); }
+
+
+/* ============================================================
+   BUTTONS (mirrors shell styles)
+   ============================================================ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid transparent;
+    border-radius: var(--etm-radius-sm);
+    font-family: inherit;
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: var(--etm-t);
+    line-height: 1.2;
+}
+.btn i { font-size: 0.78rem; }
+
+.btn-orange {
+    background: var(--etm-orange-grad);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(255,107,0,0.25);
+}
+.btn-orange:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(255,107,0,0.4);
+    color: #fff;
+}
+.btn-orange:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--etm-text-soft);
+    border-color: var(--etm-border);
+}
+.btn-outline:hover {
+    border-color: var(--etm-orange);
+    color: var(--etm-orange);
+    text-decoration: none;
+    background: rgba(255,107,0,0.04);
+}
+
+.btn-danger {
+    background: var(--etm-danger);
+    color: #fff;
+}
+.btn-danger:hover {
+    background: #DC2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(239,68,68,0.35);
+    color: #fff;
+}
+.btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-sm {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.78rem;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+
+/* ============================================================
+   LAYOUT — TWO COLUMNS
+   ============================================================ */
+
+.etm-layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) minmax(420px, 1.4fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+
+/* ============================================================
+   PANEL (both columns)
+   ============================================================ */
+
+.etm-panel {
+    background: var(--etm-bg);
+    border: 1px solid var(--etm-border);
+    border-radius: var(--etm-radius);
+    box-shadow: var(--etm-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 480px;
+}
+
+.etm-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--etm-border);
+    background: var(--etm-bg-subtle);
+}
+.etm-panel-head h2 {
+    margin: 0;
+    font-family: 'Fraunces', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--etm-text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    line-height: 1.2;
+}
+.etm-panel-head h2 i {
+    color: var(--etm-orange);
+    font-size: 0.9rem;
+}
+.etm-panel-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--etm-orange);
+    margin-left: 0.35rem;
+    padding-left: 0.6rem;
+    border-left: 2px solid var(--etm-orange);
+    text-transform: none;
+    letter-spacing: 0;
+}
+.etm-panel-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 24px;
+    padding: 0 0.6rem;
+    background: var(--etm-orange-grad);
+    color: #fff;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    font-family: 'Inter', sans-serif;
+}
+
+.etm-panel-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--etm-border);
+    background: var(--etm-bg);
+    flex-wrap: wrap;
+}
+.etm-panel-toolbar .etm-search {
+    flex: 1;
+    min-width: 160px;
+}
+
+.etm-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+    max-height: 560px;
+    min-height: 240px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--etm-border-strong) transparent;
+}
+.etm-panel-body::-webkit-scrollbar { width: 6px; }
+.etm-panel-body::-webkit-scrollbar-thumb {
+    background: var(--etm-border-strong);
+    border-radius: 100px;
+}
+
+.etm-panel-foot {
+    padding: 0.85rem 1rem;
+    border-top: 1px solid var(--etm-border);
+    background: var(--etm-bg-subtle);
+}
+.etm-panel-foot-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--etm-text-muted);
+    line-height: 1.4;
+}
+.etm-panel-foot-hint i {
+    color: var(--etm-info);
+    font-size: 0.85rem;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+.etm-panel-foot-hint strong {
+    color: var(--etm-text-soft);
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   SEARCH INPUT
+   ============================================================ */
+
+.etm-search {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    background: var(--etm-bg-subtle);
+    border: 1.5px solid var(--etm-border);
+    border-radius: var(--etm-radius-sm);
+    padding: 0.5rem 0.85rem;
+    transition: var(--etm-t);
+}
+.etm-search:focus-within {
+    border-color: var(--etm-orange);
+    background: var(--etm-bg);
+    box-shadow: 0 0 0 3px rgba(255,107,0,0.08);
+}
+.etm-search i {
+    color: var(--etm-text-muted);
+    font-size: 0.82rem;
+    flex-shrink: 0;
+}
+.etm-search input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: 0.85rem;
+    color: var(--etm-text);
+    width: 100%;
+    padding: 0;
+}
+.etm-search input::placeholder {
+    color: var(--etm-text-muted);
+}
+
+
+/* ============================================================
+   MAIN LIST ITEMS
+   ============================================================ */
+
+.etm-main-item {
+    display: grid;
+    grid-template-columns: 4px 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.85rem 0.9rem 0.85rem 0.65rem;
+    background: var(--etm-bg);
+    border: 1.5px solid var(--etm-border);
+    border-radius: var(--etm-radius-sm);
+    margin-bottom: 0.4rem;
+    cursor: pointer;
+    transition: var(--etm-t);
+    position: relative;
+}
+.etm-main-item:hover {
+    background: var(--etm-bg-hover);
+    border-color: rgba(255,107,0,0.3);
+    transform: translateX(2px);
+}
+.etm-main-item:hover .etm-main-marker {
+    background: var(--etm-orange);
+}
+.etm-main-item.etm-selected {
+    background: rgba(255,107,0,0.06);
+    border-color: var(--etm-orange);
+    box-shadow: 0 0 0 3px rgba(255,107,0,0.1);
+}
+.etm-main-item.etm-selected .etm-main-marker {
+    background: var(--etm-orange);
+}
+.etm-main-item.etm-item-inactive {
+    opacity: 0.75;
+}
+.etm-main-item.etm-item-inactive .etm-main-marker {
+    background: var(--etm-text-muted);
+}
+
+.etm-main-marker {
+    width: 4px;
+    height: 100%;
+    min-height: 36px;
+    border-radius: 4px;
+    background: var(--etm-border-strong);
+    transition: var(--etm-t);
+    align-self: stretch;
+}
+
+.etm-main-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.etm-main-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--etm-text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    line-height: 1.3;
+    word-break: break-word;
+}
+.etm-main-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.72rem;
+    color: var(--etm-text-muted);
+    flex-wrap: wrap;
+}
+.etm-main-subs-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.etm-main-subs-count i {
+    font-size: 0.68rem;
+    color: var(--etm-info);
+}
+.etm-main-order {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.etm-main-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+.etm-main-item:hover .etm-main-actions,
+.etm-main-item.etm-selected .etm-main-actions {
+    opacity: 1;
+}
+
+
+/* ============================================================
+   ICON BUTTONS
+   ============================================================ */
+
+.etm-icon-btn {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--etm-radius-xs);
+    border: 1px solid var(--etm-border);
+    background: var(--etm-bg);
+    color: var(--etm-text-soft);
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: var(--etm-t);
+    padding: 0;
+    flex-shrink: 0;
+}
+.etm-icon-btn:hover {
+    background: var(--etm-bg-hover);
+    border-color: var(--etm-orange);
+    color: var(--etm-orange);
+    transform: translateY(-1px);
+}
+.etm-icon-btn.etm-icon-danger:hover {
+    background: rgba(239,68,68,0.08);
+    border-color: var(--etm-danger);
+    color: var(--etm-danger);
+}
+.etm-icon-btn i {
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   TAGS
+   ============================================================ */
+
+.etm-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 100px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    line-height: 1.3;
+}
+.etm-tag-muted {
+    background: rgba(148,163,184,0.15);
+    color: var(--etm-text-muted);
+    border: 1px solid rgba(148,163,184,0.3);
+}
+.etm-tag-success {
+    background: rgba(34,197,94,0.12);
+    color: var(--etm-success);
+    border: 1px solid rgba(34,197,94,0.3);
+}
+
+
+/* ============================================================
+   SUB LIST ITEMS
+   ============================================================ */
+
+.etm-sub-item {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.75rem 0.9rem;
+    background: var(--etm-bg);
+    border: 1.5px solid var(--etm-border);
+    border-radius: var(--etm-radius-sm);
+    margin-bottom: 0.4rem;
+    transition: var(--etm-t);
+    position: relative;
+}
+.etm-sub-item:hover {
+    background: var(--etm-bg-hover);
+    border-color: rgba(255,107,0,0.3);
+    transform: translateX(2px);
+}
+.etm-sub-item.etm-item-inactive {
+    opacity: 0.65;
+}
+
+.etm-sub-index {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--etm-bg-subtle);
+    color: var(--etm-text-muted);
+    border: 1px solid var(--etm-border);
+    flex-shrink: 0;
+}
+.etm-sub-item:hover .etm-sub-index {
+    background: rgba(255,107,0,0.1);
+    color: var(--etm-orange);
+    border-color: rgba(255,107,0,0.3);
+}
+.etm-sub-item.etm-item-inactive .etm-sub-index {
+    background: rgba(148,163,184,0.1);
+    color: var(--etm-text-muted);
+}
+
+.etm-sub-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+.etm-sub-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--etm-text);
+    word-break: break-word;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.etm-sub-meta {
+    font-size: 0.7rem;
+    color: var(--etm-text-muted);
+}
+
+.etm-sub-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+.etm-sub-item:hover .etm-sub-actions {
+    opacity: 1;
+}
+
+
+/* ============================================================
+   EMPTY STATES
+   ============================================================ */
+
+.etm-empty,
+.etm-panel-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--etm-text-muted);
+    gap: 0.5rem;
+}
+.etm-empty i,
+.etm-panel-placeholder i {
+    font-size: 2.75rem;
+    color: var(--etm-orange);
+    opacity: 0.35;
+    margin-bottom: 0.5rem;
+}
+.etm-empty-title,
+.etm-placeholder-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--etm-text);
+    font-family: 'Fraunces', serif;
+}
+.etm-empty-sub,
+.etm-placeholder-sub {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--etm-text-muted);
+    max-width: 320px;
+    line-height: 1.5;
+}
+.etm-empty-sub strong,
+.etm-placeholder-sub strong {
+    color: var(--etm-orange);
+    font-weight: 700;
+}
+
+.etm-panel-placeholder {
+    flex: 1;
+    min-height: 320px;
+}
+
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+
+.etm-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1060;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.etm-modal.etm-modal-open {
+    display: flex;
+}
+
+.etm-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15,23,42,0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: etmFadeIn 0.2s ease;
+}
+@keyframes etmFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.etm-modal-box {
+    position: relative;
+    background: var(--etm-bg);
+    border-radius: var(--etm-radius);
+    box-shadow: var(--etm-shadow-lg);
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: etmModalIn 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+    z-index: 1;
+}
+@keyframes etmModalIn {
+    from { opacity: 0; transform: scale(0.94) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.etm-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--etm-border);
+    background: var(--etm-bg-subtle);
+}
+.etm-modal-head h3 {
+    margin: 0;
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--etm-text);
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+.etm-modal-head h3 i {
+    color: var(--etm-orange);
+}
+.etm-modal-head-danger h3 i {
+    color: var(--etm-danger);
+}
+
+.etm-modal-close {
+    background: none;
+    border: 1px solid var(--etm-border);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--etm-text-muted);
+    display: grid;
+    place-items: center;
+    transition: var(--etm-t);
+    flex-shrink: 0;
+    padding: 0;
+    font-size: 0.85rem;
+}
+.etm-modal-close:hover {
+    background: rgba(239,68,68,0.1);
+    color: var(--etm-danger);
+    border-color: rgba(239,68,68,0.3);
+    transform: rotate(90deg);
+}
+
+.etm-modal-body {
+    padding: 1.25rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.etm-modal-text {
+    font-size: 0.9rem;
+    color: var(--etm-text-soft);
+    margin: 0 0 0.75rem;
+    line-height: 1.5;
+}
+.etm-modal-text strong {
+    color: var(--etm-text);
+    font-weight: 700;
+}
+
+.etm-modal-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.9rem 1.25rem;
+    border-top: 1px solid var(--etm-border);
+    background: var(--etm-bg-subtle);
+}
+
+
+/* ============================================================
+   WARNING BOX
+   ============================================================ */
+
+.etm-warning-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.7rem 0.9rem;
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: var(--etm-radius-sm);
+    font-size: 0.82rem;
+    color: var(--etm-text-soft);
+    margin-bottom: 0.75rem;
+    line-height: 1.45;
+}
+.etm-warning-box i {
+    color: var(--etm-warning);
+    font-size: 0.95rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+.etm-warning-box strong {
+    color: var(--etm-text);
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   FORM FIELDS
+   ============================================================ */
+
+.etm-field {
+    margin-bottom: 1rem;
+}
+.etm-field:last-child {
+    margin-bottom: 0;
+}
+.etm-field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--etm-text-soft);
+    margin-bottom: 0.4rem;
+}
+.etm-field .req {
+    color: var(--etm-danger);
+    font-weight: 700;
+}
+
+.etm-field input[type="text"],
+.etm-field input[type="number"] {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border: 1.5px solid var(--etm-border);
+    border-radius: var(--etm-radius-sm);
+    background: var(--etm-bg);
+    color: var(--etm-text);
+    font-family: inherit;
+    font-size: 0.88rem;
+    outline: none;
+    transition: var(--etm-t);
+    box-sizing: border-box;
+}
+.etm-field input[type="text"]:focus,
+.etm-field input[type="number"]:focus {
+    border-color: var(--etm-orange);
+    box-shadow: 0 0 0 3px rgba(255,107,0,0.12);
+}
+.etm-field input[type="text"]:disabled,
+.etm-field input[type="number"]:disabled {
+    background: var(--etm-bg-alt);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.etm-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.etm-hint {
+    margin: 0.35rem 0 0;
+    font-size: 0.72rem;
+    color: var(--etm-text-muted);
+    line-height: 1.4;
+}
+
+.etm-readonly-value {
+    padding: 0.6rem 0.85rem;
+    background: var(--etm-bg-alt);
+    border: 1.5px solid var(--etm-border);
+    border-radius: var(--etm-radius-sm);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--etm-orange);
+    font-family: 'Inter', sans-serif;
+}
+
+
+/* ============================================================
+   TOGGLE SWITCH
+   ============================================================ */
+
+.etm-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    user-select: none;
+    padding: 0.4rem 0;
+}
+.etm-toggle input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.etm-toggle-slider {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    border-radius: 100px;
+    background: var(--etm-border-strong);
+    transition: var(--etm-t);
+    flex-shrink: 0;
+}
+.etm-toggle-slider::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: var(--etm-t-bounce);
+}
+.etm-toggle input:checked + .etm-toggle-slider {
+    background: var(--etm-orange);
+}
+.etm-toggle input:checked + .etm-toggle-slider::after {
+    transform: translateX(18px);
+}
+.etm-toggle input:focus-visible + .etm-toggle-slider {
+    box-shadow: 0 0 0 3px rgba(255,107,0,0.3);
+}
+.etm-toggle-text {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--etm-text-soft);
+    transition: color 0.2s ease;
+}
+.etm-toggle input:checked ~ .etm-toggle-text {
+    color: var(--etm-success);
+}
+
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+
+.etm-toasts {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 400px;
+    pointer-events: none;
+}
+
+.etm-toast {
+    pointer-events: auto;
+    min-width: 260px;
+    padding: 0.85rem 1rem;
+    border-radius: var(--etm-radius-sm);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #fff;
+    background: #1A2A6C;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    animation: etmToastIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    line-height: 1.4;
+}
+.etm-toast i {
+    flex-shrink: 0;
+    font-size: 0.95rem;
+}
+.etm-toast.etm-toast-success { background: linear-gradient(135deg, #16A34A, #22C55E); }
+.etm-toast.etm-toast-error   { background: linear-gradient(135deg, #DC2626, #EF4444); }
+.etm-toast.etm-toast-info    { background: linear-gradient(135deg, #2563EB, #3B82F6); }
+.etm-toast.etm-toast-warning { background: linear-gradient(135deg, #D97706, #F59E0B); }
+
+@keyframes etmToastIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+/* Tablet — stack the two panels */
+@media (max-width: 991px) {
+    .etm-layout {
+        grid-template-columns: 1fr;
+    }
+    .etm-panel {
+        min-height: 0;
+    }
+    .etm-panel-body {
+        max-height: 400px;
+    }
+    .etm-panel-placeholder {
+        min-height: 200px;
+    }
+}
+
+/* Mobile — compact */
+@media (max-width: 767px) {
+    .etm-page {
+        padding: 0 0.5rem 1.5rem;
+    }
+    .etm-header {
+        padding: 1.1rem 1.15rem;
+    }
+    .etm-header-main {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .etm-header-actions {
+        width: 100%;
+    }
+    .etm-header-actions .btn {
+        flex: 1;
+    }
+    .etm-header-info h1 {
+        font-size: 1.2rem;
+    }
+    .etm-header-info p {
+        font-size: 0.78rem;
+    }
+    .etm-stats {
+        gap: 0.4rem;
+    }
+    .etm-stat {
+        padding: 0.4rem 0.8rem;
+    }
+    .etm-stat-value {
+        font-size: 1rem;
+    }
+    .etm-stat-label {
+        font-size: 0.65rem;
+    }
+    .etm-panel-head {
+        padding: 0.85rem 1rem;
+    }
+    .etm-panel-head h2 {
+        font-size: 0.92rem;
+    }
+    .etm-panel-toolbar {
+        padding: 0.6rem 0.75rem;
+    }
+    .etm-panel-body {
+        padding: 0.4rem;
+        max-height: 360px;
+    }
+    .etm-main-item {
+        padding: 0.7rem 0.75rem 0.7rem 0.55rem;
+        gap: 0.6rem;
+    }
+    .etm-main-name {
+        font-size: 0.82rem;
+    }
+    .etm-sub-item {
+        grid-template-columns: 32px 1fr auto;
+        padding: 0.65rem 0.75rem;
+        gap: 0.6rem;
+    }
+    .etm-sub-index {
+        width: 28px;
+        height: 28px;
+        font-size: 0.68rem;
+    }
+    .etm-sub-name {
+        font-size: 0.8rem;
+    }
+    .etm-field-row {
+        grid-template-columns: 1fr;
+    }
+    .etm-modal-box {
+        max-width: 100%;
+    }
+    .etm-toasts {
+        left: 0.75rem;
+        right: 0.75rem;
+        bottom: 0.75rem;
+        max-width: none;
+    }
+    .etm-toast {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+    .etm-header {
+        padding: 1rem;
+    }
+    .etm-header-info h1 {
+        font-size: 1.05rem;
+    }
+    .etm-header-actions .btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.75rem;
+    }
+    .etm-header-actions .btn span,
+    .etm-header-actions .btn:not(:has(i)) {
+        /* keep icon-only when space is tight */
+    }
+    .etm-stats {
+        padding-top: 1rem;
+    }
+    .etm-stat {
+        padding: 0.35rem 0.7rem;
+    }
+    .etm-stat-value {
+        font-size: 0.95rem;
+    }
+    .etm-stat-label {
+        font-size: 0.6rem;
+    }
+    .etm-main-actions,
+    .etm-sub-actions {
+        opacity: 1;
+    }
+    .etm-icon-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+}
+
+
+/* ============================================================
+   PRINT (hide interactivity)
+   ============================================================ */
+
+@media print {
+    .etm-header-actions,
+    .etm-main-actions,
+    .etm-sub-actions,
+    .etm-panel-toolbar,
+    .etm-panel-foot,
+    .etm-modal,
+    .etm-toasts {
+        display: none !important;
+    }
+    .etm-panel {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}
+/* ============================================================
+   FIX — Toggle inside .etm-field was being broken by
+   the `.etm-field label { display: block }` rule
+   ============================================================ */
+
+.etm-field label.etm-toggle,
+label.etm-toggle {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0;
+    padding: 0.4rem 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--etm-text-soft);
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.etm-toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 40px;
+    height: 22px;
+    margin: 0;
+    cursor: pointer;
+    /* No pointer-events: none — allow the label to forward clicks */
+}
+
+.etm-toggle-slider {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    border-radius: 100px;
+    background: var(--etm-border-strong);
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
+.etm-toggle-slider::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    transition: transform 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.etm-toggle input:checked + .etm-toggle-slider {
+    background: var(--etm-orange);
+}
+
+.etm-toggle input:checked + .etm-toggle-slider::after {
+    transform: translateX(18px);
+}
+
+.etm-toggle input:focus-visible + .etm-toggle-slider {
+    outline: 2px solid rgba(255,107,0,0.4);
+    outline-offset: 2px;
+}
+
+.etm-toggle-text {
+    display: inline-block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--etm-text-soft);
+    transition: color 0.2s ease;
+    line-height: 1;
+    min-width: 52px;
+}
+
+.etm-toggle input:checked ~ .etm-toggle-text {
+    color: var(--etm-success);
+}

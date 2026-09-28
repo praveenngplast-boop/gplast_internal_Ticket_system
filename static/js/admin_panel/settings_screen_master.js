@@ -1,439 +1,854 @@
-document.addEventListener('DOMContentLoaded', function() {
+// ============================================================
+// GPLAST — SCREEN MASTER
+// Table view · Pagination · Bulk select/edit/delete · Upload
+// ============================================================
 
-    const CSRF = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
-
-    // ✅ FIXED: Use correct URLs with custom-admin prefix
-    const ADD_URL = '/custom-admin/settings/screen-master/add/';
-    const EDIT_URL = '/custom-admin/settings/screen-master/edit/';
-    const DELETE_URL = '/custom-admin/settings/screen-master/delete/';
-    const BULK_UPLOAD_URL = '/custom-admin/settings/screen-master/bulk-upload/';
+(function () {
+    'use strict';
 
     // ============================================================
-    // TOAST NOTIFICATION
+    // CONFIG
+    // ============================================================
+    var API = {
+        add:         '/custom-admin/settings/screen-master/add/',
+        edit:        '/custom-admin/settings/screen-master/edit/',
+        del:         '/custom-admin/settings/screen-master/delete/',
+        bulkUpload:  '/custom-admin/settings/screen-master/bulk-upload/',
+        bulkEdit:    '/custom-admin/settings/screen-master/bulk-edit/',
+        bulkDelete:  '/custom-admin/settings/screen-master/bulk-delete/'
+    };
+
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    var selectedIds = new Set();
+    var selectedMeta = new Map();
+    var selectedFiles = [];
+
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+    function $(sel, root) { return (root || document).querySelector(sel); }
+    function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+
+    function getCSRF() {
+        var el = $('[name=csrfmiddlewaretoken]');
+        if (el) return el.value;
+        var m = document.cookie.match(/csrftoken=([^;]+)/);
+        return m ? m[1] : '';
+    }
+
+    function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+    }
+
+    function formatBytes(n) {
+        if (n < 1024) return n + ' B';
+        if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+        return (n / 1048576).toFixed(2) + ' MB';
+    }
+
+
+    // ============================================================
+    // TOASTS
     // ============================================================
     function showToast(msg, type) {
-        type = type || 'success';
-        const tc = document.getElementById('toastContainer');
-        if (!tc) return;
-        const t = document.createElement('div');
-        t.className = 'toast ' + type;
-        const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle';
-        t.innerHTML = '<i class="fas fa-' + icon + ' me-2"></i>' + msg;
-        tc.appendChild(t);
-        setTimeout(function() {
+        type = type || 'info';
+        var container = $('#toastContainer');
+        if (!container) return;
+        var t = document.createElement('div');
+        t.className = 'sm-toast ' + type;
+        var icon = type === 'success' ? 'check-circle'
+                 : type === 'error'   ? 'times-circle'
+                 : type === 'warning' ? 'triangle-exclamation'
+                 : 'info-circle';
+        t.innerHTML = '<i class="fas fa-' + icon + '"></i><span>' + escapeHtml(msg) + '</span>';
+        container.appendChild(t);
+        setTimeout(function () {
             t.style.opacity = '0';
             t.style.transform = 'translateX(30px)';
-            setTimeout(function() { if (t.parentNode) t.remove(); }, 400);
+            setTimeout(function () {
+                if (t.parentNode) t.parentNode.removeChild(t);
+            }, 350);
         }, 4000);
     }
 
-    window.showToast = showToast;
 
     // ============================================================
-    // ADD MODAL
+    // MODALS
     // ============================================================
-    window.openAddModal = function() {
-        document.getElementById('addCode').value = '';
-        document.getElementById('addName').value = '';
-        document.getElementById('addModal').classList.add('active');
-        setTimeout(function() { document.getElementById('addCode').focus(); }, 200);
-    };
+    function openModal(id) {
+        var m = document.getElementById(id);
+        if (m) {
+            m.classList.add('active');
+            m.setAttribute('aria-hidden', 'false');
+        }
+    }
 
-    window.closeAddModal = function() {
-        document.getElementById('addModal').classList.remove('active');
-    };
+    function closeModal(id) {
+        var m = document.getElementById(id);
+        if (m) {
+            m.classList.remove('active');
+            m.setAttribute('aria-hidden', 'true');
+        }
+    }
 
-    window.submitAdd = function() {
-        const code = document.getElementById('addCode').value.trim();
-        const name = document.getElementById('addName').value.trim();
-        const type = document.getElementById('addType').value;
+    function closeAllModals() {
+        ['addModal', 'editModal', 'deleteModal', 'bulkEditModal', 'bulkDeleteModal', 'bulkModal']
+            .forEach(closeModal);
+    }
+
+
+    // ============================================================
+    // SELECTION
+    // ============================================================
+    function updateSelectionUI() {
+        var bar = $('#bulkActionBar');
+        var countEl = $('#bulkCount');
+        var n = selectedIds.size;
+
+        if (bar) bar.hidden = n === 0;
+        if (countEl) countEl.textContent = n;
+
+        var header = $('#selectAllCheckbox');
+        if (header) {
+            var boxes = $$('.sm-row-checkbox');
+            var checked = boxes.filter(function (cb) { return cb.checked; }).length;
+
+            if (boxes.length === 0 || checked === 0) {
+                header.checked = false;
+                header.indeterminate = false;
+            } else if (checked === boxes.length) {
+                header.checked = true;
+                header.indeterminate = false;
+            } else {
+                header.checked = false;
+                header.indeterminate = true;
+            }
+        }
+    }
+
+    function clearSelection() {
+        selectedIds.clear();
+        selectedMeta.clear();
+
+        $$('.sm-row-checkbox').forEach(function (cb) {
+            cb.checked = false;
+            var row = cb.closest('tr');
+            if (row) row.classList.remove('sm-row-selected');
+        });
+
+        var header = $('#selectAllCheckbox');
+        if (header) {
+            header.checked = false;
+            header.indeterminate = false;
+        }
+
+        updateSelectionUI();
+    }
+
+    function setRowSelected(checkbox, isSelected) {
+        var id = checkbox.value;
+        var row = checkbox.closest('tr');
+
+        checkbox.checked = isSelected;
+        if (row) row.classList.toggle('sm-row-selected', isSelected);
+
+        if (isSelected) {
+            selectedIds.add(id);
+            selectedMeta.set(id, {
+                code: checkbox.dataset.code || '',
+                name: checkbox.dataset.name || ''
+            });
+        } else {
+            selectedIds.delete(id);
+            selectedMeta.delete(id);
+        }
+    }
+
+    function toggleSelectAll(headerCheckbox) {
+        var select = headerCheckbox.checked;
+        $$('.sm-row-checkbox').forEach(function (cb) {
+            setRowSelected(cb, select);
+        });
+        updateSelectionUI();
+    }
+
+
+    // ============================================================
+    // SELECTED LIST HTML
+    // ============================================================
+    function buildSelectedListHtml(max) {
+        max = max || 20;
+        var items = Array.from(selectedMeta.entries());
+        var shown = items.slice(0, max);
+
+        var html = shown.map(function (entry) {
+            var meta = entry[1];
+            return '' +
+                '<div class="sm-selected-item">' +
+                    '<i class="fas fa-desktop"></i>' +
+                    '<span class="scode">' + escapeHtml(meta.code || '—') + '</span>' +
+                    '<span class="sname">' + escapeHtml(meta.name || '') + '</span>' +
+                '</div>';
+        }).join('');
+
+        if (items.length > max) {
+            html += '<div class="sm-selected-more">+ ' + (items.length - max) + ' more…</div>';
+        }
+        return html || '<div class="sm-selected-item">No items</div>';
+    }
+
+
+    // ============================================================
+    // ADD
+    // ============================================================
+    function openAdd() {
+        $('#addCode').value = '';
+        $('#addName').value = '';
+        $('#addType').value = 'ALL';
+        openModal('addModal');
+        setTimeout(function () { $('#addCode').focus(); }, 200);
+    }
+
+    function submitAdd() {
+        var code = $('#addCode').value.trim();
+        var name = $('#addName').value.trim();
+        var type = $('#addType').value;
+
         if (!code || !name) {
-            showToast('Both Screen Code and Name are required', 'error');
+            showToast('Screen Code and Name are required', 'error');
             return;
         }
 
-        var formData = new FormData();
-        formData.append('screen_code', code);
-        formData.append('screen_name', name);
-        formData.append('screen_type', type);
+        var fd = new FormData();
+        fd.append('screen_code', code);
+        fd.append('screen_name', name);
+        fd.append('screen_type', type);
 
-        fetch(ADD_URL, {
+        fetch(API.add, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': CSRF,
+                'X-CSRFToken': getCSRF(),
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: formData,
+            body: fd,
             credentials: 'same-origin'
         })
-        .then(function(r) {
-            if (!r.ok) throw new Error('Network response was not ok: ' + r.status);
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.json();
         })
-        .then(function(d) {
+        .then(function (d) {
             if (d.success) {
-                showToast(d.message);
-                closeAddModal();
-                setTimeout(function() { location.reload(); }, 1000);
+                showToast(d.message, 'success');
+                closeModal('addModal');
+                setTimeout(function () { location.reload(); }, 900);
             } else {
                 showToast(d.message, 'error');
             }
         })
-        .catch(function(e) { showToast('Error: ' + e.message, 'error'); });
-    };
+        .catch(function (e) { showToast('Error: ' + e.message, 'error'); });
+    }
+
 
     // ============================================================
-    // EDIT MODAL
+    // EDIT
     // ============================================================
-    window.openEditModal = function(id, code, name, type) {
-        document.getElementById('editId').value = id;
-        document.getElementById('editCode').value = code;
-        document.getElementById('editName').value = name;
-        document.getElementById('editType').value = type;
-        document.getElementById('editModal').classList.add('active');
-        setTimeout(function() { document.getElementById('editCode').focus(); }, 200);
-    };
+    function openEdit(id, code, name, type) {
+        $('#editId').value = id;
+        $('#editCode').value = code;
+        $('#editName').value = name;
+        $('#editType').value = type;
+        openModal('editModal');
+        setTimeout(function () { $('#editCode').focus(); }, 200);
+    }
 
-    window.closeEditModal = function() {
-        document.getElementById('editModal').classList.remove('active');
-    };
+    function submitEdit() {
+        var id = $('#editId').value;
+        var code = $('#editCode').value.trim();
+        var name = $('#editName').value.trim();
+        var type = $('#editType').value;
 
-    window.submitEdit = function() {
-        const id = document.getElementById('editId').value;
-        const code = document.getElementById('editCode').value.trim();
-        const name = document.getElementById('editName').value.trim();
-        const type = document.getElementById('editType').value;
         if (!code || !name) {
-            showToast('Both Screen Code and Name are required', 'error');
+            showToast('Screen Code and Name are required', 'error');
             return;
         }
 
-        var formData = new FormData();
-        formData.append('screen_id', id);
-        formData.append('screen_code', code);
-        formData.append('screen_name', name);
-        formData.append('screen_type', type);
+        var fd = new FormData();
+        fd.append('screen_id', id);
+        fd.append('screen_code', code);
+        fd.append('screen_name', name);
+        fd.append('screen_type', type);
 
-        fetch(EDIT_URL, {
+        fetch(API.edit, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': CSRF,
+                'X-CSRFToken': getCSRF(),
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: formData,
+            body: fd,
             credentials: 'same-origin'
         })
-        .then(function(r) {
-            if (!r.ok) throw new Error('Network response was not ok: ' + r.status);
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.json();
         })
-        .then(function(d) {
+        .then(function (d) {
             if (d.success) {
-                showToast(d.message);
-                closeEditModal();
-                setTimeout(function() { location.reload(); }, 1000);
+                showToast(d.message, 'success');
+                closeModal('editModal');
+                setTimeout(function () { location.reload(); }, 900);
             } else {
                 showToast(d.message, 'error');
             }
         })
-        .catch(function(e) { showToast('Error: ' + e.message, 'error'); });
-    };
+        .catch(function (e) { showToast('Error: ' + e.message, 'error'); });
+    }
+
 
     // ============================================================
-    // DELETE MODAL
+    // DELETE (single)
     // ============================================================
-    window.confirmDelete = function(id, name) {
-        document.getElementById('deleteId').value = id;
-        document.getElementById('deleteName').textContent = name;
-        document.getElementById('deleteModal').classList.add('active');
-    };
+    function openDelete(id, name) {
+        $('#deleteId').value = id;
+        $('#deleteName').textContent = name;
+        openModal('deleteModal');
+    }
 
-    window.closeDeleteModal = function() {
-        document.getElementById('deleteModal').classList.remove('active');
-    };
+    function submitDelete() {
+        var id = $('#deleteId').value;
 
-    window.submitDelete = function() {
-        const id = document.getElementById('deleteId').value;
+        var fd = new FormData();
+        fd.append('screen_id', id);
 
-        var formData = new FormData();
-        formData.append('screen_id', id);
-
-        fetch(DELETE_URL, {
+        fetch(API.del, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': CSRF,
+                'X-CSRFToken': getCSRF(),
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: formData,
+            body: fd,
             credentials: 'same-origin'
         })
-        .then(function(r) {
-            if (!r.ok) throw new Error('Network response was not ok: ' + r.status);
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.json();
         })
-        .then(function(d) {
+        .then(function (d) {
             if (d.success) {
-                showToast(d.message);
-                closeDeleteModal();
-                var row = document.getElementById('row-' + id);
-                if (row) row.remove();
+                showToast(d.message, 'success');
+                closeModal('deleteModal');
+                setTimeout(function () { location.reload(); }, 700);
             } else {
                 showToast(d.message, 'error');
             }
         })
-        .catch(function(e) { showToast('Error: ' + e.message, 'error'); });
-    };
+        .catch(function (e) { showToast('Error: ' + e.message, 'error'); });
+    }
+
+
+    // ============================================================
+    // BULK EDIT
+    // ============================================================
+    function openBulkEdit() {
+        if (selectedIds.size === 0) return;
+        $('#bulkEditSelectedList').innerHTML = buildSelectedListHtml();
+        $('#bulkEditType').value = '';
+        $('#bulkEditBtnText').textContent = 'Apply to ' + selectedIds.size + ' screen' + (selectedIds.size > 1 ? 's' : '');
+        openModal('bulkEditModal');
+    }
+
+    function submitBulkEdit() {
+        var type = $('#bulkEditType').value;
+        if (!type) {
+            showToast('Select a Screen Type to apply', 'error');
+            return;
+        }
+        if (selectedIds.size === 0) {
+            showToast('No screens selected', 'error');
+            return;
+        }
+
+        var btn = $('#bulkEditSubmitBtn');
+        var original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Applying…';
+
+        var fd = new FormData();
+        fd.append('screen_ids', Array.from(selectedIds).join(','));
+        fd.append('screen_type', type);
+
+        fetch(API.bulkEdit, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRF(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: fd,
+            credentials: 'same-origin'
+        })
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(function (d) {
+            if (d.success) {
+                showToast(d.message || 'Screens updated', 'success');
+                closeModal('bulkEditModal');
+                clearSelection();
+                setTimeout(function () { location.reload(); }, 1000);
+            } else {
+                showToast(d.message || 'Failed', 'error');
+            }
+        })
+        .catch(function (e) { showToast('Error: ' + e.message, 'error'); })
+        .finally(function () {
+            btn.disabled = false;
+            btn.innerHTML = original;
+        });
+    }
+
+
+    // ============================================================
+    // BULK DELETE
+    // ============================================================
+    function openBulkDelete() {
+        if (selectedIds.size === 0) return;
+        $('#bulkDeleteSelectedList').innerHTML = buildSelectedListHtml();
+        $('#bulkDeleteCount').textContent = selectedIds.size;
+        $('#bulkDeleteBtnText').textContent = 'Delete ' + selectedIds.size + ' screen' + (selectedIds.size > 1 ? 's' : '');
+        openModal('bulkDeleteModal');
+    }
+
+    function submitBulkDelete() {
+        if (selectedIds.size === 0) {
+            showToast('No screens selected', 'error');
+            return;
+        }
+
+        var btn = $('#bulkDeleteSubmitBtn');
+        var original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Deleting…';
+
+        var fd = new FormData();
+        fd.append('screen_ids', Array.from(selectedIds).join(','));
+
+        fetch(API.bulkDelete, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRF(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: fd,
+            credentials: 'same-origin'
+        })
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(function (d) {
+            if (d.success) {
+                showToast(d.message || 'Screens deleted', 'success');
+                closeModal('bulkDeleteModal');
+                clearSelection();
+                setTimeout(function () { location.reload(); }, 1000);
+            } else {
+                showToast(d.message || 'Failed', 'error');
+            }
+        })
+        .catch(function (e) { showToast('Error: ' + e.message, 'error'); })
+        .finally(function () {
+            btn.disabled = false;
+            btn.innerHTML = original;
+        });
+    }
+
 
     // ============================================================
     // BULK UPLOAD
     // ============================================================
-    var selectedFile = null;
+    function openBulkUpload() {
+        selectedFiles = [];
+        renderFilePreview();
 
-    window.openBulkModal = function() {
-        document.getElementById('bulkModal').classList.add('active');
-        document.getElementById('fileName').textContent = 'No file selected';
-        document.getElementById('uploadResult').innerHTML = '';
-        document.getElementById('progressBar').classList.remove('active');
-        document.getElementById('progressFill').style.width = '0%';
-        selectedFile = null;
-        document.getElementById('bulkFile').value = '';
-    };
+        var fileInput = $('#bulkFile');
+        if (fileInput) fileInput.value = '';
 
-    window.closeBulkModal = function() {
-        document.getElementById('bulkModal').classList.remove('active');
-    };
+        var result = $('#uploadResult');
+        if (result) result.innerHTML = '';
 
-    window.handleFileSelect = function(event) {
-        const file = event.target.files[0];
-        if (file) {
-            selectedFile = file;
-            document.getElementById('fileName').textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
-            document.getElementById('uploadResult').innerHTML = '';
-        } else {
-            selectedFile = null;
-            document.getElementById('fileName').textContent = 'No file selected';
-        }
-    };
+        var pb = $('#progressBar');
+        if (pb) pb.classList.remove('active');
 
-    // Drag and drop support
-    var uploadArea = document.getElementById('uploadArea');
-    if (uploadArea) {
-        uploadArea.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.style.borderColor = 'var(--sm-orange)';
-            this.style.background = 'rgba(255,107,0,0.05)';
-        });
-        uploadArea.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            this.style.borderColor = '';
-            this.style.background = '';
-        });
-        uploadArea.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.style.borderColor = '';
-            this.style.background = '';
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                const file = files[0];
-                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-                    selectedFile = file;
-                    document.getElementById('bulkFile').files = files;
-                    document.getElementById('fileName').textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
-                    document.getElementById('uploadResult').innerHTML = '';
-                } else {
-                    showToast('Please upload an Excel file (.xlsx or .xls)', 'error');
-                }
-            }
-        });
+        var pf = $('#progressFill');
+        if (pf) pf.style.width = '0%';
+
+        openModal('bulkModal');
     }
 
-    window.submitBulkUpload = function() {
-        if (!selectedFile) {
-            showToast('Please select an Excel file to upload', 'error');
+    function addFiles(fileList) {
+        var validExt = /\.(xlsx|xls)$/i;
+        Array.prototype.slice.call(fileList).forEach(function (f) {
+            if (!validExt.test(f.name)) {
+                showToast('Skipped "' + f.name + '" — only .xlsx/.xls', 'error');
+                return;
+            }
+            var duplicate = selectedFiles.some(function (s) {
+                return s.name === f.name && s.size === f.size;
+            });
+            if (duplicate) {
+                showToast('"' + f.name + '" already added', 'info');
+                return;
+            }
+            selectedFiles.push(f);
+        });
+        renderFilePreview();
+    }
+
+    function renderFilePreview() {
+        var list = $('#filePreviewList');
+        var label = $('#fileName');
+        if (!list) return;
+
+        if (selectedFiles.length === 0) {
+            if (label) label.textContent = 'No files selected';
+            list.innerHTML = '';
             return;
         }
 
-        var formData = new FormData();
-        formData.append('excel_file', selectedFile);
-        formData.append('csrfmiddlewaretoken', CSRF);
+        var total = selectedFiles.reduce(function (s, f) { return s + f.size; }, 0);
+        if (label) {
+            label.textContent = selectedFiles.length + ' file' +
+                (selectedFiles.length > 1 ? 's' : '') + ' selected · ' + formatBytes(total);
+        }
 
-        var btn = document.getElementById('bulkUploadBtn');
-        var progressBar = document.getElementById('progressBar');
-        var progressFill = document.getElementById('progressFill');
-        var resultDiv = document.getElementById('uploadResult');
+        list.innerHTML = selectedFiles.map(function (f, i) {
+            return '' +
+                '<div class="sm-file-item">' +
+                    '<div class="fname"><i class="fas fa-file-excel" style="color:#22c55e;"></i><span>' +
+                        escapeHtml(f.name) + '</span></div>' +
+                    '<span class="fsize">' + formatBytes(f.size) + '</span>' +
+                    '<button type="button" class="fremove" data-index="' + i + '">' +
+                        '<i class="fas fa-times"></i>' +
+                    '</button>' +
+                '</div>';
+        }).join('');
+
+        $$('.fremove', list).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var idx = parseInt(this.dataset.index, 10);
+                selectedFiles.splice(idx, 1);
+                renderFilePreview();
+            });
+        });
+    }
+
+    function submitBulkUpload() {
+        if (selectedFiles.length === 0) {
+            showToast('Select at least one file', 'error');
+            return;
+        }
+
+        var btn = $('#bulkUploadBtn');
+        var progressBar = $('#progressBar');
+        var progressFill = $('#progressFill');
+        var resultDiv = $('#uploadResult');
 
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Uploading...';
+        btn.innerHTML = '<span class="spinner"></span> Uploading…';
         progressBar.classList.add('active');
-        progressFill.style.width = '30%';
+        progressFill.style.width = '0%';
         resultDiv.innerHTML = '';
 
-        fetch(BULK_UPLOAD_URL, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-        })
-        .then(function(response) {
-            progressFill.style.width = '70%';
-            if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(function(data) {
-            progressFill.style.width = '100%';
-            setTimeout(function() {
-                progressBar.classList.remove('active');
-                progressFill.style.width = '0%';
-            }, 1000);
+        var totalAdded = 0;
+        var totalSkipped = 0;
+        var allErrors = [];
+        var perFile = [];
+        var i = 0;
 
-            if (data.success) {
-                var html = '<div style="font-weight:600; margin-bottom:0.5rem;">Upload Complete</div>';
-                if (data.added_count > 0) {
-                    html += '<div class="success-item">' + data.added_count + ' screens added successfully</div>';
-                }
-                if (data.skipped_count > 0) {
-                    html += '<div class="error-item">' + data.skipped_count + ' rows skipped</div>';
-                }
-                if (data.errors && data.errors.length > 0) {
-                    html += '<div style="margin-top:0.5rem;"><strong>Errors:</strong></div>';
-                    data.errors.forEach(function(err) {
-                        html += '<div class="error-item">' + err + '</div>';
-                    });
-                }
-                resultDiv.innerHTML = html;
-                showToast(data.message || 'Bulk upload completed successfully!', 'success');
-                setTimeout(function() {
-                    location.reload();
-                }, 2000);
-            } else {
-                var html = '<div style="font-weight:600; color:var(--sm-danger); margin-bottom:0.5rem;">Upload Failed</div>';
-                if (data.errors && data.errors.length > 0) {
-                    data.errors.forEach(function(err) {
-                        html += '<div class="error-item">' + err + '</div>';
-                    });
+        function next() {
+            if (i >= selectedFiles.length) return finish();
+
+            var file = selectedFiles[i];
+            var fd = new FormData();
+            fd.append('excel_file', file);
+
+            fetch(API.bulkUpload, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRF(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: fd,
+                credentials: 'same-origin'
+            })
+            .then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function (d) {
+                perFile.push({
+                    name: file.name,
+                    success: !!d.success,
+                    added: d.added_count || 0,
+                    skipped: d.skipped_count || 0
+                });
+                if (d.success) {
+                    totalAdded += d.added_count || 0;
+                    totalSkipped += d.skipped_count || 0;
+                    if (d.errors && d.errors.length) {
+                        d.errors.forEach(function (e) {
+                            allErrors.push('[' + file.name + '] ' + e);
+                        });
+                    }
                 } else {
-                    html += '<div class="error-item">' + (data.message || 'Unknown error occurred') + '</div>';
+                    allErrors.push('[' + file.name + '] ' + (d.message || 'Upload failed'));
                 }
-                resultDiv.innerHTML = html;
-                showToast(data.message || 'Bulk upload failed', 'error');
-            }
-
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload';
-        })
-        .catch(function(error) {
-            progressFill.style.width = '100%';
-            setTimeout(function() {
-                progressBar.classList.remove('active');
-                progressFill.style.width = '0%';
-            }, 1000);
-            resultDiv.innerHTML = '<div class="error-item">Error: ' + error.message + '</div>';
-            showToast('Error: ' + error.message, 'error');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-upload me-1"></i> Upload';
-        });
-    };
-
-    // ============================================================
-    // SEARCH / FILTER
-    // ============================================================
-    window.filterTable = function() {
-        const q = document.getElementById('screenSearch').value.toLowerCase();
-        document.querySelectorAll('#screenTable tbody tr').forEach(function(row) {
-            row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-        });
-    };
-
-    // ============================================================
-    // CLOSE MODALS ON OVERLAY CLICK
-    // ============================================================
-    ['addModal','editModal','deleteModal','bulkModal'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('active');
+            })
+            .catch(function (err) {
+                perFile.push({ name: file.name, success: false, added: 0, skipped: 0 });
+                allErrors.push('[' + file.name + '] ' + err.message);
+            })
+            .finally(function () {
+                i++;
+                progressFill.style.width = Math.round((i / selectedFiles.length) * 100) + '%';
+                setTimeout(next, 80);
             });
         }
-    });
 
-    // ============================================================
-    // KEYBOARD SUPPORT
-    // ============================================================
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            if (document.getElementById('addModal').classList.contains('active')) {
-                window.submitAdd();
-            } else if (document.getElementById('editModal').classList.contains('active')) {
-                window.submitEdit();
-            }
-        }
-        if (e.key === 'Escape') {
-            ['addModal','editModal','deleteModal','bulkModal'].forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.classList.remove('active');
+        function finish() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-upload"></i> Upload';
+
+            var html = '<div style="font-weight:600;margin-bottom:0.5rem;">' +
+                '<i class="fas fa-check-circle" style="color:#22c55e;"></i> ' +
+                totalAdded + ' added, ' + totalSkipped + ' skipped</div>';
+
+            html += '<div>';
+            perFile.forEach(function (r) {
+                var icon = r.success
+                    ? '<i class="fas fa-check" style="color:#22c55e;"></i>'
+                    : '<i class="fas fa-times" style="color:#ef4444;"></i>';
+                html += '<div style="padding:0.25rem 0;">' + icon + ' ' +
+                    escapeHtml(r.name) + ' — ' + r.added + ' added, ' + r.skipped + ' skipped</div>';
             });
-        }
-    });
+            html += '</div>';
 
-    // ============================================================
-    // THEME SYNC
-    // ============================================================
-    function updateThemeStyles() {
-        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        var inputs = document.querySelectorAll('.form-control, input, select');
-        inputs.forEach(function(el) {
-            if (isDark) {
-                el.style.backgroundColor = 'rgba(255,255,255,0.04)';
-                el.style.borderColor = 'rgba(255,255,255,0.08)';
-                el.style.color = '#E8EDF5';
-                el.style.webkitTextFillColor = '#E8EDF5';
+            if (allErrors.length) {
+                html += '<details style="margin-top:0.5rem;">' +
+                    '<summary style="cursor:pointer;color:#ef4444;font-weight:600;font-size:0.78rem;">' +
+                    allErrors.length + ' error(s)</summary>' +
+                    '<ul style="margin:0.5rem 0 0 1rem;font-size:0.72rem;color:#64748b;">' +
+                    allErrors.slice(0, 30).map(function (e) {
+                        return '<li>' + escapeHtml(e) + '</li>';
+                    }).join('') +
+                    '</ul></details>';
+            }
+
+            resultDiv.innerHTML = html;
+
+            if (totalAdded > 0) {
+                showToast('Added ' + totalAdded + ' screen(s)', 'success');
+                setTimeout(function () { location.reload(); }, 2000);
             } else {
-                el.style.backgroundColor = '';
-                el.style.borderColor = '';
-                el.style.color = '';
-                el.style.webkitTextFillColor = '';
+                showToast('No screens were added', 'error');
+            }
+        }
+
+        next();
+    }
+
+
+    // ============================================================
+    // BIND EVENTS
+    // ============================================================
+    function bindEvents() {
+        // ---- Filter form: search input submits on Enter ----
+        var searchInput = $('#smSearchInput');
+        var filterForm = $('#smFilterForm');
+        if (searchInput && filterForm) {
+            searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    filterForm.submit();
+                }
+            });
+        }
+
+        // ---- Filter form: type select auto-submits on change ----
+        var typeSelect = $('#smTypeSelect');
+        if (typeSelect && filterForm) {
+            typeSelect.addEventListener('change', function () {
+                filterForm.submit();
+            });
+        }
+
+        // ---- Header checkbox ----
+        var header = $('#selectAllCheckbox');
+        if (header) {
+            header.addEventListener('change', function () {
+                toggleSelectAll(this);
+            });
+        }
+
+        // ---- Row checkboxes ----
+        $$('.sm-row-checkbox').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                setRowSelected(this, this.checked);
+                updateSelectionUI();
+            });
+        });
+
+        // ---- Delegated click for data-action / data-close ----
+        document.addEventListener('click', function (e) {
+            var target = e.target.closest('[data-action], [data-close]');
+            if (!target) return;
+
+            var closeId = target.getAttribute('data-close');
+            if (closeId) {
+                e.preventDefault();
+                closeModal(closeId);
+                return;
+            }
+
+            var action = target.getAttribute('data-action');
+            if (!action) return;
+            e.preventDefault();
+
+            switch (action) {
+                case 'open-add':
+                    openAdd();
+                    break;
+                case 'open-bulk-upload':
+                    openBulkUpload();
+                    break;
+                case 'submit-add':
+                    submitAdd();
+                    break;
+                case 'submit-edit':
+                    submitEdit();
+                    break;
+                case 'submit-delete':
+                    submitDelete();
+                    break;
+                case 'submit-bulk-edit':
+                    submitBulkEdit();
+                    break;
+                case 'submit-bulk-delete':
+                    submitBulkDelete();
+                    break;
+                case 'submit-bulk-upload':
+                    submitBulkUpload();
+                    break;
+                case 'edit':
+                    openEdit(
+                        target.dataset.id,
+                        target.dataset.code,
+                        target.dataset.name,
+                        target.dataset.type
+                    );
+                    break;
+                case 'delete':
+                    openDelete(target.dataset.id, target.dataset.name);
+                    break;
+            }
+        });
+
+        // ---- Bulk bar ----
+        var clearBtn = $('#bulkClearBtn');
+        if (clearBtn) clearBtn.addEventListener('click', clearSelection);
+
+        var bulkEditBtn = $('#bulkEditBtn');
+        if (bulkEditBtn) bulkEditBtn.addEventListener('click', openBulkEdit);
+
+        var bulkDeleteBtn = $('#bulkDeleteBtn');
+        if (bulkDeleteBtn) bulkDeleteBtn.addEventListener('click', openBulkDelete);
+
+        // ---- File input ----
+        var fileInput = $('#bulkFile');
+        if (fileInput) {
+            fileInput.addEventListener('change', function () {
+                addFiles(this.files);
+                this.value = '';
+            });
+        }
+
+        // ---- Upload area ----
+        var uploadArea = $('#uploadArea');
+        if (uploadArea) {
+            uploadArea.addEventListener('click', function () {
+                var fi = $('#bulkFile');
+                if (fi) fi.click();
+            });
+
+            uploadArea.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                this.style.borderColor = 'var(--sm-orange)';
+                this.style.background = 'rgba(255,107,0,0.05)';
+            });
+            uploadArea.addEventListener('dragleave', function (e) {
+                e.preventDefault();
+                this.style.borderColor = '';
+                this.style.background = '';
+            });
+            uploadArea.addEventListener('drop', function (e) {
+                e.preventDefault();
+                this.style.borderColor = '';
+                this.style.background = '';
+                if (e.dataTransfer.files.length) {
+                    addFiles(e.dataTransfer.files);
+                }
+            });
+        }
+
+        // ---- Close modal on backdrop click ----
+        $$('.sm-modal').forEach(function (m) {
+            m.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                    this.setAttribute('aria-hidden', 'true');
+                }
+            });
+        });
+
+        // ---- Keyboard ----
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                var addOpen = $('#addModal');
+                var editOpen = $('#editModal');
+                if (addOpen && addOpen.classList.contains('active')) {
+                    e.preventDefault();
+                    submitAdd();
+                } else if (editOpen && editOpen.classList.contains('active')) {
+                    e.preventDefault();
+                    submitEdit();
+                }
+            }
+            if (e.key === 'Escape') {
+                closeAllModals();
             }
         });
     }
 
-    var themeToggle = document.getElementById('themeToggleFloating');
-    if (themeToggle) {
-        themeToggle.addEventListener('click', function() {
-            setTimeout(updateThemeStyles, 100);
-        });
+
+    // ============================================================
+    // BOOT
+    // ============================================================
+    function boot() {
+        bindEvents();
+        updateSelectionUI();
     }
 
-    var observer = new MutationObserver(function() {
-        updateThemeStyles();
-    });
-    observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-theme']
-    });
-    setTimeout(updateThemeStyles, 200);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
+    } else {
+        boot();
+    }
 
-    // ============================================================
-    // SPINNER STYLES (for upload button)
-    // ============================================================
-    var style = document.createElement('style');
-    style.textContent = `
-        .spinner {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 0.6s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    `;
-    document.head.appendChild(style);
-
-});
+})();

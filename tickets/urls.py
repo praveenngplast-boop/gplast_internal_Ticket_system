@@ -15,15 +15,46 @@ from tickets.views.settings_action import (
     screen_mapping_delete_erp,
     screen_master_download_template,
     screen_master_bulk_upload,
-    # Department bulk upload imports
+    screen_master_bulk_edit,
+    screen_master_bulk_delete,
     departments_bulk_upload,
     departments_download_template,
-    # ✅ NEW: Credentials bulk upload imports
     credentials_bulk_upload,
     credentials_download_template,
 )
 
-# ✅ NEW: Desktop notifications (Windows toast) views
+# ✅ Auditor credentials settings sub-page
+from tickets.views.settings_action.settings_auditors import (
+    settings_auditor_page,
+    settings_auditors_handler,
+)
+
+# ✅ Error Type Master settings sub-page (admin-only)
+from tickets.views.settings_action.error_types import (
+    settings_error_type_master,
+    error_type_main_add,
+    error_type_main_edit,
+    error_type_main_delete,
+    error_type_main_toggle,
+    error_type_sub_add,
+    error_type_sub_edit,
+    error_type_sub_delete,
+    error_type_sub_toggle,
+    error_type_subs_for_main,
+)
+
+# ✅ Admin Users (Manage Admins) settings sub-page
+from tickets.views.settings_action.admin_users import (
+    settings_admin_users,
+    admin_user_add,
+    admin_user_edit,
+    admin_user_reset_password,
+    admin_user_toggle_active,
+    admin_user_delete,
+    admin_user_count,
+)
+
+# ✅ Desktop notifications (Windows toast) views
 from tickets.views import notification_views
 
 
@@ -36,7 +67,7 @@ urlpatterns = [
     path('logout/', views.custom_logout, name='custom_logout'),
 
     # ============================================================
-    # ✅ PASSWORD CHANGE (self-service for logged-in users)
+    # ✅ PASSWORD CHANGE
     # ============================================================
     path(
         'password/change/',
@@ -97,7 +128,7 @@ urlpatterns = [
          views.export_archived_tickets_excel, name='export_archived_tickets_excel'),
 
     # ============================================================
-    # NOTIFICATION URLS (existing in-app notifications)
+    # NOTIFICATION URLS
     # ============================================================
     path('custom-admin/notifications/get/', views.get_notifications, name='get_notifications'),
     path('custom-admin/notifications/refresh/', views.refresh_notifications, name='refresh_notifications'),
@@ -105,7 +136,7 @@ urlpatterns = [
     path('custom-admin/notifications/mark-read/<int:ticket_id>/', views.mark_notification_read, name='mark_notification_read'),
 
     # ============================================================
-    # ✅ DESKTOP (WINDOWS TOAST) NOTIFICATION ENDPOINTS
+    # ✅ DESKTOP NOTIFICATION ENDPOINTS
     # ============================================================
     path('notifications/poll/', notification_views.poll_notifications, name='notifications_poll'),
     path('notifications/<int:notification_id>/read/', notification_views.mark_read, name='notifications_mark_read'),
@@ -146,12 +177,122 @@ urlpatterns = [
     path('custom-admin/settings/unit-heads/handler/', views.settings_unit_heads, name='settings_unit_heads'),
 
     # ============================================================
+    # ✅ AUDITOR CREDENTIALS
+    # ============================================================
+    path(
+        'custom-admin/settings/auditor/',
+        settings_auditor_page,
+        name='settings_auditor_page',
+    ),
+    path(
+        'custom-admin/settings/auditor/handler/',
+        settings_auditors_handler,
+        name='settings_auditors_handler',
+    ),
+
+    # ============================================================
+    # ✅ ERROR TYPE MASTER
+    # ============================================================
+    path(
+        'custom-admin/settings/error-types/',
+        settings_error_type_master,
+        name='settings_error_type_master',
+    ),
+    path(
+        'custom-admin/settings/error-types/main/add/',
+        error_type_main_add,
+        name='error_type_main_add',
+    ),
+    path(
+        'custom-admin/settings/error-types/main/edit/',
+        error_type_main_edit,
+        name='error_type_main_edit',
+    ),
+    path(
+        'custom-admin/settings/error-types/main/delete/',
+        error_type_main_delete,
+        name='error_type_main_delete',
+    ),
+    path(
+        'custom-admin/settings/error-types/main/toggle/',
+        error_type_main_toggle,
+        name='error_type_main_toggle',
+    ),
+    path(
+        'custom-admin/settings/error-types/sub/add/',
+        error_type_sub_add,
+        name='error_type_sub_add',
+    ),
+    path(
+        'custom-admin/settings/error-types/sub/edit/',
+        error_type_sub_edit,
+        name='error_type_sub_edit',
+    ),
+    path(
+        'custom-admin/settings/error-types/sub/delete/',
+        error_type_sub_delete,
+        name='error_type_sub_delete',
+    ),
+    path(
+        'custom-admin/settings/error-types/sub/toggle/',
+        error_type_sub_toggle,
+        name='error_type_sub_toggle',
+    ),
+    path(
+        'custom-admin/settings/error-types/subs-for/<int:main_id>/',
+        error_type_subs_for_main,
+        name='error_type_subs_for_main',
+    ),
+
+    # ============================================================
+    # ✅ ADMIN USERS (MANAGE ADMINS)
+    # ============================================================
+    path(
+        'custom-admin/settings/admin-users/',
+        settings_admin_users,
+        name='settings_admin_users',
+    ),
+    path(
+        'custom-admin/settings/admin-users/add/',
+        admin_user_add,
+        name='admin_user_add',
+    ),
+    path(
+        'custom-admin/settings/admin-users/edit/',
+        admin_user_edit,
+        name='admin_user_edit',
+    ),
+    path(
+        'custom-admin/settings/admin-users/reset-password/',
+        admin_user_reset_password,
+        name='admin_user_reset_password',
+    ),
+    path(
+        'custom-admin/settings/admin-users/toggle/',
+        admin_user_toggle_active,
+        name='admin_user_toggle_active',
+    ),
+    path(
+        'custom-admin/settings/admin-users/delete/',
+        admin_user_delete,
+        name='admin_user_delete',
+    ),
+    path(
+        'custom-admin/settings/admin-users/count/',
+        admin_user_count,
+        name='admin_user_count',
+    ),
+
+    # ============================================================
     # ERP USER ID MAPPING URLS
     # ============================================================
     path('custom-admin/settings/erp-mapping/', erp_mapping_views.erp_mapping_page, name='settings_erp_mapping'),
     path('custom-admin/settings/erp-mapping/add/', erp_mapping_views.erp_mapping_add, name='settings_erp_mapping_add'),
     path('custom-admin/settings/erp-mapping/remove/', erp_mapping_views.erp_mapping_remove, name='settings_erp_mapping_remove'),
     path('custom-admin/settings/erp-mapping/unmap/', erp_mapping_views.erp_mapping_unmap, name='settings_erp_mapping_unmap'),
+    path('custom-admin/settings/erp-mapping/unmap-all/', erp_mapping_views.erp_mapping_unmap_all, name='settings_erp_mapping_unmap_all'),
+    path('custom-admin/settings/erp-mapping/delete-all/', erp_mapping_views.erp_mapping_delete_all, name='settings_erp_mapping_delete_all'),
+    path('custom-admin/settings/erp-mapping/bulk-delete/', erp_mapping_views.erp_mapping_bulk_delete, name='settings_erp_mapping_bulk_delete'),
     path('custom-admin/settings/erp-mapping/export-excel/', erp_mapping_views.erp_mapping_export_excel, name='settings_erp_mapping_export_excel'),
     path('custom-admin/settings/erp-mapping/bulk-upload/', erp_mapping_views.erp_mapping_bulk_upload, name='settings_erp_mapping_bulk_upload'),
     path('custom-admin/settings/erp-mapping/download-template/', erp_mapping_views.erp_mapping_download_template, name='settings_erp_mapping_download_template'),
@@ -161,7 +302,7 @@ urlpatterns = [
     path('ajax/search-employees/', erp_mapping_views.erp_mapping_search_employees, name='settings_erp_mapping_search_employees'),
 
     # ============================================================
-    # UNIT HEAD PANEL - VIEW ONLY (NO CREATE TICKET, NO MY TICKETS)
+    # UNIT HEAD PANEL
     # ============================================================
     path('unit-head/dashboard/', unit_head_views.unit_head_dashboard, name='unit_head_dashboard'),
     path('unit-head/tickets/', unit_head_views.unit_head_all_tickets, name='unit_head_all_tickets'),
@@ -169,7 +310,7 @@ urlpatterns = [
     path('unit-head/ticket/<int:ticket_id>/reply/', views.ticket_reply, name='unit_head_ticket_reply'),
     path('unit-head/reports/', unit_head_views.unit_head_reports, name='unit_head_reports'),
     path('unit-head/ticket/<int:ticket_id>/download/', unit_head_views.unit_head_download_ticket_excel, name='unit_head_download_ticket_excel'),
-    path('unit-head/export/closed-30-days/', unit_head_views.unit_head_export_closed_tickets_30_days, name='unit_head_export_closed_30_days'),
+    path('unit-head/export/closed-30-days/', unit_head_views.unit_head_export_closed_tickets_30_days, name='unit_head_export_export_closed_30_days'),
 
     # ============================================================
     # TEST NOTIFICATION URLS
@@ -190,9 +331,11 @@ urlpatterns = [
     path('custom-admin/settings/screen-master/download/', views.screen_master_download_excel, name='screen_master_download_excel'),
     path('custom-admin/settings/screen-master/download-template/', screen_master_download_template, name='screen_master_download_template'),
     path('custom-admin/settings/screen-master/bulk-upload/', screen_master_bulk_upload, name='screen_master_bulk_upload'),
+    path('custom-admin/settings/screen-master/bulk-edit/', screen_master_bulk_edit, name='screen_master_bulk_edit'),
+    path('custom-admin/settings/screen-master/bulk-delete/', screen_master_bulk_delete, name='screen_master_bulk_delete'),
 
     # ============================================================
-    # SCREEN MAPPING URLS - ✅ WITH BULK UPLOAD
+    # SCREEN MAPPING URLS
     # ============================================================
     path('custom-admin/settings/screen-mapping/', views.settings_screen_mapping_page, name='settings_screen_mapping'),
     path('custom-admin/settings/screen-mapping/add/', views.screen_mapping_add, name='screen_mapping_add'),
@@ -225,7 +368,7 @@ urlpatterns = [
     path('custom-admin/archive/', views.archived_tickets, name='archived_tickets'),
 
     # ============================================================
-    # ✅ TARGET DATE URL (Update target date for assigned tickets)
+    # ✅ TARGET DATE URL
     # ============================================================
     path('ticket/<int:ticket_id>/update-target-date/', views.update_target_date, name='update_target_date'),
 ]

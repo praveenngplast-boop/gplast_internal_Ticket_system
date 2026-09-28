@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'whitenoise.runserver_nostatic',
     'tickets',
+    # 'admin_view' removed — oversight lives inside tickets.views.admin_view
 ]
 
 MIDDLEWARE = [
@@ -31,6 +32,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'tickets.middleware.AuditorWriteGuardMiddleware',   # NEW
 ]
 
 ROOT_URLCONF = 'gplast_ticket.urls'
@@ -46,10 +48,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                # ✅ Added: Notification count context processor
                 'tickets.context_processors.notification_count',
-                # ✅ NEW: Unit Head context processor
                 'tickets.context_processors.unit_head_context',
+                'tickets.views.admin_view.context_processors.oversight_context',   # NEW
             ],
         },
     },
@@ -72,11 +73,6 @@ DATABASES = {
     }
 }
 
-# ============================================================
-# ✅ PASSWORD VALIDATION - GPLAST CUSTOM POLICY
-# Length: 4–14 characters only. All character types allowed.
-# No similarity check, no common-password check, no numeric check.
-# ============================================================
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'tickets.validators.SimpleLengthValidator'},
 ]
@@ -158,30 +154,19 @@ if not LOG_DIR.exists():
     LOG_DIR.mkdir(parents=True)
 
 # ============================================================
-# ✅ SESSION SETTINGS - FULLY CONFIGURED
+# SESSION SETTINGS
 # ============================================================
-# Session cookie age - 24 hours (86400 seconds)
 SESSION_COOKIE_AGE = 86400
-
-# Keep session alive after browser is closed
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-
-# ✅ CRITICAL: Refresh session expiry on every request
-# This prevents session from expiring while user is active
 SESSION_SAVE_EVERY_REQUEST = True
-
-# Security settings for session cookie
-SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
-SESSION_COOKIE_SECURE = not DEBUG  # Only send cookie over HTTPS in production
-SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
-
-# Session engine (default is fine)
-# SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 # ============================================================
 # CSRF SETTINGS
 # ============================================================
-CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF token
+CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']

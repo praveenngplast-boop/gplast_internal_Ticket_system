@@ -1,0 +1,57 @@
+
+
+<div class="av-kpi-strip">
+
+    <a href="{% url 'admin_view:ticket_list' %}" class="av-kpi">
+        <div class="av-kpi-icon">
+            <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="av-kpi-body">
+            <div class="av-kpi-label">Total</div>
+            <div class="av-kpi-value">{{ total|default:0 }}</div>
+        </div>
+    </a>
+
+    <a href="{% url 'admin_view:ticket_list' %}?status=open" class="av-kpi av-kpi--open">
+        <div class="av-kpi-icon">
+            <i class="fa-solid fa-circle-dot"></i>
+        </div>
+        <div class="av-kpi-body">
+            <div class="av-kpi-label">Open</div>
+            <div class="av-kpi-value">{{ open_count|default:0 }}</div>
+        </div>
+    </a>
+
+    <a href="{% url 'admin_view:ticket_list' %}?priority=critical"
+       class="av-kpi av-kpi--critical">
+        <div class="av-kpi-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="av-kpi-body">
+            <div class="av-kpi-label">Critical</div>
+            <div class="av-kpi-value">{{ critical_count|default:0 }}</div>
+        </div>
+    </a>
+
+    <a href="{% url 'admin_view:ticket_list' %}?status=escalated"
+       class="av-kpi av-kpi--escalated">
+        <div class="av-kpi-icon">
+            <i class="fa-solid fa-arrow-up-right-dots"></i>
+        </div>
+        <div class="av-kpi-body">
+            <div class="av-kpi-label">Escalated</div>
+            <div class="av-kpi-value">{{ escalated_count|default:0 }}</div>
+        </div>
+    </a>
+
+    <a href="{% url 'admin_view:ticket_list' %}" class="av-kpi av-kpi--overdue">
+        <div class="av-kpi-icon">
+            <i class="fa-solid fa-clock"></i>
+        </div>
+        <div class="av-kpi-body">
+            <div class="av-kpi-label">Overdue</div>
+            <div class="av-kpi-value">{{ overdue_count|default:0 }}</div>
+        </div>
+    </a>
+
+</div>

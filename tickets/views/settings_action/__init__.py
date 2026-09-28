@@ -27,6 +27,8 @@ from .screen_master import (
     screen_master_download_excel,
     screen_master_download_template,
     screen_master_bulk_upload,
+    screen_master_bulk_edit,
+    screen_master_bulk_delete,
 )
 from .screen_mapping import (
     screen_mapping_add,
@@ -58,33 +60,47 @@ from .erp_mapping_views import (
     erp_mapping_search_employees,
 )
 
+# ✅ Error Type Master (NEW)
+from .error_types import (
+    settings_error_type_master,
+    error_type_main_add,
+    error_type_main_edit,
+    error_type_main_delete,
+    error_type_main_toggle,
+    error_type_sub_add,
+    error_type_sub_edit,
+    error_type_sub_delete,
+    error_type_sub_toggle,
+    error_type_subs_for_main,
+)
+
 __all__ = [
     # Contact
     'settings_contact',
-    
+
     # Units
     'settings_units',
     'settings_departments',
     'departments_bulk_upload',
     'departments_download_template',
-    
+
     # Emails
     'settings_emails',
-    
+
     # Passwords
     'settings_passwords',
-    
+
     # Employees
     'settings_employees',
     'download_employee_list',
     'download_employee_template',
-    
+
     # Credentials
     'settings_credentials',
     'download_credentials',
     'credentials_bulk_upload',
     'credentials_download_template',
-    
+
     # Screen Master
     'screen_master_add',
     'screen_master_edit',
@@ -92,7 +108,9 @@ __all__ = [
     'screen_master_download_excel',
     'screen_master_download_template',
     'screen_master_bulk_upload',
-    
+    'screen_master_bulk_edit',
+    'screen_master_bulk_delete',
+
     # Screen Mapping
     'screen_mapping_add',
     'screen_mapping_remove',
@@ -102,11 +120,11 @@ __all__ = [
     'ajax_get_screens_for_erp',
     'screen_mapping_bulk_upload',
     'screen_mapping_download_template',
-    
+
     # Unit Head Management
     'settings_unit_heads_page',
     'settings_unit_heads',
-    
+
     # ERP USER ID MAPPING
     'erp_mapping_page',
     'erp_mapping_add',
@@ -117,4 +135,28 @@ __all__ = [
     'erp_mapping_download_template',
     'erp_mapping_list',
     'erp_mapping_search_employees',
+
+    # Error Type Master (NEW)
+    'settings_error_type_master',
+    'error_type_main_add',
+    'error_type_main_edit',
+    'error_type_main_delete',
+    'error_type_main_toggle',
+    'error_type_sub_add',
+    'error_type_sub_edit',
+    'error_type_sub_delete',
+    'error_type_sub_toggle',
+    'error_type_subs_for_main',
 ]
+# ---------------------------------------------------------------------------
+# Admin Users (Manage Admins)
+# ---------------------------------------------------------------------------
+from .admin_users import (
+    settings_admin_users,
+    admin_user_add,
+    admin_user_edit,
+    admin_user_reset_password,
+    admin_user_toggle_active,
+    admin_user_delete,
+    admin_user_count,
+)

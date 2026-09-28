@@ -1,0 +1,116 @@
+
+
+<form method="get"
+      action="{% url 'admin_view:ticket_list' %}"
+      class="av-filters"
+      id="av-filters-form">
+
+    <div class="av-filter-row">
+
+        <!-- --------------------------------------------------------
+             SEARCH BOX
+             -------------------------------------------------------- -->
+        <div class="av-input-wrap av-input-wrap--search">
+            <i class="fa-solid fa-magnifying-glass av-input-icon"></i>
+            <input type="search"
+                   name="q"
+                   class="av-input av-input--search"
+                   placeholder="Search subject or description…"
+                   value="{{ current_filters.q|default:'' }}"
+                   autocomplete="off">
+            {% if current_filters.q %}
+            <a href="?{% if current_filters.status %}status={{ current_filters.status }}&{% endif %}{% if current_filters.priority %}priority={{ current_filters.priority }}&{% endif %}{% if current_filters.sort %}sort={{ current_filters.sort }}{% endif %}"
+               class="av-input-clear"
+               title="Clear search">
+                <i class="fa-solid fa-xmark"></i>
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- --------------------------------------------------------
+             STATUS DROPDOWN
+             -------------------------------------------------------- -->
+        <select name="status" class="av-select" data-av-autosubmit>
+            <option value="">All Statuses</option>
+            <option value="open"      {% if current_filters.status == 'open' %}selected{% endif %}>Open</option>
+            <option value="assigned"  {% if current_filters.status == 'assigned' %}selected{% endif %}>Assigned</option>
+            <option value="hold"      {% if current_filters.status == 'hold' %}selected{% endif %}>On Hold</option>
+            <option value="escalated" {% if current_filters.status == 'escalated' %}selected{% endif %}>Escalated</option>
+            <option value="closed"    {% if current_filters.status == 'closed' %}selected{% endif %}>Closed</option>
+        </select>
+
+        <!-- --------------------------------------------------------
+             PRIORITY DROPDOWN
+             -------------------------------------------------------- -->
+        <select name="priority" class="av-select" data-av-autosubmit>
+            <option value="">All Priorities</option>
+            <option value="low"      {% if current_filters.priority == 'low' %}selected{% endif %}>Low</option>
+            <option value="medium"   {% if current_filters.priority == 'medium' %}selected{% endif %}>Medium</option>
+            <option value="high"     {% if current_filters.priority == 'high' %}selected{% endif %}>High</option>
+            <option value="critical" {% if current_filters.priority == 'critical' %}selected{% endif %}>Critical</option>
+        </select>
+
+        <!-- --------------------------------------------------------
+             SUBMIT + CLEAR
+             -------------------------------------------------------- -->
+        <button type="submit" class="av-btn av-btn-primary">
+            <i class="fa-solid fa-filter"></i>
+            <span class="av-btn-label">Apply</span>
+        </button>
+
+        {% if current_filters.q or current_filters.status or current_filters.priority %}
+        <a href="{% url 'admin_view:ticket_list' %}" class="av-btn av-btn-ghost">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span class="av-btn-label">Reset</span>
+        </a>
+        {% endif %}
+
+    </div>
+
+    <!-- --------------------------------------------------------
+         ACTIVE FILTER CHIPS
+         -------------------------------------------------------- -->
+    {% if current_filters.q or current_filters.status or current_filters.priority %}
+    <div class="av-filter-chips">
+
+        <span class="av-filter-chips-label">Active:</span>
+
+        {% if current_filters.q %}
+        <span class="av-filter-chip">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            {{ current_filters.q }}
+        </span>
+        {% endif %}
+
+        {% if current_filters.status %}
+        <span class="av-filter-chip av-filter-chip--status">
+            <i class="fa-solid fa-circle-dot"></i>
+            Status: {{ current_filters.status|title }}
+        </span>
+        {% endif %}
+
+        {% if current_filters.priority %}
+        <span class="av-filter-chip av-filter-chip--priority">
+            <i class="fa-solid fa-flag"></i>
+            Priority: {{ current_filters.priority|title }}
+        </span>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+</form>
+
+<script>
+    // Auto-submit the filter form when a select changes
+    (function () {
+        var selects = document.querySelectorAll('[data-av-autosubmit]');
+        var form = document.getElementById('av-filters-form');
+        if (!form) return;
+        selects.forEach(function (sel) {
+            sel.addEventListener('change', function () {
+                form.submit();
+            });
+        });
+    })();
+</script>

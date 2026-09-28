@@ -4,20 +4,28 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+
 from tickets.views import role_redirect
+
 
 urlpatterns = [
     # ✅ Django admin (stays at /admin/)
     path('admin/', admin.site.urls),
-    
+
     # ✅ Root redirect
     path('', role_redirect, name='root_redirect'),
-    
+
     # ✅ Accounts (login, logout, password reset)
     path('accounts/', include('django.contrib.auth.urls')),
-    
-    # ✅ Tickets app (all custom URLs including admin, employee, unit_head)
+
+    # ✅ Tickets app (all custom URLs: admin, employee, unit_head, settings, etc.)
     path('', include('tickets.urls')),
+
+    #  NEW — Oversight (read-only admin) subpackage
+    path(
+        'admin_view/',
+        include('tickets.views.admin_view.urls', namespace='admin_view'),
+    ),
 ]
 
 # ✅ Serve static and media files in development

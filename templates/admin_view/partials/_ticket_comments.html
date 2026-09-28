@@ -1,0 +1,124 @@
+{# ============================================================
+   TICKET COMMENTS
+   Renders existing replies + (conditionally) a comment form.
+   Requires context: ticket, replies, can_comment
+   ============================================================ #}
+
+<section class="av-card av-comments">
+
+    <div class="av-card-head av-card-head--row">
+        <h3>
+            Comments
+            <span class="av-count-pill">{{ replies|length }}</span>
+        </h3>
+    </div>
+
+    <div class="av-card-body">
+
+        <!-- ========================================================
+             EXISTING COMMENTS
+             ======================================================== -->
+        <div class="av-comment-list">
+            {% for r in replies %}
+            <div class="av-comment">
+
+                <div class="av-avatar av-avatar--lg">
+                    {{ r.author.username|first|upper }}
+                </div>
+
+                <div class="av-comment-body">
+                    <div class="av-comment-head">
+                        <strong>
+                            {{ r.author.get_full_name|default:r.author.username }}
+                        </strong>
+                        <span class="av-muted">
+                            {{ r.created_at|timesince }} ago
+                        </span>
+                    </div>
+
+                    <div class="av-comment-text">
+                        {{ r.message|linebreaks }}
+                    </div>
+
+                    {% if r.attachment %}
+                    <a href="{{ r.attachment.url }}"
+                       target="_blank"
+                       class="av-attachment-chip av-attachment-chip--sm">
+                        <i class="fa-solid fa-paperclip"></i>
+                        <span>{{ r.attachment.name|cut:"attachments/replies/" }}</span>
+                    </a>
+                    {% endif %}
+                </div>
+
+            </div>
+            {% empty %}
+            <div class="av-empty av-empty--sm">
+                <i class="fa-regular fa-comment-dots"></i>
+                <span>No comments yet.</span>
+                {% if can_comment %}
+                <span class="av-muted">Be the first to comment.</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- ========================================================
+             COMMENT FORM
+             ======================================================== -->
+        {% if can_comment %}
+        <form method="post"
+              action="{% url 'admin_view:add_comment' ticket.id %}"
+              class="av-comment-form"
+              id="av-comment-form">
+            {% csrf_token %}
+
+            <div class="av-comment-form-head">
+                <span class="av-avatar av-avatar--sm">
+                    {{ user.username|first|upper }}
+                </span>
+                <span class="av-muted">
+                    Posting as
+                    <strong>{{ user.get_full_name|default:user.username }}</strong>
+                </span>
+            </div>
+
+            <textarea name="body"
+                      class="av-textarea"
+                      placeholder="Write a comment…"
+                      rows="3"
+                      maxlength="5000"
+                      required
+                      id="av-comment-body"></textarea>
+
+            <div class="av-comment-actions">
+                <span class="av-char-counter">
+                    <span id="av-comment-count">0</span> / 5000
+                </span>
+                <button type="submit" class="av-btn av-btn-primary">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Post Comment
+                </button>
+            </div>
+        </form>
+
+        <script>
+            // Live character counter for the comment box
+            (function () {
+                var textarea = document.getElementById('av-comment-body');
+                var counter = document.getElementById('av-comment-count');
+                if (!textarea || !counter) return;
+                textarea.addEventListener('input', function () {
+                    counter.textContent = textarea.value.length;
+                });
+            })();
+        </script>
+        {% else %}
+        <div class="av-note-small">
+            <i class="fa-solid fa-eye"></i>
+            You don't have permission to comment on this ticket.
+        </div>
+        {% endif %}
+
+    </div>
+
+</section>

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Oversight Dashboard — GPLAST{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin_view/oversight.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin_view/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="av-page av-page--dashboard">
+
+    {% include 'admin_view/partials/_read_only_banner.html' %}
+
+    <header class="av-page-header">
+        <div>
+            <h1>Oversight Dashboard</h1>
+            <p>Read-only view across every unit and department</p>
+        </div>
+        <div class="av-page-actions">
+            <a href="{% url 'admin_view:reports' %}" class="av-btn av-btn-ghost">
+                <i class="fa-solid fa-chart-bar"></i> Reports
+            </a>
+        </div>
+    </header>
+
+    {% include 'admin_view/partials/_kpi_strip.html' %}
+
+    {% include 'admin_view/partials/_recent_tickets.html' %}
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/admin_view/dashboard.js' %}"></script>
+{% endblock %}

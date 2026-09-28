@@ -29,15 +29,15 @@ class UnitHead(models.Model):
     Each Unit Head has a corresponding User account for login.
     """
     user = models.OneToOneField(
-        User, 
-        on_delete=models.CASCADE, 
+        User,
+        on_delete=models.CASCADE,
         related_name='unit_head_profile',
         null=True,
         blank=True
     )
     unit = models.OneToOneField(
-        Unit, 
-        on_delete=models.CASCADE, 
+        Unit,
+        on_delete=models.CASCADE,
         related_name='head'
     )
     name = models.CharField(max_length=150)
@@ -52,17 +52,15 @@ class UnitHead(models.Model):
 
 
 # ============================================================
-# DEPARTMENT MODEL - ✅ FIXED: Allows same name in different units
+# DEPARTMENT MODEL - Allows same name in different units
 # ============================================================
 class Department(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)  # ✅ NO unique=True
+    name = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        # ✅ Allows same department name in different units
-        # ✅ Prevents duplicate department name within the same unit
         unique_together = ('unit', 'name')
 
     def save(self, *args, **kwargs):
@@ -126,7 +124,7 @@ class EmployeeMaster(models.Model):
     employee_id = models.CharField(max_length=50, unique=True)
     employee_name = models.CharField(max_length=150)
     mobile = models.CharField(
-        max_length=10, 
+        max_length=10,
         blank=True,
         null=True
     )
@@ -183,17 +181,92 @@ class DepartmentCredential(models.Model):
 
 
 # ============================================================
-# TICKET NUMBER GENERATOR - ✅ FIXED: No circular import
+# ✅ NEW: ERROR TYPE MASTER MODELS
+# Admin manages these in Settings → Error Type Master.
+# Close Ticket sheet reads from these tables.
+# ============================================================
+class ErrorTypeMain(models.Model):
+    """
+    Main error category (e.g. "Roadmap Error", "GPL Error").
+    Admin can add / rename / delete / toggle from the settings page.
+    """
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        verbose_name="Main Error Type",
+        help_text="e.g. Roadmap Error, GPL Error"
+    )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        help_text="Lower numbers appear first in dropdowns"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Inactive types do not appear in the Close Ticket dropdown"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=100, blank=True)
+
+    class Meta:
+        ordering = ['display_order', 'name']
+        verbose_name = 'Main Error Type'
+        verbose_name_plural = 'Main Error Types'
+
+    def __str__(self):
+        return self.name
+
+
+class ErrorTypeSub(models.Model):
+    """
+    Sub error type nested under a Main (e.g. "Database Error" under
+    "Roadmap Error").  Admin manages these alongside the mains.
+    """
+    main = models.ForeignKey(
+        ErrorTypeMain,
+        on_delete=models.CASCADE,
+        related_name='sub_types',
+        verbose_name="Parent Main Error Type"
+    )
+    name = models.CharField(
+        max_length=150,
+        verbose_name="Sub Error Type",
+        help_text="e.g. Database Error, User / Data Entry Error"
+    )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        help_text="Lower numbers appear first in dropdowns"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Inactive types do not appear in the Close Ticket dropdown"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=100, blank=True)
+
+    class Meta:
+        ordering = ['main__display_order', 'display_order', 'name']
+        verbose_name = 'Sub Error Type'
+        verbose_name_plural = 'Sub Error Types'
+        unique_together = [('main', 'name')]
+
+    def __str__(self):
+        return f"{self.main.name} → {self.name}"
+
+
+# ============================================================
+# TICKET NUMBER GENERATOR - No circular import
 # ============================================================
 def generate_ticket_number():
     """Generate a unique ticket number"""
     from .models import Ticket
-    
+
     last_ticket = Ticket.objects.with_archived().order_by('id').last()
-    
+
     if last_ticket and last_ticket.ticket_number:
         ticket_num = last_ticket.ticket_number
-        
+
         try:
             last_number = int(ticket_num)
             new_number = last_number + 1
@@ -209,7 +282,7 @@ def generate_ticket_number():
                 new_number = 1
     else:
         new_number = 1
-    
+
     return f"{new_number:04d}"
 
 
@@ -245,17 +318,19 @@ class Ticket(models.Model):
         ('High', 'High'),
         ('Critical', 'Critical')
     ]
-    
+
     ERROR_TYPE_CHOICES = [
         ('New', 'New'),
         ('Repeated', 'Repeated'),
     ]
-    
+
+    # Kept for backwards compatibility — no longer drives dropdowns.
+    # The dropdowns read from ErrorTypeMain / ErrorTypeSub instead.
     MAIN_ERROR_TYPE_CHOICES = [
         ('Roadmap Error', 'Roadmap Error'),
         ('GPL Error', 'GPL Error'),
     ]
-    
+
     ROADMAP_SUB_ERROR_CHOICES = [
         ('Database Error', 'Database Error'),
         ('Logic / Functional Error', 'Logic / Functional Error'),
@@ -270,14 +345,14 @@ class Ticket(models.Model):
         ('Master Data / Configuration Error', 'Master Data / Configuration Error'),
         ('Other ERP Error', 'Other ERP Error'),
     ]
-    
+
     GPL_SUB_ERROR_CHOICES = [
         ('User / Data Entry Error', 'User / Data Entry Error'),
         ('Process / Procedure Error', 'Process / Procedure Error'),
         ('Master Data Error', 'Master Data Error'),
         ('Other GPL Error', 'Other GPL Error'),
     ]
-    
+
     STATUS_CHOICES = [
         ('Open', 'Open'),
         ('Assigned', 'Assigned'),
@@ -285,12 +360,12 @@ class Ticket(models.Model):
         ('Escalated', 'Escalated'),
         ('Closed', 'Closed')
     ]
-    
+
     CREATED_BY_CHOICES = [
         ('Employee', 'Employee'),
         ('Admin', 'Admin')
     ]
-    
+
     ADMIN_REASON_CHOICES = [
         ('Phone Call', 'Phone Call'),
         ('Walk-in Support', 'Walk-in Support'),
@@ -304,9 +379,9 @@ class Ticket(models.Model):
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     employee_id = models.CharField(max_length=50)
     employee_name = models.CharField(max_length=150)
-    
+
     mobile = models.CharField(
-        max_length=10, 
+        max_length=10,
         blank=True,
         null=True
     )
@@ -314,38 +389,37 @@ class Ticket(models.Model):
         blank=True,
         null=True
     )
-    
+
     screen_number = models.CharField(max_length=50)
     subject = models.CharField(max_length=150)
     description = models.TextField()
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
-    
+
     error_type = models.CharField(
-        max_length=50, 
+        max_length=50,
         choices=ERROR_TYPE_CHOICES,
         default='New',
         verbose_name="Error Type"
     )
-    
+
     main_error_type = models.CharField(
-        max_length=50, 
-        blank=True, 
+        max_length=50,
+        blank=True,
         null=True,
-        choices=MAIN_ERROR_TYPE_CHOICES,
         verbose_name="Main Error Type",
-        help_text="Select the main error category when closing the ticket"
+        help_text="Selected when closing the ticket (from Error Type Master)"
     )
-    
+
     sub_error_type = models.CharField(
-        max_length=100, 
-        blank=True, 
+        max_length=150,
+        blank=True,
         null=True,
         verbose_name="Sub Error Type",
-        help_text="Select the sub error type based on the main error category"
+        help_text="Selected when closing the ticket (from Error Type Master)"
     )
-    
+
     # ============================================================
-    # ✅ NEW: TARGET DATE FIELD
+    # TARGET DATE FIELD
     # ============================================================
     target_date = models.DateField(
         null=True,
@@ -353,11 +427,11 @@ class Ticket(models.Model):
         verbose_name="Target Date",
         help_text="Expected completion date for the ticket"
     )
-    
+
     attachment_1 = models.FileField(upload_to='attachments/', blank=True, null=True)
     attachment_2 = models.FileField(upload_to='attachments/', blank=True, null=True)
     attachment_3 = models.FileField(upload_to='attachments/', blank=True, null=True)
-    
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
     created_by_role = models.CharField(max_length=10, choices=CREATED_BY_CHOICES, default='Employee')
     admin_creation_reason = models.CharField(max_length=50, choices=ADMIN_REASON_CHOICES, blank=True, null=True)
@@ -366,19 +440,19 @@ class Ticket(models.Model):
     closing_remarks = models.TextField(blank=True, null=True)
     closed_by = models.CharField(max_length=100, blank=True, null=True)
     vendor_ticket_number = models.CharField(max_length=100, blank=True, null=True)
-    
+
     created_by_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     closed_at = models.DateTimeField(blank=True, null=True)
     escalated_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     is_viewed = models.BooleanField(
         default=False,
         help_text="Admin has viewed this ticket"
     )
     viewed_at = models.DateTimeField(
-        blank=True, 
+        blank=True,
         null=True,
         help_text="When the ticket was first viewed by admin"
     )
@@ -388,7 +462,7 @@ class Ticket(models.Model):
     )
 
     # ============================================================
-    # ✅ NEW: ARCHIVE FIELDS
+    # ARCHIVE FIELDS
     # ============================================================
     is_archived = models.BooleanField(
         default=False,
@@ -429,29 +503,29 @@ class Ticket(models.Model):
         if screen:
             return f'{screen.screen_name} ({screen.screen_code})'
         return self.screen_number or 'Not Set'
-    
+
     def get_main_error_display(self):
         if self.main_error_type:
             return self.main_error_type
         return "N/A"
-    
+
     def get_sub_error_display(self):
         if self.sub_error_type:
             return self.sub_error_type
         return "N/A"
-    
+
     def get_full_error_details(self):
         return {
             'main_error_type': self.get_main_error_display(),
             'sub_error_type': self.get_sub_error_display(),
         }
-    
+
     def has_closing_error_details(self):
         return bool(self.main_error_type and self.sub_error_type)
-    
+
     def is_closed(self):
         return self.status == 'Closed'
-    
+
     def can_reopen(self):
         if not self.is_closed():
             return False
@@ -461,24 +535,24 @@ class Ticket(models.Model):
         from datetime import timedelta
         time_since_close = timezone.now() - self.closed_at
         return time_since_close.total_seconds() <= 48 * 3600
-    
+
     def change_priority(self, new_priority, reason, performed_by):
         if self.is_closed():
             raise ValueError("Cannot change priority of a closed ticket.")
-        
+
         old_priority = self.priority
         self.priority = new_priority
         self.save()
-        
+
         TicketHistory.objects.create(
             ticket=self,
             action="Priority Changed",
             remarks=f"Priority changed from {old_priority} to {new_priority}. Reason: {reason}",
             performed_by=performed_by
         )
-        
+
         return old_priority
-    
+
     def get_priority_display(self):
         priority_map = {
             'Critical': 'badge-priority-critical',
@@ -490,14 +564,14 @@ class Ticket(models.Model):
             'value': self.priority,
             'class': priority_map.get(self.priority, '')
         }
-    
+
     def get_allowed_priority_changes(self):
         if self.is_closed():
             return []
         return ['Critical', 'High', 'Medium', 'Low']
 
     # ============================================================
-    # ✅ NEW: ARCHIVE HELPERS
+    # ARCHIVE HELPERS
     # ============================================================
     def archive(self, actor="System (auto)"):
         """
@@ -586,7 +660,7 @@ class SettingsAuditLog(models.Model):
         ('LOGIN', 'Login'),
         ('LOGOUT', 'Logout'),
     ]
-    
+
     SETTING_TYPES = [
         ('UNIT', 'Unit'),
         ('DEPARTMENT', 'Department'),
@@ -596,9 +670,10 @@ class SettingsAuditLog(models.Model):
         ('EMAIL', 'Email'),
         ('PASSWORD', 'Password'),
         ('SCREEN', 'Screen'),
+        ('ERROR_TYPE', 'Error Type'),   # ✅ NEW — for error type master
         ('GENERAL', 'General'),
     ]
-    
+
     performed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     performed_by_name = models.CharField(max_length=150)
     action_type = models.CharField(max_length=20, choices=ACTION_TYPES)
@@ -611,12 +686,12 @@ class SettingsAuditLog(models.Model):
     user_agent = models.TextField(blank=True, null=True)
     remarks = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         ordering = ['-created_at']
         verbose_name = 'Settings Audit Log'
         verbose_name_plural = 'Settings Audit Logs'
-    
+
     def __str__(self):
         return f"{self.performed_by_name} - {self.action_type} - {self.setting_name} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
 
@@ -631,22 +706,21 @@ class SettingsAuditLog(models.Model):
 
 
 # ============================================================
-# ERP USER ID MAPPING MODEL - ✅ FIXED: Removed unique=True
+# ERP USER ID MAPPING MODEL
 # ============================================================
 class ERPHolderMapping(models.Model):
     """
     Maps ERP User IDs to Employee IDs
-    ✅ FIXED: Same ERP ID can be used by multiple employees across different units
+    Same ERP ID can be used by multiple employees across different units
     """
     erp_user_id = models.CharField(
-        max_length=50, 
+        max_length=50,
         db_index=True,
-        # ✅ REMOVED: unique=True
         verbose_name="ERP User ID",
         help_text="ERP User ID (e.g., 0001, 0002, HRD1223)"
     )
     employee = models.ForeignKey(
-        EmployeeMaster, 
+        EmployeeMaster,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -662,7 +736,7 @@ class ERPHolderMapping(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.CharField(max_length=100, blank=True, null=True)
-    
+
     class Meta:
         ordering = ['erp_user_id']
         verbose_name = 'ERP User ID'
@@ -672,12 +746,12 @@ class ERPHolderMapping(models.Model):
             models.Index(fields=['employee']),
             models.Index(fields=['is_mapped']),
         ]
-    
+
     def __str__(self):
         if self.employee:
             return f"ERP {self.erp_user_id} → {self.employee.employee_id} ({self.employee.employee_name})"
         return f"ERP {self.erp_user_id} → (Not Mapped)"
-    
+
     def get_employee_details(self):
         if self.employee:
             return {
@@ -775,7 +849,7 @@ class ScreenMapping(models.Model):
 
 
 # ============================================================
-# ✅ NEW: DESKTOP NOTIFICATION MODEL
+# DESKTOP NOTIFICATION MODEL
 # ============================================================
 class Notification(models.Model):
     """

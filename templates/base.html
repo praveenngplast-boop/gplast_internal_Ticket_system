@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>{% block title %}GPLAST Ticketing System{% endblock %}</title>
     <link rel="icon" type="image/png" sizes="64x64" href="{% static 'images/favicon.png' %}">
     <link rel="apple-touch-icon" sizes="64x64" href="{% static 'images/favicon.png' %}">
@@ -44,7 +44,7 @@
     {% if user.is_authenticated %}
 
     <!-- ============================================================
-         NAVBAR — toggle + logo (left) | greeting + bell (right)
+         NAVBAR
          ============================================================ -->
     <nav class="shell-navbar" id="shellNavbar">
 
@@ -60,7 +60,15 @@
                 <i class="fa-solid fa-bars"></i>
             </button>
 
-            <a href="{% if user.is_staff %}{% url 'admin_dashboard' %}{% elif is_unit_head %}{% url 'unit_head_dashboard' %}{% else %}{% url 'employee_dashboard' %}{% endif %}"
+            <!-- Mobile-only hamburger -->
+            <button type="button"
+                    class="shell-hamburger"
+                    id="shellHamburger"
+                    aria-label="Open menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <a href="{% if is_auditor %}{% url 'admin_view:dashboard' %}{% elif user.is_staff %}{% url 'admin_dashboard' %}{% elif is_unit_head %}{% url 'unit_head_dashboard' %}{% else %}{% url 'employee_dashboard' %}{% endif %}"
                class="shell-navbar-logo"
                aria-label="GPLAST home">
                 <img src="{% static 'images/logo.png' %}" alt="GPLAST"
@@ -72,7 +80,7 @@
 
         <div class="shell-navbar-right">
 
-            <!-- Two-line greeting block (right side, before bell) -->
+            <!-- Two-line greeting block (hidden on very small screens) -->
             <div class="shell-navbar-greeting">
                 <span class="shell-greeting-line" id="shellGreetingLine">Welcome</span>
                 <span class="shell-greeting-user">
@@ -80,6 +88,21 @@
                     <span class="shell-greeting-name">{{ user.get_full_name|default:user.username }}</span>
                 </span>
             </div>
+
+            <!-- ================================================
+                 LOGOUT BUTTON — inline in navbar
+                 ================================================ -->
+            <form action="{% url 'custom_logout' %}" method="POST" class="shell-navbar-logout-form">
+                {% csrf_token %}
+                <button type="submit"
+                        class="shell-navbar-logout"
+                        data-tip="Logout"
+                        data-tip-placement="bottom"
+                        aria-label="Logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span class="shell-navbar-logout-text">Logout</span>
+                </button>
+            </form>
 
             {% if user.is_staff %}
             <button type="button" class="shell-bell"
@@ -126,7 +149,31 @@
     <aside class="shell-rail-wrap" id="shellRail" aria-label="Main navigation">
 
         <nav class="shell-rail-top">
-            {% if user.is_staff %}
+
+            {# ================= AUDITOR ================= #}
+            {% if is_auditor %}
+                <a href="{% url 'admin_view:dashboard' %}"
+                   class="shell-rail-btn {% if request.resolver_match.namespace == 'admin_view' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                   data-tip="Oversight" data-tip-placement="right" aria-label="Oversight">
+                    <span class="shell-rail-icon"><i class="fa-solid fa-eye"></i></span>
+                    <span class="shell-rail-label">Oversight</span>
+                </a>
+                <a href="{% url 'admin_view:ticket_list' %}"
+                   class="shell-rail-btn {% if request.resolver_match.namespace == 'admin_view' and request.resolver_match.url_name == 'ticket_list' %}active{% endif %}"
+                   data-tip="All Tickets" data-tip-placement="right" aria-label="All Tickets">
+                    <span class="shell-rail-icon"><i class="fa-solid fa-list-check"></i></span>
+                    <span class="shell-rail-label">All Tickets</span>
+                </a>
+                <div class="shell-rail-divider"></div>
+                <a href="{% url 'admin_view:reports' %}"
+                   class="shell-rail-btn {% if request.resolver_match.namespace == 'admin_view' and request.resolver_match.url_name == 'reports' %}active{% endif %}"
+                   data-tip="Reports" data-tip-placement="right" aria-label="Reports">
+                    <span class="shell-rail-icon"><i class="fa-solid fa-chart-bar"></i></span>
+                    <span class="shell-rail-label">Reports</span>
+                </a>
+
+            {# ================= ADMIN ================= #}
+            {% elif user.is_staff %}
                 <a href="{% url 'admin_dashboard' %}"
                    class="shell-rail-btn {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}"
                    data-tip="Dashboard" data-tip-placement="right" aria-label="Dashboard">
@@ -164,6 +211,8 @@
                     <span class="shell-rail-icon"><i class="fa-solid fa-sliders"></i></span>
                     <span class="shell-rail-label">Settings</span>
                 </a>
+
+            {# ================= UNIT HEAD ================= #}
             {% elif is_unit_head %}
                 <a href="{% url 'unit_head_dashboard' %}"
                    class="shell-rail-btn {% if request.resolver_match.url_name == 'unit_head_dashboard' %}active{% endif %}"
@@ -184,6 +233,8 @@
                     <span class="shell-rail-icon"><i class="fa-solid fa-file-excel"></i></span>
                     <span class="shell-rail-label">Reports</span>
                 </a>
+
+            {# ================= EMPLOYEE ================= #}
             {% else %}
                 <a href="{% url 'employee_dashboard' %}"
                    class="shell-rail-btn {% if request.resolver_match.url_name == 'employee_dashboard' %}active{% endif %}"
@@ -220,7 +271,10 @@
                 <span class="shell-rail-user">
                     <span class="shell-rail-user-name">{{ user.get_full_name|default:user.username }}</span>
                     <span class="shell-rail-user-role">
-                        {% if user.is_staff %}Admin{% elif is_unit_head %}Unit Head{% else %}Employee{% endif %}
+                        {% if is_auditor %}Auditor
+                        {% elif user.is_staff %}Admin
+                        {% elif is_unit_head %}Unit Head
+                        {% else %}Employee{% endif %}
                     </span>
                 </span>
             </button>
@@ -239,7 +293,9 @@
             <div class="shell-menu-id">
                 <div class="shell-menu-name">{{ user.get_full_name|default:user.username }}</div>
                 <div class="shell-menu-email">{{ user.email|default:user.username }}</div>
-                {% if user.is_staff %}
+                {% if is_auditor %}
+                    <span class="shell-menu-role role-auditor">Auditor</span>
+                {% elif user.is_staff %}
                     <span class="shell-menu-role role-admin">Admin</span>
                 {% elif is_unit_head %}
                     <span class="shell-menu-role role-unit-head">Unit Head{% if unit_head_unit_code %} · {{ unit_head_unit_code }}{% endif %}</span>

@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Users — GPLAST Ticket System{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin_panel/settings_admin_users.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-users-page">
+
+    <div class="page-header">
+        <div class="header-left">
+            <a href="{% url 'settings_page' %}" class="back-link">
+                <i class="fa-solid fa-arrow-left"></i> Settings
+            </a>
+            <h1 class="page-title">
+                <i class="fa-solid fa-user-shield"></i> Admin Users
+            </h1>
+            <p class="page-subtitle">
+                Manage system administrators. Each admin should have their own
+                username so the audit log records the real person.
+            </p>
+        </div>
+        <div class="header-right">
+            <button type="button" class="btn btn-primary" id="btn-add-admin">
+                <i class="fa-solid fa-plus"></i> Add Admin
+            </button>
+        </div>
+    </div>
+
+    <div class="info-banner">
+        <i class="fa-solid fa-circle-info"></i>
+        <div>
+            <strong>{{ admin_count }}</strong> admin{{ admin_count|pluralize }} in the system.
+            Actions performed by each admin are recorded in the audit log under their own username.
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text"
+                   id="admin-search"
+                   placeholder="Search by username, name, or email…"
+                   autocomplete="off">
+        </div>
+        <button type="button" class="btn btn-ghost" id="btn-refresh">
+            <i class="fa-solid fa-rotate"></i> Refresh
+        </button>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="data-table" id="admin-table">
+            <thead>
+                <tr>
+                    <th style="width:60px;">#</th>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th style="width:120px;">Status</th>
+                    <th style="width:120px;">Last Login</th>
+                    <th style="width:200px; text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="admin-tbody">
+                {% for admin in admins %}
+                <tr data-id="{{ admin.id }}"
+                    data-username="{{ admin.username }}"
+                    data-first-name="{{ admin.first_name }}"
+                    data-last-name="{{ admin.last_name }}"
+                    data-email="{{ admin.email }}"
+                    data-is-active="{{ admin.is_active|yesno:'true,false' }}"
+                    class="admin-row {% if not admin.is_active %}row-inactive{% endif %}">
+
+                    <td class="col-index">{{ forloop.counter }}</td>
+                    <td class="col-username">
+                        <span class="username-text">{{ admin.username }}</span>
+                        {% if admin.id == current_user_id %}<span class="badge badge-you">You</span>{% endif %}
+                        {% if admin.is_superuser %}<span class="badge badge-super">Super</span>{% endif %}
+                    </td>
+                    <td class="col-name">{{ admin.get_full_name|default:"—" }}</td>
+                    <td class="col-email">{{ admin.email|default:"—" }}</td>
+                    <td class="col-status">
+                        {% if admin.is_active %}
+                        <span class="status-badge status-active"><i class="fa-solid fa-circle"></i> Active</span>
+                        {% else %}
+                        <span class="status-badge status-inactive"><i class="fa-solid fa-circle"></i> Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="col-last-login">
+                        {% if admin.last_login %}
+                            {{ admin.last_login|date:"d M Y" }}<br>
+                            <small>{{ admin.last_login|date:"H:i" }}</small>
+                        {% else %}
+                            <span class="muted">Never</span>
+                        {% endif %}
+                    </td>
+                    <td class="col-actions">
+                        <button type="button" class="icon-btn btn-edit" title="Edit name / email" data-id="{{ admin.id }}">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button type="button" class="icon-btn btn-reset-pw" title="Reset password" data-id="{{ admin.id }}">
+                            <i class="fa-solid fa-key"></i>
+                        </button>
+                        {% if admin.id != current_user_id %}
+                        <button type="button"
+                                class="icon-btn btn-toggle {% if admin.is_active %}btn-warn{% else %}btn-ok{% endif %}"
+                                title="{% if admin.is_active %}Deactivate{% else %}Activate{% endif %}"
+                                data-id="{{ admin.id }}">
+                            <i class="fa-solid {% if admin.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                        </button>
+                        <button type="button" class="icon-btn btn-delete" title="Delete admin" data-id="{{ admin.id }}">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                        {% else %}
+                        <button type="button" class="icon-btn" disabled title="You cannot modify your own account here">
+                            <i class="fa-solid fa-lock"></i>
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <p>No admins found.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- MODAL: ADD ADMIN -->
+<div class="modal-overlay" id="modal-add" hidden>
+    <div class="modal">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-user-plus"></i> Add Admin User</h2>
+            <button type="button" class="modal-close" data-close="modal-add"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="form-add" class="modal-body" autocomplete="off" onsubmit="return false;">
+            {% csrf_token %}
+            <div class="form-row">
+                <label for="add-username">Username <span class="req">*</span></label>
+                <input type="text" id="add-username" name="username" minlength="3" maxlength="150">
+            </div>
+            <div class="form-grid-2">
+                <div class="form-row">
+                    <label for="add-first-name">First Name</label>
+                    <input type="text" id="add-first-name" name="first_name" maxlength="150">
+                </div>
+                <div class="form-row">
+                    <label for="add-last-name">Last Name</label>
+                    <input type="text" id="add-last-name" name="last_name" maxlength="150">
+                </div>
+            </div>
+            <div class="form-row">
+                <label for="add-email">Email</label>
+                <input type="email" id="add-email" name="email" maxlength="254">
+            </div>
+            <div class="form-row">
+                <label for="add-password">Password <span class="req">*</span></label>
+                <div class="input-with-toggle">
+                    <input type="password" id="add-password" name="password" minlength="4" maxlength="14">
+                    <button type="button" class="toggle-pw" data-target="add-password"><i class="fa-solid fa-eye"></i></button>
+                </div>
+                <small class="hint">4–14 characters.</small>
+            </div>
+            <div class="form-row">
+                <label for="add-password-confirm">Confirm Password <span class="req">*</span></label>
+                <div class="input-with-toggle">
+                    <input type="password" id="add-password-confirm" name="password_confirm" minlength="4" maxlength="14">
+                    <button type="button" class="toggle-pw" data-target="add-password-confirm"><i class="fa-solid fa-eye"></i></button>
+                </div>
+            </div>
+            <div class="form-row form-row-check">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="add-is-active" name="is_active" checked>
+                    <span>Active (can log in immediately)</span>
+                </label>
+            </div>
+            <div class="form-error" id="add-error" hidden></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-close="modal-add">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-add-submit">
+                    <i class="fa-solid fa-check"></i> Create Admin
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: EDIT ADMIN -->
+<div class="modal-overlay" id="modal-edit" hidden>
+    <div class="modal">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-pen"></i> Edit Admin</h2>
+            <button type="button" class="modal-close" data-close="modal-edit"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="form-edit" class="modal-body" autocomplete="off" onsubmit="return false;">
+            {% csrf_token %}
+            <input type="hidden" id="edit-id" name="id">
+            <div class="form-row">
+                <label>Username</label>
+                <input type="text" id="edit-username" disabled>
+                <small class="hint">Username cannot be changed.</small>
+            </div>
+            <div class="form-grid-2">
+                <div class="form-row">
+                    <label for="edit-first-name">First Name</label>
+                    <input type="text" id="edit-first-name" name="first_name" maxlength="150">
+                </div>
+                <div class="form-row">
+                    <label for="edit-last-name">Last Name</label>
+                    <input type="text" id="edit-last-name" name="last_name" maxlength="150">
+                </div>
+            </div>
+            <div class="form-row">
+                <label for="edit-email">Email</label>
+                <input type="email" id="edit-email" name="email" maxlength="254">
+            </div>
+            <div class="form-error" id="edit-error" hidden></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-close="modal-edit">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-edit-submit">
+                    <i class="fa-solid fa-check"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: RESET PASSWORD -->
+<div class="modal-overlay" id="modal-reset-pw" hidden>
+    <div class="modal">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-key"></i> Reset Password</h2>
+            <button type="button" class="modal-close" data-close="modal-reset-pw"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="form-reset-pw" class="modal-body" autocomplete="off" onsubmit="return false;">
+            {% csrf_token %}
+            <input type="hidden" id="reset-id" name="id">
+            <p class="modal-note">
+                Setting a new password for <strong id="reset-username-label">—</strong>.
+            </p>
+            <div class="form-row">
+                <label for="reset-password">New Password <span class="req">*</span></label>
+                <div class="input-with-toggle">
+                    <input type="password" id="reset-password" name="password" minlength="4" maxlength="14">
+                    <button type="button" class="toggle-pw" data-target="reset-password"><i class="fa-solid fa-eye"></i></button>
+                </div>
+            </div>
+            <div class="form-row">
+                <label for="reset-password-confirm">Confirm Password <span class="req">*</span></label>
+                <div class="input-with-toggle">
+                    <input type="password" id="reset-password-confirm" name="password_confirm" minlength="4" maxlength="14">
+                    <button type="button" class="toggle-pw" data-target="reset-password-confirm"><i class="fa-solid fa-eye"></i></button>
+                </div>
+            </div>
+            <div class="form-error" id="reset-error" hidden></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-close="modal-reset-pw">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-reset-submit">
+                    <i class="fa-solid fa-key"></i> Reset Password
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: TOGGLE -->
+<div class="modal-overlay" id="modal-toggle" hidden>
+    <div class="modal modal-small">
+        <div class="modal-header">
+            <h2 id="toggle-title"><i class="fa-solid fa-toggle-on"></i> Confirm</h2>
+            <button type="button" class="modal-close" data-close="modal-toggle"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <p id="toggle-message">Are you sure?</p>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-close="modal-toggle">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-toggle-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: DELETE -->
+<div class="modal-overlay" id="modal-delete" hidden>
+    <div class="modal modal-small">
+        <div class="modal-header modal-header-danger">
+            <h2><i class="fa-solid fa-triangle-exclamation"></i> Delete Admin</h2>
+            <button type="button" class="modal-close" data-close="modal-delete"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to permanently delete <strong id="delete-username-label">—</strong>?</p>
+            <div class="warning-box">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Consider <strong>deactivating</strong> instead — it keeps their past audit log entries intact.</span>
+            </div>
+            <div class="form-error" id="delete-error" hidden></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-close="modal-delete">Cancel</button>
+                <button type="button" class="btn btn-danger" id="btn-delete-confirm">
+                    <i class="fa-solid fa-trash"></i> Delete Anyway
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+    window.ADMIN_USERS_URLS = {
+        add:           "{% url 'admin_user_add' %}",
+        edit:          "{% url 'admin_user_edit' %}",
+        resetPassword: "{% url 'admin_user_reset_password' %}",
+        toggle:        "{% url 'admin_user_toggle_active' %}",
+        delete:        "{% url 'admin_user_delete' %}",
+        count:         "{% url 'admin_user_count' %}"
+    };
+    console.log('[AdminUsers] URLS:', window.ADMIN_USERS_URLS);
+</script>
+<script src="{% static 'js/admin_panel/settings_admin_users.js' %}"></script>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // Runs AFTER shell.js, so it overrides whatever shell.js set.
+    // Prevents the base "Are you sure you want to perform this action?"
+    // confirm dialog from appearing on top of our modals.
+    window.showConfirmation = function (message, onConfirm) {
+        if (typeof onConfirm === 'function') onConfirm();
+    };
+</script>
+{% endblock %}

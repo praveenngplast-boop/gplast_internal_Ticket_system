@@ -216,35 +216,32 @@
                             </select>
                         </div>
 
+                        <!-- ✅ DB-driven Main Error dropdown -->
                         <div class="rp-field">
                             <label><i class="fa-solid fa-bug"></i> Main Error</label>
                             <select name="main_error_type" id="id_main_error_type" class="rp-select">
                                 <option value="">All Error Types</option>
-                                <option value="Roadmap Error" {% if selected_main_error_type == 'Roadmap Error' %}selected{% endif %}>Roadmap Error</option>
-                                <option value="GPL Error" {% if selected_main_error_type == 'GPL Error' %}selected{% endif %}>GPL Error</option>
+                                {% for main_name in error_type_mains %}
+                                    <option value="{{ main_name }}"
+                                            {% if selected_main_error_type == main_name %}selected{% endif %}>
+                                        {{ main_name }}
+                                    </option>
+                                {% endfor %}
                             </select>
                         </div>
 
+                        <!-- ✅ DB-driven Sub Error dropdown -->
                         <div class="rp-field">
                             <label><i class="fa-solid fa-bug"></i> Sub Error</label>
                             <select name="sub_error_type" id="id_sub_error_type" class="rp-select">
                                 <option value="">All</option>
-                                <option value="Database Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Database Error' %}selected{% endif %}>Database Error</option>
-                                <option value="Logic / Functional Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Logic / Functional Error' %}selected{% endif %}>Logic / Functional Error</option>
-                                <option value="Application Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Application Error' %}selected{% endif %}>Application Error</option>
-                                <option value="Calculation Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Calculation Error' %}selected{% endif %}>Calculation Error</option>
-                                <option value="Report / Print Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Report / Print Error' %}selected{% endif %}>Report / Print Error</option>
-                                <option value="Workflow / Approval Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Workflow / Approval Error' %}selected{% endif %}>Workflow / Approval Error</option>
-                                <option value="Integration / API Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Integration / API Error' %}selected{% endif %}>Integration / API Error</option>
-                                <option value="Barcode Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Barcode Error' %}selected{% endif %}>Barcode Error</option>
-                                <option value="Performance Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Performance Error' %}selected{% endif %}>Performance Error</option>
-                                <option value="Access / Permission Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Access / Permission Error' %}selected{% endif %}>Access / Permission Error</option>
-                                <option value="Master Data / Configuration Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Master Data / Configuration Error' %}selected{% endif %}>Master Data / Configuration Error</option>
-                                <option value="Other ERP Error" data-main="Roadmap Error" {% if selected_sub_error_type == 'Other ERP Error' %}selected{% endif %}>Other ERP Error</option>
-                                <option value="User / Data Entry Error" data-main="GPL Error" {% if selected_sub_error_type == 'User / Data Entry Error' %}selected{% endif %}>User / Data Entry Error</option>
-                                <option value="Process / Procedure Error" data-main="GPL Error" {% if selected_sub_error_type == 'Process / Procedure Error' %}selected{% endif %}>Process / Procedure Error</option>
-                                <option value="Master Data Error" data-main="GPL Error" {% if selected_sub_error_type == 'Master Data Error' %}selected{% endif %}>Master Data Error</option>
-                                <option value="Other GPL Error" data-main="GPL Error" {% if selected_sub_error_type == 'Other GPL Error' %}selected{% endif %}>Other GPL Error</option>
+                                {% for sub in error_type_subs %}
+                                    <option value="{{ sub.name }}"
+                                            data-main="{{ sub.main_name }}"
+                                            {% if selected_sub_error_type == sub.name %}selected{% endif %}>
+                                        {{ sub.name }}
+                                    </option>
+                                {% endfor %}
                             </select>
                         </div>
 

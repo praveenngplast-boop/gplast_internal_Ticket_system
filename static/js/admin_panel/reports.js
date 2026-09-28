@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ------------------------------------------------------------
        Sub Error Type cascade
+       Reads all options once on load, then filters them by main.
+       Works for ANY main error type (not just Roadmap/GPL).
        ------------------------------------------------------------ */
     const allSubErrorOptions = [];
     if (subErrorTypeSelect) {
@@ -36,11 +38,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const selectedMain = mainErrorTypeSelect.value;
         const currentValue = subErrorTypeSelect.value;
 
+        // Rebuild the sub dropdown from scratch
         subErrorTypeSelect.innerHTML = '<option value="">All</option>';
 
+        // If a specific main is selected, filter to that main only.
+        // If no main is selected, show every sub.
         let filtered = allSubErrorOptions;
-        if (selectedMain === 'Roadmap Error' || selectedMain === 'GPL Error') {
-            filtered = allSubErrorOptions.filter(o => o.mainType === selectedMain);
+        if (selectedMain) {
+            filtered = allSubErrorOptions.filter(function (o) {
+                return o.mainType === selectedMain;
+            });
         }
 
         filtered.forEach(function (o) {
@@ -48,12 +55,14 @@ document.addEventListener('DOMContentLoaded', function () {
             option.value = o.value;
             option.textContent = o.text;
             option.setAttribute('data-main', o.mainType);
+            // Preserve current selection if it still exists in the filtered set
             if (o.value === currentValue) option.selected = true;
             subErrorTypeSelect.appendChild(option);
         });
     }
 
     if (mainErrorTypeSelect) {
+        // Run once on page load to sync with any pre-selected main
         setTimeout(updateSubErrorOptions, 0);
         mainErrorTypeSelect.addEventListener('change', updateSubErrorOptions);
     }

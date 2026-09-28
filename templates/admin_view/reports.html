@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Oversight Reports — GPLAST{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin_view/oversight.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin_view/reports.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="av-page av-page--reports">
+
+    {% include 'admin_view/partials/_read_only_banner.html' %}
+
+    <!-- ============================================================
+         PAGE HEADER
+         ============================================================ -->
+    <header class="av-page-header">
+        <div>
+            <h1>Reports</h1>
+            <p>Aggregate insights across all units and priorities</p>
+        </div>
+        <div class="av-page-actions">
+            <a href="{% url 'admin_view:export_csv' %}" class="av-btn av-btn-csv">
+                <i class="fa-solid fa-file-csv"></i> Export CSV
+            </a>
+            <a href="{% url 'admin_view:export_xlsx' %}" class="av-btn av-btn-excel">
+                <i class="fa-solid fa-file-excel"></i> Export Excel
+            </a>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         SUMMARY LISTS
+         ============================================================ -->
+    <div class="av-grid-3">
+
+        <section class="av-card">
+            <div class="av-card-head">
+                <h3><i class="fa-solid fa-circle-dot"></i> By Status</h3>
+            </div>
+            <div class="av-card-body">
+                <ul class="av-stat-list">
+                    {% for row in by_status %}
+                    <li>
+                        <span class="av-badge badge--status-{{ row.status|lower }}">
+                            {{ row.status|title }}
+                        </span>
+                        <strong>{{ row.count }}</strong>
+                    </li>
+                    {% empty %}
+                    <li class="av-empty av-empty--sm">No data available.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+
+        <section class="av-card">
+            <div class="av-card-head">
+                <h3><i class="fa-solid fa-flag"></i> By Priority</h3>
+            </div>
+            <div class="av-card-body">
+                <ul class="av-stat-list">
+                    {% for row in by_priority %}
+                    <li>
+                        <span class="av-badge badge--priority-{{ row.priority|lower }}">
+                            {{ row.priority|title }}
+                        </span>
+                        <strong>{{ row.count }}</strong>
+                    </li>
+                    {% empty %}
+                    <li class="av-empty av-empty--sm">No data available.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+
+        <section class="av-card">
+            <div class="av-card-head">
+                <h3><i class="fa-solid fa-building"></i> Top Units</h3>
+            </div>
+            <div class="av-card-body">
+                <ul class="av-stat-list">
+                    {% for row in by_unit %}
+                    <li>
+                        <span class="av-stat-label">{{ row.unit__code|default:'—' }}</span>
+                        <strong>{{ row.count }}</strong>
+                    </li>
+                    {% empty %}
+                    <li class="av-empty av-empty--sm">No data available.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ============================================================
+         CHARTS
+         ============================================================ -->
+    <div class="av-grid-2">
+
+        <div class="av-card">
+            <div class="av-card-head">
+                <h3><i class="fa-solid fa-chart-column"></i> Status Distribution</h3>
+            </div>
+            <div class="av-card-body">
+                <div class="av-chart-wrap">
+                    <canvas id="avReportsStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="av-card">
+            <div class="av-card-head">
+                <h3><i class="fa-solid fa-chart-simple"></i> Priority Breakdown</h3>
+            </div>
+            <div class="av-card-body">
+                <div class="av-chart-wrap">
+                    <canvas id="avReportsPriorityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ============================================================
+     DATA FOR JAVASCRIPT
+     ============================================================ -->
+{{ by_status|json_script:"by-status-data" }}
+{{ by_priority|json_script:"by-priority-data" }}
+
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/admin_view/reports.js' %}"></script>
+{% endblock %}

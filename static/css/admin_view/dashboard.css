@@ -1,0 +1,55 @@
+/* ============================================================
+   ADMIN_VIEW · DASHBOARD PAGE
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Page header
+   ------------------------------------------------------------ */
+.av-page-header {
+    margin-bottom: 28px;
+}
+
+/* ------------------------------------------------------------
+   Recent tickets — compact table
+   ------------------------------------------------------------ */
+.av-recent {
+    margin-bottom: 0;
+}
+
+.av-recent .av-card-head {
+    background: linear-gradient(90deg,
+                rgba(255, 107, 0, 0.02) 0%,
+                transparent 40%);
+}
+
+.av-recent .av-table-wrap {
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+.av-recent .av-table {
+    font-size: 0.82rem;
+}
+
+.av-recent .av-table th,
+.av-recent .av-table td {
+    padding: 10px 14px;
+}
+
+.av-recent .av-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bg-secondary);
+}
+
+.av-recent .av-table td strong {
+    font-size: 0.85rem;
+}
+
+/* ------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------ */
+@media (max-width: 700px) {
+    .av-recent .av-table-wrap { max-height: 380px; }
+}

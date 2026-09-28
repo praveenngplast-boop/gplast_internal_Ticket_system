@@ -1,0 +1,69 @@
+<section class="av-card av-recent">
+
+    <div class="av-card-head av-card-head--row">
+        <h3>Recent Tickets</h3>
+        <a href="{% url 'admin_view:ticket_list' %}" class="av-link">
+            View all
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="av-table-wrap">
+        <table class="av-table av-table--recent">
+            <thead>
+                <tr>
+                    <th class="av-th-id">#</th>
+                    <th class="av-th-subject">Subject</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th class="av-th-unit">Unit</th>
+                    <th class="av-th-date">Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in recent_tickets %}
+                <tr data-href="{% url 'admin_view:ticket_detail' t.id %}"
+                    class="av-tr-clickable">
+
+                    <td class="av-td-id">
+                        <strong>#{{ t.id }}</strong>
+                    </td>
+
+                    <td class="av-td-subject">
+                        {{ t.subject|truncatechars:55 }}
+                    </td>
+
+                    <td>
+                        <span class="badge-status-{{ t.status|lower }}">
+                            {{ t.status }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="badge-priority-{{ t.priority|lower }}">
+                            {{ t.priority }}
+                        </span>
+                    </td>
+
+                    <td class="av-td-unit">
+                        {{ t.unit.full_name|default:'—' }}
+                    </td>
+
+                    <td class="av-td-date">
+                        {{ t.created_at|date:"M d, H:i" }}
+                    </td>
+
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="av-empty">
+                        <i class="fa-solid fa-inbox"></i>
+                        <div>No tickets yet.</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</section>

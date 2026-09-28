@@ -422,6 +422,12 @@
     font-weight: 400;
 }
 
+.not-mapped-text {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.7rem;
+}
+
 /* ============================================================
    CARDS
    ============================================================ */
@@ -925,6 +931,12 @@
     color: #fff;
 }
 
+.btn-modal-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .modal-content {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -1162,6 +1174,304 @@
 }
 
 /* ============================================================
+   ✅ BULK SELECTION — NEW
+   ============================================================ */
+
+/* ---- Checkbox column ---- */
+.mappings-table .col-check {
+    width: 40px;
+    text-align: center;
+    padding-left: 0.5rem;
+    padding-right: 0.25rem;
+}
+
+.mappings-table thead .col-check {
+    padding-left: 0.5rem;
+}
+
+/* ---- Custom checkbox ---- */
+.erp-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-card);
+    cursor: pointer;
+    position: relative;
+    transition: var(--erp-transition);
+    vertical-align: middle;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.erp-checkbox:hover {
+    border-color: var(--erp-primary);
+    transform: scale(1.05);
+}
+
+.erp-checkbox:checked,
+.erp-checkbox:indeterminate {
+    background: var(--erp-primary);
+    border-color: var(--erp-primary);
+    transform: scale(1.05);
+}
+
+.erp-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.erp-checkbox:indeterminate::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 6px;
+    width: 8px;
+    height: 2px;
+    background: #fff;
+    border-radius: 1px;
+}
+
+.erp-checkbox:focus-visible {
+    outline: 2px solid rgba(255, 107, 0, 0.4);
+    outline-offset: 2px;
+}
+
+/* ---- Selected row highlight ---- */
+.mappings-table tbody tr.erp-row-selected {
+    background: rgba(255, 107, 0, 0.05);
+}
+
+.mappings-table tbody tr.erp-row-selected:hover {
+    background: rgba(255, 107, 0, 0.08);
+}
+
+[data-theme="dark"] .mappings-table tbody tr.erp-row-selected {
+    background: rgba(255, 107, 0, 0.08);
+}
+
+[data-theme="dark"] .mappings-table tbody tr.erp-row-selected:hover {
+    background: rgba(255, 107, 0, 0.12);
+}
+
+/* ---- Bulk action bar ---- */
+.erp-bulk-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 1.25rem;
+    background: linear-gradient(135deg,
+                rgba(255, 107, 0, 0.08) 0%,
+                rgba(255, 184, 0, 0.08) 100%);
+    border-bottom: 1px solid rgba(255, 107, 0, 0.18);
+    animation: erpBulkBarIn 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
+    flex-wrap: wrap;
+}
+
+@keyframes erpBulkBarIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.erp-bulk-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.erp-bulk-count {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.erp-bulk-count strong {
+    color: var(--erp-primary);
+    font-weight: 800;
+    font-size: 0.9rem;
+}
+
+.erp-bulk-clear {
+    background: none;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 50px;
+    color: var(--erp-danger);
+    font-family: inherit;
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.25rem 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: var(--erp-transition);
+}
+
+.erp-bulk-clear:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--erp-danger);
+    transform: translateY(-1px);
+}
+
+.erp-bulk-bar-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.erp-bulk-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 50px;
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--erp-transition);
+    white-space: nowrap;
+}
+
+.erp-bulk-btn i {
+    font-size: 0.7rem;
+}
+
+.erp-bulk-btn-delete {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.25);
+}
+
+.erp-bulk-btn-delete:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+    color: #fff;
+}
+
+.erp-bulk-btn-delete:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ---- Bulk delete confirm modal contents ---- */
+.erp-bulk-delete-list {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.erp-bulk-delete-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.78rem;
+}
+
+.erp-bulk-delete-id {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-weight: 700;
+    color: var(--erp-primary);
+    background: rgba(255, 107, 0, 0.1);
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+}
+
+.erp-bulk-delete-count {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.erp-bulk-delete-more {
+    font-style: italic;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    padding: 0.25rem 0.6rem;
+    text-align: center;
+}
+
+.erp-bulk-delete-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.6rem 0.85rem;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 8px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+.erp-bulk-delete-warning i {
+    color: var(--erp-warning);
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.erp-bulk-delete-warning strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* ---- Dark mode overrides for bulk ---- */
+[data-theme="dark"] .erp-bulk-bar {
+    background: linear-gradient(135deg,
+                rgba(255, 107, 0, 0.12) 0%,
+                rgba(255, 184, 0, 0.12) 100%);
+    border-bottom-color: rgba(255, 107, 0, 0.25);
+}
+
+[data-theme="dark"] .erp-bulk-delete-list {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .erp-bulk-delete-item {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .erp-bulk-delete-id {
+    background: rgba(255, 107, 0, 0.18);
+    color: #FF8C3A;
+}
+
+[data-theme="dark"] .erp-bulk-delete-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #E8EDF5;
+}
+
+/* ============================================================
    SCROLLBAR
    ============================================================ */
 ::-webkit-scrollbar {
@@ -1208,6 +1518,24 @@
     .btn-map i, .btn-unmap i, .btn-unmap-all i, .btn-remove-all i { display: none; }
     .employee-tag { font-size: 0.5rem; padding: 0.05rem 0.3rem; }
     .count-badge { font-size: 0.55rem; padding: 0.05rem 0.3rem; min-width: 18px; }
+
+    /* Bulk responsive */
+    .erp-bulk-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    .erp-bulk-bar-actions {
+        width: 100%;
+    }
+    .erp-bulk-btn {
+        flex: 1;
+        justify-content: center;
+    }
+    .mappings-table .col-check {
+        width: 32px;
+        padding-left: 0.35rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1228,4 +1556,26 @@
     .employee-list { gap: 0.15rem; }
     .employee-tag { font-size: 0.45rem; padding: 0.05rem 0.25rem; }
     .count-badge { font-size: 0.5rem; padding: 0.05rem 0.25rem; min-width: 16px; }
+
+    /* Bulk mobile */
+    .erp-bulk-bar {
+        padding: 0.5rem 0.75rem;
+    }
+    .erp-bulk-count {
+        font-size: 0.7rem;
+    }
+    .erp-bulk-count strong {
+        font-size: 0.82rem;
+    }
+    .erp-bulk-btn {
+        font-size: 0.65rem;
+        padding: 0.3rem 0.6rem;
+    }
+    .erp-bulk-delete-list {
+        max-height: 180px;
+    }
+    .erp-bulk-delete-item {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
 }

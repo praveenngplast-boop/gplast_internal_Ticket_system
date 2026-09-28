@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 
 from tickets.models import (
     Ticket, Unit, Department, AdminContact, AdminNotificationEmail,
-    EmployeeMaster, DepartmentCredential, ERPHolderMapping, UnitHead, TicketReply
+    EmployeeMaster, DepartmentCredential, ERPHolderMapping, UnitHead, TicketReply,
+    ErrorTypeMain, ErrorTypeSub,
 )
 from tickets.utils import validate_attachment
 
@@ -104,11 +105,11 @@ class TicketForm(forms.ModelForm):
         self.fields['unit'].queryset = Unit.objects.filter(is_active=True)
         self.fields['department'].queryset = Department.objects.filter(is_active=True)
 
-        # ✅ Make mobile and email optional
+        # Make mobile and email optional
         self.fields['mobile'].required = False
         self.fields['email'].required = False
 
-        # ✅ Set help texts and placeholders for optional fields
+        # Set help texts and placeholders for optional fields
         self.fields['mobile'].help_text = '10 digits only (optional)'
         self.fields['email'].help_text = 'Valid email format (optional)'
         self.fields['mobile'].widget.attrs.update({'placeholder': '10 digits (optional)'})
@@ -334,7 +335,7 @@ class UnitHeadForm(forms.ModelForm):
         if not self.is_edit and not password:
             raise ValidationError("Password is required.")
 
-        # ✅ GPLAST policy: 4–14 characters
+        # GPLAST policy: 4–14 characters
         if password and len(password) < 4:
             raise ValidationError("Password must be at least 4 characters.")
 
@@ -607,26 +608,33 @@ class DepartmentCredentialForm(forms.ModelForm):
 
 
 # ============================================================
-# CLOSE TICKET FORM
+# CLOSE TICKET FORM — DB-DRIVEN
+# Main + Sub error types come from the Error Type Master
+# (managed by admin in Settings → Error Type Master).
 # ============================================================
 class CloseTicketForm(forms.Form):
     """
-    Form for closing a ticket with new error type structure.
-    Used in the admin ticket detail view.
+    Form for closing a ticket.
+
+    Reads Main + Sub error types from the database
+    (ErrorTypeMain / ErrorTypeSub). No hardcoded lists.
     """
+
     main_error_type = forms.ChoiceField(
-        choices=[
-            ('', '-- Select Error Type --'),
-            ('Roadmap Error', 'Roadmap Error'),
-            ('GPL Error', 'GPL Error'),
-        ],
-        widget=forms.Select(attrs={'class': 'form-select', 'id': 'mainErrorType'})
+        choices=[],   # populated in __init__ from DB
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'id': 'mainErrorType',
+        }),
     )
 
     sub_error_type = forms.ChoiceField(
-        choices=[],
+        choices=[],   # populated in __init__ from DB
         required=False,
-        widget=forms.Select(attrs={'class': 'form-select', 'id': 'subErrorType'})
+        widget=forms.Select(attrs={
+            'class': 'form-select',
+            'id': 'subErrorType',
+        }),
     )
 
     closing_remarks = forms.CharField(
@@ -634,77 +642,86 @@ class CloseTicketForm(forms.Form):
             'class': 'form-control',
             'rows': 3,
             'placeholder': 'Enter resolution details...',
-            'id': 'closingRemarks'
+            'id': 'closingRemarks',
         }),
         required=True,
-        label='Closing Remarks'
+        label='Closing Remarks',
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.roadmap_sub_errors = [
-            ('', '-- Select Sub Error Type --'),
-            ('Database Error', 'Database Error'),
-            ('Logic / Functional Error', 'Logic / Functional Error'),
-            ('Application Error', 'Application Error'),
-            ('Calculation Error', 'Calculation Error'),
-            ('Report / Print Error', 'Report / Print Error'),
-            ('Workflow / Approval Error', 'Workflow / Approval Error'),
-            ('Integration / API Error', 'Integration / API Error'),
-            ('Barcode Error', 'Barcode Error'),
-            ('Performance Error', 'Performance Error'),
-            ('Access / Permission Error', 'Access / Permission Error'),
-            ('Master Data / Configuration Error', 'Master Data / Configuration Error'),
-            ('Other ERP Error', 'Other ERP Error'),
-        ]
+        # ---- Load active mains from DB ----
+        mains = ErrorTypeMain.objects.filter(is_active=True).order_by('display_order', 'name')
+        main_choices = [('', '-- Select Error Type --')]
+        main_choices += [(m.name, m.name) for m in mains]
+        self.fields['main_error_type'].choices = main_choices
 
-        self.gpl_sub_errors = [
-            ('', '-- Select Sub Error Type --'),
-            ('User / Data Entry Error', 'User / Data Entry Error'),
-            ('Process / Procedure Error', 'Process / Procedure Error'),
-            ('Master Data Error', 'Master Data Error'),
-            ('Other GPL Error', 'Other GPL Error'),
-        ]
+        # ---- Decide which main is currently selected ----
+        selected_main = ''
+        if self.is_bound and self.data.get('main_error_type'):
+            selected_main = self.data.get('main_error_type')
+        elif self.initial.get('main_error_type'):
+            selected_main = self.initial.get('main_error_type')
 
-        self.fields['sub_error_type'].choices = [('', '-- Select Sub Error Type --')]
+        # ---- Populate sub choices for the selected main ----
+        self.fields['sub_error_type'].choices = self._get_sub_choices(selected_main)
 
-        if self.data and self.data.get('main_error_type'):
-            self._update_sub_error_choices(self.data.get('main_error_type'))
-
-        for name, field in self.fields.items():
-            if hasattr(field.widget, 'attrs'):
-                if 'class' not in field.widget.attrs:
-                    field.widget.attrs.update({'class': 'form-control'})
-                if isinstance(field.widget, forms.Select):
-                    field.widget.attrs.update({'class': 'form-select'})
-
-    def _update_sub_error_choices(self, main_error_type):
-        if main_error_type == 'Roadmap Error':
-            self.fields['sub_error_type'].choices = self.roadmap_sub_errors
-            self.fields['sub_error_type'].required = True
-        elif main_error_type == 'GPL Error':
-            self.fields['sub_error_type'].choices = self.gpl_sub_errors
+        # ---- If a main is selected, sub becomes required ----
+        if selected_main:
             self.fields['sub_error_type'].required = True
         else:
-            self.fields['sub_error_type'].choices = [('', '-- Select Sub Error Type --')]
             self.fields['sub_error_type'].required = False
+
+    def _get_sub_choices(self, main_name):
+        """Return [(value, label), ...] for the given main name."""
+        if not main_name:
+            return [('', '-- Select Sub Error Type --')]
+
+        try:
+            main_obj = ErrorTypeMain.objects.get(name=main_name, is_active=True)
+        except ErrorTypeMain.DoesNotExist:
+            return [('', '-- Select Sub Error Type --')]
+
+        subs = main_obj.sub_types.filter(is_active=True).order_by('display_order', 'name')
+        choices = [('', '-- Select Sub Error Type --')]
+        choices += [(s.name, s.name) for s in subs]
+        return choices
 
     def clean(self):
         cleaned_data = super().clean()
+
         main_error = cleaned_data.get('main_error_type')
         sub_error = cleaned_data.get('sub_error_type')
         closing_remarks = cleaned_data.get('closing_remarks')
 
+        # ---- If main is set, verify it exists and sub is valid ----
         if main_error:
-            self._update_sub_error_choices(main_error)
+            try:
+                main_obj = ErrorTypeMain.objects.get(name=main_error, is_active=True)
+            except ErrorTypeMain.DoesNotExist:
+                raise ValidationError({
+                    'main_error_type': 'Selected main error type is not valid.'
+                })
 
-        if main_error and main_error in ['Roadmap Error', 'GPL Error']:
-            if not sub_error or sub_error == '':
+            # Re-populate sub choices for the chosen main
+            self.fields['sub_error_type'].choices = self._get_sub_choices(main_error)
+
+            valid_subs = list(
+                main_obj.sub_types.filter(is_active=True).values_list('name', flat=True)
+            )
+
+            if not sub_error:
                 raise ValidationError({
                     'sub_error_type': 'Please select a sub-error type for the selected error category.'
                 })
 
+            if sub_error not in valid_subs:
+                raise ValidationError({
+                    'sub_error_type': 'Invalid sub-error type for the selected category.'
+                })
+
+        # ---- Closing remarks minimum length ----
         if closing_remarks and len(closing_remarks.strip()) < 5:
             raise ValidationError({
                 'closing_remarks': 'Closing remarks must be at least 5 characters.'

@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settings · Auditor Credentials — GPLAST{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin_panel/settings_credentials.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="settings-page">
+
+    <!-- ============================================================
+         PAGE HEADER
+         ============================================================ -->
+    <header class="settings-header">
+        <div>
+            <h1>
+                <i class="fa-solid fa-eye"></i>
+                Auditor Credentials
+            </h1>
+            <p>
+                Oversight users who can view all tickets across every unit,
+                post comments, change priority, and export reports.
+                They cannot modify workflows (no assign, close, or delete).
+            </p>
+        </div>
+        <a href="{% url 'settings_page' %}" class="settings-back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Back to Settings
+        </a>
+    </header>
+
+    <!-- ============================================================
+         AUDITOR MANAGEMENT SECTION
+         ============================================================ -->
+    <section class="cred-section">
+
+        <div class="cred-section-head">
+            <div>
+                <h3>
+                    <i class="fa-solid fa-user-shield"></i>
+                    Auditors
+                </h3>
+                <p class="cred-section-desc">
+                    Each auditor logs in at <code>/login/</code> and is
+                    automatically routed to <code>/admin_view/</code>.
+                    Their account is not tied to any employee record.
+                </p>
+            </div>
+            <button type="button"
+                    class="cred-toggle-btn"
+                    data-toggle-section="auditor-form-wrap"
+                    aria-expanded="false">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Auditor</span>
+            </button>
+        </div>
+
+        <!-- ---- Table of existing auditors ---- -->
+        {% if auditors %}
+        <div class="cred-table-wrap">
+            <table class="cred-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Status</th>
+                        <th>Last Login</th>
+                        <th>Created</th>
+                        <th class="cred-th-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in auditors %}
+                    <tr>
+
+                        <td>
+                            <div class="cred-user-chip">
+                                <span class="cred-avatar">
+                                    {{ a.username|first|upper }}
+                                </span>
+                                <span class="cred-username">
+                                    {{ a.username }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if a.is_active %}
+                            <span class="cred-status-badge cred-status-badge--active">
+                                <i class="fa-solid fa-circle"></i> Active
+                            </span>
+                            {% else %}
+                            <span class="cred-status-badge cred-status-badge--inactive">
+                                <i class="fa-solid fa-circle"></i> Disabled
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="cred-meta">
+                            {% if a.last_login %}
+                                {{ a.last_login|date:"M d, Y · H:i" }}
+                            {% else %}
+                                <em>Never</em>
+                            {% endif %}
+                        </td>
+
+                        <td class="cred-meta">
+                            {{ a.date_joined|date:"M d, Y" }}
+                        </td>
+
+                        <td class="cred-td-actions">
+
+                            <!-- Reset password -->
+                            <form method="post"
+                                  action="{% url 'settings_auditors_handler' %}"
+                                  class="cred-inline-form"
+                                  onsubmit="return confirmReset('{{ a.username }}');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reset">
+                                <input type="hidden" name="username" value="{{ a.username }}">
+                                <input type="password"
+                                       name="password"
+                                       placeholder="New password"
+                                       minlength="4"
+                                       maxlength="14"
+                                       required
+                                       class="cred-input cred-input--sm">
+                                <button type="submit"
+                                        class="cred-btn cred-btn--ghost cred-btn--sm">
+                                    <i class="fa-solid fa-rotate-right"></i>
+                                    Reset
+                                </button>
+                            </form>
+
+                            <!-- Delete -->
+                            <form method="post"
+                                  action="{% url 'settings_auditors_handler' %}"
+                                  class="cred-inline-form"
+                                  onsubmit="return confirmDelete('{{ a.username }}');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="username" value="{{ a.username }}">
+                                <button type="submit"
+                                        class="cred-btn cred-btn--danger cred-btn--sm">
+                                    <i class="fa-solid fa-trash"></i>
+                                    Delete
+                                </button>
+                            </form>
+
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <!-- ---- Empty state ---- -->
+        <div class="cred-empty">
+            <i class="fa-solid fa-eye-slash"></i>
+            <div class="cred-empty-title">No auditors yet</div>
+            <div class="cred-empty-sub">
+                Click <strong>Add Auditor</strong> to create the first oversight account.
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ---- Add Auditor form (hidden by default) ---- -->
+        <div class="cred-form-wrap"
+             id="auditor-form-wrap"
+             style="display: none;">
+
+            <h4 class="cred-form-title">
+                <i class="fa-solid fa-user-plus"></i>
+                New Auditor
+            </h4>
+
+            <form method="post"
+                  action="{% url 'settings_auditors_handler' %}"
+                  class="cred-form"
+                  autocomplete="off">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add">
+
+                <div class="cred-form-row">
+
+                    <div class="cred-form-field">
+                        <label for="auditor-username">
+                            Username
+                        </label>
+                        <input type="text"
+                               id="auditor-username"
+                               name="username"
+                               required
+                               autocomplete="off"
+                               placeholder="e.g. auditor_view"
+                               class="cred-input">
+                        <div class="cred-form-hint">
+                            Must be unique. Not tied to any employee record.
+                        </div>
+                    </div>
+
+                    <div class="cred-form-field">
+                        <label for="auditor-password">
+                            Password
+                        </label>
+                        <input type="password"
+                               id="auditor-password"
+                               name="password"
+                               required
+                               minlength="4"
+                               maxlength="14"
+                               autocomplete="new-password"
+                               placeholder="4–14 characters"
+                               class="cred-input">
+                        <div class="cred-form-hint">
+                            Between 4 and 14 characters.
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="cred-form-actions">
+                    <button type="button"
+                            class="cred-btn cred-btn--ghost"
+                            data-toggle-section="auditor-form-wrap">
+                        Cancel
+                    </button>
+                    <button type="submit" class="cred-btn cred-btn--primary">
+                        <i class="fa-solid fa-check"></i>
+                        Create Auditor
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </section>
+
+</div>
+
+<!-- ============================================================
+     PAGE SCRIPTS
+     ============================================================ -->
+<script>
+    // Toggle add-auditor form
+    (function () {
+        var buttons = document.querySelectorAll('[data-toggle-section]');
+
+        buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var targetId = btn.getAttribute('data-toggle-section');
+                var target = document.getElementById(targetId);
+                if (!target) return;
+
+                var isHidden =
+                    target.style.display === 'none' ||
+                    target.style.display === '';
+
+                target.style.display = isHidden ? 'block' : 'none';
+                btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+
+                if (isHidden) {
+                    var firstInput = target.querySelector('input');
+                    if (firstInput) {
+                        setTimeout(function () {
+                            firstInput.focus();
+                        }, 100);
+                    }
+                }
+            });
+        });
+    })();
+
+    // Confirmation dialog for password reset
+    function confirmReset(username) {
+        return confirm(
+            'Reset the password for auditor "' + username + '"?\n\n' +
+            'They will need the new password to sign in.'
+        );
+    }
+
+    // Confirmation dialog for delete
+    function confirmDelete(username) {
+        return confirm(
+            'Remove auditor "' + username + '" from the Auditor group?\n\n' +
+            'They will immediately lose oversight access.'
+        );
+    }
+</script>
+
+{% endblock %}

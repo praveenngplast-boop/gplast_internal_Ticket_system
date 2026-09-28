@@ -123,11 +123,35 @@
                 </a>
             </div>
         </div>
+
+        <!-- ===== BULK ACTION BAR (hidden until selection) ===== -->
+        <div class="erp-bulk-bar" id="erpBulkBar" hidden>
+            <div class="erp-bulk-bar-left">
+                <span class="erp-bulk-count">
+                    <strong id="erpBulkCount">0</strong> selected
+                </span>
+                <button type="button" class="erp-bulk-clear" id="erpBulkClearBtn" title="Clear selection">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+            <div class="erp-bulk-bar-actions">
+                <button type="button" class="erp-bulk-btn erp-bulk-btn-delete" id="erpBulkDeleteBtn">
+                    <i class="fas fa-trash-can"></i> Bulk Delete
+                </button>
+            </div>
+        </div>
+
         <div class="erp-card-body" style="padding: 0;">
             <div class="table-responsive">
                 <table class="mappings-table" id="mappingsTable">
                     <thead>
                         <tr>
+                            <th class="col-check">
+                                <input type="checkbox"
+                                       class="erp-checkbox"
+                                       id="erpSelectAllCheckbox"
+                                       title="Select all on this page">
+                            </th>
                             <th style="width: 5%;">#</th>
                             <th style="width: 15%;">ERP User ID</th>
                             <th style="width: 20%;">Mapped Employees</th>
@@ -138,7 +162,14 @@
                     </thead>
                     <tbody id="mappingsBody">
                         {% for group in grouped_mappings %}
-                        <tr data-erp="{{ group.erp_user_id }}">
+                        <tr data-erp="{{ group.erp_user_id }}" data-id="{{ group.erp_user_id }}">
+                            <td class="col-check">
+                                <input type="checkbox"
+                                       class="erp-checkbox erp-row-checkbox"
+                                       value="{{ group.erp_user_id }}"
+                                       data-erp-id="{{ group.erp_user_id }}"
+                                       data-count="{{ group.count }}">
+                            </td>
                             <td>{{ forloop.counter }}</td>
                             <td><span class="mapping-erp-id"><i class="fa-regular fa-hashtag"></i> {{ group.erp_user_id }}</span></td>
                             <td>
@@ -146,10 +177,12 @@
                                     {% for emp in group.employees %}
                                         <span class="employee-tag">
                                             {{ emp.employee_id }}
-                                            <span style="font-size: 0.55rem; color: var(--text-muted);">({{ emp.unit_code }})</span>
+                                            {% if emp.unit_code %}
+                                                <span class="unit-code">({{ emp.unit_code }})</span>
+                                            {% endif %}
                                         </span>
                                     {% empty %}
-                                        <span style="color: var(--text-muted); font-style: italic;">Not Mapped</span>
+                                        <span class="not-mapped-text">Not Mapped</span>
                                     {% endfor %}
                                 </div>
                             </td>
@@ -160,9 +193,9 @@
                             </td>
                             <td>
                                 {% if group.is_mapped %}
-                                    <span class="badge-status-mapped">✅ Mapped</span>
+                                    <span class="badge-status-mapped">Mapped</span>
                                 {% else %}
-                                    <span class="badge-status-unmapped">⚠️ Unmapped</span>
+                                    <span class="badge-status-unmapped">Unmapped</span>
                                 {% endif %}
                             </td>
                             <td style="text-align: center; white-space: nowrap;">
@@ -179,7 +212,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6">
+                            <td colspan="7">
                                 <div class="empty-state">
                                     <i class="fa-regular fa-folder-open"></i>
                                     <h4>No ERP IDs Found</h4>
@@ -235,7 +268,7 @@
             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                 <i class="fa-solid fa-circle-info" style="color: var(--erp-primary); font-size: 1.2rem;"></i>
                 <span style="font-size: 0.75rem; color: var(--text-secondary);">
-                    <strong>Note:</strong> After adding ERP User IDs here, go to 
+                    <strong>Note:</strong> After adding ERP User IDs here, go to
                     <strong style="color: var(--erp-primary);">Screen Mapping</strong> to map screens to these ERP IDs.
                 </span>
             </div>
@@ -298,7 +331,6 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- Download Template -->
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label class="form-label" style="font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">
                         <i class="fa-solid fa-file-excel me-1" style="color: #28A745;"></i> Download Template
@@ -314,7 +346,6 @@
                     <div class="form-text">Download the template, add your ERP IDs, and upload the file below.</div>
                 </div>
 
-                <!-- Upload File -->
                 <div class="form-group">
                     <label class="form-label" style="font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">
                         <i class="fa-solid fa-cloud-upload-alt me-1" style="color: var(--erp-primary);"></i> Upload Excel/CSV File <span class="text-danger">*</span>
@@ -329,12 +360,10 @@
                     <div class="form-text">Any ERP ID format accepted. Same ERP ID can be added multiple times for different units.</div>
                 </div>
 
-                <!-- Progress Bar -->
                 <div class="progress-bar-container" id="bulkProgressBar">
                     <div class="progress-bar-fill" id="bulkProgressFill"></div>
                 </div>
 
-                <!-- Upload Result -->
                 <div class="upload-result" id="bulkUploadResult"></div>
             </div>
             <div class="modal-footer">
@@ -346,6 +375,42 @@
         </div>
     </div>
 </div>
+
+<!-- ============================================================
+     BULK DELETE CONFIRM MODAL
+============================================================ -->
+<div class="modal fade" id="erpBulkDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #DC2626, #B91C1C);">
+                <h5 class="modal-title text-white"><i class="fa-solid fa-triangle-exclamation me-2"></i> Delete ERP IDs</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.9rem; margin-bottom: 0.75rem;">
+                    Are you sure you want to delete
+                    <strong id="erpBulkDeleteCount" style="color: var(--erp-danger);">0</strong>
+                    ERP ID(s)?
+                </p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                    This will permanently delete <strong>ALL mappings</strong> for:
+                </p>
+                <div class="erp-bulk-delete-list" id="erpBulkDeleteList"></div>
+                <div class="erp-bulk-delete-warning">
+                    <i class="fa-solid fa-exclamation-circle"></i>
+                    <span>This action cannot be undone. Total rows to be deleted: <strong id="erpBulkDeleteRows">0</strong>.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-close" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn-modal-submit" id="erpBulkDeleteConfirmBtn" style="background: linear-gradient(135deg, #DC2626, #B91C1C);">
+                    <i class="fa-solid fa-trash-can me-1"></i> <span id="erpBulkDeleteBtnText">Delete</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}

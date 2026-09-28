@@ -1,10 +1,14 @@
-﻿# tickets/views/settings_actions/screen_master.py
+﻿# tickets/views/settings_action/screen_master.py
 
 """
-Screen Master - Add, Edit, Delete, Download Excel, Download Template, Bulk Upload
+Screen Master - List (paginated), Add, Edit, Delete,
+Download Excel, Download Template, Bulk Upload, Bulk Edit, Bulk Delete
 """
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db import models
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render
 from django.utils import timezone
 import openpyxl
 import pandas as pd
@@ -19,6 +23,73 @@ logger = logging.getLogger(__name__)
 
 # Default screen type if not specified
 DEFAULT_SCREEN_TYPE = 'ALL'
+
+# Valid screen types (used across add/edit/bulk)
+VALID_SCREEN_TYPES = ['ALL', 'ENTRY', 'CONFIGURATION', 'QUERY']
+
+# Rows per page
+SCREEN_MASTER_PER_PAGE = 30
+
+
+# ============================================================
+# SCREEN MASTER LIST PAGE (paginated)
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='login')
+def settings_screen_master(request):
+    """
+    Screen Master list page with server-side pagination (30 per page).
+    Query params:
+        ?q=<search>              — matches screen_code OR screen_name (icontains)
+        ?type=<TYPE>             — filter by screen_type (ALL/ENTRY/CONFIGURATION/QUERY)
+        ?page=<n>                — page number (default 1)
+    """
+    q = request.GET.get('q', '').strip()
+    type_filter = request.GET.get('type', '').strip().upper()
+
+    # DEBUG — remove these lines after confirming the fix works
+    print("[SCREEN MASTER DEBUG] URL params:", dict(request.GET))
+    print("[SCREEN MASTER DEBUG] Parsed -> q=%r | type=%r" % (q, type_filter))
+
+    qs = ScreenMaster.objects.all().order_by('screen_name')
+
+    if q:
+        qs = qs.filter(
+            models.Q(screen_name__icontains=q) |
+            models.Q(screen_code__icontains=q)
+        )
+
+    if type_filter in VALID_SCREEN_TYPES:
+        qs = qs.filter(screen_type=type_filter)
+        print("[SCREEN MASTER DEBUG] Filter applied. Result count:", qs.count())
+    else:
+        print("[SCREEN MASTER DEBUG] No type filter applied")
+
+    total_screens = ScreenMaster.objects.count()
+    active_screens = ScreenMaster.objects.filter(is_active=True).count()
+
+    paginator = Paginator(qs, SCREEN_MASTER_PER_PAGE)
+    page_number = request.GET.get('page', 1)
+
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    context = {
+        'screens': page_obj.object_list,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'is_paginated': page_obj.has_other_pages(),
+        'total_screens': total_screens,
+        'active_screens': active_screens,
+        'search_q': q,
+        'type_filter': type_filter,
+        'per_page': SCREEN_MASTER_PER_PAGE,
+    }
+    return render(request, 'admin_panel/settings_screen_master.html', context)
 
 
 # ============================================================
@@ -39,12 +110,9 @@ def screen_master_add(request):
     if not screen_code:
         return JsonResponse({'success': False, 'message': 'Screen Code is required'})
 
-    # âœ… If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
-    valid_types = ['ALL', 'ENTRY', 'CONFIGURATION', 'QUERY']
-    if not screen_type or screen_type not in valid_types:
+    if not screen_type or screen_type not in VALID_SCREEN_TYPES:
         screen_type = DEFAULT_SCREEN_TYPE
 
-    # Duplicate check
     if ScreenMaster.objects.filter(screen_name__iexact=screen_name).exists():
         return JsonResponse({'success': False, 'message': f'Screen Name "{screen_name}" already exists'})
     if ScreenMaster.objects.filter(screen_code__iexact=screen_code).exists():
@@ -99,9 +167,7 @@ def screen_master_edit(request):
     if not screen_code:
         return JsonResponse({'success': False, 'message': 'Screen Code is required'})
 
-    # âœ… If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
-    valid_types = ['ALL', 'ENTRY', 'CONFIGURATION', 'QUERY']
-    if not screen_type or screen_type not in valid_types:
+    if not screen_type or screen_type not in VALID_SCREEN_TYPES:
         screen_type = DEFAULT_SCREEN_TYPE
 
     try:
@@ -109,7 +175,6 @@ def screen_master_edit(request):
     except ScreenMaster.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Screen not found'})
 
-    # Duplicate check (exclude self)
     if ScreenMaster.objects.filter(screen_name__iexact=screen_name).exclude(id=screen_id).exists():
         return JsonResponse({'success': False, 'message': f'Screen Name "{screen_name}" already exists'})
     if ScreenMaster.objects.filter(screen_code__iexact=screen_code).exclude(id=screen_id).exists():
@@ -141,7 +206,7 @@ def screen_master_edit(request):
 
 
 # ============================================================
-# SCREEN MASTER - DELETE
+# SCREEN MASTER - DELETE (single)
 # ============================================================
 @login_required
 @user_passes_test(is_admin, login_url='login')
@@ -200,8 +265,10 @@ def screen_master_download_excel(request):
     title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
     header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
     thin_border = Border(
-        left=Side(style='thin', color='D0D0D0'), right=Side(style='thin', color='D0D0D0'),
-        top=Side(style='thin', color='D0D0D0'), bottom=Side(style='thin', color='D0D0D0')
+        left=Side(style='thin', color='D0D0D0'),
+        right=Side(style='thin', color='D0D0D0'),
+        top=Side(style='thin', color='D0D0D0'),
+        bottom=Side(style='thin', color='D0D0D0')
     )
 
     ws.merge_cells('A1:F1')
@@ -222,7 +289,10 @@ def screen_master_download_excel(request):
     ws.row_dimensions[3].height = 25
 
     for ri, screen in enumerate(screens, 1):
-        created_local = screen.created_at.astimezone(current_tz).strftime('%d-%b-%Y %I:%M %p') if screen.created_at else ''
+        created_local = ''
+        if screen.created_at:
+            created_local = screen.created_at.astimezone(current_tz).strftime('%d-%b-%Y %I:%M %p')
+
         row_data = [
             ri,
             screen.screen_code,
@@ -252,21 +322,20 @@ def screen_master_download_excel(request):
 @user_passes_test(is_admin, login_url='login')
 def screen_master_download_template(request):
     """
-    Download Excel template for bulk screen upload
-    Columns: Screen Code, Screen Name, Screen Type (Optional - defaults to General/ALL)
+    Download Excel template for bulk screen upload.
+    Columns: Screen Code, Screen Name, Screen Type (Optional — defaults to General/ALL)
     """
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=Screen_Upload_Template.xlsx'
-    
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = 'Screen Template'
-    
-    # Headers
+
     header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
     header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
     header_alignment = Alignment(horizontal='center', vertical='center')
-    
+
     headers = ['Screen Code', 'Screen Name', 'Screen Type (Optional)']
     for col_idx, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_idx)
@@ -274,38 +343,35 @@ def screen_master_download_template(request):
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = header_alignment
-    
-    # Sample data
+
     samples = [
         ['SO-001', 'Sales Order Entry', 'ENTRY'],
         ['PO-001', 'Purchase Order Entry', ''],
         ['INV-001', 'Inventory Report', 'QUERY'],
         ['USR-001', 'User Management', 'CONFIGURATION'],
-        ['GEN-001', 'General Dashboard', ''],  # Empty = General/ALL
+        ['GEN-001', 'General Dashboard', ''],
     ]
     for row_idx, row in enumerate(samples, 2):
         for col_idx, val in enumerate(row, 1):
             cell = ws.cell(row=row_idx, column=col_idx)
             cell.value = val
             cell.font = Font(name='Calibri', size=11)
-    
-    # Notes
+
     note_row = len(samples) + 3
     note_cell = ws.cell(row=note_row, column=1)
     note_cell.value = "Mandatory: Screen Code, Screen Name | Screen Type is OPTIONAL - Leave empty for 'General' (ALL)"
     note_cell.font = Font(name='Calibri', size=10, italic=True, color='FF0000')
     ws.merge_cells(start_row=note_row, start_column=1, end_row=note_row, end_column=3)
-    
+
     note_row2 = len(samples) + 4
     note_cell2 = ws.cell(row=note_row2, column=1)
     note_cell2.value = "Valid Types: ALL (General), ENTRY (Data Entry), CONFIGURATION, QUERY (Report/Query)"
     note_cell2.font = Font(name='Calibri', size=10, italic=True, color='0066CC')
     ws.merge_cells(start_row=note_row2, start_column=1, end_row=note_row2, end_column=3)
-    
-    # Column widths
+
     for col in range(1, 4):
         ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 28
-    
+
     wb.save(response)
     return response
 
@@ -317,89 +383,92 @@ def screen_master_download_template(request):
 @user_passes_test(is_admin, login_url='login')
 def screen_master_bulk_upload(request):
     """
-    Bulk upload screens from Excel
-    Screen Type column is OPTIONAL - defaults to 'General' (ALL) if empty
+    Bulk upload screens from Excel.
+    Screen Type column is OPTIONAL — defaults to 'General' (ALL) if empty.
     """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
-    
+
     excel_file = request.FILES.get('excel_file')
     if not excel_file:
         return JsonResponse({'success': False, 'message': 'Please select an Excel file.'})
-    
+
     if not excel_file.name.endswith(('.xlsx', '.xls')):
         return JsonResponse({'success': False, 'message': 'Invalid file format. Only .xlsx and .xls files are supported.'})
-    
+
     try:
         df = pd.read_excel(excel_file, dtype=str)
-        
+
         if df.empty:
             return JsonResponse({'success': False, 'message': 'The uploaded file is empty.'})
-        
-        # Find required columns (case insensitive)
+
         required_columns = ['Screen Code', 'Screen Name']
         missing_columns = []
-        
+
         for col in required_columns:
             found = False
             for existing_col in df.columns:
-                if existing_col.strip().lower() == col.lower():
+                if str(existing_col).strip().lower() == col.lower():
                     found = True
                     break
             if not found:
                 missing_columns.append(col)
-        
+
         if missing_columns:
             return JsonResponse({
                 'success': False,
                 'message': f'Missing required columns: {", ".join(missing_columns)}'
             })
-        
+
         added_count = 0
         skipped_count = 0
         errors = []
-        valid_types = ['ALL', 'ENTRY', 'CONFIGURATION', 'QUERY']
-        
-        # Find column indices
+
         col_code = None
         col_name = None
         col_type = None
-        
+
         for col in df.columns:
-            col_lower = col.strip().lower()
-            if 'screen code' in col_lower or 'code' in col_lower and 'screen' in col_lower:
+            col_lower = str(col).strip().lower()
+            if 'screen code' in col_lower or ('code' in col_lower and 'screen' in col_lower):
                 col_code = col
-            elif 'screen name' in col_lower or 'name' in col_lower and 'screen' in col_lower:
+            elif 'screen name' in col_lower or ('name' in col_lower and 'screen' in col_lower):
                 col_name = col
             elif 'screen type' in col_lower or 'type' in col_lower:
                 col_type = col
-        
+
         for idx, row in df.iterrows():
             row_num = idx + 2
-            
+
             screen_code = str(row.get(col_code, '')).strip() if col_code else ''
             screen_name = str(row.get(col_name, '')).strip() if col_name else ''
             screen_type = str(row.get(col_type, '')).strip().upper() if col_type else ''
-            
+
+            if screen_code.lower() == 'nan':
+                screen_code = ''
+            if screen_name.lower() == 'nan':
+                screen_name = ''
+            if screen_type.lower() == 'nan':
+                screen_type = ''
+
             if not screen_code or not screen_name:
                 errors.append(f'Row {row_num}: Screen Code and Screen Name are required')
                 skipped_count += 1
                 continue
-            
-            # âœ… If screen_type is empty or not valid, set to DEFAULT_SCREEN_TYPE (General/ALL)
-            if not screen_type or screen_type not in valid_types:
+
+            if not screen_type or screen_type not in VALID_SCREEN_TYPES:
                 screen_type = DEFAULT_SCREEN_TYPE
-            
+
             if ScreenMaster.objects.filter(screen_code__iexact=screen_code).exists():
                 errors.append(f'Row {row_num}: Screen Code "{screen_code}" already exists')
                 skipped_count += 1
                 continue
-            
+
             if ScreenMaster.objects.filter(screen_name__iexact=screen_name).exists():
                 errors.append(f'Row {row_num}: Screen Name "{screen_name}" already exists')
                 skipped_count += 1
                 continue
-            
+
             try:
                 ScreenMaster.objects.create(
                     screen_code=screen_code.upper(),
@@ -411,8 +480,7 @@ def screen_master_bulk_upload(request):
             except Exception as e:
                 errors.append(f'Row {row_num}: {str(e)}')
                 skipped_count += 1
-        
-        # Log the bulk upload
+
         if added_count > 0:
             log_settings_change(
                 request, 'CREATE', 'SCREEN',
@@ -420,19 +488,146 @@ def screen_master_bulk_upload(request):
                 new_value=f'Added {added_count} screens, Skipped {skipped_count}',
                 change_summary=f'Bulk uploaded {added_count} screens'
             )
-        
+
         message = f'Successfully added {added_count} screens.'
         if skipped_count > 0:
             message += f' Skipped {skipped_count} rows with errors.'
-        
+
         return JsonResponse({
             'success': True,
             'message': message,
             'added_count': added_count,
             'skipped_count': skipped_count,
-            'errors': errors[:10]  # Show first 10 errors
+            'errors': errors[:10]
         })
-        
+
     except Exception as e:
         logger.error(f"Bulk upload error: {str(e)}")
         return JsonResponse({'success': False, 'message': f'Error processing file: {str(e)}'})
+
+
+# ============================================================
+# SCREEN MASTER - BULK EDIT
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='login')
+def screen_master_bulk_edit(request):
+    """
+    Bulk edit screens — supports changing Screen Type only.
+    POST params:
+        screen_ids  : comma-separated list of IDs
+        screen_type : one of ALL / ENTRY / CONFIGURATION / QUERY
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
+
+    ids_raw = request.POST.get('screen_ids', '').strip()
+    new_type = request.POST.get('screen_type', '').strip().upper()
+
+    if not ids_raw:
+        return JsonResponse({'success': False, 'message': 'No screens selected'})
+
+    if not new_type or new_type not in VALID_SCREEN_TYPES:
+        return JsonResponse({'success': False, 'message': 'Invalid screen type'})
+
+    try:
+        id_list = [int(x) for x in ids_raw.split(',') if x.strip().isdigit()]
+    except (ValueError, TypeError):
+        return JsonResponse({'success': False, 'message': 'Invalid screen IDs'})
+
+    if not id_list:
+        return JsonResponse({'success': False, 'message': 'No valid screen IDs provided'})
+
+    screens = ScreenMaster.objects.filter(id__in=id_list)
+    updated = 0
+    skipped = 0
+
+    for screen in screens:
+        old_type = screen.screen_type
+        if old_type == new_type:
+            skipped += 1
+            continue
+
+        old_value = f'Code: {screen.screen_code}, Name: {screen.screen_name}, Type: {old_type}'
+        screen.screen_type = new_type
+        screen.save(update_fields=['screen_type'])
+
+        log_settings_change(
+            request, 'UPDATE', 'SCREEN',
+            f'{screen.screen_code} - {screen.screen_name}',
+            old_value=old_value,
+            new_value=f'Code: {screen.screen_code}, Name: {screen.screen_name}, Type: {new_type}',
+            change_summary=f'Bulk updated screen type: {screen.screen_code} -> {new_type}'
+        )
+        updated += 1
+
+    msg = f'Updated {updated} screen(s).'
+    if skipped:
+        msg += f' {skipped} already had this type.'
+
+    return JsonResponse({
+        'success': True,
+        'message': msg,
+        'updated_count': updated,
+        'skipped_count': skipped
+    })
+
+
+# ============================================================
+# SCREEN MASTER - BULK DELETE
+# ============================================================
+@login_required
+@user_passes_test(is_admin, login_url='login')
+def screen_master_bulk_delete(request):
+    """
+    Bulk delete screens.
+    POST params:
+        screen_ids : comma-separated list of IDs
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid method'}, status=400)
+
+    ids_raw = request.POST.get('screen_ids', '').strip()
+    if not ids_raw:
+        return JsonResponse({'success': False, 'message': 'No screens selected'})
+
+    try:
+        id_list = [int(x) for x in ids_raw.split(',') if x.strip().isdigit()]
+    except (ValueError, TypeError):
+        return JsonResponse({'success': False, 'message': 'Invalid screen IDs'})
+
+    if not id_list:
+        return JsonResponse({'success': False, 'message': 'No valid screen IDs provided'})
+
+    screens = list(ScreenMaster.objects.filter(id__in=id_list))
+    deleted = 0
+    not_found = len(id_list) - len(screens)
+
+    for screen in screens:
+        old_value = f'Code: {screen.screen_code}, Name: {screen.screen_name}, Type: {screen.screen_type}'
+        screen_code = screen.screen_code
+        screen_name = screen.screen_name
+        try:
+            mapping_count = screen.screen_mappings.count()
+        except Exception:
+            mapping_count = 0
+        screen.delete()
+
+        log_settings_change(
+            request, 'DELETE', 'SCREEN',
+            f'{screen_code} - {screen_name}',
+            old_value=old_value,
+            change_summary=f'Bulk deleted screen: {screen_code} (had {mapping_count} mappings)'
+        )
+        deleted += 1
+
+    msg = f'Deleted {deleted} screen(s).'
+    if not_found:
+        msg += f' {not_found} not found.'
+
+    return JsonResponse({
+        'success': True,
+        'message': msg,
+        'deleted_count': deleted,
+        'not_found_count': not_found
+    })

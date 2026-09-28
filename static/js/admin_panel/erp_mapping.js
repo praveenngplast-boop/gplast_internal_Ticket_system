@@ -343,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
             badge.innerHTML = '<i class="fa-regular fa-circle-check"></i> ' + count + ' ERP IDs';
         }
         rows.forEach(function(row, index) {
-            var td = row.querySelector('td:first-child');
+            var td = row.querySelector('td:nth-child(2)');
             if (td) { td.textContent = index + 1; }
         });
     }
@@ -534,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         var inputs = document.querySelectorAll('.form-control, .modal-body .form-control');
         var selects = document.querySelectorAll('select.form-control, .modal-body select.form-control');
-        
+
         inputs.forEach(function(input) {
             if (isDark) {
                 input.style.backgroundColor = 'rgba(255,255,255,0.05)';
@@ -622,5 +622,259 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(updateThemeStyles, 50);
         });
     }
+
+
+    // ============================================================
+    // ✅ BULK SELECTION + BULK DELETE
+    // ============================================================
+    (function initBulkSelection() {
+
+        var STORAGE_KEY = 'erpBulkSelectedIds';
+        var BULK_DELETE_URL = '/custom-admin/settings/erp-mapping/bulk-delete/';
+
+        var selectAllCb = document.getElementById('erpSelectAllCheckbox');
+        var rowCheckboxes = document.querySelectorAll('.erp-row-checkbox');
+        var bulkBar = document.getElementById('erpBulkBar');
+        var bulkCountEl = document.getElementById('erpBulkCount');
+        var bulkClearBtn = document.getElementById('erpBulkClearBtn');
+        var bulkDeleteBtn = document.getElementById('erpBulkDeleteBtn');
+
+        var deleteModalEl = document.getElementById('erpBulkDeleteModal');
+        var deleteModal = deleteModalEl ? new bootstrap.Modal(deleteModalEl) : null;
+        var deleteCountEl = document.getElementById('erpBulkDeleteCount');
+        var deleteRowsEl = document.getElementById('erpBulkDeleteRows');
+        var deleteListEl = document.getElementById('erpBulkDeleteList');
+        var deleteConfirmBtn = document.getElementById('erpBulkDeleteConfirmBtn');
+        var deleteBtnText = document.getElementById('erpBulkDeleteBtnText');
+
+        // ---- Load persisted selection ----
+        var selectedIds;
+        try {
+            var raw = sessionStorage.getItem(STORAGE_KEY);
+            selectedIds = new Set(raw ? JSON.parse(raw) : []);
+        } catch (e) {
+            selectedIds = new Set();
+        }
+
+        // ---- Persist helper ----
+        function persist() {
+            try {
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(selectedIds)));
+            } catch (e) { /* ignore */ }
+        }
+
+        // ---- Row → ERP ID map from current page ----
+        function getRowErpId(cb) {
+            return cb.getAttribute('data-erp-id') || cb.value;
+        }
+
+        // ---- Apply persisted state to checkboxes on load ----
+        rowCheckboxes.forEach(function(cb) {
+            var erpId = getRowErpId(cb);
+            if (selectedIds.has(erpId)) {
+                cb.checked = true;
+                var row = cb.closest('tr');
+                if (row) row.classList.add('erp-row-selected');
+            }
+        });
+
+        // ---- Update UI (bulk bar + header tri-state) ----
+        function refreshUI() {
+            var n = selectedIds.size;
+
+            // Bulk bar
+            if (bulkBar) {
+                bulkBar.hidden = n === 0;
+            }
+            if (bulkCountEl) bulkCountEl.textContent = n;
+
+            // Header tri-state — considers only checkboxes present in the DOM
+            if (selectAllCb) {
+                var totalVisible = 0;
+                var checkedVisible = 0;
+                rowCheckboxes.forEach(function(cb) {
+                    totalVisible++;
+                    if (cb.checked) checkedVisible++;
+                });
+
+                if (totalVisible === 0 || checkedVisible === 0) {
+                    selectAllCb.checked = false;
+                    selectAllCb.indeterminate = false;
+                } else if (checkedVisible === totalVisible) {
+                    selectAllCb.checked = true;
+                    selectAllCb.indeterminate = false;
+                } else {
+                    selectAllCb.checked = false;
+                    selectAllCb.indeterminate = true;
+                }
+            }
+        }
+
+        // ---- Row checkbox change ----
+        rowCheckboxes.forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                var erpId = getRowErpId(this);
+                var row = this.closest('tr');
+
+                if (this.checked) {
+                    selectedIds.add(erpId);
+                    if (row) row.classList.add('erp-row-selected');
+                } else {
+                    selectedIds.delete(erpId);
+                    if (row) row.classList.remove('erp-row-selected');
+                }
+                persist();
+                refreshUI();
+            });
+        });
+
+        // ---- Header checkbox — select/deselect all on current page ----
+        if (selectAllCb) {
+            selectAllCb.addEventListener('change', function() {
+                var shouldSelect = this.checked;
+
+                rowCheckboxes.forEach(function(cb) {
+                    var erpId = getRowErpId(cb);
+                    var row = cb.closest('tr');
+
+                    cb.checked = shouldSelect;
+
+                    if (shouldSelect) {
+                        selectedIds.add(erpId);
+                        if (row) row.classList.add('erp-row-selected');
+                    } else {
+                        selectedIds.delete(erpId);
+                        if (row) row.classList.remove('erp-row-selected');
+                    }
+                });
+
+                persist();
+                refreshUI();
+            });
+        }
+
+        // ---- Clear button ----
+        if (bulkClearBtn) {
+            bulkClearBtn.addEventListener('click', function() {
+                selectedIds.clear();
+                persist();
+
+                rowCheckboxes.forEach(function(cb) {
+                    cb.checked = false;
+                    var row = cb.closest('tr');
+                    if (row) row.classList.remove('erp-row-selected');
+                });
+
+                if (selectAllCb) {
+                    selectAllCb.checked = false;
+                    selectAllCb.indeterminate = false;
+                }
+
+                refreshUI();
+            });
+        }
+
+        // ---- Bulk Delete button — open confirm modal ----
+        if (bulkDeleteBtn && deleteModal) {
+            bulkDeleteBtn.addEventListener('click', function() {
+                var ids = Array.from(selectedIds);
+                if (ids.length === 0) return;
+
+                // Build list of ERP IDs with their row counts (from current page only)
+                var rowsTotal = 0;
+                var listHtml = '';
+                var shown = ids.slice(0, 20);
+
+                shown.forEach(function(erpId) {
+                    // Find matching checkbox on current page to grab count
+                    var cb = null;
+                    rowCheckboxes.forEach(function(x) {
+                        if (getRowErpId(x) === erpId) cb = x;
+                    });
+                    var count = cb ? parseInt(cb.getAttribute('data-count') || '0', 10) : 0;
+                    rowsTotal += count;
+                    listHtml += '<div class="erp-bulk-delete-item">'
+                             +   '<span class="erp-bulk-delete-id">' + erpId + '</span>'
+                             +   '<span class="erp-bulk-delete-count">' + count + ' row' + (count === 1 ? '' : 's') + '</span>'
+                             + '</div>';
+                });
+
+                if (ids.length > 20) {
+                    listHtml += '<div class="erp-bulk-delete-more">+ ' + (ids.length - 20) + ' more…</div>';
+                }
+
+                if (deleteCountEl) deleteCountEl.textContent = ids.length;
+                if (deleteRowsEl) deleteRowsEl.textContent = rowsTotal;
+                if (deleteListEl) deleteListEl.innerHTML = listHtml;
+                if (deleteBtnText) deleteBtnText.textContent = 'Delete ' + ids.length + ' ERP ID' + (ids.length === 1 ? '' : 's');
+
+                deleteModal.show();
+            });
+        }
+
+        // ---- Confirm delete ----
+        if (deleteConfirmBtn) {
+            deleteConfirmBtn.addEventListener('click', function() {
+                var ids = Array.from(selectedIds);
+                if (ids.length === 0) return;
+
+                var btn = this;
+                var originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> Deleting...';
+
+                var formData = new FormData();
+                ids.forEach(function(id) { formData.append('erp_user_ids', id); });
+                formData.append('csrfmiddlewaretoken', csrfToken);
+
+                fetch(BULK_DELETE_URL, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(function(r) {
+                    if (!r.ok) throw new Error('Network response was not ok: ' + r.status);
+                    return r.json();
+                })
+                .then(function(data) {
+                    if (data.success) {
+                        // Clear selection before reload
+                        selectedIds.clear();
+                        persist();
+
+                        if (deleteModal) deleteModal.hide();
+                        showAlert(data.message || 'Bulk delete completed.', 'success');
+
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1200);
+                    } else {
+                        showAlert(data.message || 'Bulk delete failed.', 'error');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Bulk delete error:', error);
+                    showAlert('Error: ' + error.message, 'error');
+                })
+                .finally(function() {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                });
+            });
+        }
+
+        // ---- Initial UI sync ----
+        refreshUI();
+
+        // ---- Also refresh on any theme mutation (paranoia) ----
+        // Not strictly necessary but keeps the checkbox visual in sync after theme swap.
+        document.addEventListener('click', function(e) {
+            // Nothing here — reserved for future
+        });
+
+    })();
 
 });

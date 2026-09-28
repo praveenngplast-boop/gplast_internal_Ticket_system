@@ -25,7 +25,8 @@ import logging
 from tickets.models import (
     Unit, Department, Ticket, TicketHistory, EmployeeMaster,
     AdminContact, AdminNotificationEmail, SettingsAuditLog,
-    ERPHolderMapping, UnitHead
+    ERPHolderMapping, UnitHead,
+    ErrorTypeMain, ErrorTypeSub,   # ✅ NEW — for DB-driven dropdowns
 )
 from tickets.forms import AdminTicketForm, CloseTicketForm, TicketReplyForm
 from tickets.utils import send_ticket_email
@@ -38,10 +39,42 @@ from .utils import (
     generate_admin_ticket_list_html,
 )
 
-# ✅ NEW: Unit Head helper functions
+# ✅ Unit Head helper functions
 from .unit_head_views import get_unit_head_unit, is_unit_head
 
 logger = logging.getLogger(__name__)
+
+
+# ============================================================
+# ✅ NEW — Build error type context for the reports filters
+# ============================================================
+def _build_error_type_context():
+    """
+    Return a tuple of:
+        main_names  — list of active main error type names (as strings)
+        sub_options — list of dicts {'name': ..., 'main_name': ...}
+                      for active subs, sorted by main then display order
+    Used by the reports page's Main Error / Sub Error dropdowns.
+    """
+    mains = list(
+        ErrorTypeMain.objects
+        .filter(is_active=True)
+        .order_by('display_order', 'name')
+    )
+    main_names = [m.name for m in mains]
+
+    sub_options = []
+    for main in mains:
+        subs = (
+            main.sub_types
+            .filter(is_active=True)
+            .order_by('display_order', 'name')
+            .values_list('name', flat=True)
+        )
+        for sub_name in subs:
+            sub_options.append({'name': sub_name, 'main_name': main.name})
+
+    return main_names, sub_options
 
 
 def _aging_category(days):
@@ -70,36 +103,36 @@ def escalated_aging_report(request):
     if not request.user.is_staff and not is_unit_head(request.user):
         messages.error(request, 'You do not have permission to view escalated reports.')
         return redirect('employee_dashboard')
-    
+
     # ✅ Check if user is Unit Head
     user_is_unit_head = is_unit_head(request.user)
     user_is_admin = request.user.is_staff
-    
+
     # ✅ Unit Heads can only see their unit
     if user_is_unit_head and not user_is_admin:
         unit = get_unit_head_unit(request.user)
         if not unit:
             messages.error(request, "Your unit head profile is not properly configured.")
             return redirect('employee_dashboard')
-        
+
         # Force filter to their unit
         tickets_qs = Ticket.objects.filter(
-            status='Escalated', 
+            status='Escalated',
             escalated_at__isnull=False,
             unit=unit
         ).select_related('department').order_by('escalated_at')
-        
+
         # Override unit_id for the context
         unit_id = str(unit.id)
     else:
         # Admin - full access
         tickets_qs = Ticket.objects.filter(
-            status='Escalated', 
+            status='Escalated',
             escalated_at__isnull=False
         ).select_related('department').order_by('escalated_at')
-        
+
         unit_id = request.GET.get('unit', '').strip()
-    
+
     department_id = request.GET.get('department', '').strip()
     priority = request.GET.get('priority', '').strip()
     start_date = request.GET.get('start_date', '').strip()
@@ -250,7 +283,7 @@ def escalated_ticket_detail(request, pk):
 
 
 # ============================================================
-# REPORTS VIEW - Admin & Unit Head (UPDATED WITH DEPARTMENT)
+# REPORTS VIEW - Admin & Unit Head
 # ============================================================
 @login_required
 def reports(request):
@@ -265,18 +298,18 @@ def reports(request):
     if not user_is_admin and not user_is_unit_head:
         messages.error(request, 'You do not have permission to view reports.')
         return redirect('employee_dashboard')
-    
+
     # ✅ Unit Heads can only see their unit
     if user_is_unit_head and not user_is_admin:
         unit = get_unit_head_unit(request.user)
         if not unit:
             messages.error(request, "Your unit head profile is not properly configured.")
             return redirect('employee_dashboard')
-        
+
         # Force filter to their unit
         tickets_qs = Ticket.objects.filter(unit=unit)
         all_tickets_for_stats = tickets_qs
-        
+
         # Override unit_id for the context
         unit_id = str(unit.id)
     else:
@@ -304,9 +337,9 @@ def reports(request):
     escalated_end = request.GET.get('escalated_end', '').strip()
     category = request.GET.get('category', 'all').strip()
     is_reopened = request.GET.get('is_reopened', '').strip()
-    
+
     logger.info(f"Filters received - category: {category}, unit: {unit_id}, status: {status}, priority: {priority}")
-    
+
     # ============================================================
     # APPLY CATEGORY FILTERS
     # ============================================================
@@ -324,7 +357,7 @@ def reports(request):
         tickets_qs = tickets_qs.filter(status='Closed', escalated_at__isnull=False)
     elif category == 'reopened':
         tickets_qs = tickets_qs.filter(history__action='Ticket Reopened').distinct()
-    
+
     # ============================================================
     # APPLY STANDARD FILTERS
     # ============================================================
@@ -344,7 +377,7 @@ def reports(request):
         tickets_qs = tickets_qs.filter(error_type=error_type)
     if vendor_ticket:
         tickets_qs = tickets_qs.filter(vendor_ticket_number__icontains=vendor_ticket)
-    
+
     # ============================================================
     # APPLY ERROR TYPE FILTERS
     # ============================================================
@@ -352,7 +385,7 @@ def reports(request):
         tickets_qs = tickets_qs.filter(main_error_type=main_error_type)
     if sub_error_type and sub_error_type != 'All':
         tickets_qs = tickets_qs.filter(sub_error_type=sub_error_type)
-    
+
     # ============================================================
     # APPLY ERP ID FILTER
     # ============================================================
@@ -364,12 +397,12 @@ def reports(request):
             tickets_qs = tickets_qs.filter(employee_id__in=employee_ids)
         else:
             tickets_qs = tickets_qs.none()
-    
+
     # ============================================================
     # APPLY DATE RANGE FILTERS
     # ============================================================
     current_tz = timezone.get_current_timezone()
-    
+
     if created_start:
         try:
             created_start_date = datetime.strptime(created_start, '%Y-%m-%d').date()
@@ -378,7 +411,7 @@ def reports(request):
             tickets_qs = tickets_qs.filter(created_at__gte=from_datetime)
         except ValueError:
             pass
-    
+
     if created_end:
         try:
             created_end_date = datetime.strptime(created_end, '%Y-%m-%d').date()
@@ -387,7 +420,7 @@ def reports(request):
             tickets_qs = tickets_qs.filter(created_at__lte=to_datetime)
         except ValueError:
             pass
-    
+
     if closed_start:
         try:
             closed_start_date = datetime.strptime(closed_start, '%Y-%m-%d').date()
@@ -396,7 +429,7 @@ def reports(request):
             tickets_qs = tickets_qs.filter(closed_at__gte=from_datetime)
         except ValueError:
             pass
-    
+
     if closed_end:
         try:
             closed_end_date = datetime.strptime(closed_end, '%Y-%m-%d').date()
@@ -405,7 +438,7 @@ def reports(request):
             tickets_qs = tickets_qs.filter(closed_at__lte=to_datetime)
         except ValueError:
             pass
-    
+
     if escalated_start:
         try:
             escalated_start_date = datetime.strptime(escalated_start, '%Y-%m-%d').date()
@@ -414,7 +447,7 @@ def reports(request):
             tickets_qs = tickets_qs.filter(escalated_at__gte=from_datetime)
         except ValueError:
             pass
-    
+
     if escalated_end:
         try:
             escalated_end_date = datetime.strptime(escalated_end, '%Y-%m-%d').date()
@@ -423,7 +456,7 @@ def reports(request):
             tickets_qs = tickets_qs.filter(escalated_at__lte=to_datetime)
         except ValueError:
             pass
-    
+
     # ============================================================
     # APPLY REOPENED FILTER
     # ============================================================
@@ -431,24 +464,23 @@ def reports(request):
         tickets_qs = tickets_qs.filter(history__action='Ticket Reopened').distinct()
     elif is_reopened == 'no':
         tickets_qs = tickets_qs.exclude(history__action='Ticket Reopened')
-    
+
     # ============================================================
     # ORDER AND ANNOTATE
     # ============================================================
     tickets_qs = tickets_qs.order_by('-created_at')
-    
-    # ✅ Annotate with ERP ID
+
     erp_subquery = ERPHolderMapping.objects.filter(
         employee__employee_id=OuterRef('employee_id')
     ).values('erp_user_id')[:1]
-    
+
     tickets_qs = tickets_qs.annotate(
         erp_id=Coalesce(Subquery(erp_subquery, output_field=CharField()), Value('Not Mapped'))
     )
-    
+
     total_count = tickets_qs.count()
     logger.info(f"Total tickets after all filters: {total_count}")
-    
+
     # ============================================================
     # CALCULATE STATS
     # ============================================================
@@ -457,31 +489,32 @@ def reports(request):
     hold_count = all_tickets_for_stats.filter(status='Hold').count()
     escalated_count = all_tickets_for_stats.filter(status='Escalated').count()
     closed_count = all_tickets_for_stats.filter(status='Closed').count()
-    
+
     # ============================================================
     # GET DATA FOR DROPDOWNS
     # ============================================================
     units = Unit.objects.filter(is_active=True).order_by('code')
-    
-    # ✅ Get departments for the unit (for Unit Head, only their unit's departments)
+
     if user_is_unit_head and not user_is_admin:
         all_departments = Department.objects.filter(unit=unit, is_active=True).order_by('name')
     else:
         all_departments = Department.objects.filter(is_active=True).order_by('name')
-    
+
     employees = EmployeeMaster.objects.all().order_by('employee_name')
     erp_ids = ERPHolderMapping.objects.filter(
         erp_user_id__isnull=False
     ).exclude(
         erp_user_id__exact=''
     ).values_list('erp_user_id', flat=True).distinct().order_by('erp_user_id')
-    
+
+    # ✅ NEW — Load DB-driven error types
+    error_type_mains, error_type_subs = _build_error_type_context()
+
     # ============================================================
     # DEPARTMENT STATS FOR UNIT HEAD REPORT
     # ============================================================
     department_stats = []
     if user_is_unit_head and not user_is_admin:
-        # Get department-wise ticket counts for the unit
         dept_counts = (
             Ticket.objects.filter(unit=unit)
             .values('department_id', 'department__name')
@@ -492,7 +525,7 @@ def reports(request):
             {'name': item['department__name'] or 'Unassigned', 'count': item['count']}
             for item in dept_counts
         ]
-    
+
     # ============================================================
     # EXPORT TO EXCEL
     # ============================================================
@@ -503,7 +536,7 @@ def reports(request):
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Tickets Report"
-        
+
         title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
         header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
         data_font = Font(name='Calibri', size=11)
@@ -515,17 +548,17 @@ def reports(request):
             top=Side(style='thin', color='D0D0D0'),
             bottom=Side(style='thin', color='D0D0D0')
         )
-        
+
         now_local = timezone.now().astimezone(current_tz)
         report_time = now_local.strftime('%d-%b-%Y %I:%M:%S %p')
-        
+
         ws.merge_cells('A1:AB1')
         ws['A1'] = f"GPLAST TICKET REPORT - Generated: {report_time}  |  Total Entries: {tickets_qs.count()}"
         ws['A1'].font = title_font
         ws['A1'].fill = title_fill
         ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
         ws.row_dimensions[1].height = 45
-        
+
         headers = [
             "Ticket Number","Status","Unit Code","Unit Full Name","Department",
             "Employee ID","ERP ID","Employee Name","Mobile","Email","Screen Number",
@@ -542,20 +575,18 @@ def reports(request):
             cell.alignment = Alignment(horizontal='center', vertical='center')
             cell.border = thin_border
         ws.row_dimensions[3].height = 25
-        
+
         row_idx = 4
         for t in tickets_qs:
             c_at = t.created_at.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p') if t.created_at else ""
             cl_at = t.closed_at.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p') if t.closed_at else ""
             esc_at = t.escalated_at.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p') if t.escalated_at else ""
             ttc = format_timedelta_display(t.closed_at - t.created_at) if t.status == 'Closed' and t.created_at and t.closed_at else ""
-            
+
             row_data = [
                 t.ticket_number, t.status, t.unit.code if t.unit else '', t.unit.full_name if t.unit else '',
                 t.department.name if t.department else '', t.employee_id, t.erp_id, t.employee_name,
-                t.mobile, t.email, 
-                t.screen_number,
-                t.subject, t.description, t.priority,
+                t.mobile, t.email, t.screen_number, t.subject, t.description, t.priority,
                 t.error_type, t.created_by_role, ttc, t.admin_creation_reason or '',
                 t.assigned_person or '', t.hold_reason or '', t.main_error_type or 'N/A',
                 t.sub_error_type or 'N/A', t.closing_remarks or '', t.closed_by or '',
@@ -568,7 +599,7 @@ def reports(request):
                 cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
                 cell.border = thin_border
             row_idx += 1
-        
+
         column_widths = {
             'A': 18, 'B': 14, 'C': 14, 'D': 25, 'E': 20, 'F': 14, 'G': 16,
             'H': 22, 'I': 16, 'J': 25, 'K': 16, 'L': 30, 'M': 40, 'N': 14,
@@ -577,11 +608,11 @@ def reports(request):
         }
         for col_letter, width in column_widths.items():
             ws.column_dimensions[col_letter].width = width
-        
+
         add_replies_sheet(wb, tickets_qs)
         wb.save(response)
         return response
-    
+
     # ============================================================
     # PAGINATION
     # ============================================================
@@ -593,9 +624,9 @@ def reports(request):
         tickets_page = paginator.page(1)
     except EmptyPage:
         tickets_page = paginator.page(paginator.num_pages)
-    
+
     # ============================================================
-    # ERROR TYPE CHOICES
+    # ERROR TYPE CHOICES (for the "error_type" New/Repeated dropdown)
     # ============================================================
     error_type_choices = Ticket.objects.filter(
         error_type__isnull=False
@@ -606,7 +637,7 @@ def reports(request):
 
     filter_query = request.GET.copy()
     filter_query.pop('page', None)
-    
+
     # ============================================================
     # CONTEXT
     # ============================================================
@@ -649,10 +680,13 @@ def reports(request):
         'is_unit_head': user_is_unit_head,
         'is_admin': user_is_admin,
         'unit': get_unit_head_unit(request.user) if user_is_unit_head else None,
-        # NEW: Department stats for Unit Head
+        # Department stats for Unit Head
         'department_stats': department_stats,
         'all_departments': all_departments,
         'selected_department_id': dept_id,
+        # ✅ NEW — DB-driven error type options for Main / Sub dropdowns
+        'error_type_mains': error_type_mains,
+        'error_type_subs': error_type_subs,
     }
     return render(request, 'admin_panel/reports.html', context)
 
@@ -670,15 +704,14 @@ def download_ticket_excel(request, pk):
     if not request.user.is_staff and not is_unit_head(request.user):
         messages.error(request, "You do not have permission to download this ticket.")
         return redirect('employee_dashboard')
-    
-    # ✅ Unit Head security check
+
     user_is_unit_head = is_unit_head(request.user)
     if user_is_unit_head and not request.user.is_staff:
         unit = get_unit_head_unit(request.user)
         if not unit or ticket.unit != unit:
             messages.error(request, "You do not have permission to download this ticket.")
             return redirect('employee_dashboard')
-    
+
     erp_id = 'Not Mapped'
     if ticket.employee_id:
         erp_mapping = ERPHolderMapping.objects.filter(
@@ -686,14 +719,14 @@ def download_ticket_excel(request, pk):
         ).first()
         if erp_mapping:
             erp_id = erp_mapping.erp_user_id
-    
+
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename=Ticket_{ticket.ticket_number}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
-    
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = f"Ticket {ticket.ticket_number}"
-    
+
     title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
     header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
     section_font = Font(name='Calibri', size=12, bold=True, color='FFFFFF')
@@ -701,27 +734,27 @@ def download_ticket_excel(request, pk):
     data_font = Font(name='Calibri', size=11, color='333333')
     history_header_font = Font(name='Calibri', size=10, bold=True, color='FFFFFF')
     history_data_font = Font(name='Calibri', size=10, color='333333')
-    
+
     title_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
     header_fill = PatternFill(start_color='2F5597', end_color='2F5597', fill_type='solid')
     section_fill = PatternFill(start_color='FF6B00', end_color='FF6B00', fill_type='solid')
     label_fill = PatternFill(start_color='E8EDF5', end_color='E8EDF5', fill_type='solid')
     history_header_fill = PatternFill(start_color='1F4E79', end_color='1F4E79', fill_type='solid')
-    
+
     thin_border = Border(
         left=Side(style='thin', color='D0D0D0'),
         right=Side(style='thin', color='D0D0D0'),
         top=Side(style='thin', color='D0D0D0'),
         bottom=Side(style='thin', color='D0D0D0')
     )
-    
+
     ws.merge_cells('A1:F1')
     ws['A1'] = f"GPLAST TICKET DETAILS - {ticket.ticket_number}"
     ws['A1'].font = title_font
     ws['A1'].fill = title_fill
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 40
-    
+
     row = 3
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = "BASIC INFORMATION"
@@ -730,7 +763,7 @@ def download_ticket_excel(request, pk):
     ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
     ws.row_dimensions[row].height = 30
     row += 1
-    
+
     basic_info = [
         ('Ticket Number', ticket.ticket_number),
         ('Subject', ticket.subject),
@@ -741,7 +774,7 @@ def download_ticket_excel(request, pk):
         ('Created Date', timezone.localtime(ticket.created_at).strftime('%d-%b-%Y %I:%M %p') if ticket.created_at else ''),
         ('Updated Date', timezone.localtime(ticket.updated_at).strftime('%d-%b-%Y %I:%M %p') if ticket.updated_at else ''),
     ]
-    
+
     for label, value in basic_info:
         ws.cell(row=row, column=1, value=label).font = label_font
         ws.cell(row=row, column=1).fill = label_fill
@@ -752,9 +785,9 @@ def download_ticket_excel(request, pk):
         ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
         row += 1
-    
+
     row += 1
-    
+
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = "EMPLOYEE DETAILS"
     ws[f'A{row}'].font = section_font
@@ -762,7 +795,7 @@ def download_ticket_excel(request, pk):
     ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
     ws.row_dimensions[row].height = 30
     row += 1
-    
+
     emp_info = [
         ('Employee Name', ticket.employee_name),
         ('Employee ID', ticket.employee_id),
@@ -773,7 +806,7 @@ def download_ticket_excel(request, pk):
         ('Department', ticket.department.name if ticket.department else ''),
         ('Screen/Module', ticket.screen_number),
     ]
-    
+
     for label, value in emp_info:
         ws.cell(row=row, column=1, value=label).font = label_font
         ws.cell(row=row, column=1).fill = label_fill
@@ -784,9 +817,9 @@ def download_ticket_excel(request, pk):
         ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
         row += 1
-    
+
     row += 1
-    
+
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = "ASSIGNMENT & STATUS"
     ws[f'A{row}'].font = section_font
@@ -794,7 +827,7 @@ def download_ticket_excel(request, pk):
     ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
     ws.row_dimensions[row].height = 30
     row += 1
-    
+
     assign_info = [
         ('Created By Role', ticket.created_by_role),
         ('Assigned To', ticket.assigned_person or 'Not Assigned'),
@@ -802,7 +835,7 @@ def download_ticket_excel(request, pk):
         ('Vendor Ticket', ticket.vendor_ticket_number or ''),
         ('Admin Creation Reason', ticket.admin_creation_reason or ''),
     ]
-    
+
     for label, value in assign_info:
         ws.cell(row=row, column=1, value=label).font = label_font
         ws.cell(row=row, column=1).fill = label_fill
@@ -813,9 +846,9 @@ def download_ticket_excel(request, pk):
         ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
         row += 1
-    
+
     row += 1
-    
+
     if ticket.status == 'Closed':
         ws.merge_cells(f'A{row}:F{row}')
         ws[f'A{row}'] = "CLOSING DETAILS"
@@ -824,7 +857,7 @@ def download_ticket_excel(request, pk):
         ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
         ws.row_dimensions[row].height = 30
         row += 1
-        
+
         closing_info = [
             ('Closed By', ticket.closed_by or ''),
             ('Closed Date', timezone.localtime(ticket.closed_at).strftime('%d-%b-%Y %I:%M %p') if ticket.closed_at else ''),
@@ -833,7 +866,7 @@ def download_ticket_excel(request, pk):
             ('Closing Remarks', ticket.closing_remarks or ''),
             ('Time to Close', format_timedelta_display(ticket.closed_at - ticket.created_at) if ticket.closed_at else ''),
         ]
-        
+
         for label, value in closing_info:
             ws.cell(row=row, column=1, value=label).font = label_font
             ws.cell(row=row, column=1).fill = label_fill
@@ -844,9 +877,9 @@ def download_ticket_excel(request, pk):
             ws.cell(row=row, column=2).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
             ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=6)
             row += 1
-        
+
         row += 1
-    
+
     ws.merge_cells(f'A{row}:F{row}')
     ws[f'A{row}'] = "AUDIT HISTORY"
     ws[f'A{row}'].font = section_font
@@ -854,7 +887,7 @@ def download_ticket_excel(request, pk):
     ws[f'A{row}'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
     ws.row_dimensions[row].height = 30
     row += 1
-    
+
     history_headers = ['Timestamp', 'Action', 'Remarks', 'Performed By']
     for col_idx, header in enumerate(history_headers, 1):
         cell = ws.cell(row=row, column=col_idx)
@@ -865,7 +898,7 @@ def download_ticket_excel(request, pk):
         cell.alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[row].height = 25
     row += 1
-    
+
     for history in ticket.history.all().order_by('timestamp'):
         ws.cell(row=row, column=1, value=timezone.localtime(history.timestamp).strftime('%d-%b-%Y %I:%M %p')).font = history_data_font
         ws.cell(row=row, column=1).border = thin_border
@@ -880,7 +913,7 @@ def download_ticket_excel(request, pk):
         ws.cell(row=row, column=4).border = thin_border
         ws.cell(row=row, column=4).alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         row += 1
-    
+
     row = append_replies_section(
         ws, row + 1, ticket, section_font, history_header_font, data_font,
         section_fill, history_header_fill, thin_border
@@ -890,16 +923,16 @@ def download_ticket_excel(request, pk):
     ws[f'A{row}'].font = Font(name='Calibri', size=9, italic=True, color='666666')
     ws[f'A{row}'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[row].height = 25
-    
+
     ws.column_dimensions['A'].width = 28
     ws.column_dimensions['B'].width = 35
     ws.column_dimensions['C'].width = 30
     ws.column_dimensions['D'].width = 30
     ws.column_dimensions['E'].width = 15
     ws.column_dimensions['F'].width = 15
-    
+
     ws.freeze_panes = 'A1'
-    
+
     wb.save(response)
     return response
 
@@ -918,16 +951,15 @@ def export_closed_tickets_30_days(request):
         return redirect('employee_dashboard')
 
     thirty_days_ago = timezone.now() - timedelta(days=30)
-    
-    # ✅ Check if user is Unit Head
+
     user_is_unit_head = is_unit_head(request.user)
-    
+
     if user_is_unit_head and not request.user.is_staff:
         unit = get_unit_head_unit(request.user)
         if not unit:
             messages.error(request, "Your unit head profile is not properly configured.")
             return redirect('employee_dashboard')
-        
+
         tickets_qs = Ticket.objects.filter(
             unit=unit,
             status='Closed',
@@ -938,11 +970,11 @@ def export_closed_tickets_30_days(request):
             status='Closed',
             closed_at__gte=thirty_days_ago
         ).order_by('-closed_at')
-    
+
     current_tz = timezone.get_current_timezone()
     now_local = timezone.now().astimezone(current_tz)
     report_time = now_local.strftime('%d-%b-%Y %I:%M:%S %p')
-    
+
     # Build mapping of employee_id to ERP ID
     employee_ids = tickets_qs.values_list('employee_id', flat=True).distinct()
     erp_mappings = {}
@@ -952,17 +984,17 @@ def export_closed_tickets_30_days(request):
         ).select_related('employee')
         for mapping in erp_mappings_qs:
             erp_mappings[mapping.employee.employee_id] = mapping.erp_user_id
-    
+
     suffix = "_UnitHead" if user_is_unit_head and not request.user.is_staff else ""
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = f'attachment; filename=Closed_Tickets_30_Days{suffix}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
-    
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Closed Tickets (30 Days)"
-    
+
     title_font = Font(name='Calibri', size=16, bold=True, color='FFFFFF')
     header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
     data_font = Font(name='Calibri', size=10)
@@ -974,31 +1006,31 @@ def export_closed_tickets_30_days(request):
         top=Side(style='thin', color='D0D0D0'),
         bottom=Side(style='thin', color='D0D0D0')
     )
-    
+
     ws.merge_cells('A1:AB1')
     ws['A1'] = f"CLOSED TICKETS - LAST 30 DAYS"
     ws['A1'].font = title_font
     ws['A1'].fill = title_fill
     ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[1].height = 45
-    
+
     ws.merge_cells('A2:AB2')
     ws['A2'] = f"Generated: {report_time}  |  Total Closed Tickets: {tickets_qs.count()}  |  Period: {thirty_days_ago.strftime('%d-%b-%Y')} to {timezone.now().strftime('%d-%b-%Y')}"
     ws['A2'].font = Font(name='Calibri', size=10, italic=True, color='666666')
     ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
     ws.row_dimensions[2].height = 25
-    
+
     headers = [
         'Ticket Number', 'Status', 'Unit Code', 'Unit Name', 'Department',
-        'Employee ID', 'ERP ID', 'Employee Name', 'Mobile', 'Email', 
+        'Employee ID', 'ERP ID', 'Employee Name', 'Mobile', 'Email',
         'Screen/Module',
         'Subject', 'Description', 'Priority', 'Error Type', 'Created By Role',
         'Admin Creation Reason', 'Assigned Person', 'Hold Reason',
-        'Main Error Type', 'Sub Error Type', 'Closing Remarks', 'Closed By', 
-        'Vendor Ticket Number', 'Created At', 'Closed At', 'Time to Close', 
+        'Main Error Type', 'Sub Error Type', 'Closing Remarks', 'Closed By',
+        'Vendor Ticket Number', 'Created At', 'Closed At', 'Time to Close',
         'Escalated At'
     ]
-    
+
     for col_idx, header in enumerate(headers, 1):
         cell = ws.cell(row=4, column=col_idx)
         cell.value = header
@@ -1007,13 +1039,13 @@ def export_closed_tickets_30_days(request):
         cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         cell.border = thin_border
     ws.row_dimensions[4].height = 30
-    
+
     row_idx = 5
     for ticket in tickets_qs:
         created_at_local = ticket.created_at.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p') if ticket.created_at else ''
         closed_at_local = ticket.closed_at.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p') if ticket.closed_at else ''
         escalated_at_local = ticket.escalated_at.astimezone(current_tz).strftime('%d-%b-%Y %I:%M:%S %p') if ticket.escalated_at else ''
-        
+
         time_to_close = ''
         if ticket.created_at and ticket.closed_at:
             duration = ticket.closed_at - ticket.created_at
@@ -1021,9 +1053,9 @@ def export_closed_tickets_30_days(request):
             hours = duration.seconds // 3600
             minutes = (duration.seconds % 3600) // 60
             time_to_close = f"{days}d {hours}h {minutes}m" if days > 0 else f"{hours}h {minutes}m"
-        
+
         erp_id = erp_mappings.get(ticket.employee_id, 'Not Mapped')
-        
+
         row_data = [
             ticket.ticket_number, ticket.status, ticket.unit.code if ticket.unit else '',
             ticket.unit.full_name if ticket.unit else '', ticket.department.name if ticket.department else '',
@@ -1036,26 +1068,26 @@ def export_closed_tickets_30_days(request):
             ticket.vendor_ticket_number or '', created_at_local, closed_at_local, time_to_close,
             escalated_at_local,
         ]
-        
+
         for col_idx, val in enumerate(row_data, 1):
             cell = ws.cell(row=row_idx, column=col_idx)
             cell.value = val
             cell.font = data_font
             cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
             cell.border = thin_border
-        
+
         row_idx += 1
-    
+
     column_widths = {
         'A': 18, 'B': 14, 'C': 12, 'D': 25, 'E': 20, 'F': 14, 'G': 16,
         'H': 22, 'I': 16, 'J': 25, 'K': 16, 'L': 30, 'M': 40, 'N': 14,
         'O': 20, 'P': 18, 'Q': 25, 'R': 20, 'S': 20, 'T': 22, 'U': 22,
         'V': 30, 'W': 18, 'X': 18, 'Y': 22, 'Z': 22, 'AA': 16, 'AB': 22
     }
-    
+
     for col_letter, width in column_widths.items():
         ws.column_dimensions[col_letter].width = width
-    
+
     add_replies_sheet(wb, tickets_qs)
     wb.save(response)
     return response

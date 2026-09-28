@@ -8,226 +8,499 @@
 <link rel="stylesheet" href="{% static 'css/admin_panel/settings_screen_master.css' %}">
 {% endblock %}
 
+
 {% block content %}
-<div class="sm-container">
+<div class="sm-page">
 
-    <!-- Header -->
+    <!-- ============================================================
+         PAGE HEADER
+         ============================================================ -->
     <div class="sm-header">
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div>
-                <h1 style="font-size:1.4rem;font-weight:700;color:var(--sm-text-primary);margin:0;font-family:'Fraunces',serif;">
-                    <i class="fas fa-desktop" style="color:var(--sm-orange);"></i> Screen Master
-                </h1>
-                <p style="color:var(--sm-text-secondary);font-size:0.83rem;margin:0.15rem 0 0;">
-                    Manage ERP screen/module master list &mdash; add, edit, delete screens
-                </p>
+        <div class="sm-header-row">
+            <div class="sm-header-info">
+                <h1><i class="fas fa-desktop"></i> Screen Master</h1>
+                <p>Manage ERP screen/module master list — add, edit, delete screens</p>
             </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a href="{% url 'settings_page' %}" class="btn-outline"><i class="fas fa-arrow-left me-1"></i> Back</a>
-                <a href="{% url 'screen_master_download_excel' %}" class="btn-outline"><i class="fas fa-download me-1"></i> Download Excel</a>
-                <a href="{% url 'screen_master_download_template' %}" class="btn-info"><i class="fas fa-file-excel me-1"></i> Template</a>
-                <button class="btn-success" onclick="openBulkModal()"><i class="fas fa-upload me-1"></i> Bulk Upload</button>
-                <button class="btn-orange" onclick="openAddModal()"><i class="fas fa-plus me-1"></i> Add Screen</button>
+            <div class="sm-header-actions">
+                <a href="{% url 'settings_page' %}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                <a href="{% url 'screen_master_download_excel' %}" class="btn btn-outline">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                <a href="{% url 'screen_master_download_template' %}" class="btn btn-info">
+                    <i class="fas fa-file-excel"></i> Template
+                </a>
+                <button type="button" class="btn btn-success" data-action="open-bulk-upload">
+                    <i class="fas fa-upload"></i> Bulk Upload
+                </button>
+                <button type="button" class="btn btn-orange" data-action="open-add">
+                    <i class="fas fa-plus"></i> Add Screen
+                </button>
             </div>
         </div>
-    </div>
 
-    <!-- Stats row -->
-    <div class="row g-3 mb-3">
-        <div class="col-auto">
-            <div class="sm-card" style="padding:0.8rem 1.5rem;">
-                <div style="font-size:1.6rem;font-weight:800;color:var(--sm-orange);">{{ total_screens }}</div>
-                <div style="font-size:0.75rem;color:var(--sm-text-secondary);">Total Screens</div>
+        <!-- Stats -->
+        <div class="sm-stats">
+            <div class="sm-stat">
+                <span class="sm-stat-value">{{ total_screens }}</span>
+                <span class="sm-stat-label">Total</span>
             </div>
-        </div>
-        <div class="col-auto">
-            <div class="sm-card" style="padding:0.8rem 1.5rem; border-color: rgba(34,197,94,0.2);">
-                <div style="font-size:1.6rem;font-weight:800;color:var(--sm-success);">{{ active_screens|default:total_screens }}</div>
-                <div style="font-size:0.75rem;color:var(--sm-text-secondary);">Active Screens</div>
+            <div class="sm-stat sm-stat-success">
+                <span class="sm-stat-value">{{ active_screens|default:total_screens }}</span>
+                <span class="sm-stat-label">Active</span>
             </div>
-        </div>
-    </div>
-
-    <!-- Screen List -->
-    <div class="sm-card">
-        <div class="sm-card-header">
-            <h5><i class="fas fa-list me-2" style="color:var(--sm-orange);"></i> Screen List <span class="sm-badge ms-2">{{ total_screens }}</span></h5>
-            <input type="text" class="search-box" id="screenSearch" placeholder="&#128269; Search screens..." onkeyup="filterTable()" style="width:220px;">
-        </div>
-        <div class="sm-card-body p-0">
-            {% if screens %}
-            <div class="table-responsive-wrapper">
-                <table class="sm-table" id="screenTable">
-                    <thead>
-                        <tr>
-                            <th style="width:5%;">#</th>
-                            <th style="width:18%;">Screen Code</th>
-                            <th style="width:30%;">Screen Name</th>
-                            <th style="width:15%;">Type</th>
-                            <th style="width:20%;">Created At</th>
-                            <th style="width:12%;text-align:center;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for screen in screens %}
-                        <tr id="row-{{ screen.id }}">
-                            <td class="row-num">{{ forloop.counter }}</td>
-                            <td><span class="code-badge">{{ screen.screen_code }}</span></td>
-                            <td style="font-weight:600;color:var(--sm-text-primary);">{{ screen.screen_name }}</td>
-                            <td>
-                                <span class="type-badge type-{{ screen.screen_type }}">{{ screen.get_screen_type_display }}</span>
-                            </td>
-                            <td style="font-size:0.78rem;">{{ screen.created_at|date:"d-M-Y h:i A" }}</td>
-                            <td style="text-align:center;">
-                                <div class="action-buttons">
-                                    <button class="btn-sm-edit" onclick="openEditModal({{ screen.id }}, '{{ screen.screen_code|escapejs }}', '{{ screen.screen_name|escapejs }}', '{{ screen.screen_type }}')">
-                                        <i class="fas fa-edit"></i>
-                                        <span class="text-label">Edit</span>
-                                    </button>
-                                    <button class="btn-sm-delete" onclick="confirmDelete({{ screen.id }}, '{{ screen.screen_name|escapejs }}')">
-                                        <i class="fas fa-trash"></i>
-                                        <span class="text-label">Delete</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="empty-state">
-                <i class="fas fa-desktop"></i>
-                <p style="font-size:1rem;font-weight:600;margin-bottom:0.5rem;">No screens added yet</p>
-                <p style="font-size:0.85rem;">Click "Add Screen" to create your first screen or use "Bulk Upload"</p>
+            {% if search_q or type_filter %}
+            <div class="sm-stat sm-stat-info">
+                <span class="sm-stat-value">{{ page_obj.paginator.count }}</span>
+                <span class="sm-stat-label">Filtered</span>
             </div>
             {% endif %}
         </div>
     </div>
 
-</div>
 
-<!-- Add Screen Modal -->
-<div class="modal-overlay" id="addModal">
-    <div class="modal-box">
-        <h5><i class="fas fa-plus-circle me-2" style="color:var(--sm-orange);"></i> Add New Screen</h5>
-        <div class="form-group">
-            <label>Screen Code <span style="color:#ef4444;">*</span></label>
-            <input type="text" id="addCode" placeholder="e.g. SO-001" autocomplete="off">
+    <!-- ============================================================
+         TABLE CARD
+         ============================================================ -->
+    <div class="sm-card">
+
+        <!-- ============================================================
+             TOOLBAR — single form, native HTML submit, no JS needed
+             ============================================================ -->
+        <div class="sm-toolbar">
+            <h2 class="sm-toolbar-title">
+                <i class="fas fa-list"></i>
+                Screen List
+                <span class="sm-badge">{{ page_obj.paginator.count }}</span>
+            </h2>
+
+            <form method="get" action="" class="sm-toolbar-filters" id="smFilterForm">
+                <div class="sm-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text"
+                           name="q"
+                           id="smSearchInput"
+                           placeholder="Search code or name..."
+                           value="{{ search_q|default:'' }}"
+                           autocomplete="off">
+                </div>
+
+                <select name="type"
+                        class="sm-select"
+                        id="smTypeSelect"
+                        onchange="document.getElementById('smFilterForm').submit();">
+                    <option value="">All Types</option>
+                    <option value="ALL" {% if type_filter == 'ALL' %}selected{% endif %}>General</option>
+                    <option value="ENTRY" {% if type_filter == 'ENTRY' %}selected{% endif %}>Data Entry</option>
+                    <option value="CONFIGURATION" {% if type_filter == 'CONFIGURATION' %}selected{% endif %}>Configuration</option>
+                    <option value="QUERY" {% if type_filter == 'QUERY' %}selected{% endif %}>Report/Query</option>
+                </select>
+
+                <button type="submit" class="btn btn-orange btn-sm" title="Apply filters">
+                    <i class="fas fa-filter"></i> Apply
+                </button>
+
+                {% if search_q or type_filter %}
+                <a href="{% url 'settings_screen_master' %}" class="btn btn-outline btn-sm" title="Clear all filters">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+                {% endif %}
+            </form>
         </div>
-        <div class="form-group">
-            <label>Screen Name <span style="color:#ef4444;">*</span></label>
-            <input type="text" id="addName" placeholder="e.g. Sales Order Entry" autocomplete="off">
+
+
+        <!-- ============================================================
+             BULK ACTION BAR
+             ============================================================ -->
+        <div class="sm-bulk-bar" id="bulkActionBar" hidden>
+            <div class="sm-bulk-bar-info">
+                <span class="sm-bulk-count">
+                    <strong id="bulkCount">0</strong> selected
+                </span>
+                <button type="button" class="sm-bulk-clear" id="bulkClearBtn" title="Clear selection">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+            <div class="sm-bulk-bar-actions">
+                <button type="button" class="btn btn-sm btn-edit" id="bulkEditBtn">
+                    <i class="fas fa-pen"></i> Bulk Edit
+                </button>
+                <button type="button" class="btn btn-sm btn-danger" id="bulkDeleteBtn">
+                    <i class="fas fa-trash"></i> Bulk Delete
+                </button>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Screen Type <span style="color:#ef4444;">*</span></label>
-            <select id="addType" class="form-control">
-                <option value="ALL">General</option>
-                <option value="ENTRY">Data Entry</option>
-                <option value="CONFIGURATION">Configuration</option>
-                <option value="QUERY">Report/Query</option>
-            </select>
+
+
+        <!-- ============================================================
+             TABLE
+             ============================================================ -->
+        {% if screens %}
+        <div class="sm-table-wrap">
+            <table class="sm-table" id="screenTable">
+                <thead>
+                    <tr>
+                        <th class="col-check">
+                            <input type="checkbox"
+                                   class="sm-checkbox sm-checkbox-header"
+                                   id="selectAllCheckbox"
+                                   title="Select all on this page">
+                        </th>
+                        <th class="col-num">#</th>
+                        <th class="col-code">Code</th>
+                        <th class="col-name">Screen Name</th>
+                        <th class="col-type">Type</th>
+                        <th class="col-date">Created</th>
+                        <th class="col-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for screen in screens %}
+                    <tr id="row-{{ screen.id }}" data-screen-id="{{ screen.id }}">
+                        <td class="col-check" data-label="Select">
+                            <input type="checkbox"
+                                   class="sm-checkbox sm-row-checkbox"
+                                   value="{{ screen.id }}"
+                                   data-name="{{ screen.screen_name|escapejs }}"
+                                   data-code="{{ screen.screen_code|escapejs }}">
+                        </td>
+                        <td class="col-num" data-label="#">
+                            {{ page_obj.start_index|add:forloop.counter0 }}
+                        </td>
+                        <td class="col-code" data-label="Code">
+                            <span class="code-badge">{{ screen.screen_code }}</span>
+                        </td>
+                        <td class="col-name" data-label="Name">
+                            <span class="screen-name">{{ screen.screen_name }}</span>
+                        </td>
+                        <td class="col-type" data-label="Type">
+                            <span class="type-badge type-{{ screen.screen_type }}">
+                                {{ screen.get_screen_type_display }}
+                            </span>
+                        </td>
+                        <td class="col-date" data-label="Created">
+                            {{ screen.created_at|date:"d-M-Y h:i A" }}
+                        </td>
+                        <td class="col-actions" data-label="Actions">
+                            <div class="sm-row-actions">
+                                <button type="button"
+                                        class="btn-icon btn-icon-edit"
+                                        data-action="edit"
+                                        data-id="{{ screen.id }}"
+                                        data-code="{{ screen.screen_code|escapejs }}"
+                                        data-name="{{ screen.screen_name|escapejs }}"
+                                        data-type="{{ screen.screen_type }}"
+                                        title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button"
+                                        class="btn-icon btn-icon-delete"
+                                        data-action="delete"
+                                        data-id="{{ screen.id }}"
+                                        data-name="{{ screen.screen_name|escapejs }}"
+                                        title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        <div class="d-flex gap-2 justify-content-end mt-3">
-            <button class="btn-outline" onclick="closeAddModal()">Cancel</button>
-            <button class="btn-orange" onclick="submitAdd()"><i class="fas fa-save me-1"></i> Save Screen</button>
+
+
+        <!-- ============================================================
+             PAGINATION
+             ============================================================ -->
+        {% if is_paginated %}
+        <div class="sm-pagination">
+            <div class="sm-pagination-info">
+                Showing <strong>{{ page_obj.start_index }}</strong>–<strong>{{ page_obj.end_index }}</strong>
+                of <strong>{{ page_obj.paginator.count }}</strong>
+            </div>
+            <nav class="sm-pagination-nav">
+                {% if page_obj.has_previous %}
+                    <a class="sm-page-btn"
+                       href="?page=1{% if search_q %}&q={{ search_q|urlencode }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"
+                       title="First">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a class="sm-page-btn"
+                       href="?page={{ page_obj.previous_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"
+                       title="Previous">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% else %}
+                    <span class="sm-page-btn disabled"><i class="fas fa-angle-double-left"></i></span>
+                    <span class="sm-page-btn disabled"><i class="fas fa-angle-left"></i></span>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                        <span class="sm-page-btn active">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a class="sm-page-btn"
+                           href="?page={{ num }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a class="sm-page-btn"
+                       href="?page={{ page_obj.next_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"
+                       title="Next">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a class="sm-page-btn"
+                       href="?page={{ page_obj.paginator.num_pages }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"
+                       title="Last">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% else %}
+                    <span class="sm-page-btn disabled"><i class="fas fa-angle-right"></i></span>
+                    <span class="sm-page-btn disabled"><i class="fas fa-angle-double-right"></i></span>
+                {% endif %}
+            </nav>
         </div>
+        {% endif %}
+
+        {% else %}
+        <div class="sm-empty">
+            <i class="fas fa-desktop"></i>
+            <p class="sm-empty-title">
+                {% if search_q or type_filter %}
+                    No screens match your filters
+                {% else %}
+                    No screens added yet
+                {% endif %}
+            </p>
+            <p class="sm-empty-sub">
+                {% if search_q or type_filter %}
+                    Try different keywords or <a href="{% url 'settings_screen_master' %}">clear filters</a>.
+                {% else %}
+                    Click "Add Screen" or use "Bulk Upload" to get started.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+
     </div>
 </div>
 
-<!-- Edit Screen Modal -->
-<div class="modal-overlay" id="editModal">
-    <div class="modal-box">
-        <h5><i class="fas fa-edit me-2" style="color:#3b82f6;"></i> Edit Screen</h5>
-        <input type="hidden" id="editId">
-        <div class="form-group">
-            <label>Screen Code <span style="color:#ef4444;">*</span></label>
-            <input type="text" id="editCode" placeholder="e.g. SO-001" autocomplete="off">
-        </div>
-        <div class="form-group">
-            <label>Screen Name <span style="color:#ef4444;">*</span></label>
-            <input type="text" id="editName" placeholder="e.g. Sales Order Entry" autocomplete="off">
-        </div>
-        <div class="form-group">
-            <label>Screen Type <span style="color:#ef4444;">*</span></label>
-            <select id="editType" class="form-control">
-                <option value="ALL">General</option>
-                <option value="ENTRY">Data Entry</option>
-                <option value="CONFIGURATION">Configuration</option>
-                <option value="QUERY">Report/Query</option>
-            </select>
-        </div>
-        <div class="d-flex gap-2 justify-content-end mt-3">
-            <button class="btn-outline" onclick="closeEditModal()">Cancel</button>
-            <button class="btn-orange" onclick="submitEdit()"><i class="fas fa-save me-1"></i> Update Screen</button>
-        </div>
-    </div>
-</div>
 
-<!-- Delete Confirm Modal -->
-<div class="modal-overlay" id="deleteModal">
-    <div class="modal-box">
-        <h5><i class="fas fa-exclamation-triangle me-2" style="color:#ef4444;"></i> Delete Screen</h5>
-        <input type="hidden" id="deleteId">
-        <p style="color:var(--sm-text-secondary);">Are you sure you want to delete screen <strong id="deleteName" style="color:var(--sm-text-primary);"></strong>? This will also remove all its mappings.</p>
-        <div class="d-flex gap-2 justify-content-end mt-3">
-            <button class="btn-outline" onclick="closeDeleteModal()">Cancel</button>
-            <button style="background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none;border-radius:8px;padding:0.5rem 1.2rem;font-size:0.85rem;font-weight:600;cursor:pointer;" onclick="submitDelete()">
-                <i class="fas fa-trash me-1"></i> Delete
+<!-- ============================================================
+     MODALS
+     ============================================================ -->
+
+<!-- Add -->
+<div class="sm-modal" id="addModal" aria-hidden="true">
+    <div class="sm-modal-box">
+        <header class="sm-modal-head">
+            <h3><i class="fas fa-plus-circle"></i> Add New Screen</h3>
+            <button type="button" class="sm-modal-close" data-close="addModal">
+                <i class="fas fa-times"></i>
             </button>
+        </header>
+        <div class="sm-modal-body">
+            <div class="sm-field">
+                <label>Screen Code <span class="req">*</span></label>
+                <input type="text" id="addCode" placeholder="e.g. SO-001" autocomplete="off">
+            </div>
+            <div class="sm-field">
+                <label>Screen Name <span class="req">*</span></label>
+                <input type="text" id="addName" placeholder="e.g. Sales Order Entry" autocomplete="off">
+            </div>
+            <div class="sm-field">
+                <label>Screen Type <span class="req">*</span></label>
+                <select id="addType">
+                    <option value="ALL">General</option>
+                    <option value="ENTRY">Data Entry</option>
+                    <option value="CONFIGURATION">Configuration</option>
+                    <option value="QUERY">Report/Query</option>
+                </select>
+            </div>
         </div>
+        <footer class="sm-modal-foot">
+            <button type="button" class="btn btn-outline" data-close="addModal">Cancel</button>
+            <button type="button" class="btn btn-orange" data-action="submit-add">
+                <i class="fas fa-save"></i> Save Screen
+            </button>
+        </footer>
     </div>
 </div>
 
-<!-- Bulk Upload Modal -->
-<div class="modal-overlay" id="bulkModal">
-    <div class="modal-box" style="max-width: 600px;">
-        <h5><i class="fas fa-upload me-2" style="color:var(--sm-success);"></i> Bulk Upload Screens</h5>
-        
-        <div class="form-group">
-            <label>Download Template</label>
-            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                <a href="{% url 'screen_master_download_template' %}" class="btn-info" style="padding:0.35rem 1rem; font-size:0.8rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">
+<!-- Edit -->
+<div class="sm-modal" id="editModal" aria-hidden="true">
+    <div class="sm-modal-box">
+        <header class="sm-modal-head">
+            <h3><i class="fas fa-edit"></i> Edit Screen</h3>
+            <button type="button" class="sm-modal-close" data-close="editModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="sm-modal-body">
+            <input type="hidden" id="editId">
+            <div class="sm-field">
+                <label>Screen Code <span class="req">*</span></label>
+                <input type="text" id="editCode" autocomplete="off">
+            </div>
+            <div class="sm-field">
+                <label>Screen Name <span class="req">*</span></label>
+                <input type="text" id="editName" autocomplete="off">
+            </div>
+            <div class="sm-field">
+                <label>Screen Type <span class="req">*</span></label>
+                <select id="editType">
+                    <option value="ALL">General</option>
+                    <option value="ENTRY">Data Entry</option>
+                    <option value="CONFIGURATION">Configuration</option>
+                    <option value="QUERY">Report/Query</option>
+                </select>
+            </div>
+        </div>
+        <footer class="sm-modal-foot">
+            <button type="button" class="btn btn-outline" data-close="editModal">Cancel</button>
+            <button type="button" class="btn btn-orange" data-action="submit-edit">
+                <i class="fas fa-save"></i> Update Screen
+            </button>
+        </footer>
+    </div>
+</div>
+
+<!-- Delete (single) -->
+<div class="sm-modal" id="deleteModal" aria-hidden="true">
+    <div class="sm-modal-box">
+        <header class="sm-modal-head sm-modal-head-danger">
+            <h3><i class="fas fa-exclamation-triangle"></i> Delete Screen</h3>
+            <button type="button" class="sm-modal-close" data-close="deleteModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="sm-modal-body">
+            <input type="hidden" id="deleteId">
+            <p class="sm-modal-text">
+                Are you sure you want to delete <strong id="deleteName"></strong>?
+                This will also remove all its mappings.
+            </p>
+        </div>
+        <footer class="sm-modal-foot">
+            <button type="button" class="btn btn-outline" data-close="deleteModal">Cancel</button>
+            <button type="button" class="btn btn-danger" data-action="submit-delete">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </footer>
+    </div>
+</div>
+
+<!-- Bulk Edit -->
+<div class="sm-modal" id="bulkEditModal" aria-hidden="true">
+    <div class="sm-modal-box">
+        <header class="sm-modal-head">
+            <h3><i class="fas fa-pen"></i> Bulk Edit Screens</h3>
+            <button type="button" class="sm-modal-close" data-close="bulkEditModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="sm-modal-body">
+            <div class="sm-selected-list" id="bulkEditSelectedList"></div>
+            <div class="sm-field">
+                <label>Screen Type <span class="muted">(optional)</span></label>
+                <select id="bulkEditType">
+                    <option value="">— Do not change —</option>
+                    <option value="ALL">General</option>
+                    <option value="ENTRY">Data Entry</option>
+                    <option value="CONFIGURATION">Configuration</option>
+                    <option value="QUERY">Report/Query</option>
+                </select>
+                <p class="sm-hint">Only Screen Type can be bulk-edited.</p>
+            </div>
+        </div>
+        <footer class="sm-modal-foot">
+            <button type="button" class="btn btn-outline" data-close="bulkEditModal">Cancel</button>
+            <button type="button" class="btn btn-orange" id="bulkEditSubmitBtn" data-action="submit-bulk-edit">
+                <i class="fas fa-save"></i> <span id="bulkEditBtnText">Apply</span>
+            </button>
+        </footer>
+    </div>
+</div>
+
+<!-- Bulk Delete -->
+<div class="sm-modal" id="bulkDeleteModal" aria-hidden="true">
+    <div class="sm-modal-box">
+        <header class="sm-modal-head sm-modal-head-danger">
+            <h3><i class="fas fa-exclamation-triangle"></i> Delete Screens</h3>
+            <button type="button" class="sm-modal-close" data-close="bulkDeleteModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="sm-modal-body">
+            <p class="sm-modal-text">
+                Are you sure you want to delete <strong id="bulkDeleteCount">0</strong> screen(s)?
+                This will remove all their mappings and cannot be undone.
+            </p>
+            <div class="sm-selected-list" id="bulkDeleteSelectedList"></div>
+        </div>
+        <footer class="sm-modal-foot">
+            <button type="button" class="btn btn-outline" data-close="bulkDeleteModal">Cancel</button>
+            <button type="button" class="btn btn-danger" id="bulkDeleteSubmitBtn" data-action="submit-bulk-delete">
+                <i class="fas fa-trash"></i> <span id="bulkDeleteBtnText">Delete</span>
+            </button>
+        </footer>
+    </div>
+</div>
+
+<!-- Bulk Upload -->
+<div class="sm-modal" id="bulkModal" aria-hidden="true">
+    <div class="sm-modal-box sm-modal-box-wide">
+        <header class="sm-modal-head">
+            <h3><i class="fas fa-upload"></i> Bulk Upload Screens</h3>
+            <button type="button" class="sm-modal-close" data-close="bulkModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="sm-modal-body">
+            <div class="sm-field">
+                <label>Template</label>
+                <a href="{% url 'screen_master_download_template' %}" class="btn btn-info">
                     <i class="fas fa-file-excel"></i> Download Template
                 </a>
-                <span style="font-size:0.7rem; color:var(--sm-text-secondary); align-self:center;">
-                    (Excel file with required columns)
-                </span>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label>Upload Excel File <span style="color:#ef4444;">*</span></label>
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('bulkFile').click()">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <p>Click to select or drag & drop your Excel file</p>
-                <p style="font-size:0.7rem; color:var(--sm-text-secondary);">Supported: .xlsx, .xls</p>
-                <div class="file-name" id="fileName">No file selected</div>
+            <div class="sm-field">
+                <label>Excel File(s) <span class="req">*</span></label>
+                <div class="sm-upload" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click or drag & drop Excel files</p>
+                    <p class="sm-upload-sub">.xlsx, .xls — multiple allowed</p>
+                    <div class="sm-file-name" id="fileName">No files selected</div>
+                </div>
+                <input type="file" id="bulkFile" accept=".xlsx,.xls" multiple hidden>
+                <div id="filePreviewList" class="sm-file-preview"></div>
             </div>
-            <input type="file" id="bulkFile" accept=".xlsx,.xls" style="display:none;" onchange="handleFileSelect(event)">
-            <div class="file-hint">Columns: Screen Code, Screen Name, Screen Type (ALL/ENTRY/CONFIGURATION/QUERY)</div>
+
+            <div class="sm-progress" id="progressBar">
+                <div class="sm-progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="sm-upload-result" id="uploadResult"></div>
         </div>
-
-        <!-- Progress Bar -->
-        <div class="progress-bar-container" id="progressBar">
-            <div class="progress-bar-fill" id="progressFill"></div>
-        </div>
-
-        <!-- Upload Result -->
-        <div class="upload-result" id="uploadResult"></div>
-
-        <div class="d-flex gap-2 justify-content-end mt-3">
-            <button class="btn-outline" onclick="closeBulkModal()">Cancel</button>
-            <button class="btn-success" id="bulkUploadBtn" onclick="submitBulkUpload()">
-                <i class="fas fa-upload me-1"></i> Upload
+        <footer class="sm-modal-foot">
+            <button type="button" class="btn btn-outline" data-close="bulkModal">Cancel</button>
+            <button type="button" class="btn btn-success" id="bulkUploadBtn" data-action="submit-bulk-upload">
+                <i class="fas fa-upload"></i> Upload
             </button>
-        </div>
+        </footer>
     </div>
 </div>
 
-<!-- Toast Container -->
-<div class="toast-container" id="toastContainer"></div>
+<!-- Toast container -->
+<div class="sm-toasts" id="toastContainer"></div>
+
 {% endblock %}
+
 
 {% block extra_js %}
 <script src="{% static 'js/admin_panel/settings_screen_master.js' %}"></script>

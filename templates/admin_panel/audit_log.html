@@ -29,6 +29,9 @@
     <!-- Filters -->
     <div class="audit-filters">
         <form method="GET" id="auditFilterForm">
+            <!-- Preserve per_page across filter submissions -->
+            <input type="hidden" name="per_page" value="{{ per_page }}">
+
             <div class="row g-3 align-items-end">
                 <div class="col-12 col-sm-6 col-md-2">
                     <label class="form-label"><i class="fa-solid fa-tag"></i> Action</label>
@@ -39,7 +42,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                
+
                 <div class="col-12 col-sm-6 col-md-2">
                     <label class="form-label"><i class="fa-solid fa-gear"></i> Setting Type</label>
                     <select name="setting_type" class="form-select">
@@ -49,17 +52,17 @@
                         {% endfor %}
                     </select>
                 </div>
-                
+
                 <div class="col-12 col-sm-6 col-md-2">
                     <label class="form-label"><i class="fa-regular fa-user"></i> Performed By</label>
                     <input type="text" name="performed_by" class="form-control" placeholder="Username" value="{{ selected_performed_by }}">
                 </div>
-                
+
                 <div class="col-12 col-sm-6 col-md-2">
                     <label class="form-label"><i class="fa-regular fa-calendar"></i> Date From</label>
                     <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
                 </div>
-                
+
                 <div class="col-12 col-sm-6 col-md-2">
                     <label class="form-label"><i class="fa-regular fa-calendar"></i> Date To</label>
                     <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
@@ -67,17 +70,17 @@
                         {% if date_error %}{{ date_error }}{% endif %}
                     </div>
                 </div>
-                
-                <div class="col-12 col-sm-12 col-md-2">
-                    <label class="form-label" style="visibility: hidden;">Actions</label>
-                    <div class="filter-actions">
-                        <button type="submit" class="btn-filter">
-                            <i class="fa-solid fa-filter me-1"></i> Filter
-                        </button>
-                    </div>
+
+                <div class="col-12 col-sm-6 col-md-2">
+                    <label class="form-label"><i class="fa-solid fa-list-ol"></i> Per Page</label>
+                    <select name="per_page_select" class="form-select" id="perPageSelect">
+                        {% for size in allowed_per_page %}
+                        <option value="{{ size }}" {% if per_page == size %}selected{% endif %}>{{ size }} per page</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
-            
+
             <!-- Search Bar with Reset & Excel Buttons -->
             <div class="row mt-3">
                 <div class="col-12">
@@ -86,11 +89,9 @@
                         <button type="submit" class="btn-filter">
                             <i class="fa-solid fa-search me-1"></i> Search
                         </button>
-                        <!-- Reset button -->
                         <a href="{% url 'settings_audit_log' %}" class="btn-reset" title="Reset All Filters">
                             <i class="fa-solid fa-rotate-right"></i>
                         </a>
-                        <!-- Excel Download Button -->
                         <a href="{% url 'admin_download_audit_log_excel' %}?{{ request.GET.urlencode }}" class="btn-excel" title="Download Excel">
                             <i class="fa-solid fa-file-excel me-1"></i> Excel
                         </a>
@@ -114,13 +115,13 @@
                             <span class="audit-time"><i class="fa-regular fa-clock me-1"></i>{{ log.created_at|date:"d M Y H:i:s" }}</span>
                             <span class="audit-ip"><i class="fa-solid fa-network-wired me-1"></i>{{ log.ip_address|default:"N/A" }}</span>
                         </div>
-                        
+
                         <div class="audit-setting-name">{{ log.setting_name }}</div>
-                        
+
                         {% if log.change_summary %}
                         <div class="audit-summary">{{ log.change_summary }}</div>
                         {% endif %}
-                        
+
                         {% if log.old_value or log.new_value %}
                         <div class="mt-1">
                             {% if log.old_value %}
@@ -132,7 +133,7 @@
                             {% endif %}
                         </div>
                         {% endif %}
-                        
+
                         {% if log.remarks %}
                         <div class="audit-summary" style="font-size: 0.65rem; color: var(--audit-text-muted); margin-top: 0.3rem;">
                             <i class="fa-regular fa-message me-1"></i>{{ log.remarks }}
@@ -142,51 +143,86 @@
                 </div>
             </div>
             {% endfor %}
-            
-            <!-- Pagination -->
+
+            <!-- ============================================================
+                 WINDOWED PAGINATION
+                 Uses `page_window` from the view — a compact list like
+                 [1, '…', 45, 46, 47, 48, 49, '…', 94].
+                 Total buttons shown: at most ~11.
+                 ============================================================ -->
             {% if page_obj.has_other_pages %}
             <nav aria-label="Page navigation" class="mt-4">
                 <ul class="pagination justify-content-center flex-wrap">
+
+                    <!-- First -->
                     {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}{% if selected_setting_type %}&setting_type={{ selected_setting_type }}{% endif %}{% if selected_performed_by %}&performed_by={{ selected_performed_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                        <a class="page-link" href="?page=1&per_page={{ per_page }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}{% if selected_setting_type %}&setting_type={{ selected_setting_type }}{% endif %}{% if selected_performed_by %}&performed_by={{ selected_performed_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
+                           title="First page">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&per_page={{ per_page }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}{% if selected_setting_type %}&setting_type={{ selected_setting_type }}{% endif %}{% if selected_performed_by %}&performed_by={{ selected_performed_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
+                           title="Previous page">
                             <i class="fa-solid fa-chevron-left"></i>
                         </a>
                     </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-angles-left"></i></span></li>
+                    <li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-left"></i></span></li>
                     {% endif %}
-                    
-                    {% for num in page_obj.paginator.page_range %}
-                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}{% if selected_setting_type %}&setting_type={{ selected_setting_type }}{% endif %}{% if selected_performed_by %}&performed_by={{ selected_performed_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
-                            {{ num }}
-                        </a>
-                    </li>
+
+                    <!-- Windowed page numbers -->
+                    {% for num in page_window %}
+                        {% if num == '…' %}
+                            <li class="page-item disabled">
+                                <span class="page-link page-ellipsis">…</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}&per_page={{ per_page }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}{% if selected_setting_type %}&setting_type={{ selected_setting_type }}{% endif %}{% if selected_performed_by %}&performed_by={{ selected_performed_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
                     {% endfor %}
-                    
+
+                    <!-- Next / Last -->
                     {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}{% if selected_setting_type %}&setting_type={{ selected_setting_type }}{% endif %}{% if selected_performed_by %}&performed_by={{ selected_performed_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&per_page={{ per_page }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}{% if selected_setting_type %}&setting_type={{ selected_setting_type }}{% endif %}{% if selected_performed_by %}&performed_by={{ selected_performed_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
+                           title="Next page">
                             <i class="fa-solid fa-chevron-right"></i>
                         </a>
                     </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&per_page={{ per_page }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_action %}&action={{ selected_action }}{% endif %}{% if selected_setting_type %}&setting_type={{ selected_setting_type }}{% endif %}{% if selected_performed_by %}&performed_by={{ selected_performed_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}"
+                           title="Last page">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-right"></i></span></li>
+                    <li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-angles-right"></i></span></li>
                     {% endif %}
+
                 </ul>
             </nav>
             {% endif %}
-            
+
             <!-- Total count -->
             <div class="text-center mt-3">
                 <span style="color: var(--audit-text-muted); font-size: 0.8rem; font-family: var(--audit-font-family);">
                     <i class="fa-regular fa-file-lines me-1"></i>
                     Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }} entries
                     <span style="display: inline-block; margin-left: 0.5rem; background: var(--audit-input-bg); padding: 0.1rem 0.8rem; border-radius: 50px; font-size: 0.7rem;">
-                        {{ page_obj.paginator.per_page }} per page
+                        {{ page_obj.paginator.per_page }} per page · {{ page_obj.paginator.num_pages }} page{{ page_obj.paginator.num_pages|pluralize }}
                     </span>
                 </span>
             </div>
-            
+
         {% else %}
-        <!-- Empty State -->
         <div class="audit-empty">
             <i class="fa-regular fa-clock-rotate-left"></i>
             <h5>No audit logs found</h5>
@@ -206,7 +242,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateFrom = auditForm.querySelector('[name="date_from"]');
     const dateTo = auditForm.querySelector('[name="date_to"]');
     const dateRangeError = document.getElementById('dateRangeError');
+    const perPageSelect = document.getElementById('perPageSelect');
 
+    // ---- Per-page dropdown: sync hidden input, reset to page 1, submit ----
+    if (perPageSelect) {
+        perPageSelect.addEventListener('change', function () {
+            var hidden = auditForm.querySelector('input[name="per_page"]');
+            if (hidden) hidden.value = this.value;
+            var pageInput = auditForm.querySelector('input[name="page"]');
+            if (pageInput) pageInput.value = '1';
+            auditForm.submit();
+        });
+    }
+
+    // ---- Date range validation ----
     function validateDateRange() {
         dateTo.min = dateFrom.value || '';
         const hasInvalidRange = dateFrom.value && dateTo.value && dateTo.value < dateFrom.value;
@@ -226,13 +275,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     validateDateRange();
 
-    function syncAuditTheme() {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        // CSS custom properties handle everything automatically
-    }
-    
+    // ---- Theme sync (no-op — CSS variables handle it) ----
+    function syncAuditTheme() {}
+
     syncAuditTheme();
-    
+
     const themeObserver = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.attributeName === 'data-theme') {
@@ -240,12 +287,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
+
     themeObserver.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ['data-theme']
     });
-    
+
     window.addEventListener('storage', function(e) {
         if (e.key === 'theme') {
             const newTheme = e.newValue || 'light';
@@ -256,3 +303,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
+

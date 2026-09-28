@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}All Tickets — Oversight{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin_view/oversight.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin_view/ticket_list.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="av-page av-page--list">
+
+    {% include 'admin_view/partials/_read_only_banner.html' %}
+
+    <!-- ============================================================
+         PAGE HEADER
+         ============================================================ -->
+    <header class="av-page-header">
+        <div>
+            <h1>All Tickets</h1>
+            <p>
+                {{ total_count }} ticket{{ total_count|pluralize }}
+                {% if current_filters.q or current_filters.ticket_number or current_filters.preset or selected_statuses or selected_priorities or selected_units or selected_departments or selected_assignees %}
+                    matching current filters
+                {% else %}
+                    across all units and departments
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="av-page-actions">
+            <a href="{% url 'admin_view:export_csv' %}?{{ request.GET.urlencode }}"
+               class="av-btn av-btn-csv">
+                <i class="fa-solid fa-file-csv"></i> Export CSV
+            </a>
+            <a href="{% url 'admin_view:export_xlsx' %}?{{ request.GET.urlencode }}"
+               class="av-btn av-btn-excel">
+                <i class="fa-solid fa-file-excel"></i> Export Excel
+            </a>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         FILTER PANEL
+         ============================================================ -->
+    <form method="get" class="av-filter-panel" id="av-filter-form">
+
+        <div class="av-filter-panel-row">
+            <div class="av-input-wrap av-input-wrap--search">
+                <i class="fa-solid fa-magnifying-glass av-input-icon"></i>
+                <input type="search" name="q" class="av-input av-input--search"
+                       placeholder="Search subject, description, ticket #…"
+                       value="{{ current_filters.q|default:'' }}"
+                       autocomplete="off">
+            </div>
+            <div class="av-input-wrap av-input-wrap--tn">
+                <i class="fa-solid fa-hashtag av-input-icon"></i>
+                <input type="text" name="ticket_number" class="av-input av-input--search"
+                       placeholder="Ticket number"
+                       value="{{ current_filters.ticket_number|default:'' }}"
+                       autocomplete="off">
+            </div>
+        </div>
+
+        <div class="av-filter-panel-row">
+            <div class="av-preset-row">
+                <span class="av-preset-label">Quick:</span>
+                <a href="?{% if current_filters.q %}q={{ current_filters.q }}&{% endif %}{% if current_filters.ticket_number %}ticket_number={{ current_filters.ticket_number }}&{% endif %}preset=all"
+                   class="av-preset-chip {% if not current_filters.preset or current_filters.preset == 'all' %}is-active{% endif %}">All</a>
+                <a href="?{% if current_filters.q %}q={{ current_filters.q }}&{% endif %}{% if current_filters.ticket_number %}ticket_number={{ current_filters.ticket_number }}&{% endif %}preset=open"
+                   class="av-preset-chip {% if current_filters.preset == 'open' %}is-active{% endif %}">Open</a>
+                <a href="?{% if current_filters.q %}q={{ current_filters.q }}&{% endif %}{% if current_filters.ticket_number %}ticket_number={{ current_filters.ticket_number }}&{% endif %}preset=assigned"
+                   class="av-preset-chip {% if current_filters.preset == 'assigned' %}is-active{% endif %}">Assigned</a>
+                <a href="?{% if current_filters.q %}q={{ current_filters.q }}&{% endif %}{% if current_filters.ticket_number %}ticket_number={{ current_filters.ticket_number }}&{% endif %}preset=hold"
+                   class="av-preset-chip {% if current_filters.preset == 'hold' %}is-active{% endif %}">Hold</a>
+                <a href="?{% if current_filters.q %}q={{ current_filters.q }}&{% endif %}{% if current_filters.ticket_number %}ticket_number={{ current_filters.ticket_number }}&{% endif %}preset=escalated"
+                   class="av-preset-chip {% if current_filters.preset == 'escalated' %}is-active{% endif %}">Escalated</a>
+                <a href="?{% if current_filters.q %}q={{ current_filters.q }}&{% endif %}{% if current_filters.ticket_number %}ticket_number={{ current_filters.ticket_number }}&{% endif %}preset=closed"
+                   class="av-preset-chip {% if current_filters.preset == 'closed' %}is-active{% endif %}">Closed</a>
+                <a href="?{% if current_filters.q %}q={{ current_filters.q }}&{% endif %}{% if current_filters.ticket_number %}ticket_number={{ current_filters.ticket_number }}&{% endif %}preset=escalated_closed"
+                   class="av-preset-chip {% if current_filters.preset == 'escalated_closed' %}is-active{% endif %}">Escalated + Closed</a>
+            </div>
+        </div>
+
+        <div class="av-filter-dropdowns">
+
+            <div class="av-dd" data-dd="status">
+                <button type="button" class="av-dd-trigger">
+                    <span class="av-dd-label"><i class="fa-solid fa-circle-dot"></i> Status</span>
+                    <span class="av-dd-value">
+                        {% if selected_statuses %}{{ selected_statuses|length }} selected{% else %}Any{% endif %}
+                    </span>
+                    <i class="fa-solid fa-chevron-down av-dd-chev"></i>
+                </button>
+                <div class="av-dd-panel">
+                    <label class="av-dd-option"><input type="checkbox" name="status" value="Open" {% if 'Open' in selected_statuses %}checked{% endif %}><span>Open</span><em>{{ status_counts.Open|default:0 }}</em></label>
+                    <label class="av-dd-option"><input type="checkbox" name="status" value="Assigned" {% if 'Assigned' in selected_statuses %}checked{% endif %}><span>Assigned</span><em>{{ status_counts.Assigned|default:0 }}</em></label>
+                    <label class="av-dd-option"><input type="checkbox" name="status" value="Hold" {% if 'Hold' in selected_statuses %}checked{% endif %}><span>Hold</span><em>{{ status_counts.Hold|default:0 }}</em></label>
+                    <label class="av-dd-option"><input type="checkbox" name="status" value="Escalated" {% if 'Escalated' in selected_statuses %}checked{% endif %}><span>Escalated</span><em>{{ status_counts.Escalated|default:0 }}</em></label>
+                    <label class="av-dd-option"><input type="checkbox" name="status" value="Closed" {% if 'Closed' in selected_statuses %}checked{% endif %}><span>Closed</span><em>{{ status_counts.Closed|default:0 }}</em></label>
+                </div>
+            </div>
+
+            <div class="av-dd" data-dd="priority">
+                <button type="button" class="av-dd-trigger">
+                    <span class="av-dd-label"><i class="fa-solid fa-flag"></i> Priority</span>
+                    <span class="av-dd-value">{% if selected_priorities %}{{ selected_priorities|length }} selected{% else %}Any{% endif %}</span>
+                    <i class="fa-solid fa-chevron-down av-dd-chev"></i>
+                </button>
+                <div class="av-dd-panel">
+                    <label class="av-dd-option"><input type="checkbox" name="priority" value="Critical" {% if 'Critical' in selected_priorities %}checked{% endif %}><span>Critical</span><em>{{ priority_counts.Critical|default:0 }}</em></label>
+                    <label class="av-dd-option"><input type="checkbox" name="priority" value="High" {% if 'High' in selected_priorities %}checked{% endif %}><span>High</span><em>{{ priority_counts.High|default:0 }}</em></label>
+                    <label class="av-dd-option"><input type="checkbox" name="priority" value="Medium" {% if 'Medium' in selected_priorities %}checked{% endif %}><span>Medium</span><em>{{ priority_counts.Medium|default:0 }}</em></label>
+                    <label class="av-dd-option"><input type="checkbox" name="priority" value="Low" {% if 'Low' in selected_priorities %}checked{% endif %}><span>Low</span><em>{{ priority_counts.Low|default:0 }}</em></label>
+                </div>
+            </div>
+
+            <div class="av-dd" data-dd="unit">
+                <button type="button" class="av-dd-trigger">
+                    <span class="av-dd-label"><i class="fa-solid fa-building"></i> Unit</span>
+                    <span class="av-dd-value">{% if selected_units %}{{ selected_units|length }} selected{% else %}Any{% endif %}</span>
+                    <i class="fa-solid fa-chevron-down av-dd-chev"></i>
+                </button>
+                <div class="av-dd-panel">
+                    {% for u in all_units %}
+                    <label class="av-dd-option">
+                        <input type="checkbox" name="unit" value="{{ u.id }}"
+                               {% if u.id|stringformat:"s" in selected_units %}checked{% endif %}>
+                        <span>{{ u.code }} — {{ u.full_name }}</span>
+                    </label>
+                    {% empty %}
+                    <em class="av-dd-empty">No units</em>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="av-dd {% if not selected_units %}is-locked{% endif %}" data-dd="department">
+                <button type="button" class="av-dd-trigger"
+                        {% if not selected_units %}disabled aria-disabled="true"{% endif %}>
+                    <span class="av-dd-label"><i class="fa-solid fa-sitemap"></i> Department</span>
+                    <span class="av-dd-value">
+                        {% if not selected_units %}
+                            Select a unit first
+                        {% elif selected_departments %}
+                            {{ selected_departments|length }} selected
+                        {% else %}
+                            Any
+                        {% endif %}
+                    </span>
+                    <i class="fa-solid fa-chevron-down av-dd-chev"></i>
+                </button>
+                <div class="av-dd-panel">
+                    <div class="av-dd-hint">
+                        <i class="fa-solid fa-circle-info"></i> Scoped to selected units
+                    </div>
+                    {% for d in all_departments %}
+                    <label class="av-dd-option {% if d.id in disabled_departments %}is-disabled{% endif %}">
+                        <input type="checkbox" name="department" value="{{ d.id }}"
+                               {% if d.id|stringformat:"s" in selected_departments %}checked{% endif %}
+                               {% if d.id in disabled_departments %}disabled{% endif %}>
+                        <span>{{ d.name }}</span>
+                    </label>
+                    {% empty %}
+                    <em class="av-dd-empty">No departments</em>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="av-dd {% if not selected_units or not selected_departments %}is-locked{% endif %}" data-dd="assignee">
+                <button type="button" class="av-dd-trigger"
+                        {% if not selected_units or not selected_departments %}disabled aria-disabled="true"{% endif %}>
+                    <span class="av-dd-label"><i class="fa-solid fa-user"></i> Assigned</span>
+                    <span class="av-dd-value">
+                        {% if not selected_units %}
+                            Select a unit first
+                        {% elif not selected_departments %}
+                            Select a department first
+                        {% elif selected_assignees %}
+                            {{ selected_assignees|length }} selected
+                        {% else %}
+                            Any
+                        {% endif %}
+                    </span>
+                    <i class="fa-solid fa-chevron-down av-dd-chev"></i>
+                </button>
+                <div class="av-dd-panel">
+                    <div class="av-dd-hint">
+                        <i class="fa-solid fa-circle-info"></i> Scoped to unit + department
+                    </div>
+                    <label class="av-dd-option">
+                        <input type="checkbox" name="assignee" value="__unassigned__"
+                               {% if '__unassigned__' in selected_assignees %}checked{% endif %}>
+                        <span><em>Unassigned</em></span>
+                    </label>
+                    {% for name in all_assignees %}
+                    <label class="av-dd-option">
+                        <input type="checkbox" name="assignee" value="{{ name }}"
+                               {% if name in selected_assignees %}checked{% endif %}>
+                        <span>{{ name }}</span>
+                    </label>
+                    {% empty %}
+                    <em class="av-dd-empty">No assignees in scope</em>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="av-filter-actions">
+            <button type="submit" class="av-btn av-btn-primary av-btn-sm">
+                <i class="fa-solid fa-filter"></i> Apply filters
+            </button>
+            <a href="{% url 'admin_view:ticket_list' %}" class="av-btn av-btn-ghost av-btn-sm">
+                <i class="fa-solid fa-rotate-left"></i> Reset all
+            </a>
+        </div>
+    </form>
+
+    <!-- ============================================================
+         TICKET TABLE
+         ============================================================ -->
+    <section class="av-table-card">
+        <div class="av-table-scroll">
+            <table class="av-table--tickets">
+                <thead>
+                    <tr>
+                        <th class="av-col-id">#</th>
+                        <th class="av-col-subject">Subject</th>
+                        <th class="av-col-status">Status</th>
+                        <th class="av-col-priority">Priority</th>
+                        <th class="av-col-unit">Unit</th>
+                        <th class="av-col-assignee">Assigned</th>
+                        <th class="av-col-date">Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in page_obj %}
+                    <tr class="av-row"
+                        data-href="{% url 'admin_view:ticket_detail' t.id %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
+                        tabindex="0"
+                        role="link"
+                        aria-label="View ticket #{{ t.ticket_number|default:t.id }}">
+                        <td class="av-col-id">
+                            <span class="av-td-id">#{{ t.ticket_number|default:t.id }}</span>
+                        </td>
+                        <td class="av-col-subject">
+                            <span class="av-td-subject">{{ t.subject }}</span>
+                        </td>
+                        <td class="av-col-status">
+                            <span class="av-badge badge--status-{{ t.status.value|default:t.status|lower }}">
+                                {{ t.status.value|default:t.status }}
+                            </span>
+                        </td>
+                        <td class="av-col-priority">
+                            <span class="av-badge badge--priority-{{ t.priority.value|default:t.priority|lower }}">
+                                {{ t.priority.value|default:t.priority }}
+                            </span>
+                        </td>
+                        <td class="av-col-unit">
+                            <span class="av-td-unit">{{ t.unit.code|default:'—' }}</span>
+                        </td>
+                        <td class="av-col-assignee">
+                            {% if t.assigned_person %}
+                                <span class="av-mini-user">
+                                    <span class="av-mini-avatar">{{ t.assigned_person|first|upper }}</span>
+                                    <span>{{ t.assigned_person }}</span>
+                                </span>
+                            {% else %}
+                                <em class="av-muted">—</em>
+                            {% endif %}
+                        </td>
+                        <td class="av-col-date">
+                            <span class="av-td-date">{{ t.created_at|timesince }} ago</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="av-empty-cell">
+                            <div class="av-empty">
+                                <i class="fa-solid fa-inbox"></i>
+                                <div>No tickets match your filters.</div>
+                                <a href="{% url 'admin_view:ticket_list' %}" class="av-btn av-btn-ghost av-btn-sm">
+                                    Clear filters
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <nav class="av-pagination">
+            {% if page_obj.has_previous %}
+            <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}"
+               class="av-btn av-btn-ghost av-btn-sm">
+                <i class="fa-solid fa-chevron-left"></i> Prev
+            </a>
+            {% else %}
+            <span class="av-btn av-btn-ghost av-btn-sm av-btn-disabled">
+                <i class="fa-solid fa-chevron-left"></i> Prev
+            </span>
+            {% endif %}
+
+            <span class="av-page-info">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                <span class="av-muted">· {{ page_obj.paginator.count }} total</span>
+            </span>
+
+            {% if page_obj.has_next %}
+            <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}"
+               class="av-btn av-btn-ghost av-btn-sm">
+                Next <i class="fa-solid fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <span class="av-btn av-btn-ghost av-btn-sm av-btn-disabled">
+                Next <i class="fa-solid fa-chevron-right"></i>
+            </span>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </section>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/admin_view/ticket_list.js' %}"></script>
+{% endblock %}

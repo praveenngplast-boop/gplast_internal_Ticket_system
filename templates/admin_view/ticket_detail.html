@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} — Oversight{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin_view/oversight.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin_view/ticket_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="av-page av-page--detail">
+
+    {% include 'admin_view/partials/_read_only_banner.html' %}
+
+    <!-- ============================================================
+         HEADER
+         ============================================================ -->
+    <header class="av-page-header">
+        <div>
+            <h1>Ticket #{{ selected_ticket.ticket_number|default:selected_ticket.id }}</h1>
+            <p>{{ selected_ticket.subject }}</p>
+        </div>
+
+        <div class="av-page-actions">
+            <a href="{% url 'admin_view:download_ticket_excel' selected_ticket.id %}"
+               class="av-btn av-btn-excel"
+               target="_blank"
+               rel="noopener">
+                <i class="fa-solid fa-file-excel"></i>
+                Export Excel
+            </a>
+
+            <a href="{% url 'admin_view:download_ticket_csv' selected_ticket.id %}"
+               class="av-btn av-btn-csv"
+               target="_blank"
+               rel="noopener">
+                <i class="fa-solid fa-file-csv"></i>
+                Export CSV
+            </a>
+
+            <a href="{% url 'admin_view:ticket_list' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
+               class="av-btn av-btn-ghost">
+                <i class="fa-solid fa-arrow-left"></i> Back to list
+            </a>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         DETAIL CARDS
+         ============================================================ -->
+    <div class="av-detail-inner">
+
+        <!-- Headline card -->
+        <section class="av-card av-card--headline">
+            <div class="av-card-body">
+                <h2 class="av-headline-title">
+                    <span class="av-ticket-id">#{{ selected_ticket.ticket_number|default:selected_ticket.id }}</span>
+                    <span class="av-headline-subject">{{ selected_ticket.subject }}</span>
+                </h2>
+                <div class="av-headline-meta">
+                    <span class="av-detail-meta-item">
+                        <i class="fa-solid fa-building"></i>
+                        {{ selected_ticket.unit.full_name|default:'No unit' }}
+                    </span>
+                    <span class="av-badge av-badge--time">
+                        <i class="fa-regular fa-clock"></i>
+                        Created {{ selected_ticket.created_at|timesince }} ago
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status / Priority / Assigned / Target -->
+        <div class="av-detail-strip av-detail-strip--cards">
+
+            <div class="av-card av-card--info">
+                <div class="av-card-head"><h3><i class="fa-solid fa-circle-dot"></i> Status</h3></div>
+                <div class="av-card-body">
+                    <span class="av-badge badge--status-{{ status_value|lower }}">{{ status_display }}</span>
+                </div>
+            </div>
+
+            <div class="av-card av-card--info">
+                <div class="av-card-head"><h3><i class="fa-solid fa-flag"></i> Priority</h3></div>
+                <div class="av-card-body">
+                    {% if can_change_priority %}
+                    <form method="post"
+                          action="{% url 'admin_view:change_priority' selected_ticket.id %}"
+                          class="av-strip-form">
+                        {% csrf_token %}
+                        <select name="priority"
+                                onchange="this.form.submit()"
+                                class="av-select av-select--sm">
+                            <option value="Low"      {% if priority_value == 'Low' %}selected{% endif %}>Low</option>
+                            <option value="Medium"   {% if priority_value == 'Medium' %}selected{% endif %}>Medium</option>
+                            <option value="High"     {% if priority_value == 'High' %}selected{% endif %}>High</option>
+                            <option value="Critical" {% if priority_value == 'Critical' %}selected{% endif %}>Critical</option>
+                        </select>
+                    </form>
+                    {% else %}
+                    <span class="av-badge badge--priority-{{ priority_value|lower }}">{{ priority_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="av-card av-card--info">
+                <div class="av-card-head"><h3><i class="fa-solid fa-user"></i> Assigned</h3></div>
+                <div class="av-card-body">
+                    {% if selected_ticket.assigned_person %}
+                        <span class="av-strip-user">
+                            <span class="av-avatar av-avatar--sm">
+                                {{ selected_ticket.assigned_person|first|upper }}
+                            </span>
+                            {{ selected_ticket.assigned_person }}
+                        </span>
+                    {% else %}
+                        <em class="av-muted">Unassigned</em>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="av-card av-card--info">
+                <div class="av-card-head"><h3><i class="fa-regular fa-calendar"></i> Target</h3></div>
+                <div class="av-card-body">
+                    {% if selected_ticket.target_date %}
+                        <span class="av-strip-value">
+                            <i class="fa-regular fa-calendar"></i>
+                            {{ selected_ticket.target_date|date:"M d, Y" }}
+                        </span>
+                    {% else %}
+                        <em class="av-muted">—</em>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <section class="av-card">
+            <div class="av-card-head">
+                <h3><i class="fa-solid fa-align-left"></i> Description</h3>
+            </div>
+            <div class="av-card-body av-description-body">
+                {% if selected_ticket.description %}
+                    {{ selected_ticket.description|linebreaks }}
+                {% else %}
+                    <em class="av-muted">No description provided.</em>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Attachment -->
+        {% if selected_ticket.attachment %}
+        <section class="av-card">
+            <div class="av-card-head">
+                <h3><i class="fa-solid fa-paperclip"></i> Attachment</h3>
+            </div>
+            <div class="av-card-body">
+                <a href="{{ selected_ticket.attachment.url }}"
+                   target="_blank"
+                   class="av-attachment-chip">
+                    <i class="fa-solid fa-paperclip"></i>
+                    <span>{{ selected_ticket.attachment.name|cut:"attachments/" }}</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Audit History -->
+        <section class="av-card av-card--table">
+            <div class="av-card-head">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> Audit History</h3>
+                <span class="av-count-pill">{{ history|length }}</span>
+            </div>
+            <div class="av-table-wrap">
+                <table class="av-table av-table--audit">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Performed By</th>
+                            <th>Timestamp</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in history %}
+                        <tr>
+                            <td>
+                                <span class="av-action">
+                                    <i class="fa-solid fa-circle-dot"></i>
+                                    {{ log.action }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="av-user-mini">
+                                    <span class="av-avatar av-avatar--sm">
+                                        {{ log.performed_by|first|upper }}
+                                    </span>
+                                    {{ log.performed_by }}
+                                </span>
+                            </td>
+                            <td class="av-nowrap">
+                                {% if log.timestamp %}{{ log.timestamp|date:"M d, Y · H:i" }}{% else %}—{% endif %}
+                            </td>
+                            <td>
+                                {% if log.remarks %}{{ log.remarks }}{% else %}<span class="av-muted">—</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="av-empty-cell">No audit history yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Comments -->
+        <section class="av-card av-card--table">
+            <div class="av-card-head">
+                <h3><i class="fa-regular fa-comments"></i> Comments</h3>
+                <span class="av-count-pill">{{ replies|length }}</span>
+            </div>
+
+            <div class="av-table-wrap">
+                <table class="av-table av-table--comments">
+                    <thead>
+                        <tr>
+                            <th class="av-col-author">Author</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in replies %}
+                        <tr>
+                            <td class="av-col-author">
+                                <div class="av-conv-author">
+                                    <span class="av-avatar av-avatar--sm">
+                                        {% if r.author %}
+                                            {{ r.author.username|first|upper }}
+                                        {% else %}
+                                            {{ r.author_name|default:'?'|first|upper }}
+                                        {% endif %}
+                                    </span>
+                                    <div class="av-conv-author-meta">
+                                        <strong>
+                                            {% if r.author %}
+                                                {{ r.author.get_full_name|default:r.author.username }}
+                                            {% else %}
+                                                {{ r.author_name|default:'Unknown' }}
+                                            {% endif %}
+                                        </strong>
+                                        <span>{{ r.created_at|timesince }} ago</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="av-conv-text">
+                                    {{ r.body|linebreaks }}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="av-empty-cell">No comments yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if can_comment %}
+            <form method="post"
+                  action="{% url 'admin_view:add_comment' selected_ticket.id %}"
+                  class="av-comment-form">
+                {% csrf_token %}
+                <textarea name="body"
+                          class="av-textarea"
+                          placeholder="Write a comment…"
+                          rows="3"
+                          required></textarea>
+                <div class="av-comment-actions">
+                    <button type="submit" class="av-btn av-btn-primary">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Post Comment
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="av-comment-readonly">
+                <i class="fa-solid fa-eye"></i>
+                <span>You don't have permission to comment on this ticket.</span>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Details -->
+        <section class="av-card av-card--table">
+            <div class="av-card-head">
+                <h3><i class="fa-solid fa-circle-info"></i> Details</h3>
+            </div>
+            <div class="av-table-wrap">
+                <table class="av-table av-table--kv">
+                    <tbody>
+                        <tr>
+                            <th>Created</th>
+                            <td>{{ selected_ticket.created_at|date:"M d, Y · H:i" }}</td>
+                        </tr>
+                        {% if selected_ticket.closed_at %}
+                        <tr>
+                            <th>Closed</th>
+                            <td>{{ selected_ticket.closed_at|date:"M d, Y · H:i" }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>Unit</th>
+                            <td>{{ selected_ticket.unit.full_name|default:'—' }}</td>
+                        </tr>
+                        {% if selected_ticket.department %}
+                        <tr>
+                            <th>Department</th>
+                            <td>{{ selected_ticket.department.name }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>Category</th>
+                            <td>{{ selected_ticket.category|default:'—' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Created by</th>
+                            <td>
+                                {% if selected_ticket.created_by_user %}
+                                    {{ selected_ticket.created_by_user.get_full_name|default:selected_ticket.created_by_user.username }}
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/admin_view/ticket_detail.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,440 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Error Type Master - GPLAST Admin{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin_panel/settings_error_type_master.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<div class="etm-page" id="etmPage">
+
+    <!-- ============================================================
+         PAGE HEADER
+         ============================================================ -->
+    <header class="etm-header">
+        <div class="etm-header-main">
+            <div class="etm-header-info">
+                <h1>
+                    <i class="fas fa-triangle-exclamation"></i>
+                    Error Type Master
+                </h1>
+                <p>
+                    Manage Main &amp; Sub error types used when closing tickets.
+                    These options appear in the <strong>Close Ticket</strong> sheet.
+                </p>
+            </div>
+            <div class="etm-header-actions">
+                <a href="{% url 'settings_page' %}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                <button type="button" class="btn btn-orange" data-action="open-add-main">
+                    <i class="fas fa-plus"></i> Add Main Type
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats strip -->
+        <div class="etm-stats">
+            <div class="etm-stat">
+                <span class="etm-stat-value" id="statTotalMains">{{ total_mains }}</span>
+                <span class="etm-stat-label">Main Types</span>
+            </div>
+            <div class="etm-stat">
+                <span class="etm-stat-value" id="statTotalSubs">{{ total_subs }}</span>
+                <span class="etm-stat-label">Sub Types</span>
+            </div>
+            <div class="etm-stat etm-stat-success">
+                <span class="etm-stat-value" id="statActiveMains">{{ active_mains }}</span>
+                <span class="etm-stat-label">Active Mains</span>
+            </div>
+            <div class="etm-stat etm-stat-success">
+                <span class="etm-stat-value" id="statActiveSubs">{{ active_subs }}</span>
+                <span class="etm-stat-label">Active Subs</span>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- ============================================================
+         MAIN LAYOUT — Two Columns
+         ============================================================ -->
+    <div class="etm-layout">
+
+        <!-- ============================================================
+             LEFT PANEL — MAIN ERROR TYPES
+             ============================================================ -->
+        <section class="etm-panel etm-panel-left" aria-label="Main Error Types">
+            <div class="etm-panel-head">
+                <h2>
+                    <i class="fas fa-layer-group"></i>
+                    Main Error Types
+                </h2>
+                <span class="etm-panel-count" id="mainsCount">{{ total_mains }}</span>
+            </div>
+
+            <div class="etm-panel-toolbar">
+                <div class="etm-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text"
+                           id="mainSearchInput"
+                           placeholder="Search main types..."
+                           autocomplete="off">
+                </div>
+            </div>
+
+            <div class="etm-panel-body" id="mainsList" role="listbox" aria-label="List of main error types">
+                {% if mains %}
+                    {% for main in mains %}
+                    <article class="etm-main-item {% if not main.is_active %}etm-item-inactive{% endif %}"
+                             data-main-id="{{ main.id }}"
+                             data-main-name="{{ main.name|escapejs }}"
+                             data-main-order="{{ main.display_order }}"
+                             data-main-active="{% if main.is_active %}1{% else %}0{% endif %}">
+                        <div class="etm-main-marker"></div>
+
+                        <div class="etm-main-content">
+                            <div class="etm-main-name">
+                                {{ main.name }}
+                                {% if not main.is_active %}
+                                <span class="etm-tag etm-tag-muted">Inactive</span>
+                                {% endif %}
+                            </div>
+                            <div class="etm-main-meta">
+                                <span class="etm-main-subs-count">
+                                    <i class="fas fa-list-ul"></i>
+                                    {{ main.sub_types.count }} sub type{{ main.sub_types.count|pluralize }}
+                                </span>
+                                <span class="etm-main-order">
+                                    Order: {{ main.display_order }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="etm-main-actions">
+                            <button type="button"
+                                    class="etm-icon-btn"
+                                    title="Toggle active"
+                                    data-action="toggle-main"
+                                    data-id="{{ main.id }}"
+                                    data-active="{% if main.is_active %}1{% else %}0{% endif %}">
+                                <i class="fas {% if main.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                            </button>
+                            <button type="button"
+                                    class="etm-icon-btn"
+                                    title="Edit main"
+                                    data-action="edit-main"
+                                    data-id="{{ main.id }}"
+                                    data-name="{{ main.name|escapejs }}"
+                                    data-order="{{ main.display_order }}"
+                                    data-active="{% if main.is_active %}1{% else %}0{% endif %}">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button type="button"
+                                    class="etm-icon-btn etm-icon-danger"
+                                    title="Delete main"
+                                    data-action="delete-main"
+                                    data-id="{{ main.id }}"
+                                    data-name="{{ main.name|escapejs }}"
+                                    data-subs-count="{{ main.sub_types.count }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="etm-empty" id="mainsEmptyState">
+                        <i class="fas fa-layer-group"></i>
+                        <p class="etm-empty-title">No main error types yet</p>
+                        <p class="etm-empty-sub">Click <strong>Add Main Type</strong> to get started.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="etm-panel-foot">
+                <button type="button" class="btn btn-orange btn-block" data-action="open-add-main">
+                    <i class="fas fa-plus"></i> Add Main Type
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             RIGHT PANEL — SUB ERROR TYPES
+             ============================================================ -->
+        <section class="etm-panel etm-panel-right" aria-label="Sub Error Types">
+            <div class="etm-panel-head">
+                <h2 id="subsPanelTitle">
+                    <i class="fas fa-list-ul"></i>
+                    <span id="subsPanelLabel">Sub Error Types</span>
+                    <span class="etm-panel-subtitle" id="subsPanelMainName"></span>
+                </h2>
+                <span class="etm-panel-count" id="subsCount">0</span>
+            </div>
+
+            <!-- Placeholder when no main selected -->
+            <div class="etm-panel-placeholder" id="subsPlaceholder">
+                <i class="fas fa-arrow-left"></i>
+                <p class="etm-placeholder-title">Select a Main Error Type</p>
+                <p class="etm-placeholder-sub">
+                    Click any main type on the left to view and manage its sub types.
+                </p>
+            </div>
+
+            <!-- Sub list wrapper (hidden until a main is selected) -->
+            <div class="etm-subs-wrapper" id="subsWrapper" hidden>
+
+                <div class="etm-panel-toolbar">
+                    <div class="etm-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text"
+                               id="subSearchInput"
+                               placeholder="Search sub types..."
+                               autocomplete="off">
+                    </div>
+                    <button type="button"
+                            class="btn btn-orange btn-sm"
+                            data-action="open-add-sub"
+                            id="addSubBtn">
+                        <i class="fas fa-plus"></i> Add Sub
+                    </button>
+                </div>
+
+                <div class="etm-panel-body" id="subsList" role="listbox" aria-label="List of sub error types">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="etm-panel-foot">
+                    <div class="etm-panel-foot-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Only <strong>active</strong> sub types appear in the Close Ticket dropdown.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+</div>
+
+
+<!-- ============================================================
+     MODAL — ADD / EDIT MAIN
+     ============================================================ -->
+<div class="etm-modal" id="mainModal" aria-hidden="true" role="dialog">
+    <div class="etm-modal-backdrop" data-close-modal="mainModal"></div>
+    <div class="etm-modal-box">
+        <header class="etm-modal-head">
+            <h3 id="mainModalTitle">
+                <i class="fas fa-plus-circle"></i>
+                <span id="mainModalTitleText">Add Main Error Type</span>
+            </h3>
+            <button type="button" class="etm-modal-close" data-close-modal="mainModal" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+
+        <form id="mainForm" autocomplete="off" novalidate>
+            <input type="hidden" id="mainFormId" value="">
+
+            <div class="etm-modal-body">
+                <div class="etm-field">
+                    <label for="mainFormName">
+                        Name <span class="req">*</span>
+                    </label>
+                    <input type="text"
+                           id="mainFormName"
+                           maxlength="100"
+                           placeholder="e.g. Roadmap Error"
+                           required>
+                    <p class="etm-hint">This is the label shown in the Close Ticket dropdown.</p>
+                </div>
+
+                <div class="etm-field-row">
+                    <div class="etm-field">
+                        <label for="mainFormOrder">Display Order</label>
+                        <input type="number" id="mainFormOrder" min="0" value="0">
+                        <p class="etm-hint">Lower numbers appear first.</p>
+                    </div>
+                    <div class="etm-field">
+                        <label>Status</label>
+                        <label class="etm-toggle">
+                            <input type="checkbox" id="mainFormActive" checked>
+                            <span class="etm-toggle-slider"></span>
+                            <span class="etm-toggle-text" id="mainFormActiveLabel">Active</span>
+                        </label>
+                        <p class="etm-hint">Inactive types are hidden from the dropdown.</p>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="etm-modal-foot">
+                <button type="button" class="btn btn-outline" data-close-modal="mainModal">Cancel</button>
+                <button type="submit" class="btn btn-orange" id="mainFormSubmit">
+                    <i class="fas fa-save"></i>
+                    <span id="mainFormSubmitText">Save Main Type</span>
+                </button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================
+     MODAL — ADD / EDIT SUB
+     ============================================================ -->
+<div class="etm-modal" id="subModal" aria-hidden="true" role="dialog">
+    <div class="etm-modal-backdrop" data-close-modal="subModal"></div>
+    <div class="etm-modal-box">
+        <header class="etm-modal-head">
+            <h3 id="subModalTitle">
+                <i class="fas fa-plus-circle"></i>
+                <span id="subModalTitleText">Add Sub Error Type</span>
+            </h3>
+            <button type="button" class="etm-modal-close" data-close-modal="subModal" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+
+        <form id="subForm" autocomplete="off" novalidate>
+            <input type="hidden" id="subFormId" value="">
+            <input type="hidden" id="subFormMainId" value="">
+
+            <div class="etm-modal-body">
+                <div class="etm-field">
+                    <label>Parent Main Type</label>
+                    <div class="etm-readonly-value" id="subFormParentName">—</div>
+                    <p class="etm-hint">The sub type is added under this main error type.</p>
+                </div>
+
+                <div class="etm-field">
+                    <label for="subFormName">
+                        Name <span class="req">*</span>
+                    </label>
+                    <input type="text"
+                           id="subFormName"
+                           maxlength="150"
+                           placeholder="e.g. Database Error"
+                           required>
+                    <p class="etm-hint">Must be unique within the parent main type.</p>
+                </div>
+
+                <div class="etm-field-row">
+                    <div class="etm-field">
+                        <label for="subFormOrder">Display Order</label>
+                        <input type="number" id="subFormOrder" min="0" value="0">
+                    </div>
+                    <div class="etm-field">
+                        <label>Status</label>
+                        <label class="etm-toggle">
+                            <input type="checkbox" id="subFormActive" checked>
+                            <span class="etm-toggle-slider"></span>
+                            <span class="etm-toggle-text" id="subFormActiveLabel">Active</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="etm-modal-foot">
+                <button type="button" class="btn btn-outline" data-close-modal="subModal">Cancel</button>
+                <button type="submit" class="btn btn-orange" id="subFormSubmit">
+                    <i class="fas fa-save"></i>
+                    <span id="subFormSubmitText">Save Sub Type</span>
+                </button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+
+<!-- ============================================================
+     MODAL — CONFIRM DELETE MAIN
+     ============================================================ -->
+<div class="etm-modal" id="deleteMainModal" aria-hidden="true" role="dialog">
+    <div class="etm-modal-backdrop" data-close-modal="deleteMainModal"></div>
+    <div class="etm-modal-box">
+        <header class="etm-modal-head etm-modal-head-danger">
+            <h3>
+                <i class="fas fa-exclamation-triangle"></i>
+                Delete Main Error Type
+            </h3>
+            <button type="button" class="etm-modal-close" data-close-modal="deleteMainModal" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+
+        <div class="etm-modal-body">
+            <p class="etm-modal-text">
+                Are you sure you want to delete <strong id="deleteMainName"></strong>?
+            </p>
+            <div class="etm-warning-box" id="deleteMainWarning">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>This will also delete <strong id="deleteMainSubsCount">0</strong> sub type(s) under this main.</span>
+            </div>
+            <p class="etm-hint">This action cannot be undone.</p>
+        </div>
+
+        <footer class="etm-modal-foot">
+            <button type="button" class="btn btn-outline" data-close-modal="deleteMainModal">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteMainBtn">
+                <i class="fas fa-trash"></i> Delete Main Type
+            </button>
+        </footer>
+    </div>
+</div>
+
+
+<!-- ============================================================
+     MODAL — CONFIRM DELETE SUB
+     ============================================================ -->
+<div class="etm-modal" id="deleteSubModal" aria-hidden="true" role="dialog">
+    <div class="etm-modal-backdrop" data-close-modal="deleteSubModal"></div>
+    <div class="etm-modal-box">
+        <header class="etm-modal-head etm-modal-head-danger">
+            <h3>
+                <i class="fas fa-exclamation-triangle"></i>
+                Delete Sub Error Type
+            </h3>
+            <button type="button" class="etm-modal-close" data-close-modal="deleteSubModal" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+
+        <div class="etm-modal-body">
+            <p class="etm-modal-text">
+                Are you sure you want to delete <strong id="deleteSubName"></strong>?
+            </p>
+            <p class="etm-hint">This action cannot be undone.</p>
+        </div>
+
+        <footer class="etm-modal-foot">
+            <button type="button" class="btn btn-outline" data-close-modal="deleteSubModal">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteSubBtn">
+                <i class="fas fa-trash"></i> Delete Sub Type
+            </button>
+        </footer>
+    </div>
+</div>
+
+
+<!-- ============================================================
+     TOASTS
+     ============================================================ -->
+<div class="etm-toasts" id="etmToasts"></div>
+
+
+<!-- ============================================================
+     BOOTSTRAP DATA — passed to JS
+     ============================================================ -->
+{{ mains_payload|json_script:"etmBootstrapData" }}
+
+{% endblock %}
+
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/admin_panel/settings_error_type_master.js' %}"></script>
+{% endblock %}
